@@ -1,0 +1,576 @@
+{
+  "@@locale": "tr",
+  "helloUser": "Tekrar hoş geldin, {name}",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "academicOverview": "Akademik genel bakışınız",
+  "academicRisk": "Akademik Risk",
+  "lowRisk": "Düşük Risk",
+  "score": "Skor",
+  "tasksToday": "Bugünkü Görevler",
+  "tasksPending": "{count} görev bekliyor",
+  "@tasksPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingDeadlines": "Yaklaşan Son Tarihler",
+  "thisWeek": "Bu hafta {count} tane",
+  "@thisWeek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noDeadlinesWeek": "Bu hafta son tarih yok",
+  "studyTimeToday": "Bugünkü Çalışma Süresi",
+  "noStudyLogged": "Bugün çalışma kaydedilmedi",
+  "profile": "Profil",
+  "account": "Hesap",
+  "preferences": "Tercihler",
+  "support": "Destek",
+  "language": "Dil",
+  "theme": "Karanlık Mod",
+  "aboutApp": "Uygulama Hakkında",
+  "privacy": "Gizlilik",
+  "logout": "Çıkış Yap",
+  "notifications": "Bildirimler",
+  "noNotifications": "Henüz bildirim yok",
+  "notificationsCaughtUp": "Her şey yolunda",
+  "tomorrow": "Yarın",
+  "earlier": "Daha Önce",
+  "home": "Ana Sayfa",
+  "overview": "Genel Bakış",
+  "searchHint": "Görev, sınav veya içgörü ara",
+  "email": "E-posta",
+  "languageEnglish": "İngilizce",
+  "languageTurkish": "Türkçe",
+  "themeLight": "Aydınlık",
+  "themeDark": "Karanlık",
+  "themeSystem": "Sistem",
+  "tasks": "Görevler",
+  "all": "Hepsi",
+  "pending": "Bekleyen",
+  "deadlines": "Son Tarihler",
+  "completed": "Tamamlandı",
+  "overdue": "Gecikmiş",
+  "createTask": "Görev Oluştur",
+  "taskTitle": "Görev Başlığı",
+  "course": "Ders",
+  "priority": "Öncelik",
+  "low": "Düşük",
+  "medium": "Orta",
+  "high": "Yüksek",
+  "estimatedStudyTime": "Tahmini Çalışma Süresi",
+  "notes": "Notlar",
+  "save": "Kaydet",
+  "cancel": "İptal",
+  "study": "Çalış",
+  "startStudySession": "Çalışma Oturumu",
+  "start": "Başlat",
+  "pause": "Duraklat",
+  "resume": "Devam Et",
+  "stop": "Durdur",
+  "sessionCompleted": "Oturum tamamlandı",
+  "recentStudySessions": "Son Çalışma Oturumlari",
+  "stayOrganized": "Düzenli kal",
+  "createFirstTask": "Ödevleri takip etmeye başlamak için ilk görevinizi oluşturun.",
+  "couldNotLoadTasks": "Görevler yüklenemedi.",
+  "couldNotLoadDeadlines": "Son tarihler yüklenemedi.",
+  "delete": "Sil",
+  "complete": "Tamamla",
+  "due": "Son Tarih: {date}",
+  "@due": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "estStudy": "Tahmini Çalışma: {time}sa",
+  "@estStudy": {
+    "placeholders": {
+      "time": {
+        "type": "num"
+      }
+    }
+  },
+  "noDeadlinesYet": "Henüz son tarih yok",
+  "createFirstDeadline": "Önde kalmak için ilk akademik son tarihinizi oluşturun.",
+  "createDeadline": "Son Tarih Oluştur",
+  "dueToday": "Bugün son",
+  "daysRemaining": "{count} gün kaldı",
+  "@daysRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exam": "Sınav",
+  "quiz": "Quiz",
+  "project": "Proje",
+  "assignment": "Ödev",
+  "noDeadline": "Son tarih yok",
+  "newAcademicTask": "Yeni Akademik Görev",
+  "titleRequired": "Başlık gerekli",
+  "optional": "isteğe bağlı",
+  "newAcademicDeadline": "Yeni Akademik Son Tarih",
+  "pleaseSelectDate": "Lütfen bir son tarih seçin",
+  "saving": "Kaydediliyor...",
+  "title": "Başlık",
+  "deadlineDate": "Son Tarih",
+  "type": "Tür",
+  "studySession": "Çalışma Oturumu",
+  "saveSession": "Oturumu Kaydet",
+  "noStudySessionsYet": "Henüz çalışma oturumu yok.",
+  "today": "Bugün",
+  "yesterday": "Dün",
+  "minutes": "{count} dakika",
+  "@minutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duration": "Süre",
+  "pomodoro": "Pomodoro",
+  "review": "Tekrar",
+  "deepFocus": "Derin Odak",
+  "analytics": "Analiz",
+  "studyHours": "Çalışma saatleri",
+  "taskCompletionRate": "Görev tamamlama oranı",
+  "stressTrends": "Stres eğilimleri",
+  "comingSoon": "Çok yakında",
+  "taskDetail": "Görev Detayı",
+  "deadlineDetail": "Son Tarih Detayı",
+  "taskNotFound": "Görev bulunamadı.",
+  "deadlineNotFound": "Son tarih bulunamadı.",
+  "noDeadlineSet": "Son tarih belirlenmedi",
+  "overdueByDays": "{count} gün gecikti",
+  "@overdueByDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dueInDays": "{count} gün içinde",
+  "@dueInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editTask": "Görevi Düzenle",
+  "editDeadline": "Son Tarihi Düzenle",
+  "markAsPending": "Bekliyor Olarak İşaretle",
+  "markAsComplete": "Tamamlandı Olarak İşaretle",
+  "deleteTask": "Görevi Sil",
+  "deleteDeadline": "Son Tarihi Sil",
+  "notSet": "Belirlenmedi",
+  "estimated": "Tahmini",
+  "updateTask": "Görevi Güncelle",
+  "saveChanges": "Değişiklikleri Kaydet",
+  "welcome": "Hoş geldiniz",
+  "password": "Şifre",
+  "rememberMe": "Beni hatırla",
+  "forgotPassword": "Şifremi Unuttum?",
+  "login": "Giriş Yap",
+  "dontHaveAccount": "Hesabınız yok mu?",
+  "signup": "Hesap Oluştur",
+  "invalidCredentials": "Geçersiz e-posta veya şifre.",
+  "tooManyRequests": "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+  "networkError": "Bağlantı hatası. Tekrar deneyin.",
+  "invalidEmail": "Geçersiz bir e-posta girin",
+  "passwordTooShort": "Şifre en az 8 karakter olmalıdır",
+  "alreadyHaveAccount": "Zaten hesabınız var mı?",
+  "fullName": "Ad Soyad",
+  "requiredField": "Bu alan zorunludur",
+  "passwordStrong": "Güçlü",
+  "passwordFair": "Orta",
+  "passwordWeak": "Zayıf",
+  "confirmPassword": "Şifreyi Onayla",
+  "passwordsDoNotMatch": "Şifreler eşleşmiyor",
+  "emailAlreadyInUse": "Bu e-posta zaten kayıtlı. Giriş yapmayı deneyin.",
+  "otpExpired": "Kodun süresi doldu. Yeni bir tane isteyin.",
+  "tooManyAttempts": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin.",
+  "invalidOtp": "Geçersiz doğrulama kodu",
+  "codeResent": "Kod tekrar gönderildi!",
+  "verifyEmail": "E-postayı Doğrula",
+  "enterOtp": "E-postanıza gönderilen 6 haneli kodu girin",
+  "verifyCode": "Kodu Doğrula",
+  "resendCode": "Kodu Tekrar Gönder",
+  "forgotPasswordTitle": "Şifremi Unuttum",
+  "forgotPasswordPrompt": "Şifre sıfırlama kodu almak için e-posta adresinizi girin.",
+  "sendResetLink": "Kod Gönder",
+  "backToLogin": "Giriş Yap",
+  "resetPassword": "Şifreyi Sıfırla",
+  "newPassword": "Yeni Şifre",
+  "passwordSameAsOld": "Yeni şifre mevcut şifrenizden farklı olmalıdır.",
+  "resendIn": "{count} saniye içinde tekrar gönder",
+  "selectLanguage": "Dil Seçin",
+  "english": "İngilizce",
+  "turkish": "Türkçe",
+  "continueText": "Devam Et",
+  "onboardingTitle1": "Akademik hayatınıza hakim olun",
+  "onboardingDesc1": "Görevlerinizi, sınavlarınızı ve çalışma oturumlarınızı tek bir akıllı çalışma alanında takip edin.",
+  "onboardingTitle2": "Görevlerinizin başında kalın",
+  "onboardingDesc2": "Ödevleri ve teslim tarihlerini düzenleyin, böylece hiçbir şey gözden kaçmasın.",
+  "onboardingTitle3": "Gelişiminizi anlayın",
+  "onboardingDesc3": "Görsel içgörüler çalışma modellerinizi, üretkenliğinizi ve akademik eğilimlerinizi gösterir.",
+  "onboardingTitle4": "Performans ve refahı dengeleyin",
+  "onboardingDesc4": "Stres seviyelerini izleyin ve daha akıllı çalışma alışkanlıkları edinin.",
+  "getStarted": "Hemen Başla",
+  "next": "İleri",
+  "skip": "Atla",
+  "workloadBalanced": "İş Yükü Dengeli",
+  "student": "Öğrenci",
+  "hoursAbbreviation": "sa",
+  "minutesAbbreviation": "dk",
+  "avatarUpdated": "Profil resmi başarıyla güncellendi",
+  "avatarUploadFailed": "Profil resmi yüklenemedi",
+  "mediumRisk": "Orta Risk",
+  "highRisk": "Yüksek Risk",
+  "riskScore": "Risk Skoru",
+  "remaining": "kaldı",
+  "studyLogged": "Çalışma kaydedildi",
+  "allTasksCompleted": "Tüm görevler tamamlandı!",
+  "dontForgetTasks": "Onları bitirmeyi unutmayın",
+  "academicProfileOnboarding": "Akademik Profil",
+  "basicIdentity": "Temel Kimlik",
+  "academicProgram": "Akademik Program",
+  "currentSemesterLoad": "Dönem İş Yükü",
+  "learningPatternCalibration": "Öğrenme Modelleri",
+  "universityName": "Üniversite Adı",
+  "degreeType": "Derece Türü",
+  "major": "Bölüm",
+  "minor": "Yandal",
+  "academicYear": "Akademik Yıl",
+  "expectedGraduationYear": "Beklenen Mezuniyet Yılı",
+  "currentSemesterNumber": "Mevcut Dönem",
+  "coursesThisSemester": "Beklenen Dersler",
+  "studyHoursPerWeek": "Haftalık Çalışma Hedefi (Saat)",
+  "preferredStudyTime": "Tercih Edilen Çalışma Zamanı",
+  "breakPattern": "Mola Modeli",
+  "morning": "Sabah",
+  "afternoon": "Öğleden Sonra",
+  "night": "Gece",
+  "deepWork": "Derin Çalışma",
+  "mixed": "Karışık",
+  "bachelor": "Lisans",
+  "master": "Yüksek Lisans",
+  "phd": "Doktora",
+  "addSemester": "Dönem Ekle",
+  "editSemester": "Dönemi Düzenle",
+  "semesterName": "Dönem Adı",
+  "semesterNameHint": "ör. Güz 2024",
+  "startDate": "Başlangıç Tarihi",
+  "endDate": "Bitiş Tarihi",
+  "createSemester": "Dönem Oluştur",
+  "updateSemester": "Dönemi Güncelle",
+  "courseManagement": "Ders Yönetimi",
+  "myCourses": "Derslerim",
+  "manageSemesters": "Dönemleri Yönet",
+  "addCourse": "Ders Ekle",
+  "editCourse": "Dersi Düzenle",
+  "courseCode": "Ders Kodu",
+  "courseNameHint": "örn. İleri Matematik",
+  "courseCodeHint": "örn. CS204",
+  "details": "Detaylar",
+  "courseColor": "Ders Rengi",
+  "creditsLabel": "Kredi",
+  "sortAlphabetical": "Alfabetik",
+  "sortStudyTime": "Çalışma Süresi",
+  "semester": "Dönem",
+  "selectSemester": "Dönem Seç",
+  "setAsActive": "Aktif dönem olarak ayarla",
+  "noCoursesYet": "Henüz ders eklenmedi",
+  "addFirstCourse": "Takip etmeye başlamak için ilk dersinizi ekleyin.",
+  "addFirstCourseBtn": "İlk Dersimi Ekle",
+  "deleteCourse": "Dersi Sil?",
+  "deleteCourseWarning": "Bu işlem aynı zamanda bu dersi tüm bağlantılı görev ve oturumlardan ayıracaktır.",
+  "addCourseFirst": "Önce bir ders ekleyin",
+  "selectCourse": "Ders Seçin",
+  "pleaseSelectCourse": "Lütfen bir ders seçin",
+  "errorLoadingCourses": "Dersler yüklenirken hata oluştu",
+  "academicInformation": "Akademik Bilgiler",
+  "editProfile": "Profili Düzenle",
+  "manageCourses": "Dersleri Yönet",
+  "manageCoursesSubtitle": "Mevcut derslerinizi ekleyin veya düzenleyin",
+  "yearCount": "Yıl {count}",
+  "@yearCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyGoal": "Haftalık Çalışma Hedefi",
+  "studyGoalCompleted": "Tamamlanan: {time}",
+  "@studyGoalCompleted": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "studyGoalRemaining": "Kalan: {time}",
+  "sessionReflectionTitle": "Bu oturum nasıldı?",
+  "focused": "Odaklı",
+  "distracted": "Dikkati Dağınık",
+  "veryProductive": "Çok Verimli",
+  "sessionNotes": "Oturum Notları",
+  "@studyGoalRemaining": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "identityDesc": "Kim olduğunuz ve nerede okuduğunuzla başlayalım.",
+  "programDesc": "Bize çalışma alanınızdan bahsedin.",
+  "loadDesc": "Beklenen iş yükünüzü kalibre etmemize yardımcı olun.",
+  "learningPatternDesc": "En iyi ne zaman ve nasıl öğrenirsiniz?",
+  "hoursCount": "{count} Saat",
+  "@hoursCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendedFocus": "Önerilen Odak",
+  "practice": "Pratik",
+  "studyPreferences": "Çalışma Tercihleri",
+  "appSettings": "Uygulama Ayarları",
+  "accountSettings": "Hesap Ayarları",
+  "dataExport": "Veri Dışa Aktar",
+  "reminderSettings": "Hatırlatıcı Ayarları",
+  "notificationsEnabled": "Bildirimler Etkin",
+  "notificationsDisabled": "Bildirimler Devre Dışı",
+  "privacyPolicy": "Gizlilik Politikası",
+  "changePassword": "Şifreyi Değiştir",
+  "changePasswordTitle": "Şifreyi Değiştir",
+  "currentPassword": "Mevcut Şifre",
+  "passwordUpdatedSuccess": "Şifre başarıyla güncellendi",
+  "termsOfService": "Kullanım Koşulları",
+  "studyTimerDefaults": "Çalışma Zamanlayıcısı Varsayılanları",
+  "focusOnTitle": "{title} konusuna odaklan - yakında teslim edilecek!",
+  "@focusOnTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "allCaughtUp": "Her şey yolunda! Derin bir odaklanma seansı başlatmaya ne dersin?",
+  "bestStudyTime": "En iyi {time} vaktinde çalışıyorsun. İlk seansını o zaman yap!",
+  "@bestStudyTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverPattern": "Çalışma modelini keşfetmek için bir oturum başlat.",
+  "startNewSession": "Yeni Oturum Başlat",
+  "sessionType": "Oturum Tipi",
+  "galleryPermissionRequired": "Galeri İzni Gerekli",
+  "galleryPermissionMessage": "Profil resminizi değiştirmek için lütfen ayarlardan galeri erişimine izin verin.",
+  "chooseACourse": "Bir kurs seçin",
+  "backToHome": "Ana Sayfaya Dön",
+  "notEnoughData": "Henüz yeterli veri yok",
+  "addCoursesPrompt": "İlerlemeyi izlemeye başlamak için kurslarınızı ekleyin.",
+  "noUpcomingDeadlines": "Yaklaşan teslim tarihi yok",
+  "caughtUp": "Her şey tamam!",
+  "youStudiedFor": "{time} boyunca çalıştınız.",
+  "@youStudiedFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "efficiencyTip": "Verimlilik İpucu",
+  "discoveryStudyPatterns": "Daha fazla oturum kaydederek en iyi çalışma düzeninizi keşfedin.",
+  "goalCompletionLabel": "Hedef Tamamlama: %{percentage}",
+  "@goalCompletionLabel": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  },
+  "keepGoingLeft": "Devam et! {time} kaldı.",
+  "@keepGoingLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "studyHoursByCourse": "Derse Göre Çalışma Saatleri",
+  "weeklyTaskCompletion": "Haftalık Görev Tamamlama",
+  "academicLoad": "Akademik İş Yükü",
+  "studyDemand": "Çalışma Talebi",
+  "workloadIntensity": "İş Yükü Yoğunluğu",
+  "lastUpdatedAt": "Son güncelleme: {time}",
+  "@lastUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "noPendingAlerts": "Bekleyen uyarı yok.",
+  "overdueTasksSummary": "{count} gecikmiş görev var.",
+  "@overdueTasksSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deadlinesSoonSummary": "Önümüzdeki 3 gün içinde {count} teslim tarihi var.",
+  "@deadlinesSoonSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allTasksUpToDate": "Mevcut tüm görevler güncel.",
+  "ectsLabel": "AKTS",
+  "totalEctsLabel": "Toplam AKTS",
+  "overloaded": "Aşırı Yüklü",
+  "highLoad": "Yüksek Yük",
+  "balanced": "Dengeli",
+  "lowLoad": "Düşük Yük",
+  "riskLow": "Düşük Risk",
+  "riskMedium": "Orta Risk",
+  "riskHigh": "Yüksek Risk",
+  "riskBreakdownTitle": "Risk Dağılımı",
+  "riskOverdueTasks": "Gecikmiş görevler",
+  "riskUpcomingTasks": "Yaklaşan görevler",
+  "riskStudyDeficit": "Çalışma açığı",
+  "riskStatusMessage": "{count} gecikmiş görev",
+  "riskInterpretationOnTrack": "Yolundasınız. Mevcut çalışma hızınızı koruyun.",
+  "riskInterpretationHigh": "Kaçırılan teslim tarihleri ve yetersiz çalışma saatleri nedeniyle yüksek risk altındasınız.",
+  "riskInterpretationMedium": "Riskiniz orta düzeyde; yaklaşan görevlere ve çalışma hedeflerine dikkat edin.",
+  "riskInterpretationLow": "Güvenli bir aralıktasınız. Mevcut ilerlemenizi sürdürün.",
+  "riskHoursRemaining": "{hours} saat kaldı",
+  "riskGoalReached": "Hedefe ulaşıldı!",
+  "@riskStatusMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "riskReasonOverdue": "{count} adet gecikmiş göreviniz var",
+  "@riskReasonOverdue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "riskReasonStudyLow": "Haftalık hedefinizden daha az çalıştınız",
+  "riskReasonUpcoming": "Yakında bitecek {count} görev",
+  "@riskReasonUpcoming": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendUp": "+{delta} risk artışı",
+  "@riskTrendUp": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendDown": "-{delta} (iyileşti)",
+  "@riskTrendDown": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendStable": "+0 (değişim yok)",
+  "riskNoData": "Aktif risk faktörü yok",
+  "overviewTitle": "Genel Bakış",
+  "lastUpdated": "Son güncelleme: {time}",
+  "@lastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "overviewOverdueTasksAction": "{count} görev ilgi bekliyor",
+  "@overviewOverdueTasksAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overviewUpcomingTasks": "Yaklaşan {count} teslim tarihi",
+  "@overviewUpcomingTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overviewNoUpcomingTasks": "Yaklaşan teslim tarihi yok",
+  "overviewCompletedToday": "Bugün tamamlanan {count} görev",
+  "@overviewCompletedToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overviewNoCompletedToday": "Bugün tamamlanan görev yok",
+  "taskCompletion": "Görev Tamamlama",
+  "tasksCompleted": "{total} görevden {completed} tanesi tamamlandı",
+  "@tasksCompleted": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksCompletedThisWeek": "Bu haftaki görevler: {completed}/{total} tamamlandı",
+  "@tasksCompletedThisWeek": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noStudyDataThisWeek": "Bu hafta çalışma oturumu yok",
+  "noTasksThisWeek": "Bu haftaya planlanmış görev yok"
+}

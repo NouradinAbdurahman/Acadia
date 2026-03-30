@@ -1,0 +1,585 @@
+{
+  "@@locale": "en",
+  "helloUser": "Welcome back, {name}",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "academicOverview": "Your academic overview",
+  "academicRisk": "Academic Risk",
+  "lowRisk": "Low Risk",
+  "score": "Score",
+  "tasksToday": "Tasks Today",
+  "tasksPending": "{count} tasks pending",
+  "@tasksPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "upcomingDeadlines": "Upcoming Deadlines",
+  "thisWeek": "{count} this week",
+  "@thisWeek": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noDeadlinesWeek": "No deadlines this week",
+  "studyTimeToday": "Study Time Today",
+  "noStudyLogged": "No study logged today",
+  "profile": "Profile",
+  "account": "Account",
+  "preferences": "Preferences",
+  "support": "Support",
+  "language": "Language",
+  "theme": "Dark Mode",
+  "aboutApp": "About App",
+  "privacy": "Privacy",
+  "logout": "Logout",
+  "notifications": "Notifications",
+  "noNotifications": "No notifications yet",
+  "notificationsCaughtUp": "You're all caught up",
+  "tomorrow": "Tomorrow",
+  "earlier": "Earlier",
+  "home": "Home",
+  "overview": "Overview",
+  "searchHint": "Search tasks, exams or insights",
+  "email": "Email",
+  "languageEnglish": "English",
+  "languageTurkish": "Turkish",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System",
+  "tasks": "Tasks",
+  "all": "All",
+  "pending": "Pending",
+  "deadlines": "Deadlines",
+  "completed": "Completed",
+  "overdue": "Overdue",
+  "createTask": "Create Task",
+  "taskTitle": "Task Title",
+  "course": "Course",
+  "priority": "Priority",
+  "low": "Low",
+  "medium": "Medium",
+  "high": "High",
+  "estimatedStudyTime": "Est. Study Time",
+  "notes": "Notes",
+  "save": "Save",
+  "cancel": "Cancel",
+  "study": "Study",
+  "startStudySession": "Study Session",
+  "start": "Start",
+  "pause": "Pause",
+  "resume": "Resume",
+  "stop": "Stop",
+  "sessionCompleted": "Session completed",
+  "recentStudySessions": "Recent Study Sessions",
+  "stayOrganized": "Stay organized",
+  "createFirstTask": "Create your first task to start tracking your assignments.",
+  "couldNotLoadTasks": "Could not load tasks.",
+  "couldNotLoadDeadlines": "Could not load deadlines.",
+  "delete": "Delete",
+  "complete": "Complete",
+  "due": "Due: {date}",
+  "@due": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "estStudy": "Est. Study: {time}h",
+  "@estStudy": {
+    "placeholders": {
+      "time": {
+        "type": "num"
+      }
+    }
+  },
+  "noDeadlinesYet": "No deadlines yet",
+  "createFirstDeadline": "Create your first academic deadline to stay ahead.",
+  "createDeadline": "Create Deadline",
+  "dueToday": "Due today",
+  "daysRemaining": "{count} days left",
+  "@daysRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exam": "Exam",
+  "quiz": "Quiz",
+  "project": "Project",
+  "assignment": "Assignment",
+  "noDeadline": "No deadline",
+  "newAcademicTask": "New Academic Task",
+  "titleRequired": "Title is required",
+  "optional": "optional",
+  "newAcademicDeadline": "New Academic Deadline",
+  "pleaseSelectDate": "Please select a date",
+  "saving": "Saving...",
+  "title": "Title",
+  "deadlineDate": "Deadline Date",
+  "type": "Type",
+  "studySession": "Study Session",
+  "saveSession": "Save Session",
+  "noStudySessionsYet": "No study sessions yet.",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "minutes": "{count} minutes",
+  "@minutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duration": "Duration",
+  "pomodoro": "Pomodoro",
+  "review": "Review",
+  "deepFocus": "Deep Focus",
+  "analytics": "Analytics",
+  "studyHours": "Study hours",
+  "taskCompletionRate": "Task completion rate",
+  "stressTrends": "Stress trends",
+  "comingSoon": "Coming soon",
+  "taskDetail": "Task Detail",
+  "deadlineDetail": "Deadline Detail",
+  "taskNotFound": "Task not found.",
+  "deadlineNotFound": "Deadline not found.",
+  "noDeadlineSet": "No deadline set",
+  "overdueByDays": "Overdue by {count} days",
+  "@overdueByDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dueInDays": "Due in {count} days",
+  "@dueInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "editTask": "Edit Task",
+  "editDeadline": "Edit Deadline",
+  "markAsPending": "Mark as Pending",
+  "markAsComplete": "Mark as Complete",
+  "deleteTask": "Delete Task",
+  "deleteDeadline": "Delete Deadline",
+  "notSet": "Not set",
+  "estimated": "Estimated",
+  "updateTask": "Update Task",
+  "saveChanges": "Save Changes",
+  "welcome": "Welcome back",
+  "password": "Password",
+  "rememberMe": "Remember me",
+  "forgotPassword": "Forgot Password?",
+  "login": "Login",
+  "dontHaveAccount": "Don't have an account?",
+  "signup": "Create Account",
+  "invalidCredentials": "Incorrect email or password.",
+  "tooManyRequests": "Too many requests. Please try again later.",
+  "networkError": "Connection error. Try again.",
+  "invalidEmail": "Enter a valid email",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "alreadyHaveAccount": "Already have an account?",
+  "fullName": "Full Name",
+  "requiredField": "This field is required",
+  "passwordStrong": "Strong",
+  "passwordFair": "Fair",
+  "passwordWeak": "Weak",
+  "confirmPassword": "Confirm Password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "emailAlreadyInUse": "This email is already registered. Try logging in instead.",
+  "otpExpired": "Code expired. Request a new one.",
+  "tooManyAttempts": "Too many attempts. Please try again later.",
+  "invalidOtp": "Invalid verification code",
+  "codeResent": "Code sent!",
+  "verifyEmail": "Verify Email",
+  "enterOtp": "Enter the 6-digit code sent to your email",
+  "verifyCode": "Verify Code",
+  "resendCode": "Resend Code",
+  "forgotPasswordTitle": "Forgot Password",
+  "forgotPasswordPrompt": "Enter your email address to receive a 6-digit verification code.",
+  "sendResetLink": "Send Code",
+  "backToLogin": "Back to Login",
+  "resetPassword": "Reset Password",
+  "newPassword": "New Password",
+  "passwordSameAsOld": "New password must be different from your current password.",
+  "resendIn": "Resend in {count} seconds",
+  "selectLanguage": "Select Language",
+  "english": "English",
+  "turkish": "Turkish",
+  "continueText": "Continue",
+  "onboardingTitle1": "Master your academic life",
+  "onboardingDesc1": "Track your tasks, exams, and study sessions in one intelligent workspace.",
+  "onboardingTitle2": "Stay on top of your tasks",
+  "onboardingDesc2": "Organize assignments and deadlines so nothing slips through the cracks.",
+  "onboardingTitle3": "Understand your progress",
+  "onboardingDesc3": "Visual insights show your study patterns, productivity, and academic trends.",
+  "onboardingTitle4": "Balance performance and wellbeing",
+  "onboardingDesc4": "Monitor stress levels and build smarter study habits.",
+  "getStarted": "Get Started",
+  "next": "Next",
+  "skip": "Skip",
+  "workloadBalanced": "Workload Balanced",
+  "student": "Student",
+  "hoursAbbreviation": "h",
+  "minutesAbbreviation": "m",
+  "avatarUpdated": "Avatar updated successfully",
+  "avatarUploadFailed": "Failed to upload avatar",
+  "mediumRisk": "Medium Risk",
+  "highRisk": "High Risk",
+  "riskScore": "Risk Score",
+  "remaining": "remaining",
+  "studyLogged": "Study logged",
+  "allTasksCompleted": "All tasks completed!",
+  "dontForgetTasks": "Don't forget to finish them",
+  "academicProfileOnboarding": "Academic Profile",
+  "basicIdentity": "Basic Identity",
+  "academicProgram": "Academic Program",
+  "currentSemesterLoad": "Current Semester Load",
+  "learningPatternCalibration": "Learning Patterns",
+  "universityName": "University Name",
+  "degreeType": "Degree Type",
+  "major": "Major",
+  "minor": "Minor",
+  "academicYear": "Academic Year",
+  "expectedGraduationYear": "Expected Graduation Year",
+  "currentSemesterNumber": "Current Semester",
+  "coursesThisSemester": "Expected Courses",
+  "studyHoursPerWeek": "Weekly Study Goal (Hours)",
+  "preferredStudyTime": "Preferred Study Time",
+  "breakPattern": "Break Pattern",
+  "morning": "Morning",
+  "afternoon": "Afternoon",
+  "night": "Night",
+  "deepWork": "Deep Work",
+  "mixed": "Mixed",
+  "bachelor": "Bachelor",
+  "master": "Master",
+  "phd": "PhD",
+  "addSemester": "Add Semester",
+  "editSemester": "Edit Semester",
+  "semesterName": "Semester Name",
+  "semesterNameHint": "e.g. Fall 2024",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "createSemester": "Create Semester",
+  "updateSemester": "Update Semester",
+  "courseManagement": "Course Management",
+  "myCourses": "My Courses",
+  "manageSemesters": "Manage Semesters",
+  "addCourse": "Add Course",
+  "editCourse": "Edit Course",
+  "courseCode": "Course Code",
+  "courseNameHint": "e.g. Advanced Mathematics",
+  "courseCodeHint": "e.g. CS204",
+  "details": "Details",
+  "courseColor": "Course Color",
+  "creditsLabel": "Credits",
+  "sortAlphabetical": "Alphabetical",
+  "sortStudyTime": "Study Time",
+  "semester": "Semester",
+  "selectSemester": "Select Semester",
+  "setAsActive": "Set as active semester",
+  "noCoursesYet": "No courses added yet",
+  "addFirstCourse": "Add your first course to start tracking.",
+  "addFirstCourseBtn": "Add My First Course",
+  "deleteCourse": "Delete Course?",
+  "deleteCourseWarning": "This will also disconnect this course from all linked tasks and sessions.",
+  "addCourseFirst": "Add a course first",
+  "selectCourse": "Select Course",
+  "pleaseSelectCourse": "Please select a course",
+  "errorLoadingCourses": "Error loading courses",
+  "academicInformation": "Academic Information",
+  "editProfile": "Edit Profile",
+  "manageCourses": "Manage Courses",
+  "manageCoursesSubtitle": "Add or edit your current courses",
+  "yearCount": "Year {count}",
+  "@yearCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "studyGoal": "Weekly Study Goal",
+  "studyGoalCompleted": "Completed: {time}",
+  "@studyGoalCompleted": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "studyGoalRemaining": "Remaining: {time}",
+  "sessionReflectionTitle": "How was this session?",
+  "focused": "Focused",
+  "distracted": "Distracted",
+  "veryProductive": "Very Productive",
+  "sessionNotes": "Session Notes",
+  "@studyGoalRemaining": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "identityDesc": "Let's start with who you are and where you study.",
+  "programDesc": "Tell us about your field of study.",
+  "loadDesc": "Help us calibrate your expected workload.",
+  "learningPatternDesc": "When and how do you learn best?",
+  "hoursCount": "{count} Hours",
+  "@hoursCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recommendedFocus": "Recommended Focus",
+  "practice": "Practice",
+  "studyPreferences": "Study Preferences",
+  "appSettings": "App Settings",
+  "accountSettings": "Account Settings",
+  "dataExport": "Data Export",
+  "reminderSettings": "Reminder Settings",
+  "notificationsEnabled": "Notifications Enabled",
+  "notificationsDisabled": "Notifications Disabled",
+  "privacyPolicy": "Privacy Policy",
+  "changePassword": "Change Password",
+  "changePasswordTitle": "Change Password",
+  "currentPassword": "Current Password",
+  "passwordUpdatedSuccess": "Password updated successfully",
+  "termsOfService": "Terms of Service",
+  "studyTimerDefaults": "Study Timer Defaults",
+  "focusOnTitle": "Focus on {title} - due soon!",
+  "@focusOnTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "allCaughtUp": "You're all caught up! Maybe start a deep work session?",
+  "bestStudyTime": "You study best in the {time}. Keep your first session then!",
+  "@bestStudyTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "discoverPattern": "Start a session to discover your productivity pattern.",
+  "startNewSession": "Start New Session",
+  "sessionType": "Session Type",
+  "galleryPermissionRequired": "Gallery Permission Required",
+  "galleryPermissionMessage": "Please allow gallery access in settings to change your profile picture.",
+  "chooseACourse": "Choose a course",
+  "backToHome": "Back to Home",
+  "notEnoughData": "Not enough data yet",
+  "addCoursesPrompt": "Add your courses to start tracking progress.",
+  "noUpcomingDeadlines": "No upcoming deadlines",
+  "caughtUp": "You are all caught up!",
+  "youStudiedFor": "You studied for {time}.",
+  "@youStudiedFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "efficiencyTip": "Efficiency Tip",
+  "discoveryStudyPatterns": "Discover your best study patterns by logging more sessions.",
+  "goalCompletionLabel": "Goal Completion: {percentage}%",
+  "@goalCompletionLabel": {
+    "placeholders": {
+      "percentage": {
+        "type": "int"
+      }
+    }
+  },
+  "keepGoingLeft": "Keep going! You have {time} left.",
+  "@keepGoingLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "greatFocusSession": "Great focus session!",
+  "focusLevel": "Focus Level",
+  "deepFlow": "Deep Flow",
+  "building": "Building",
+  "studyHoursByCourse": "Study Hours by Course",
+  "weeklyTaskCompletion": "Weekly Task Completion",
+  "dailyInsight": "Daily Insight",
+  "focusOnStudies": "Focus on your studies today.",
+  "thisWeekLabel": "This Week",
+  "noCourseSelected": "No Course Selected",
+  "lastUpdatedAt": "Last updated: {time}",
+  "@lastUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "noPendingAlerts": "No pending alerts.",
+  "overdueTasksSummary": "There are {count} overdue tasks.",
+  "@overdueTasksSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deadlinesSoonSummary": "There are {count} deadlines within the next 3 days.",
+  "@deadlinesSoonSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allTasksUpToDate": "All current tasks are up-to-date.",
+  "ectsLabel": "ECTS",
+  "sessionFocus": "Session Focus",
+  "academicLoad": "Academic Load",
+  "studyDemand": "Study Demand",
+  "workloadIntensity": "Workload Intensity",
+  "totalEctsLabel": "Total ECTS",
+  "overloaded": "Overloaded",
+  "highLoad": "High Load",
+  "balanced": "Balanced",
+  "lowLoad": "Low Load",
+  "riskLow": "Low Risk",
+  "riskMedium": "Medium Risk",
+  "riskHigh": "High Risk",
+  "riskBreakdownTitle": "Risk Breakdown",
+  "riskOverdueTasks": "Overdue tasks",
+  "riskUpcomingTasks": "Tasks due soon",
+  "riskStudyDeficit": "Study deficit",
+  "riskStatusMessage": "{count} overdue {count, plural, =1{task} other{tasks}}",
+  "riskInterpretationOnTrack": "You are on track. Keep your current study pace.",
+  "riskInterpretationHigh": "You are at high risk due to missed deadlines and insufficient study hours.",
+  "riskInterpretationMedium": "Your risk is moderate; keep an eye on upcoming tasks and study goals.",
+  "riskInterpretationLow": "You are in a safe range. Maintain your current progress.",
+  "riskHoursRemaining": "{hours}h remaining",
+  "riskGoalReached": "Goal reached!",
+  "@riskStatusMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "riskReasonOverdue": "You have {count} overdue tasks",
+  "@riskReasonOverdue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "riskReasonStudyLow": "You studied less than your weekly goal",
+  "riskReasonUpcoming": "{count} tasks due soon",
+  "@riskReasonUpcoming": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendUp": "+{delta} risk increase",
+  "@riskTrendUp": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendDown": "-{delta} (improved)",
+  "@riskTrendDown": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendStable": "+0 (no change)",
+  "riskNoData": "No active risk factors",
+  "overviewTitle": "Overview",
+  "lastUpdated": "Last updated: {time}",
+  "@lastUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "overviewOverdueTasksAction": "{count} tasks need attention",
+  "@overviewOverdueTasksAction": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overviewUpcomingTasks": "{count} upcoming deadlines",
+  "@overviewUpcomingTasks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overviewNoUpcomingTasks": "No upcoming deadlines",
+  "overviewCompletedToday": "{count} tasks completed today",
+  "@overviewCompletedToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "overviewNoCompletedToday": "No tasks completed today",
+  "taskCompletion": "Task Completion",
+  "tasksCompleted": "{completed} of {total} tasks completed",
+  "@tasksCompleted": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "tasksCompletedThisWeek": "Tasks due this week: {completed} of {total} completed",
+  "@tasksCompletedThisWeek": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "noStudyDataThisWeek": "No study sessions this week",
+  "noTasksThisWeek": "No tasks scheduled this week"
+}

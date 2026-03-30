@@ -1,0 +1,514 @@
+================================================================================
+  ACADIA — FOUNDATION RULES
+  These rules are NON-NEGOTIABLE. Every new feature, screen, provider, service,
+  or database change MUST follow every rule below without exception.
+  Breaking any rule will break the app's architecture, stability, or UX.
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 1 — ICONS: ONE LIBRARY ONLY
+────────────────────────────────────────────────────────────────────────────────
+- User preference: always use HeroIcons instead of Material Icons in UI changes when feasible.
+
+
+  ONLY use the Heroicons library for all icons in the app.
+  Package: heroicons ^0.10.0
+
+  ALWAYS use the AppIcon wrapper, never HeroIcon directly in screens:
+
+      import 'package:acadia/core/design/app_icons.dart';
+
+      AppIcon(HeroIcons.academicCap, size: 24)
+      AppIcon(HeroIcons.checkCircle, solid: true, color: AppColors.primary)
+
+  NEVER use:
+    - Icons.xxx            (Flutter Material icons)
+    - CupertinoIcons.xxx   (Cupertino icons)
+    - HeroIcon(...)        (direct use without AppIcon wrapper)
+    - Any other icon package (Lucide, FontAwesome, Feather, etc.)
+
+  The AppIcon widget lives at:
+      lib/core/design/app_icons.dart
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 2 — LOCALIZATION: ZERO HARDCODED UI STRINGS
+────────────────────────────────────────────────────────────────────────────────
+
+  Every string that appears in the UI MUST come from AppLocalizations.
+  The app supports English (en) and Turkish (tr). Both must always be in sync.
+
+  WORKFLOW for adding any new string:
+
+    Step 1. Add the key to lib/l10n/app_en.arb
+    Step 2. Add the SAME key with Turkish translation to lib/l10n/app_tr.arb
+    Step 3. Run: flutter gen-l10n
+    Step 4. Use it in code:
+
+        final l10n = AppLocalizations.of(context)!;
+        Text(l10n.myNewKey)
+
+  RULES:
+    - NEVER use Text('hardcoded string') in any Widget
+    - NEVER use ?? 'fallback string' as a permanent solution;
+      the l10n call must be non-null (use AppLocalizations.of(context)!)
+    - NEVER skip the Turkish translation (app_tr.arb must have every key
+      that app_en.arb has)
+    - ALWAYS run flutter gen-l10n after editing any .arb file;
+      never commit untranslated keys
+    - For plurals and parameterized strings, use ICU message format in .arb
+
+  ARB files location:
+      lib/l10n/app_en.arb   ← English (source of truth for keys)
+      lib/l10n/app_tr.arb   ← Turkish (must match all keys)
+
+  Generated output (DO NOT edit manually):
+      lib/l10n/app_localizations.dart
+      lib/l10n/app_localizations_en.dart
+      lib/l10n/app_localizations_tr.dart
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 3 — ARCHITECTURE: STRICT LAYERED PATTERN
+────────────────────────────────────────────────────────────────────────────────
+
+  Every data feature follows this exact vertical slice:
+
+      UI Screen / Widget
+           ↓  watches/reads
+      Riverpod Provider / StateNotifier
+           ↓  calls
+      Repository  (lib/repositories/)
+           ↓  calls
+      Service     (lib/services/supabase/)
+           ↓  calls
+      Supabase (Postgres tables)
+
+  RULES:
+    - Screens NEVER import Services or call Supabase directly
+    - Repositories NEVER import other Repositories
+    - Services take SupabaseClient via constructor (injected by app_providers.dart)
+    - Repositories return typed domain models, NEVER raw Map<String, dynamic>
+    - Providers are the ONLY place that holds and mutates state
+    - Every new Service/Repository MUST be registered in:
+          lib/providers/app_providers.dart
+
+  NAMING:
+    - Service:    XxxService      → lib/services/supabase/xxx_service.dart
+    - Repository: XxxRepository   → lib/repositories/xxx_repository.dart
+    - Provider:   xxxProvider     → lib/providers/xxx_provider.dart
+    - Notifier:   XxxNotifier     → same file as provider
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 4 — STATE MANAGEMENT: RIVERPOD ONLY
+────────────────────────────────────────────────────────────────────────────────
+
+  Package: flutter_riverpod ^2.5.1
+  NEVER use setState(), ChangeNotifier, InheritedWidget, BLoC, or GetX.
+
+  Provider type guide:
+    - Provider<T>                   → immutable service/repository instances
+    - StateProvider<T>              → simple single-value state (e.g., int, bool, enum)
+    - StateNotifierProvider<N, T>   → mutable complex state with methods
+    - FutureProvider<T>             → async one-shot reads (see Rule 5 for caching)
+    - StreamProvider<T>             → reactive streams (auth state, realtime)
+
+  StateNotifier pattern (ALWAYS follow this):
+
+      class XxxNotifier extends StateNotifier<AsyncValue<List<Xxx>>> {
+        XxxNotifier({required this.repository, required this.supabaseClient})
+            : super(const AsyncValue.loading()) {
+          _load();
+        }
+        Future<void> _load() async {
+          final userId = supabaseClient.auth.currentUser?.id;
+          if (userId == null) { state = const AsyncValue.data([]); return; }
+          try {
+            final list = await repository.getItems(userId);
+            state = AsyncValue.data(list);
+          } catch (e, st) {
+            state = AsyncValue.error(e, st);
+          }
+        }
+      }
+
+  RULES:
+    - ALWAYS handle the error case with (e, st) — never swallow errors silently
+    - After any mutation that changes routing decisions (e.g., marking profile
+      complete), call ref.invalidate(currentAppUserProvider)
+    - Pass Ref as a constructor parameter when the notifier needs to invalidate
+      other providers
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 5 — DATABASE TRUTH: SUPABASE IS AUTHORITATIVE
+────────────────────────────────────────────────────────────────────────────────
+
+  Critical one-time flags (e.g., academic_profile_completed) MUST be stored
+  in the Supabase `users` table, NOT in Hive.
+
+  HIVE is allowed ONLY for:
+    - UI/display preferences: theme (light/dark/system), locale (en/tr)
+    - One-time UI flows: language_selected, onboarding_welcome_completed
+    Box name: 'settings'
+
+  HIVE is FORBIDDEN for:
+    - Academic profile completion status
+    - User identity data (name, university, major, etc.)
+    - Any data that must survive reinstallation or device changes
+    - Any data shared across devices
+
+  The router reads `currentAppUserProvider` (DB-backed FutureProvider) for
+  routing guards. NEVER gate navigation on a Hive boolean for academic state.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 6 — NAVIGATION: GOROUTER ONLY
+────────────────────────────────────────────────────────────────────────────────
+
+  Package: go_router ^14.1.4
+  NEVER use Navigator.push(), Navigator.pushNamed(), or MaterialPageRoute.
+
+  All routes are declared in lib/main.dart inside routerProvider.
+  Use context.go() for replacement navigation, context.push() for stack push.
+
+  Route name conventions:
+    - Main app shell:    /home  (AppShell — renders tab navigation)
+    - Auth routes:       /login, /signup, /verify-email, /forgot-password, etc.
+    - Feature routes:    /courses, /tasks, /create-task, /create-deadline, etc.
+    - Profile sub-routes: /profile/edit, /profile/study-preferences
+    - After onboarding completes: context.go('/home')  ← always /home, not /app
+
+  NEVER hardcode /app as a destination — /app exists only for backwards compat.
+
+  When adding a new route:
+    1. Add the GoRoute entry in main.dart routerProvider routes list
+    2. Import the screen at the top of main.dart
+    3. If the route needs a slide/fade transition, use CustomTransitionPage
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 7 — DATABASE MIGRATIONS: ALWAYS WRITE SQL FILES
+────────────────────────────────────────────────────────────────────────────────
+
+  Every database schema change MUST have a corresponding SQL migration file.
+
+  Location: supabase/
+  Naming:   YYYYMMDDNN_description.sql  (e.g., 2026031606_risk_scoring.sql)
+            where NN is a 2-digit sequence number for the day
+
+  Migration RULES:
+    - Use IF NOT EXISTS / DO $$ ... END $$ blocks to make migrations idempotent
+    - ALWAYS enable RLS on new tables: ALTER TABLE xxx ENABLE ROW LEVEL SECURITY;
+    - ALWAYS add a user-scoped RLS policy for new tables:
+        CREATE POLICY "Users manage own xxx"
+            ON xxx FOR ALL USING (auth.uid() = user_id);
+    - NEVER drop columns or tables without explicit user confirmation
+    - New columns must have safe defaults (DEFAULT value or be nullable)
+    - Backfill existing rows when adding NOT NULL columns
+    - Document the migration purpose in a comment at the top of the file
+
+  Allowed session_type values (DB constraint):
+      pomodoro | deep_work | review | practice
+
+  Allowed notification type values (DB constraint):
+      deadline | task_overdue | study_goal | system
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 8 — LINT: ZERO ANALYZER WARNINGS
+────────────────────────────────────────────────────────────────────────────────
+
+  The Dart analyzer must report zero errors and zero warnings in all files
+  you create or modify.
+
+  RULES:
+    - Remove ALL unused imports before considering a task done
+    - Remove ALL unused local variables
+    - Every parameter you declare must be used
+    - Never leave dead code (unreachable statements, unused class members)
+    - After editing any file, mentally verify: does every import still appear
+      in the code body?
+
+  Command to check:
+      flutter analyze
+
+  After any localization change, always regenerate:
+      flutter gen-l10n
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 9 — COURSE HEALTH GUARDS
+────────────────────────────────────────────────────────────────────────────────
+
+  Before allowing the user to create a Task or Deadline, verify that at least
+  one Course exists. If no courses exist, block submission and show:
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.addCourseFirst)),
+      );
+
+  This prevents orphaned tasks/deadlines with no course association.
+  NEVER remove this guard from CreateTaskScreen or CreateDeadlineScreen.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 10 — THEME AND STYLING
+────────────────────────────────────────────────────────────────────────────────
+
+  NEVER hardcode colors as Color(0xFF...) or Colors.xxx in screen/widget files.
+  Always use design tokens:
+
+    - Colors:   AppColors.xxx        (lib/core/design/app_colors.dart)
+    - Spacing:  AppSpacing.xs/sm/md/lg/xl  (lib/core/design/app_spacing.dart)
+    - Radius:   AppRadius.xs/sm/md/lg (lib/core/design/app_radius.dart)
+    - Theme:    Theme.of(context).colorScheme.xxx  for semantic colors
+                Theme.of(context).textTheme.xxx    for text styles
+
+  Card/content containers: use AppGlassCard (lib/components/app_glass_card.dart)
+  Buttons: use AppButton (lib/components/app_button.dart)
+  Section titles: use AppSectionTitle (lib/components/app_section_title.dart)
+
+  Theme is defined in: lib/core/theme/app_theme.dart
+  Both light and dark themes MUST be kept in sync when making any style change.
+
+  SYSTEM UI CONSISTENCY:
+    - Theme changes MUST also update status bar style correctly
+    - Light/dark theme switching must NOT break status bar visibility
+    - All custom screens must respect SafeArea and background tokens
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 11 — PROVIDER REGISTRATION
+────────────────────────────────────────────────────────────────────────────────
+
+  Every new Service and Repository MUST be registered as a Provider in:
+      lib/providers/app_providers.dart
+
+  Follow the existing pattern:
+      // Service
+      final xxxServiceProvider = Provider<XxxService>(
+        (ref) => XxxService(ref.watch(supabaseProvider)),
+      );
+      // Repository
+      final xxxRepositoryProvider = Provider<XxxRepository>(
+        (ref) => XxxRepository(ref.watch(xxxServiceProvider)),
+      );
+
+  NEVER instantiate a Service or Repository directly inside a screen.
+  NEVER call Supabase.instance.client directly from a screen.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 12 — SERIALIZATION CONSISTENCY
+────────────────────────────────────────────────────────────────────────────────
+
+  Every domain model (lib/models/) MUST implement:
+    - fromJson(Map<String, dynamic> json) — named constructor or factory
+    - toJson() → Map<String, dynamic>
+
+  RULES:
+    - JSON field names MUST exactly match Supabase column names (snake_case)
+    - Use the actual field name — NEVER create an aliased helper that silently
+      writes the wrong key (this was the studyHoursWeekPerWeek bug)
+    - Nullable fields use json['field'] as Type?
+    - DateTime fields: DateTime.parse(json['field'])
+    - When adding a new field to a model, update BOTH fromJson AND toJson
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 13 — ERROR HANDLING PATTERN
+────────────────────────────────────────────────────────────────────────────────
+
+  In all StateNotifier methods that call async operations:
+
+      try {
+        final result = await repository.doSomething(...);
+        state = AsyncValue.data(result);
+      } catch (e, st) {
+        state = AsyncValue.error(e, st);
+      }
+
+  In screens, always handle all three AsyncValue states:
+      ref.watch(xxxProvider).when(
+        data: (items) => ...,
+        loading: () => const CircularProgressIndicator(),
+        error: (e, _) => Text(l10n.networkError),
+      )
+
+  NEVER use .value! without handling the null/error case.
+  NEVER use print() for errors in production code — errors propagate via state.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 14 — SESSION TYPES AND ENUM VALUES
+────────────────────────────────────────────────────────────────────────────────
+
+  Study session types are fixed. NEVER add a new type without:
+    1. Updating the DB constraint in a migration
+    2. Adding the localization key to both .arb files
+    3. Adding it to the dropdown in study_screen.dart
+
+  Valid session types:
+      pomodoro    → l10n.pomodoro
+      deep_work   → l10n.deepWork
+      review      → l10n.review
+      practice    → l10n.practice
+
+  Notification types (DB checked constraint):
+      deadline | task_overdue | study_goal | system
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 15 — ADDING A COMPLETE NEW FEATURE (CHECKLIST)
+────────────────────────────────────────────────────────────────────────────────
+
+  When implementing any new feature end-to-end, complete ALL of these steps:
+
+  DATABASE
+    [ ] Write migration SQL file in supabase/ with correct naming
+    [ ] Enable RLS + add user-scoped policy
+    [ ] Use idempotent DO $$ ... END $$ blocks
+
+  DATA LAYER
+    [ ] Create XxxService in lib/services/supabase/
+    [ ] Create XxxRepository in lib/repositories/
+    [ ] Create XxxModel in lib/models/ with fromJson + toJson
+    [ ] Register xxxServiceProvider + xxxRepositoryProvider in app_providers.dart
+
+  STATE LAYER
+    [ ] Create xxxProvider in lib/providers/ using StateNotifier pattern
+    [ ] Handle loading, data, and error states
+    [ ] Invalidate dependent providers after mutations if routing depends on them
+
+  UI LAYER
+    [ ] Use ONLY AppLocalizations for all strings (add to both .arb files first)
+    [ ] Run flutter gen-l10n before writing any UI code that uses new keys
+    [ ] Use ONLY HeroIcons via AppIcon widget
+    [ ] Use ONLY AppColors, AppSpacing, AppRadius (never hardcode values)
+    [ ] Use AppGlassCard, AppButton, AppSectionTitle from components
+    [ ] Register new route in main.dart routerProvider
+
+  QUALITY
+    [ ] Zero unused imports in every file you touched
+    [ ] Zero hardcoded UI strings
+    [ ] Both app_en.arb and app_tr.arb updated with all new keys
+    [ ] flutter gen-l10n run successfully
+    [ ] flutter analyze passes with no errors
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 16 — SYSTEM UI, SAFE AREA, AND STATUS BAR
+────────────────────────────────────────────────────────────────────────────────
+
+  The app MUST correctly handle system UI areas (status bar, notch, safe area)
+  across ALL screens. No screen is allowed to render behind system UI unless
+  explicitly designed to do so.
+
+  ROOT REQUIREMENT:
+    - Time, battery, and signal icons MUST always be visible and readable
+    - No screen may cause white-on-white or invisible status bar icons
+
+  GLOBAL RULES:
+
+  1. SAFE AREA (MANDATORY)
+    - Every screen MUST wrap its main content with SafeArea:
+
+        SafeArea(
+          child: ...
+        )
+
+    - This applies especially to:
+        - Fullscreen screens (no AppBar)
+        - Custom layouts (Study, Analytics, Notifications, etc.)
+
+  2. STATUS BAR STYLE (GLOBAL CONTROL)
+    - The app MUST define a consistent SystemUiOverlayStyle globally
+    - DO NOT set random styles per screen unless required
+
+    Required behavior:
+      - Dark theme -> light icons (white)
+      - Light theme -> dark icons (black)
+
+    Use:
+
+        SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light, // Android
+          statusBarBrightness: Brightness.dark,      // iOS
+        )
+
+  3. FULLSCREEN SCREENS (NO APPBAR)
+    - MUST wrap with AnnotatedRegion:
+
+        AnnotatedRegion<SystemUiOverlayStyle>(
+          value: correctStyle,
+          child: Scaffold(...)
+        )
+
+  4. APPBAR SCREENS
+    - MUST explicitly define:
+
+        AppBar(
+          systemOverlayStyle: correctStyle,
+        )
+
+  5. BACKGROUND COLOR CONSISTENCY
+    - Every screen MUST define:
+
+        Scaffold(
+          backgroundColor: AppColors.background
+        )
+
+    - NEVER rely on default white background
+
+  6. FORBIDDEN
+    - DO NOT leave system UI uncontrolled
+    - DO NOT mix multiple SystemChrome.setSystemUIOverlayStyle calls
+    - DO NOT allow flickering or style switching on rebuild
+
+  7. VALIDATION CHECK (MANDATORY BEFORE DONE)
+    - Test each screen:
+        - Open screen -> status bar visible?
+        - Switch theme -> icons still visible?
+        - No white flash or flicker?
+
+    If any fails -> feature is NOT complete
+
+
+────────────────────────────────────────────────────────────────────────────────
+  RULE 17 — UX CONSISTENCY AND DATA CLARITY
+────────────────────────────────────────────────────────────────────────────────
+
+  All user-facing information must be clear, specific, and contextual.
+
+  RULES:
+    - NEVER show generic messages (e.g., "You have 1 task")
+    - ALWAYS include:
+        - What (task name)
+        - Where (course name)
+        - When (date or status)
+
+    - Titles must be natural language:
+        "Assignment 3 is due tomorrow"
+        NOT:
+        "due_tomorrow"
+
+    - UI must NEVER duplicate the same item
+    - Each real-world item must appear only once in UI
+
+    - Avoid redundancy:
+        - Do not repeat course name in title if shown in subtitle
+
+  This rule applies to:
+    - Notifications
+    - Dashboard
+    - Analytics
+    - Any user-facing summaries
+
+
+================================================================================
+  END OF RULES — Last updated: 2026-03-16
+================================================================================

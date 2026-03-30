@@ -1,0 +1,30 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class TaskService {
+  final SupabaseClient _supabase;
+
+  TaskService(this._supabase);
+
+  Future<List<Map<String, dynamic>>> getTasks(String userId) async {
+    return await _supabase.from('tasks').select().eq('user_id', userId).order('created_at', ascending: false);
+  }
+
+  Future<Map<String, dynamic>> createTask(Map<String, dynamic> data) async {
+    return await _supabase.from('tasks').insert(data).select().single();
+  }
+
+  Future<Map<String, dynamic>> updateTask(String id, Map<String, dynamic> data) async {
+    final query = _supabase.from('tasks').update(data).eq('id', id);
+    
+    // Safety: Ensure we only update rows belonging to the current user if user_id is in data
+    if (data.containsKey('user_id')) {
+      query.eq('user_id', data['user_id']);
+    }
+    
+    return await query.select().single();
+  }
+
+  Future<void> deleteTask(String id) async {
+    await _supabase.from('tasks').delete().eq('id', id);
+  }
+}
