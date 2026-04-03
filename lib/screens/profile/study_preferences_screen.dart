@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 
 import '../../components/app_button.dart';
@@ -14,10 +15,12 @@ class StudyPreferencesScreen extends ConsumerStatefulWidget {
   const StudyPreferencesScreen({super.key});
 
   @override
-  ConsumerState<StudyPreferencesScreen> createState() => _StudyPreferencesScreenState();
+  ConsumerState<StudyPreferencesScreen> createState() =>
+      _StudyPreferencesScreenState();
 }
 
-class _StudyPreferencesScreenState extends ConsumerState<StudyPreferencesScreen> {
+class _StudyPreferencesScreenState
+    extends ConsumerState<StudyPreferencesScreen> {
   bool _isSaving = false;
   late double _studyHours;
   late String _preferredTime;
@@ -45,22 +48,31 @@ class _StudyPreferencesScreenState extends ConsumerState<StudyPreferencesScreen>
         preferredStudyTime: _preferredTime,
         breakPattern: _breakPattern,
       );
-      
+
       // Update in student_profiles table (legacy sync)
       await ref.read(studentProfileProvider.notifier).updateProfile(updated);
-      
+
       // Update in users table (Single source of truth for Risk Engine)
       final appUser = ref.read(currentAppUserProvider).value;
       if (appUser != null) {
-        await ref.read(authRepositoryProvider).updateWeeklyStudyGoal(appUser.id, _studyHours.toInt());
-        ref.invalidate(currentAppUserProvider);
+        try {
+          await ref
+              .read(authRepositoryProvider)
+              .updateWeeklyStudyGoal(appUser.id, _studyHours.toInt());
+          ref.invalidate(currentAppUserProvider);
+        } catch (_) {
+          // Non-fatal: keep study preferences save working even if users schema is behind.
+        }
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.saveChanges)),
         );
-        Navigator.of(context).pop();
+        await Future<void>.delayed(Duration.zero);
+        if (!mounted) return;
+        if (context.canPop()) context.pop();
+        if (!context.canPop()) context.go('/profile');
       }
     } finally {
       if (mounted) {
@@ -90,7 +102,9 @@ class _StudyPreferencesScreenState extends ConsumerState<StudyPreferencesScreen>
                 children: [
                   Text(
                     l10n.studyHoursPerWeek,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
@@ -111,13 +125,21 @@ class _StudyPreferencesScreenState extends ConsumerState<StudyPreferencesScreen>
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     l10n.preferredStudyTime,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   SegmentedButton<String>(
                     segments: [
-                      ButtonSegment(value: 'morning', label: Text(l10n.morning)),
-                      ButtonSegment(value: 'afternoon', label: Text(l10n.afternoon)),
+                      ButtonSegment(
+                        value: 'morning',
+                        label: Text(l10n.morning),
+                      ),
+                      ButtonSegment(
+                        value: 'afternoon',
+                        label: Text(l10n.afternoon),
+                      ),
                       ButtonSegment(value: 'night', label: Text(l10n.night)),
                     ],
                     selected: {_preferredTime},
@@ -128,13 +150,21 @@ class _StudyPreferencesScreenState extends ConsumerState<StudyPreferencesScreen>
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     l10n.breakPattern,
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   SegmentedButton<String>(
                     segments: [
-                      ButtonSegment(value: 'pomodoro', label: Text(l10n.pomodoro)),
-                      ButtonSegment(value: 'deep_work', label: Text(l10n.deepWork)),
+                      ButtonSegment(
+                        value: 'pomodoro',
+                        label: Text(l10n.pomodoro),
+                      ),
+                      ButtonSegment(
+                        value: 'deep_work',
+                        label: Text(l10n.deepWork),
+                      ),
                       ButtonSegment(value: 'mixed', label: Text(l10n.mixed)),
                     ],
                     selected: {_breakPattern},

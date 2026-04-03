@@ -1,4 +1,4 @@
-package com.acadia.app
+package com.acadia.studentapp
 
 import io.flutter.embedding.android.FlutterActivity
 

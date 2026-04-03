@@ -11,6 +11,17 @@ class TaskRepository {
     return data.map((json) => Task.fromJson(json)).toList();
   }
 
+  Future<List<Task>> getTasksByDeadline({
+    required String userId,
+    required String deadlineId,
+  }) async {
+    final data = await _taskService.getTasksByDeadline(
+      userId: userId,
+      deadlineId: deadlineId,
+    );
+    return data.map((json) => Task.fromJson(json)).toList();
+  }
+
   Future<Task> createTask(Task task) async {
     // Excluding id and created_at because defaults are set in DB
     final data = task.toJson();
@@ -21,7 +32,11 @@ class TaskRepository {
   }
 
   Future<Task> updateTask(Task task) async {
-    final response = await _taskService.updateTask(task.id, task.toJson());
+    final data = Map<String, dynamic>.from(task.toJson());
+    data.remove('id');
+    data.remove('created_at');
+    data['deadline_id'] = task.deadlineId;
+    final response = await _taskService.updateTask(task.id, data);
     return Task.fromJson(response);
   }
 

@@ -126,6 +126,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get all => 'All';
 
   @override
+  String get quickMenu => 'Quick Menu';
+
+  @override
+  String get deadlineKindBadge => 'Deadline';
+
+  @override
+  String get linkToAcademicDeadline => 'Link to deadline (optional)';
+
+  @override
+  String get noneLinkedDeadline => 'None';
+
+  @override
+  String get relatedTasksSection => 'Related tasks';
+
+  @override
+  String get addTaskToThisDeadline => 'Add task to this deadline';
+
+  @override
+  String deadlineLinkedTasksProgress(int completed, int total) {
+    return '$completed / $total tasks completed';
+  }
+
+  @override
+  String get deadlineNoLinkedTasks => 'No tasks linked to this deadline yet.';
+
+  @override
+  String get taskLinkedToDeadline => 'Linked to a deadline';
+
+  @override
   String get pending => 'Pending';
 
   @override
@@ -174,6 +203,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get study => 'Study';
 
   @override
+  String get liveStudySessions => 'Live Study Sessions';
+
+  @override
   String get startStudySession => 'Study Session';
 
   @override
@@ -187,6 +219,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stop => 'Stop';
+
+  @override
+  String get focusLabel => 'Focus';
+
+  @override
+  String get breakLabel => 'Break';
+
+  @override
+  String get reviewLabel => 'Review';
+
+  @override
+  String get remainingLabel => 'Remaining';
+
+  @override
+  String get stopSessionTitle => 'Stop Session';
+
+  @override
+  String get stopSessionConfirm =>
+      'Are you sure you want to end this study session?';
+
+  @override
+  String get sessionPaused => 'Session paused. Take a breath.';
+
+  @override
+  String get refreshYourself => 'Refresh yourself. You\'re doing great.';
+
+  @override
+  String get stayFocused => 'Stay focused. You\'re doing well.';
+
+  @override
+  String get deepWorkInProgress => 'Deep work in progress...';
+
+  @override
+  String get dontStopNow => 'Don\'t stop now, you\'re on a roll!';
+
+  @override
+  String get focusOnProcess => 'Focus on the process, not the results.';
+
+  @override
+  String get almostThere => 'Almost there! Keep pushing.';
+
+  @override
+  String get futureSelf => 'Your future self will thank you.';
 
   @override
   String get sessionCompleted => 'Session completed';
@@ -313,7 +388,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get review => 'Review';
 
   @override
-  String get deepFocus => 'Deep Focus';
+  String get deepFocus => 'Deep focus';
 
   @override
   String get analytics => 'Analytics';
@@ -410,7 +485,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidCredentials => 'Incorrect email or password.';
 
   @override
-  String get tooManyRequests => 'Too many requests. Please try again later.';
+  String get tooManyRequests => 'Please wait a moment before trying again.';
+
+  @override
+  String get pleaseWait => 'Please wait a moment before trying again.';
 
   @override
   String get networkError => 'Connection error. Try again.';
@@ -453,7 +531,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otpExpired => 'Code expired. Request a new one.';
 
   @override
-  String get tooManyAttempts => 'Too many attempts. Please try again later.';
+  String get tooManyAttempts => 'Please wait a moment before trying again.';
 
   @override
   String get invalidOtp => 'Invalid verification code';
@@ -695,10 +773,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageSemesters => 'Manage Semesters';
 
   @override
+  String get allSemesters => 'All Semesters';
+
+  @override
   String get addCourse => 'Add Course';
 
   @override
   String get editCourse => 'Edit Course';
+
+  @override
+  String get courseTitle => 'Course Title';
 
   @override
   String get courseCode => 'Course Code';
@@ -728,10 +812,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get semester => 'Semester';
 
   @override
+  String get semesterSeason => 'Season';
+
+  @override
+  String get fallSemester => 'Fall';
+
+  @override
+  String get springSemester => 'Spring';
+
+  @override
+  String get academicYearLabel => 'Academic Year';
+
+  @override
   String get selectSemester => 'Select Semester';
 
   @override
   String get setAsActive => 'Set as active semester';
+
+  @override
+  String get currentSemesterLabel => 'Current';
+
+  @override
+  String get selectDate => 'Select Date';
+
+  @override
+  String get noSemestersYet => 'No semesters created yet';
+
+  @override
+  String get createFirstSemester =>
+      'Create your first semester to organize your courses.';
+
+  @override
+  String get deleteSemesterWarning =>
+      'This semester will be removed from your semester list.';
 
   @override
   String get noCoursesYet => 'No courses added yet';
@@ -757,6 +870,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pleaseSelectCourse => 'Please select a course';
+
+  @override
+  String get ectsRequired => 'ECTS is required';
 
   @override
   String get errorLoadingCourses => 'Error loading courses';
@@ -968,7 +1084,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get focusOnStudies => 'Focus on your studies today.';
 
   @override
-  String get thisWeekLabel => 'This Week';
+  String get thisWeekLabel => 'This week';
 
   @override
   String get noCourseSelected => 'No Course Selected';
@@ -1066,11 +1182,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get riskInterpretationMedium =>
-      'Your risk is moderate; keep an eye on upcoming tasks and study goals.';
+      'Your risk is moderate. Focus on completing tasks and increasing study time.';
 
   @override
   String get riskInterpretationLow =>
-      'You are in a safe range. Maintain your current progress.';
+      'You are in a safe range. Keep your current progress.';
 
   @override
   String riskHoursRemaining(Object hours) {
@@ -1095,16 +1211,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String riskTrendUp(int delta) {
-    return '+$delta risk increase';
+    return 'Increased by $delta points from last week';
   }
 
   @override
   String riskTrendDown(int delta) {
-    return '-$delta (improved)';
+    return 'Improved by $delta points from last week';
   }
 
   @override
-  String get riskTrendStable => '+0 (no change)';
+  String get riskTrendStable => 'No change';
+
+  @override
+  String get riskTrendNew => 'New';
 
   @override
   String get riskNoData => 'No active risk factors';
@@ -1156,4 +1275,1063 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noTasksThisWeek => 'No tasks scheduled this week';
+
+  @override
+  String get examResults => 'Course Results';
+
+  @override
+  String get addResult => 'Add Result';
+
+  @override
+  String get editResult => 'Edit Result';
+
+  @override
+  String get noResultsYet => 'No results added yet';
+
+  @override
+  String get addFirstResultPrompt =>
+      'Add your first course result for this semester.';
+
+  @override
+  String get gradingComponents => 'Grading Components';
+
+  @override
+  String get addComponent => '+ Add Component';
+
+  @override
+  String get finalSection => 'Final';
+
+  @override
+  String get finalAverage => 'Final Average';
+
+  @override
+  String get letterGrade => 'Letter Grade';
+
+  @override
+  String get resultStatus => 'Course Status';
+
+  @override
+  String get resultSuccessful => 'Successful';
+
+  @override
+  String get resultFailed => 'Failed';
+
+  @override
+  String get component => 'Component';
+
+  @override
+  String get componentTitle => 'Title';
+
+  @override
+  String get componentTitleHint => 'e.g. Midterm, Project, Final, Quiz';
+
+  @override
+  String get scoreHint => 'e.g. 85';
+
+  @override
+  String get percentage => 'Percentage';
+
+  @override
+  String get percentageHint => 'e.g. 40';
+
+  @override
+  String get finalAverageHint => 'e.g. 78.5';
+
+  @override
+  String get numberRequired => 'Enter a valid number';
+
+  @override
+  String get completeComponentsError => 'Complete all components before saving';
+
+  @override
+  String get percentageNot100Warning => 'Warning: total percentage is not 100';
+
+  @override
+  String get gradeDistribution => 'Grade Distribution';
+
+  @override
+  String get noGradeDistributionYet => 'No grade distribution data yet';
+
+  @override
+  String get pleaseSelectLetterGrade => 'Please select a letter grade';
+
+  @override
+  String get noCoursesForSemester => 'No courses found for this semester';
+
+  @override
+  String get trendAnalysis => 'Trend Analysis';
+
+  @override
+  String get studyTrend => 'Study Trend';
+
+  @override
+  String get taskCompletionTrend => 'Task Completion Trend';
+
+  @override
+  String get workloadTrend => 'Workload Trend';
+
+  @override
+  String get performanceTrend => 'Performance Trend';
+
+  @override
+  String daysFilter(int count) {
+    return '$count days';
+  }
+
+  @override
+  String trendTodayDuration(String duration) {
+    return '$duration today';
+  }
+
+  @override
+  String trendCompletedToday(int count) {
+    return '$count completed today';
+  }
+
+  @override
+  String trendNewToday(int count) {
+    return '$count new today';
+  }
+
+  @override
+  String get trendStudySubtitle =>
+      'Hours studied per day over the selected period';
+
+  @override
+  String get trendTaskSubtitle =>
+      'Completed tasks per day over the selected period';
+
+  @override
+  String get trendWorkloadSubtitle => 'Tasks and deadlines added per day';
+
+  @override
+  String get trendPerformanceSubtitle => 'GPA change based on course results';
+
+  @override
+  String get trendTasksOneDayHint => 'Most tasks were completed on one day.';
+
+  @override
+  String get trendWorkloadEmptyMessage =>
+      'No data yet.\nAdd tasks or deadlines to see workload trends.';
+
+  @override
+  String get trendStudyEmptyMessage =>
+      'No data yet.\nStart logging study sessions to see trends.';
+
+  @override
+  String get trendTaskEmptyMessage =>
+      'No completed tasks in this period.\nComplete tasks to track progress.';
+
+  @override
+  String get trendPerformanceEmptyMessage =>
+      'Add course results to track performance.';
+
+  @override
+  String get trendPerformanceNeedThreeResults =>
+      'Add at least 3 course results to see performance trends.';
+
+  @override
+  String get trendSummaryTitle => 'Trend Summary';
+
+  @override
+  String get trendOverallStatusTitle => 'Overall Status';
+
+  @override
+  String get trendNotEnoughData => 'Not enough data';
+
+  @override
+  String get trendStable => 'Stable';
+
+  @override
+  String get trendImproving => 'Improving';
+
+  @override
+  String get trendDeclining => 'Declining';
+
+  @override
+  String get trendLessThan30Minutes => 'Less than 30 minutes in this period';
+
+  @override
+  String trendHoursInPeriod(String hours) {
+    return '${hours}h in this period';
+  }
+
+  @override
+  String trendTasksCompletedFraction(int completed, int total) {
+    return '$completed / $total completed';
+  }
+
+  @override
+  String trendTasksDeadlinesAdded(int count) {
+    return '$count tasks/deadlines added';
+  }
+
+  @override
+  String get trendVeryLowActivity => 'Very low activity';
+
+  @override
+  String get trendLowActivity => 'Low activity';
+
+  @override
+  String get trendNoTasks => 'No tasks';
+
+  @override
+  String get trendNoTasksCompletedPeriod => 'No tasks completed in this period';
+
+  @override
+  String get trendZeroCompleted => '0% completed';
+
+  @override
+  String trendPercentCompleted(int percent) {
+    return '$percent% completed';
+  }
+
+  @override
+  String get trendNoWorkload => 'No workload';
+
+  @override
+  String get trendIncreased => 'Increased';
+
+  @override
+  String get trendReducedComparedLastPeriod =>
+      'Reduced compared to last period';
+
+  @override
+  String get trendStatusOnTrack => 'On track';
+
+  @override
+  String get trendStatusLowAndBehind => 'Low activity and falling behind';
+
+  @override
+  String get trendStatusStudyNeedsImprovement =>
+      'Study consistency needs improvement';
+
+  @override
+  String get trendStatusTaskIncomplete => 'Task progress is incomplete';
+
+  @override
+  String get trendStatusStableProgress => 'Stable progress';
+
+  @override
+  String get trendStatusOnTrackDetail =>
+      'Your recent activity looks balanced. Keep this pace.';
+
+  @override
+  String get trendStatusNeedsFocusDetail =>
+      'Your activity is low and task progress is incomplete. Focus on completing tasks and increasing study time.';
+
+  @override
+  String get trendInsightBuildConsistencyTitle => 'Build study consistency';
+
+  @override
+  String get trendInsightStudyIncreasedSignificantlyTitle =>
+      'Study increased significantly';
+
+  @override
+  String get trendInsightStudyImprovedTitle => 'Study improved';
+
+  @override
+  String get trendInsightStudyDeclinedTitle => 'Study declined';
+
+  @override
+  String get trendInsightNoTasksTitle => 'No tasks in this period';
+
+  @override
+  String get trendInsightTaskLowTitle => 'Task completion is low';
+
+  @override
+  String get trendInsightNoWorkloadTitle => 'No new workload';
+
+  @override
+  String get trendInsightWorkloadSharpTitle => 'Workload increased sharply';
+
+  @override
+  String get trendInsightWorkloadRisingTitle => 'Workload is rising';
+
+  @override
+  String get trendInsightPerformanceDecliningTitle => 'Performance declining';
+
+  @override
+  String get trendInsightPerformanceImprovingTitle => 'Performance improving';
+
+  @override
+  String get trendInsightStableTitle => 'Stable trends';
+
+  @override
+  String get trendInsightBuildConsistencyMessage =>
+      'Start building a daily study habit.';
+
+  @override
+  String trendInsightStudyIncreasedMessage(int percent) {
+    return 'Study increased by $percent%. Keep this pace to stay ahead.';
+  }
+
+  @override
+  String trendInsightStudyDroppedMessage(int percent) {
+    return 'Study dropped by $percent%. Consider scheduling extra sessions.';
+  }
+
+  @override
+  String get trendInsightNoTasksMessage => 'No tasks were due in this period.';
+
+  @override
+  String get trendInsightNoTasksCompletedMessage =>
+      'No tasks completed yet. Start completing tasks to track performance.';
+
+  @override
+  String trendInsightTaskCompletedFractionMessage(int completed, int total) {
+    return 'You completed $completed of $total tasks. Try to complete more next period.';
+  }
+
+  @override
+  String get trendInsightNoWorkloadMessage =>
+      'No new tasks or deadlines were added in this period.';
+
+  @override
+  String trendInsightWorkloadAddedMessage(int count) {
+    return 'You added $count tasks/deadlines in this period. Plan ahead to avoid overload.';
+  }
+
+  @override
+  String get trendInsightPerformanceDecliningMessage =>
+      'Performance trend is decreasing. Review weak courses this week.';
+
+  @override
+  String get trendInsightPerformanceImprovingMessage =>
+      'Performance trend is improving. Keep the same study consistency.';
+
+  @override
+  String get trendInsightStableMessage =>
+      'No significant change yet. Keep logging consistently.';
+
+  @override
+  String get dashboardRiskLevelTitle => 'Risk Level';
+
+  @override
+  String dashboardRiskLevelValue(String level) {
+    return 'Risk Level: $level';
+  }
+
+  @override
+  String get dashboardTodaySnapshotTitle => 'Today Snapshot';
+
+  @override
+  String dashboardStudyToday(String time) {
+    return 'Study: $time today';
+  }
+
+  @override
+  String dashboardTasksCompletedToday(int count) {
+    return 'Tasks: $count completed';
+  }
+
+  @override
+  String dashboardWorkloadAddedToday(int count) {
+    return 'Workload: $count added';
+  }
+
+  @override
+  String get dashboardKeyInsightTitle => 'Key Insight';
+
+  @override
+  String get dashboardNoInsightAvailable => 'No key insight available yet.';
+
+  @override
+  String get dashboardQuickActionsTitle => 'Quick Actions';
+
+  @override
+  String get dashboardProgressOverviewTitle => 'Progress Overview';
+
+  @override
+  String get dashboardViewDetailedAnalysis => 'View detailed analysis ->';
+
+  @override
+  String get analyticsSparseDataTitle => 'Building your analytics';
+
+  @override
+  String get analyticsSparseDataBody =>
+      'Log study sessions, add tasks, and record grades. Charts fill in as you use the app.';
+
+  @override
+  String get custom => 'Custom';
+
+  @override
+  String customDurationLabel(int minutes) {
+    return 'Custom: ${minutes}m';
+  }
+
+  @override
+  String get enterMinutes => 'Enter minutes';
+
+  @override
+  String get quickPresets => 'Quick Presets';
+
+  @override
+  String get setDuration => 'Set Duration';
+
+  @override
+  String get focusedTime => 'Focused time';
+
+  @override
+  String get startAnotherSession => 'Start another session';
+
+  @override
+  String get sessionInsightShort =>
+      'Short session. Try longer focus next time.';
+
+  @override
+  String get sessionInsightMedium => 'Good session. Stay consistent.';
+
+  @override
+  String get sessionInsightLong => 'Strong focus session.';
+
+  @override
+  String addedToWeeklyGoal(int minutes) {
+    return '+${minutes}m added to weekly goal';
+  }
+
+  @override
+  String get minimumSessionMessage => 'Minimum session is 10 minutes';
+
+  @override
+  String get durationRangeHint => 'Enter duration (10–240 minutes)';
+
+  @override
+  String get selectCourseToStart => 'Select a course to start';
+
+  @override
+  String todayProgress(String completed, String goal) {
+    return 'Today: $completed / $goal';
+  }
+
+  @override
+  String weeklyProgress(String completed, String goal) {
+    return 'This week: $completed / $goal';
+  }
+
+  @override
+  String streakDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count day$_temp0';
+  }
+
+  @override
+  String get noStreak => 'Start a streak today';
+
+  @override
+  String get insightTooShort => 'Too short. Aim for at least 20 minutes.';
+
+  @override
+  String get insightDecent => 'Decent start. Try extending your next session.';
+
+  @override
+  String get insightStrong => 'Strong focus. Keep this consistency.';
+
+  @override
+  String get lowFocus => 'Low Focus';
+
+  @override
+  String get mediumFocus => 'Medium Focus';
+
+  @override
+  String get highFocus => 'High Focus';
+
+  @override
+  String get goodFocus => 'Good focus';
+
+  @override
+  String todayFocusedContext(int minutes, int sessions) {
+    return '${minutes}m focused tonight • $sessions sessions';
+  }
+
+  @override
+  String get studyIntent => 'Study Intent';
+
+  @override
+  String get studyIntentHint => 'What is your main focus for this session?';
+
+  @override
+  String get studyIntentPlaceholder =>
+      'e.g. Read Chapter 4, Solve Calculus set...';
+
+  @override
+  String endsAt(String time) {
+    return 'Ends at $time';
+  }
+
+  @override
+  String endsAround(String time) {
+    return 'Ends around $time';
+  }
+
+  @override
+  String get structuredSession => 'Structured session';
+
+  @override
+  String get remainingTime => 'Remaining time';
+
+  @override
+  String sessionProgress(int current, int total) {
+    return 'Session $current of $total';
+  }
+
+  @override
+  String get stayFocusedMsg => 'Stay focused. You\'re doing well.';
+
+  @override
+  String get halfwayMsg => 'Halfway there!';
+
+  @override
+  String get almostDoneMsg => 'Almost there, keeps it up!';
+
+  @override
+  String youStayedFocused(int minutes) {
+    return 'You stayed focused for $minutes minutes';
+  }
+
+  @override
+  String get recommended => 'Recommended';
+
+  @override
+  String get weeklyGoalProgress => 'Weekly Goal Progress';
+
+  @override
+  String weeklyGoalTag(int goal) {
+    return 'Goal: ${goal}m';
+  }
+
+  @override
+  String minutesDone(int minutes) {
+    return '${minutes}m done';
+  }
+
+  @override
+  String get sessionTooShort => 'Session Too Short';
+
+  @override
+  String get sessionTooShortDescription =>
+      'Minimum session duration is 10 minutes to ensure effective focus. This session was not recorded.';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String get weeklyStudyGoal => 'Weekly Study Goal';
+
+  @override
+  String get behindThisWeek => 'You\'re behind this week — take action today';
+
+  @override
+  String get justGettingStarted => 'Just getting started';
+
+  @override
+  String remainingHours(int hours) {
+    return '${hours}h remaining';
+  }
+
+  @override
+  String catchUpMessage(int hours) {
+    return '${hours}h remaining • You need to catch up';
+  }
+
+  @override
+  String get focusScore => 'Focus Score';
+
+  @override
+  String get moderateFocus => 'Moderate Focus';
+
+  @override
+  String get patternConsistent => 'Pattern: Consistent';
+
+  @override
+  String get patternIrregular => 'Pattern: Irregular';
+
+  @override
+  String get confidenceHigh => 'Confidence: High';
+
+  @override
+  String get confidenceMedium => 'Confidence: Medium';
+
+  @override
+  String get gettingStarted => 'Getting started';
+
+  @override
+  String get noDataYet => 'No data yet';
+
+  @override
+  String get statusStable => 'Stable';
+
+  @override
+  String get statusImproving => 'Improving';
+
+  @override
+  String get statusDeclining => 'Declining';
+
+  @override
+  String trySessionNow(int duration) {
+    return 'Try a $duration-minute session now';
+  }
+
+  @override
+  String get startNow => 'Start now';
+
+  @override
+  String get sessionTooShortTitle => 'Session Too Short';
+
+  @override
+  String get sessionTooShortMessage =>
+      'Minimum session duration is 10 minutes. This session was not recorded.';
+
+  @override
+  String get focusRemaining => 'Remaining time';
+
+  @override
+  String get shortSessionInsight =>
+      'Short session. Try longer focus next time.';
+
+  @override
+  String get goodSessionInsight => 'Good session. Stay consistent.';
+
+  @override
+  String get strongSessionInsight => 'Strong focus session.';
+
+  @override
+  String get sessionEndedEarly =>
+      'Session ended early — try staying at least 15 min';
+
+  @override
+  String get niceProgressToday => 'Nice progress today';
+
+  @override
+  String get studyConsistent => 'Stay consistent this week';
+
+  @override
+  String get next15m => 'Start a 15-minute session to rebuild focus';
+
+  @override
+  String get next25m => 'Continue with a 25-minute focus session';
+
+  @override
+  String get next45m => 'You’re in deep focus mode. Try a 45-minute session';
+
+  @override
+  String sessionsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions',
+      one: '1 session',
+      zero: 'No sessions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String minutesFocused(Object minutes) {
+    return '${minutes}m focused';
+  }
+
+  @override
+  String get patternLabel => 'Pattern';
+
+  @override
+  String get statusVariable => 'Variable';
+
+  @override
+  String get overloadWarning =>
+      'You\'re pushing too hard. Take a proper break.';
+
+  @override
+  String focusTrendMessage(String trend) {
+    return '$trend focus pattern this week';
+  }
+
+  @override
+  String get focusAnalysisBasis =>
+      'Based on recent sessions, consistency, and stability.';
+
+  @override
+  String get longBreakLabel => 'Long Break';
+
+  @override
+  String focusSessionCount(int current, int total) {
+    return 'Focus $current/$total';
+  }
+
+  @override
+  String get improving => 'Improving';
+
+  @override
+  String get declining => 'Declining';
+
+  @override
+  String get stable => 'Stable';
+
+  @override
+  String get focusShort => 'Short Focus';
+
+  @override
+  String get focusGood => 'Good Focus';
+
+  @override
+  String get focusDeep => 'Deep Focus';
+
+  @override
+  String get statusCompleted => 'Completed';
+
+  @override
+  String get statusStoppedEarly => 'Stopped early';
+
+  @override
+  String get tryLongerFocus => 'Try longer focus next time';
+
+  @override
+  String get solidSession => 'Solid session, keep it up';
+
+  @override
+  String get excellentDeepWork => 'Excellent deep work';
+
+  @override
+  String get focusScoreImpact => 'Focus Score Impact';
+
+  @override
+  String get completedYes => 'Yes';
+
+  @override
+  String get completedNo => 'No';
+
+  @override
+  String get cycles => 'Cycles';
+
+  @override
+  String get breaksSkipped => 'Breaks skipped';
+
+  @override
+  String get weeklyActivity => 'Weekly Activity';
+
+  @override
+  String get streakWarningMessage =>
+      '🔥 Don\'t break your streak. Study today to keep it alive!';
+
+  @override
+  String get preivousWeekLabel => 'Last week';
+
+  @override
+  String get newWeekStart => 'New week start';
+
+  @override
+  String get noStudyActivityYet => 'No study activity yet';
+
+  @override
+  String get studiedOnlyOneDay => 'You studied only one day this week';
+
+  @override
+  String get gettingStartedExtend => 'Getting started. Try to extend sessions';
+
+  @override
+  String get buildingConsistency => 'Building consistency';
+
+  @override
+  String get strongConsistentPattern => 'Strong and consistent study pattern';
+
+  @override
+  String get noActivity => 'No activity';
+
+  @override
+  String get monday => 'Monday';
+
+  @override
+  String get tuesday => 'Tuesday';
+
+  @override
+  String get wednesday => 'Wednesday';
+
+  @override
+  String get thursday => 'Thursday';
+
+  @override
+  String get friday => 'Friday';
+
+  @override
+  String get saturday => 'Saturday';
+
+  @override
+  String get sunday => 'Sunday';
+
+  @override
+  String get weeklyProgressLabel => 'Weekly Progress';
+
+  @override
+  String get newBadge => 'New ⭐';
+
+  @override
+  String weeklyGoalProgressHours(String current, String goal) {
+    return '$current / $goal';
+  }
+
+  @override
+  String activeDaysCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count active day$_temp0';
+  }
+
+  @override
+  String peakDayLabel(String day) {
+    return 'Peak: $day';
+  }
+
+  @override
+  String get streakAtRisk => 'Streak at Risk!';
+
+  @override
+  String get studyHabit => 'Study Habit';
+
+  @override
+  String get startStreakToday => 'Start your streak today';
+
+  @override
+  String get streakDay1 => 'Day 1 completed. Build consistency tomorrow';
+
+  @override
+  String get strongHabitForming => 'Strong habit forming';
+
+  @override
+  String get excellentDiscipline => 'Excellent discipline';
+
+  @override
+  String get lightFocus => 'Light focus';
+
+  @override
+  String get insightCycle => 'High-quality focus pattern. Keep this cycle.';
+
+  @override
+  String get insightStart =>
+      'Strong start. Extend beyond 30m for deeper focus.';
+
+  @override
+  String get insightMomentum => 'Building momentum toward deep work.';
+
+  @override
+  String focusPoints(String points) {
+    return '$points points';
+  }
+
+  @override
+  String get pomodoroFocusStep => 'Focus • 25 min';
+
+  @override
+  String get pomodoroBreakStep => 'Break • 5 min';
+
+  @override
+  String get pomodoroRepeatStep => '4 cycles total';
+
+  @override
+  String pomodoroTotalFocusSummary(int minutes) {
+    return 'Total focus: $minutes min';
+  }
+
+  @override
+  String get pomodoroCompleted => 'Pomodoro completed';
+
+  @override
+  String cyclesCompleted(int count) {
+    return '$count cycles completed';
+  }
+
+  @override
+  String focusTimeBreakdown(int minutes) {
+    return 'Focus time: $minutes min';
+  }
+
+  @override
+  String breakTimeBreakdown(int minutes) {
+    return 'Break time: $minutes min';
+  }
+
+  @override
+  String get excellentConsistency => 'Excellent consistency';
+
+  @override
+  String get totalFocusTime => 'Total focus time';
+
+  @override
+  String streakDaysInARow(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return '$count day$_temp0 in a row';
+  }
+
+  @override
+  String get pomodoroMetrics => 'Metrics';
+
+  @override
+  String get pomodoroPerformance => 'Performance';
+
+  @override
+  String get pomodoroTimeline => 'Cycle Timeline';
+
+  @override
+  String pomodoroSubtitle(int done, int total) {
+    return 'Pomodoro • $done/$total cycles';
+  }
+
+  @override
+  String focusCycleDone(int index, int minutes) {
+    return 'Focus $index  •  $minutes min';
+  }
+
+  @override
+  String focusCycleInProgress(int index) {
+    return 'Focus $index  •  in progress';
+  }
+
+  @override
+  String focusCycleNotReached(int index) {
+    return 'Focus $index  •  not reached';
+  }
+
+  @override
+  String breakDone(int minutes) {
+    return 'Break  •  $minutes min';
+  }
+
+  @override
+  String get breakPending => 'Break';
+
+  @override
+  String get focusTimeLabel => 'Focus Time';
+
+  @override
+  String get breakTimeLabel => 'Break Time';
+
+  @override
+  String completionOfCycles(int percent) {
+    return '$percent% of planned cycles';
+  }
+
+  @override
+  String minutesFocusedLabel(int minutes) {
+    return '$minutes min focused';
+  }
+
+  @override
+  String pomodoroHistorySubtitle(int done, int total, String time) {
+    return '$done of $total cycles • $time';
+  }
+
+  @override
+  String sessionHistorySubtitle(String type, int minutes, String time) {
+    return '$type • ${minutes}m • $time';
+  }
+
+  @override
+  String get statusBadgeCompleted => '✔ Completed';
+
+  @override
+  String get statusBadgeStopped => '⏸ Stopped early';
+
+  @override
+  String errorLoading(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get pomodoroInsightConsistent =>
+      'You consistently complete full Pomodoro cycles';
+
+  @override
+  String get pomodoroInsightPartial =>
+      'You often stop mid-cycle. Try shorter sessions';
+
+  @override
+  String get pomodoroInsightNeedsWork =>
+      'You rarely complete Pomodoro cycles. Consider reducing duration';
+
+  @override
+  String get studyActivity => 'Study Activity';
+
+  @override
+  String heatmapTooltip(String date, int minutes, int sessions, int score) {
+    return '$date: ${minutes}m • $sessions sessions • Score: $score';
+  }
+
+  @override
+  String get heatmapLegendLess => 'Less';
+
+  @override
+  String get heatmapLegendMore => 'More';
+
+  @override
+  String get heatmapDayDetails => 'Day Details';
+
+  @override
+  String streakCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count day streak',
+      one: '1 day streak',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get studyIntensitySubtitle => 'Your daily study intensity over time';
+
+  @override
+  String get buildStreak => 'BUILD YOUR STREAK';
+
+  @override
+  String get buildStreakSubtitle =>
+      'Your study activity history will appear here';
+
+  @override
+  String get goodConsistency => 'Good consistency';
+
+  @override
+  String get activity => 'Activity';
+
+  @override
+  String get sessions => 'Sessions';
+
+  @override
+  String get min => 'min';
+
+  @override
+  String heatmapActivityLegendTooltip(Object label) {
+    return 'Activity: $label';
+  }
+
+  @override
+  String minutesShort(Object count) {
+    return '$count min';
+  }
+
+  @override
+  String get startSession => 'Start Session';
+
+  @override
+  String targetPrefix(String target) {
+    return 'Target: $target';
+  }
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get status => 'Status';
 }

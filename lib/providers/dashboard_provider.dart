@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'tasks_provider.dart';
 import 'deadlines_provider.dart';
 import 'course_provider.dart';
+import 'semester_provider.dart';
 import 'study_sessions_provider.dart';
 import 'student_profile_provider.dart';
 import 'app_providers.dart';
@@ -25,7 +26,9 @@ class DashboardData {
   final String streakMessage;
   final String? productivityInsight;
   final int completedTodayCount;
+  final int sessionsTodayCount;
   final int upcomingDeadlinesCount;
+  final int workloadAddedTodayCount;
 
   DashboardData({
     required this.pendingTasksToday,
@@ -44,7 +47,9 @@ class DashboardData {
     required this.streakMessage,
     this.productivityInsight,
     required this.completedTodayCount,
+    required this.sessionsTodayCount,
     required this.upcomingDeadlinesCount,
+    required this.workloadAddedTodayCount,
   });
 }
 
@@ -68,14 +73,31 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final deadlinesAsync = ref.watch(deadlinesProvider);
   final sessionsAsync = ref.watch(studySessionsProvider);
+  final semestersAsync = ref.watch(semesterProvider);
 
-  if (profileAsync.isLoading || coursesAsync.isLoading || tasksAsync.isLoading || deadlinesAsync.isLoading || sessionsAsync.isLoading) {
+  if (profileAsync.isLoading ||
+      coursesAsync.isLoading ||
+      tasksAsync.isLoading ||
+      deadlinesAsync.isLoading ||
+      sessionsAsync.isLoading ||
+      semestersAsync.isLoading) {
     return const AsyncValue.loading();
   }
 
-  if (profileAsync.hasError || coursesAsync.hasError || tasksAsync.hasError || deadlinesAsync.hasError || sessionsAsync.hasError) {
+  if (profileAsync.hasError ||
+      coursesAsync.hasError ||
+      tasksAsync.hasError ||
+      deadlinesAsync.hasError ||
+      sessionsAsync.hasError ||
+      semestersAsync.hasError) {
     return AsyncValue.error(
-      profileAsync.error ?? coursesAsync.error ?? tasksAsync.error ?? deadlinesAsync.error ?? sessionsAsync.error ?? 'Unknown error',
+      profileAsync.error ??
+          coursesAsync.error ??
+          tasksAsync.error ??
+          deadlinesAsync.error ??
+          sessionsAsync.error ??
+          semestersAsync.error ??
+          'Unknown error',
       StackTrace.current,
     );
   }
@@ -84,7 +106,9 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final courses = coursesAsync.value ?? [];
   final tasks = tasksAsync.value ?? [];
   final deadlines = deadlinesAsync.value ?? [];
+  final pendingDeadlines = deadlines.where((d) => !d.isCompleted).toList();
   final sessions = sessionsAsync.value ?? [];
+  final semesters = semestersAsync.value ?? [];
 
   if (profile == null) return const AsyncValue.loading();
 
@@ -93,28 +117,39 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final endOfToday = startOfToday.add(const Duration(days: 1));
 
   // 1. Pending Tasks Today
-  final pendingTasksToday = tasks.where((t) => 
-    t.status == 'pending' && 
-    t.deadline != null && 
-    t.deadline!.isAfter(startOfToday) && 
-    t.deadline!.isBefore(endOfToday)
-  ).length;
+  final pendingTasksToday = tasks
+      .where(
+        (t) =>
+            t.status == 'pending' &&
+            t.deadline != null &&
+            t.deadline!.isAfter(startOfToday) &&
+            t.deadline!.isBefore(endOfToday),
+      )
+      .length;
 
   // 2. Upcoming Deadlines
-  final upcomingDeadlinesList = deadlines.where((d) => 
-    d.deadlineDate.isAfter(now)
-  ).toList()..sort((a, b) => a.deadlineDate.compareTo(b.deadlineDate));
+  final upcomingDeadlinesList =
+      pendingDeadlines.where((d) => d.deadlineDate.isAfter(now)).toList()
+        ..sort((a, b) => a.deadlineDate.compareTo(b.deadlineDate));
 
   // 2.b Overdue Tasks
   final overdueTasksCount = tasks.where((t) {
-    final hasPastDeadline = t.deadline != null && t.deadline!.isBefore(startOfToday);
-    return t.status == 'overdue' || (t.status != 'completed' && hasPastDeadline);
+    final hasPastDeadline =
+        t.deadline != null && t.deadline!.isBefore(startOfToday);
+    return t.status == 'overdue' ||
+        (t.status != 'completed' && hasPastDeadline);
   }).length;
 
   // 3. Study Time Today
-  final studyMinutesToday = sessions.where((s) => 
-    s.createdAt.isAfter(startOfToday) && s.createdAt.isBefore(endOfToday)
-  ).fold(0, (sum, s) => sum + s.durationMinutes);
+  final todaySessions = sessions
+      .where(
+        (s) =>
+            s.createdAt.isAfter(startOfToday) &&
+            s.createdAt.isBefore(endOfToday),
+      )
+      .toList();
+  final studyMinutesToday = todaySessions.fold(0, (sum, s) => sum + s.durationMinutes);
+  final sessionsTodayCount = todaySessions.length;
 
   // 3.b Tasks Completed Today
   final completedTodayCount = tasks.where((t) {
@@ -123,36 +158,69 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
     return lastAction.isAfter(startOfToday) && lastAction.isBefore(endOfToday);
   }).length;
 
+  // 3.c Workload Added Today (tasks + deadlines created today)
+  final tasksAddedTodayCount = tasks.where((t) {
+    return t.createdAt.isAfter(startOfToday) &&
+        t.createdAt.isBefore(endOfToday);
+  }).length;
+  final deadlinesAddedTodayCount = pendingDeadlines.where((d) {
+    return d.createdAt.isAfter(startOfToday) &&
+        d.createdAt.isBefore(endOfToday);
+  }).length;
+  final workloadAddedTodayCount =
+      tasksAddedTodayCount + deadlinesAddedTodayCount;
+
   // 4. Weekly Goal (Source of Truth: AppUser from users table)
   final appUserAsync = ref.watch(currentAppUserProvider);
-  final weeklyStudyGoalMinutes = (appUserAsync.value?.weeklyStudyGoal ?? profile.studyHoursPerWeek ?? 20) * 60;
-  
+  final weeklyStudyGoalMinutes =
+      (appUserAsync.value?.weeklyStudyGoal ?? profile.studyHoursPerWeek ?? 20) *
+      60;
+
   // Weekly Completed (Approx 7 days back)
   final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-  final weeklyStudyCompletedMinutes = sessions.where((s) => 
-    s.createdAt.isAfter(startOfWeek)
-  ).fold(0, (sum, s) => sum + s.durationMinutes);
+  final weeklyStudyCompletedMinutes = sessions
+      .where((s) => s.createdAt.isAfter(startOfWeek))
+      .fold(0, (sum, s) => sum + s.durationMinutes);
 
-  // 5. Course Stats (filtered by current semester from profile)
-  final activeCoursesStats = courses.where((c) => 
-    c.isActive && 
-    (profile.currentSemester == null || c.semester == profile.currentSemester)
-  ).map((c) {
-    return CourseStats(
-      course: c,
-      tasksCount: tasks.where((t) => t.courseId == c.id || t.course == c.courseName || (c.courseCode != null && t.course == c.courseCode)).length,
-      deadlinesCount: deadlines.where((d) => d.courseId == c.id || d.course == c.courseName || (c.courseCode != null && d.course == c.courseCode)).length,
-      studyMinutes: sessions.where((s) => s.courseId == c.id).fold(0, (sum, s) => sum + s.durationMinutes),
-    );
-  }).toList();
+  String? currentSemesterId;
+  for (final semester in semesters) {
+    if (semester.isCurrent) {
+      currentSemesterId = semester.id;
+      break;
+    }
+  }
 
+  // 5. Course Stats (filtered by semester_id)
+  final activeCoursesStats = courses
+      .where((c) {
+        if (!c.isActive) return false;
+        if (currentSemesterId == null) return true;
+        return c.semesterId == currentSemesterId;
+      })
+      .map((c) {
+        return CourseStats(
+          course: c,
+          tasksCount: tasks.where((t) => t.courseId == c.id).length,
+          deadlinesCount: pendingDeadlines
+              .where((d) => d.courseId == c.id)
+              .length,
+          studyMinutes: sessions
+              .where((s) => s.courseId == c.id)
+              .fold(0, (sum, s) => sum + s.durationMinutes),
+        );
+      })
+      .toList();
 
   // 6. Streak Calculation
-  final uniqueDays = sessions
-      .map((s) => DateTime(s.createdAt.year, s.createdAt.month, s.createdAt.day))
-      .toSet()
-      .toList()
-    ..sort((a, b) => b.compareTo(a));
+  final uniqueDays =
+      sessions
+          .map(
+            (s) =>
+                DateTime(s.createdAt.year, s.createdAt.month, s.createdAt.day),
+          )
+          .toSet()
+          .toList()
+        ..sort((a, b) => b.compareTo(a));
 
   int streakCount = 0;
   if (uniqueDays.isNotEmpty) {
@@ -171,7 +239,9 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
     }
   }
 
-  String streakMessage = streakCount > 0 ? '$streakCount day study streak' : 'No current streak';
+  String streakMessage = streakCount > 0
+      ? '$streakCount day study streak'
+      : 'No current streak';
 
   // 7. Rule-based recommendation engine
   String? recommendation;
@@ -194,7 +264,8 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   } else if (deadlinesSoonCount > 0) {
     recommendation = 'deadline_soon';
     recommendationTitle = 'Overview';
-    recommendationMessage = 'There are $deadlinesSoonCount deadlines within the next 3 days.';
+    recommendationMessage =
+        'There are $deadlinesSoonCount deadlines within the next 3 days.';
     recommendationType = 'warning';
     focusSuggestion = 'Deadline Status';
   } else {
@@ -205,25 +276,29 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
     focusSuggestion = 'System Status';
   }
 
-  return AsyncValue.data(DashboardData(
-    pendingTasksToday: pendingTasksToday,
-    overdueTasksCount: overdueTasksCount,
-    upcomingDeadlines: upcomingDeadlinesList,
-    studyMinutesToday: studyMinutesToday,
-    weeklyStudyGoalMinutes: weeklyStudyGoalMinutes,
-    weeklyStudyCompletedMinutes: weeklyStudyCompletedMinutes,
-    topCourses: activeCoursesStats.take(3).toList(),
-    focusSuggestion: focusSuggestion,
-    recommendation: recommendation,
-    recommendationTitle: recommendationTitle,
-    recommendationMessage: recommendationMessage,
-    recommendationType: recommendationType,
-    streakCount: streakCount,
-    streakMessage: streakMessage,
-    productivityInsight: deadlinesSoonCount > 0
-        ? '$deadlinesSoonCount deadlines due soon'
-        : profile.preferredStudyTime,
-    completedTodayCount: completedTodayCount,
-    upcomingDeadlinesCount: deadlinesSoonCount,
-  ));
+  return AsyncValue.data(
+    DashboardData(
+      pendingTasksToday: pendingTasksToday,
+      overdueTasksCount: overdueTasksCount,
+      upcomingDeadlines: upcomingDeadlinesList,
+      studyMinutesToday: studyMinutesToday,
+      weeklyStudyGoalMinutes: weeklyStudyGoalMinutes,
+      weeklyStudyCompletedMinutes: weeklyStudyCompletedMinutes,
+      topCourses: activeCoursesStats.take(3).toList(),
+      focusSuggestion: focusSuggestion,
+      recommendation: recommendation,
+      recommendationTitle: recommendationTitle,
+      recommendationMessage: recommendationMessage,
+      recommendationType: recommendationType,
+      streakCount: streakCount,
+      streakMessage: streakMessage,
+      productivityInsight: deadlinesSoonCount > 0
+          ? '$deadlinesSoonCount deadlines due soon'
+          : profile.preferredStudyTime,
+      completedTodayCount: completedTodayCount,
+      sessionsTodayCount: sessionsTodayCount,
+      upcomingDeadlinesCount: deadlinesSoonCount,
+      workloadAddedTodayCount: workloadAddedTodayCount,
+    ),
+  );
 });

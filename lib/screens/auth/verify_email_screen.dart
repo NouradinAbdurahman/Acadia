@@ -71,6 +71,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   }
 
   Future<void> _verifyOtp(String code) async {
+    final l10n = AppLocalizations.of(context);
+    if (_isLoading) return;
     if (code.length != 6) return;
 
     setState(() {
@@ -80,6 +82,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     });
 
     try {
+      debugPrint('VERIFY OTP CALLED');
       final authRepo = ref.read(authRepositoryProvider);
       
       await authRepo.verifyOTP(widget.email, code, widget.fullName);
@@ -91,7 +94,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
         String message = l10n?.networkError ?? '';
         
         if (e is AuthApiException) {
@@ -105,19 +107,26 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         setState(() => _errorMessage = message);
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _resendCode({bool force = false}) async {
-    if (!force && _countdown > 0) return;
     final l10n = AppLocalizations.of(context);
-
+    if (_isLoading) return;
+    if (!force && _countdown > 0) return;
+    
     setState(() {
+      _isLoading = true;
       _errorMessage = null;
     });
 
     try {
+      debugPrint('RESEND CODE CALLED');
       final authRepo = ref.read(authRepositoryProvider);
       await authRepo.resendOTP(widget.email);
       
@@ -133,7 +142,6 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
         String errorMessage = l10n?.networkError ?? '';
 
         if (e is AuthApiException) {
@@ -143,6 +151,10 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         }
 
         setState(() => _errorMessage = errorMessage);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }

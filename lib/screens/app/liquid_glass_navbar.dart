@@ -38,24 +38,22 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
         padding: const EdgeInsets.only(
           left: AppSpacing.lg,
           right: AppSpacing.lg,
-          bottom: AppSpacing.sm,
+          bottom: 0,
         ),
         child: SizedBox(
           height: 84,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.xl + AppRadius.sm),
             child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: 25,
-                sigmaY: 25,
-              ),
+              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
               child: Container(
                 decoration: BoxDecoration(
                   color: theme.brightness == Brightness.light
                       ? Colors.white.withValues(alpha: 0.88)
                       : const Color(0xFF0F172A).withValues(alpha: 0.7),
-                  borderRadius:
-                      BorderRadius.circular(AppRadius.xl + AppRadius.sm),
+                  borderRadius: BorderRadius.circular(
+                    AppRadius.xl + AppRadius.sm,
+                  ),
                   border: Border.all(
                     color: theme.brightness == Brightness.light
                         ? Colors.black.withValues(alpha: 0.08)
@@ -65,7 +63,9 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(
-                        alpha: theme.brightness == Brightness.light ? 0.08 : 0.5,
+                        alpha: theme.brightness == Brightness.light
+                            ? 0.08
+                            : 0.5,
                       ),
                       blurRadius: 32,
                       offset: const Offset(0, 16),
@@ -86,8 +86,9 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                           final direction = _dragDelta > 0 ? 1 : -1;
                           _dragDelta = 0;
                           final current = widget.selectedIndex;
-                          final next =
-                              (current + direction).clamp(0, 4).toInt();
+                          final next = (current + direction)
+                              .clamp(0, 4)
+                              .toInt();
                           if (next != current) {
                             HapticFeedback.selectionClick();
                             widget.onSelectedIndex(next);
@@ -115,10 +116,13 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                                   width: 64,
                                   height: 64,
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
-                                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.15),
                                     ),
                                   ),
                                 ),
@@ -164,7 +168,6 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
       ),
     );
   }
-
 }
 
 class _NavItem extends StatefulWidget {
@@ -195,14 +198,14 @@ class _NavItemState extends State<_NavItem> {
         ? Colors.black.withValues(alpha: 0.5)
         : Colors.white.withValues(alpha: 0.5);
 
-    final baseColor = widget.isSelected 
-        ? widget.theme.colorScheme.primary 
+    final baseColor = widget.isSelected
+        ? widget.theme.colorScheme.primary
         : unselectedColor;
-    
-    final labelColor = widget.isSelected 
-        ? widget.theme.colorScheme.primary 
+
+    final labelColor = widget.isSelected
+        ? widget.theme.colorScheme.primary
         : unselectedColor;
-    
+
     final iconScaleBase = widget.isSelected ? 1.08 : 1.0;
     final iconScale = _isPressed ? iconScaleBase * 0.9 : iconScaleBase;
 
@@ -233,18 +236,12 @@ class _NavItemState extends State<_NavItem> {
           duration: AppDurations.fast,
           curve: Curves.easeOutBack,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: [
-                AppIcon(
-                  widget.icon,
-                  color: baseColor,
-                  size: 24,
-                )
+                AppIcon(widget.icon, color: baseColor, size: 24)
                     .animate(target: widget.isSelected ? 1 : 0)
                     .scale(
                       begin: const Offset(1, 1),
@@ -256,13 +253,15 @@ class _NavItemState extends State<_NavItem> {
                 AnimatedDefaultTextStyle(
                   duration: AppDurations.normal,
                   curve: Curves.easeOut,
-                  style: (widget.theme.textTheme.bodySmall ??
-                          const TextStyle(fontSize: 10))
-                      .copyWith(
-                    color: labelColor,
-                    fontWeight:
-                        widget.isSelected ? FontWeight.w600 : FontWeight.w500,
-                  ),
+                  style:
+                      (widget.theme.textTheme.bodySmall ??
+                              const TextStyle(fontSize: 10))
+                          .copyWith(
+                            color: labelColor,
+                            fontWeight: widget.isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                          ),
                   child: AnimatedOpacity(
                     duration: AppDurations.normal,
                     opacity: widget.isSelected ? 1 : 0.86,
@@ -277,4 +276,3 @@ class _NavItemState extends State<_NavItem> {
     );
   }
 }
-

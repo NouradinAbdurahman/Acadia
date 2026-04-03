@@ -6,20 +6,23 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/tasks_provider.dart';
-import '../../core/theme/app_colors.dart';
+import '../../providers/deadlines_provider.dart';
+import '../../models/deadline.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 import '../../components/app_button.dart';
 import '../../components/app_text_field.dart';
-import '../../core/design/app_radius.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../providers/course_provider.dart';
-import '../../core/design/app_icons.dart';
 
 class CreateTaskScreen extends ConsumerStatefulWidget {
-  const CreateTaskScreen({super.key});
+  const CreateTaskScreen({super.key, this.initialDeadlineId});
+
+  /// When set (e.g. from deadline detail), pre-fills link and due date.
+  final String? initialDeadlineId;
 
   @override
   ConsumerState<CreateTaskScreen> createState() => _CreateTaskScreenState();
@@ -35,8 +38,10 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
   DateTime? _deadline;
   String _priority = 'medium';
   int? _estimatedHours;
+  String? _linkedDeadlineId;
 
   bool _isSubmitting = false;
+  bool _initialDeadlineSynced = false;
 
   @override
   void dispose() {
@@ -86,12 +91,19 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context)!;
+    if (_selectedCourseId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectCourse)));
+      return;
+    }
 
     final courses = ref.read(courseProvider).value ?? [];
     if (courses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.addCourseFirst)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.addCourseFirst)));
       return;
     }
 
@@ -100,19 +112,32 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
     });
 
     try {
-      final selectedCourse = courses.firstWhere((c) => c.id == _selectedCourseId);
-      await ref.read(tasksProvider.notifier).createTask(
+      final selectedCourse = courses.firstWhere(
+        (c) => c.id == _selectedCourseId,
+      );
+      await ref
+          .read(tasksProvider.notifier)
+          .createTask(
             title: _titleController.text.trim(),
             course: selectedCourse.courseName,
             courseId: _selectedCourseId,
             deadline: _deadline,
+            deadlineId: _linkedDeadlineId,
             priority: _priority,
             estimatedHours: _estimatedHours,
-            notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+            notes: _notesController.text.trim().isEmpty
+                ? null
+                : _notesController.text.trim(),
           );
       Haptics.vibrate(HapticsType.success);
       if (mounted) {
         context.pop();
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.networkError)),
+        );
       }
     } finally {
       if (mounted) {
@@ -123,9 +148,40 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
     }
   }
 
+  void _trySyncInitialDeadline(List<Deadline> deadlines) {
+    if (_initialDeadlineSynced) return;
+    final param = widget.initialDeadlineId;
+    if (param == null || param.isEmpty) {
+      _initialDeadlineSynced = true;
+      return;
+    }
+    Deadline? match;
+    for (final d in deadlines) {
+      if (d.id == param) {
+        match = d;
+        break;
+      }
+    }
+    if (match == null) {
+      _initialDeadlineSynced = true;
+      return;
+    }
+    _initialDeadlineSynced = true;
+    setState(() {
+      _linkedDeadlineId = match!.id;
+      _deadline ??= DateTime(
+        match.deadlineDate.year,
+        match.deadlineDate.month,
+        match.deadlineDate.day,
+      );
+      _deadlineController.text = _formatDeadline(context);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    ref.watch(deadlinesProvider).whenData(_trySyncInitialDeadline);
     if (_deadlineController.text.isEmpty) {
       _deadlineController.text = _formatDeadline(context);
     }
@@ -163,11 +219,13 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
                         prefixIcon: HeroIcons.documentText,
                         validator: (value) =>
                             value == null || value.trim().isEmpty
-                                ? AppLocalizations.of(context)!.titleRequired
-                                : null,
+                            ? AppLocalizations.of(context)!.titleRequired
+                            : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _buildCourseDropdown(),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildLinkedDeadlinePicker(),
                       const SizedBox(height: AppSpacing.md),
                       GestureDetector(
                         onTap: _pickDeadline,
@@ -222,16 +280,19 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
                         children: [
                           for (final h in [1, 2, 3, 4])
                             _HourChip(
-                              label: '$h${AppLocalizations.of(context)!.hoursAbbreviation}',
+                              label:
+                                  '$h${AppLocalizations.of(context)!.hoursAbbreviation}',
                               selected: _estimatedHours == h,
-                              onSelected: (_) => setState(() => _estimatedHours = h),
+                              onSelected: (_) =>
+                                  setState(() => _estimatedHours = h),
                             ),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(
                         controller: _notesController,
-                        labelText: '${AppLocalizations.of(context)!.notes} (${AppLocalizations.of(context)!.optional})',
+                        labelText:
+                            '${AppLocalizations.of(context)!.notes} (${AppLocalizations.of(context)!.optional})',
                         prefixIcon: HeroIcons.clipboardDocumentList,
                         maxLines: 3,
                       ),
@@ -252,80 +313,109 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
     );
   }
 
+  String _shortDeadlineDate(Deadline d) {
+    return '${d.deadlineDate.day.toString().padLeft(2, '0')}/${d.deadlineDate.month.toString().padLeft(2, '0')}/${d.deadlineDate.year}';
+  }
+
+  Widget _buildLinkedDeadlinePicker() {
+    final l10n = AppLocalizations.of(context)!;
+    final deadlinesAsync = ref.watch(deadlinesProvider);
+
+    return deadlinesAsync.when(
+      data: (deadlines) {
+        final filtered = _selectedCourseId == null
+            ? [...deadlines]
+            : deadlines.where((d) => d.courseId == _selectedCourseId).toList();
+        final useList = filtered.isEmpty ? [...deadlines] : filtered;
+        useList.sort((a, b) => a.deadlineDate.compareTo(b.deadlineDate));
+
+        var selectedTitle = l10n.noneLinkedDeadline;
+        final options = <AppPickerOption<String>>[
+          AppPickerOption(value: '', title: l10n.noneLinkedDeadline),
+        ];
+
+        for (final d in useList) {
+          if (d.isCompleted) continue;
+          options.add(
+            AppPickerOption(
+              value: d.id,
+              title: d.title,
+              subtitle: '${d.course} · ${_shortDeadlineDate(d)}',
+            ),
+          );
+          if (_linkedDeadlineId != null && d.id == _linkedDeadlineId) {
+            selectedTitle = d.title;
+          }
+        }
+
+        return AppBottomSheetPicker<String>(
+          icon: HeroIcons.clipboardDocumentList,
+          fieldLabel: l10n.linkToAcademicDeadline,
+          sheetTitle: l10n.linkToAcademicDeadline,
+          selectedValue: _linkedDeadlineId ?? '',
+          selectedDisplayText:
+              _linkedDeadlineId == null || _linkedDeadlineId!.isEmpty
+              ? l10n.noneLinkedDeadline
+              : selectedTitle,
+          options: options,
+          onChanged: (v) => setState(() {
+            _linkedDeadlineId = v.isEmpty ? null : v;
+          }),
+          emptyText: l10n.noDeadlinesYet,
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, _) =>
+          Text(AppLocalizations.of(context)!.couldNotLoadDeadlines),
+    );
+  }
+
   Widget _buildCourseDropdown() {
     final coursesAsync = ref.watch(courseProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return coursesAsync.when(
       data: (courses) {
         if (courses.isEmpty) {
           return AppButton(
             onPressed: () => context.push('/create-course'),
-            text: AppLocalizations.of(context)!.addCourseFirst,
+            text: l10n.addCourseFirst,
             variant: AppButtonVariant.secondary,
           );
         }
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.glassSurface : Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: isDark ? AppColors.glassBorder : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+        String selectedCourseName = l10n.selectCourse;
+        Color? selectedCourseColor;
+        final options = <AppPickerOption<String>>[];
+        for (final course in courses) {
+          options.add(
+            AppPickerOption(
+              value: course.id,
+              title: course.courseName,
+              subtitle: course.courseCode,
+              swatchColor: course.uiColor,
             ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButtonFormField<String>(
-              initialValue: _selectedCourseId,
-              hint: Text(AppLocalizations.of(context)!.selectCourse),
-              icon: const AppIcon(HeroIcons.chevronDown, size: 20),
-              isExpanded: true,
-              dropdownColor: theme.colorScheme.surface,
-              validator: (val) => val == null ? AppLocalizations.of(context)!.pleaseSelectCourse : null,
-              items: courses.map((course) {
-                return DropdownMenuItem(
-                  value: course.id,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: course.uiColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          course.courseName,
-                          softWrap: true,
-                          maxLines: 2,
-                          overflow: TextOverflow.visible,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) => setState(() => _selectedCourseId = val),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                labelText: AppLocalizations.of(context)!.course,
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: AppIcon(HeroIcons.academicCap, size: 20),
-                ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 40),
-              ),
-            ),
-          ),
+          );
+          if (course.id == _selectedCourseId) {
+            selectedCourseName = course.courseName;
+            selectedCourseColor = course.uiColor;
+          }
+        }
+
+        return AppBottomSheetPicker<String>(
+          icon: HeroIcons.academicCap,
+          fieldLabel: l10n.course,
+          sheetTitle: l10n.course,
+          selectedValue: _selectedCourseId,
+          selectedDisplayText: selectedCourseName,
+          selectedSwatchColor: selectedCourseColor,
+          options: options,
+          onChanged: (val) => setState(() => _selectedCourseId = val),
+          emptyText: l10n.noCoursesYet,
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => Text(AppLocalizations.of(context)!.errorLoadingCourses),
+      error: (_, _) => Text(l10n.errorLoadingCourses),
     );
   }
 }
@@ -356,9 +446,13 @@ class _PriorityChip extends StatelessWidget {
       selected: selected,
       onSelected: (_) => onSelected(value),
       selectedColor: color,
-      backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+      backgroundColor: isDark
+          ? Colors.white.withValues(alpha: 0.05)
+          : Colors.black.withValues(alpha: 0.03),
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
-        color: selected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        color: selected
+            ? Colors.white
+            : theme.colorScheme.onSurface.withValues(alpha: 0.7),
         fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         fontSize: 12,
       ),
@@ -366,7 +460,11 @@ class _PriorityChip extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(
-          color: selected ? color : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
+          color: selected
+              ? color
+              : (isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05)),
           width: 1,
         ),
       ),
@@ -395,9 +493,13 @@ class _HourChip extends StatelessWidget {
       selected: selected,
       onSelected: onSelected,
       selectedColor: theme.colorScheme.primary,
-      backgroundColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+      backgroundColor: isDark
+          ? Colors.white.withValues(alpha: 0.05)
+          : Colors.black.withValues(alpha: 0.03),
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
-        color: selected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        color: selected
+            ? Colors.white
+            : theme.colorScheme.onSurface.withValues(alpha: 0.7),
         fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         fontSize: 12,
       ),
@@ -405,7 +507,11 @@ class _HourChip extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(24),
         side: BorderSide(
-          color: selected ? theme.colorScheme.primary : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
+          color: selected
+              ? theme.colorScheme.primary
+              : (isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.05)),
           width: 1,
         ),
       ),

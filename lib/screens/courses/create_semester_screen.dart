@@ -10,14 +10,17 @@ import '../../providers/app_providers.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 import '../../l10n/app_localizations.dart';
+import 'semester_management_screen.dart';
 
 class CreateSemesterScreen extends ConsumerStatefulWidget {
   final Semester? semesterToEdit;
   const CreateSemesterScreen({super.key, this.semesterToEdit});
 
   @override
-  ConsumerState<CreateSemesterScreen> createState() => _CreateSemesterScreenState();
+  ConsumerState<CreateSemesterScreen> createState() =>
+      _CreateSemesterScreenState();
 }
 
 class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
@@ -27,14 +30,42 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
   DateTime? _endDate;
   bool _isCurrent = false;
   bool _isLoading = false;
+  late String _selectedSeason;
+  late int _selectedAcademicStartYear;
+  late List<int> _academicYearOptions;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.semesterToEdit?.name);
-    _startDate = widget.semesterToEdit?.startDate;
-    _endDate = widget.semesterToEdit?.endDate;
+    final now = DateTime.now();
+    final currentAcademicStartYear = now.month >= 9 ? now.year : now.year - 1;
+    _academicYearOptions = List<int>.generate(
+      12,
+      (index) => currentAcademicStartYear - 5 + index,
+    );
+
+    _selectedAcademicStartYear = currentAcademicStartYear;
+    _selectedSeason = now.month >= 9 ? 'fall' : 'spring';
+    _nameController = TextEditingController();
     _isCurrent = widget.semesterToEdit?.isCurrent ?? false;
+
+    if (widget.semesterToEdit != null) {
+      final initial = _parseExistingSemester(widget.semesterToEdit!);
+      _selectedSeason = initial.season;
+      _selectedAcademicStartYear = initial.academicStartYear;
+      _startDate = widget.semesterToEdit?.startDate;
+      _endDate = widget.semesterToEdit?.endDate;
+      _nameController.text = widget.semesterToEdit!.name;
+    } else {
+      _applyAutoFill();
+    }
+
+    if (!_academicYearOptions.contains(_selectedAcademicStartYear)) {
+      _academicYearOptions = [
+        ..._academicYearOptions,
+        _selectedAcademicStartYear,
+      ]..sort();
+    }
   }
 
   @override
@@ -80,13 +111,51 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
     }
   }
 
+  void _applyAutoFill() {
+    final startYear = _selectedAcademicStartYear;
+    final endYear = startYear + 1;
+
+    final generatedName = _selectedSeason == 'fall'
+        ? '$startYear-$endYear Fall'
+        : '$startYear-$endYear Spring';
+
+    final generatedStartDate = _selectedSeason == 'fall'
+        ? DateTime(startYear, 9, 1)
+        : DateTime(endYear, 2, 1);
+
+    final generatedEndDate = _selectedSeason == 'fall'
+        ? DateTime(endYear, 1, 31)
+        : DateTime(endYear, 6, 30);
+
+    _nameController.text = generatedName;
+    _startDate = generatedStartDate;
+    _endDate = generatedEndDate;
+  }
+
+  _SemesterDraft _parseExistingSemester(Semester semester) {
+    final name = semester.name.toLowerCase();
+    final season = name.contains('fall') ? 'fall' : 'spring';
+    final parsedStartYear = RegExp(r'(\d{4})').firstMatch(semester.name);
+    final year =
+        int.tryParse(parsedStartYear?.group(1) ?? '') ??
+        (semester.startDate?.year ?? DateTime.now().year);
+    return _SemesterDraft(season: season, academicStartYear: year);
+  }
+
+  String _academicYearLabel(int startYear) {
+    final endYear = startYear + 1;
+    return '$startYear-$endYear';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.semesterToEdit == null ? l10n.addSemester : l10n.editSemester),
+        title: Text(
+          widget.semesterToEdit == null ? l10n.addSemester : l10n.editSemester,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -100,14 +169,85 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: AppButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const SemesterManagementScreen(),
+                          ),
+                        );
+                      },
+                      variant: AppButtonVariant.text,
+                      text: l10n.allSemesters,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   _buildSectionHeader(l10n.semester),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDropdownField<String>(
+                          label: l10n.semesterSeason,
+                          icon: HeroIcons.sun,
+                          value: _selectedSeason,
+                          items: [
+                            DropdownMenuItem(
+                              value: 'fall',
+                              child: Text(l10n.fallSemester),
+                            ),
+                            DropdownMenuItem(
+                              value: 'spring',
+                              child: Text(l10n.springSemester),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              _selectedSeason = value;
+                              _applyAutoFill();
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _buildDropdownField<int>(
+                          label: l10n.academicYearLabel,
+                          icon: HeroIcons.calendarDays,
+                          value: _selectedAcademicStartYear,
+                          selectedTextFontSize: 14,
+                          selectedTextMaxLines: 2,
+                          items: _academicYearOptions
+                              .map(
+                                (startYear) => DropdownMenuItem(
+                                  value: startYear,
+                                  child: Text(_academicYearLabel(startYear)),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              _selectedAcademicStartYear = value;
+                              _applyAutoFill();
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   _buildTextField(
                     controller: _nameController,
                     label: l10n.semesterName,
-                    hint: l10n.semesterNameHint,
                     icon: HeroIcons.calendar,
-                    validator: (val) => val == null || val.isEmpty ? l10n.requiredField : null,
+                    validator: (val) =>
+                        val == null || val.isEmpty ? l10n.requiredField : null,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   _buildDatePicker(
@@ -132,7 +272,11 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
                   const SizedBox(height: AppSpacing.xl * 2),
                   AppButton(
                     onPressed: _isLoading ? null : _saveSemester,
-                    text: _isLoading ? l10n.saving : (widget.semesterToEdit == null ? l10n.createSemester : l10n.updateSemester),
+                    text: _isLoading
+                        ? l10n.saving
+                        : (widget.semesterToEdit == null
+                              ? l10n.createSemester
+                              : l10n.updateSemester),
                     isFullWidth: true,
                   ),
                 ],
@@ -148,10 +292,10 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-            letterSpacing: 1.2,
-          ),
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.primary,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
@@ -170,7 +314,9 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
         color: isDark ? AppColors.glassSurface : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: isDark ? AppColors.glassBorder : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+          color: isDark
+              ? AppColors.glassBorder
+              : theme.colorScheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       child: TextFormField(
@@ -185,7 +331,10 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
             child: AppIcon(icon, color: theme.colorScheme.primary, size: 20),
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -212,7 +361,12 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
                 colorScheme: theme.colorScheme.copyWith(
                   surface: isDark ? const Color(0xFF1E293B) : Colors.white,
                   onSurface: isDark ? Colors.white : Colors.black,
-                ), dialogTheme: DialogThemeData(backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white),
+                ),
+                dialogTheme: DialogThemeData(
+                  backgroundColor: isDark
+                      ? const Color(0xFF1E293B)
+                      : Colors.white,
+                ),
               ),
               child: child!,
             );
@@ -226,7 +380,9 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
           color: isDark ? AppColors.glassSurface : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(
-            color: isDark ? AppColors.glassBorder : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+            color: isDark
+                ? AppColors.glassBorder
+                : theme.colorScheme.onSurface.withValues(alpha: 0.08),
           ),
         ),
         child: Row(
@@ -237,15 +393,76 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
               children: [
                 Text(label, style: theme.textTheme.bodySmall),
                 Text(
-                  value == null ? 'Select Date' : '${value.day}/${value.month}/${value.year}',
-                  style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                  value == null
+                      ? AppLocalizations.of(context)!.selectDate
+                      : '${value.day}/${value.month}/${value.year}',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
-            AppIcon(HeroIcons.calendar, color: theme.colorScheme.primary, size: 20),
+            AppIcon(
+              HeroIcons.calendar,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildDropdownField<T>({
+    required String label,
+    required HeroIcons icon,
+    required T value,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+    double selectedTextFontSize = 16,
+    int selectedTextMaxLines = 1,
+  }) {
+    final theme = Theme.of(context);
+    String selectedTitle = '-';
+    final options = <AppPickerOption<T>>[];
+    for (final item in items) {
+      final itemValue = item.value;
+      if (itemValue == null) continue;
+      final child = item.child;
+      String title = '$itemValue';
+      if (child is Text) {
+        title = child.data ?? title;
+      }
+      options.add(AppPickerOption<T>(value: itemValue, title: title));
+      if (itemValue == value) selectedTitle = title;
+    }
+
+    return AppBottomSheetPicker<T>(
+      icon: icon,
+      fieldLabel: label,
+      sheetTitle: label,
+      selectedValue: value,
+      selectedDisplayText: selectedTitle,
+      fieldLabelTextStyle: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.primary,
+        fontWeight: FontWeight.w700,
+        fontSize: 11,
+      ),
+      selectedTextStyle: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        fontSize: selectedTextFontSize,
+        height: 1.15,
+      ),
+      selectedTextMaxLines: selectedTextMaxLines,
+      options: options,
+      onChanged: (selected) => onChanged(selected),
+    );
+  }
+}
+
+class _SemesterDraft {
+  const _SemesterDraft({required this.season, required this.academicStartYear});
+
+  final String season;
+  final int academicStartYear;
 }

@@ -98,6 +98,14 @@ create table if not exists public.academic_deadlines (
   created_at timestamp with time zone default now()
 );
 
+-- Link tasks (work units) to academic deadlines (targets), optional
+do $$ 
+begin 
+  if not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tasks' and column_name = 'deadline_id') then
+    alter table public.tasks add column deadline_id uuid references public.academic_deadlines(id) on delete set null;
+  end if;
+end $$;
+
 -- Exams
 create table if not exists public.exams (
   id uuid primary key default uuid_generate_v4(),

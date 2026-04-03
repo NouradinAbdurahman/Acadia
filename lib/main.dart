@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:acadia/l10n/app_localizations.dart';
+import 'services/notification_service.dart';
 
 import 'core/theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
@@ -28,7 +29,10 @@ import 'screens/onboarding/onboarding_welcome_screen.dart';
 import 'screens/language/language_selection_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
 import 'screens/courses/course_management_screen.dart';
+import 'screens/courses/semester_management_screen.dart';
 import 'screens/courses/create_course_screen.dart';
+import 'screens/courses/course_results_screen.dart';
+import 'screens/courses/course_result_editor_screen.dart';
 import 'screens/profile/edit_academic_profile_screen.dart';
 import 'screens/profile/study_preferences_screen.dart';
 import 'screens/profile/change_password_screen.dart';
@@ -39,12 +43,16 @@ import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/onboarding_provider.dart';
 import 'providers/app_providers.dart';
+import 'providers/realtime_provider.dart';
 
 // We declare a globally accessible navigator key to handle programmatic pushes if necessary
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Notifications
+  await NotificationService.init();
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -59,11 +67,7 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -89,9 +93,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CustomTransitionPage<void>(
             key: state.pageKey,
             child: const SplashScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
           );
         },
       ),
@@ -99,10 +104,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/language',
         builder: (context, state) => const LanguageSelectionScreen(),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
@@ -139,21 +141,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const AppShell(),
-      ),
-      GoRoute(
-        path: '/app',
-        builder: (context, state) => const AppShell(),
-      ),
+      GoRoute(path: '/home', builder: (context, state) => const AppShell()),
+      GoRoute(path: '/app', builder: (context, state) => const AppShell()),
       GoRoute(
         path: '/tasks',
         builder: (context, state) => const TasksListScreen(),
       ),
       GoRoute(
         path: '/create-task',
-        builder: (context, state) => const CreateTaskScreen(),
+        builder: (context, state) => CreateTaskScreen(
+          initialDeadlineId: state.uri.queryParameters['deadlineId'],
+        ),
       ),
       GoRoute(
         path: '/create-deadline',
@@ -198,7 +196,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const AcademicOnboardingScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
-              position: animation.drive(Tween(begin: const Offset(1, 0), end: Offset.zero).chain(CurveTween(curve: Curves.easeInOutCubic))),
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeInOutCubic)),
+              ),
               child: child,
             );
           },
@@ -215,8 +218,31 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const CourseManagementScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
-              position: animation.drive(Tween(begin: const Offset(0, 0.1), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic))),
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 0.1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
               child: FadeTransition(opacity: animation, child: child),
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/semesters',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const SemesterManagementScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
+              child: child,
             );
           },
         ),
@@ -228,11 +254,62 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const CreateCourseScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
-              position: animation.drive(Tween(begin: const Offset(0, 1), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic))),
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
               child: child,
             );
           },
         ),
+      ),
+      GoRoute(
+        path: '/course-results',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const CourseResultsScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/course-results/edit',
+        pageBuilder: (context, state) {
+          final resultId = state.uri.queryParameters['id'];
+          final semesterId =
+              state.uri.queryParameters['semesterId'] ??
+              state.uri.queryParameters['semester'];
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: CourseResultEditorScreen(
+              resultId: resultId,
+              initialSemesterId: semesterId,
+            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position: animation.drive(
+                      Tween(
+                        begin: const Offset(0, 1),
+                        end: Offset.zero,
+                      ).chain(CurveTween(curve: Curves.easeOutCubic)),
+                    ),
+                    child: child,
+                  );
+                },
+          );
+        },
       ),
       GoRoute(
         path: '/profile/edit',
@@ -241,7 +318,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const EditAcademicProfileScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
-              position: animation.drive(Tween(begin: const Offset(0, 1), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic))),
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
               child: child,
             );
           },
@@ -254,7 +336,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const StudyPreferencesScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
-              position: animation.drive(Tween(begin: const Offset(0, 1), end: Offset.zero).chain(CurveTween(curve: Curves.easeOutCubic))),
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
+              ),
               child: child,
             );
           },
@@ -268,8 +355,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: animation.drive(
-                Tween(begin: const Offset(0, 1), end: Offset.zero)
-                    .chain(CurveTween(curve: Curves.easeOutCubic)),
+                Tween(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeOutCubic)),
               ),
               child: child,
             );
@@ -280,17 +369,19 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final session = Supabase.instance.client.auth.currentSession;
       final loggedIn = session != null;
-      
+
       final isSplashScreen = state.matchedLocation == '/splash';
-      final isAuthScreen = state.matchedLocation == '/login' || 
-          state.matchedLocation == '/signup' || 
-          state.matchedLocation == '/forgot-password' || 
-          state.matchedLocation == '/forgot-password-code' || 
-          state.matchedLocation == '/reset-password' || 
+      final isAuthScreen =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/signup' ||
+          state.matchedLocation == '/forgot-password' ||
+          state.matchedLocation == '/forgot-password-code' ||
+          state.matchedLocation == '/reset-password' ||
           state.matchedLocation == '/verify-email';
       final isLanguageScreen = state.matchedLocation == '/language';
       final isOnboardingScreen = state.matchedLocation == '/onboarding';
-      final isAcademicOnboardingScreen = state.matchedLocation == '/academic-onboarding';
+      final isAcademicOnboardingScreen =
+          state.matchedLocation == '/academic-onboarding';
 
       // 0. Wait for Hive-backed settings and initial providers to load
       if (!localeLoaded || !onboardingLoaded || !themeLoaded) {
@@ -300,9 +391,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 1. Auth Gate
       if (!loggedIn) {
         if (!languageSelected && !isLanguageScreen) return '/language';
-        if (languageSelected && !onboardingCompleted && !isOnboardingScreen) return '/onboarding';
-        if (languageSelected && onboardingCompleted && !isAuthScreen && !isSplashScreen && !isLanguageScreen && !isOnboardingScreen) return '/login';
-        return isSplashScreen ? (!languageSelected ? '/language' : (!onboardingCompleted ? '/onboarding' : '/login')) : null;
+        if (languageSelected && !onboardingCompleted && !isOnboardingScreen) {
+          return '/onboarding';
+        }
+        if (languageSelected &&
+            onboardingCompleted &&
+            !isAuthScreen &&
+            !isSplashScreen &&
+            !isLanguageScreen &&
+            !isOnboardingScreen) {
+          return '/login';
+        }
+        return isSplashScreen
+            ? (!languageSelected
+                  ? '/language'
+                  : (!onboardingCompleted ? '/onboarding' : '/login'))
+            : null;
       }
 
       // 2. Profile Loading Wait
@@ -316,14 +420,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       // If profile record is missing or not completed, force academic onboarding
       if (appUser == null || !appUser.academicProfileCompleted) {
         // Allow reset/verify even if profile not completed
-        if (isAcademicOnboardingScreen || state.matchedLocation == '/reset-password' || state.matchedLocation == '/verify-email') {
+        if (isAcademicOnboardingScreen ||
+            state.matchedLocation == '/reset-password' ||
+            state.matchedLocation == '/verify-email') {
           return null;
         }
         return '/academic-onboarding';
       }
 
       // 4. Entry redirection to home
-      if (isSplashScreen || isAuthScreen || isLanguageScreen || isOnboardingScreen || (isAcademicOnboardingScreen && appUser.academicProfileCompleted)) {
+      if (isSplashScreen ||
+          isAuthScreen ||
+          isLanguageScreen ||
+          isOnboardingScreen ||
+          (isAcademicOnboardingScreen && appUser.academicProfileCompleted)) {
         return '/home';
       }
 
@@ -338,8 +448,10 @@ class MyApp extends ConsumerWidget {
   SystemUiOverlayStyle _overlayStyleForTheme(ThemeMode themeMode) {
     final platformBrightness =
         WidgetsBinding.instance.platformDispatcher.platformBrightness;
-    final isDark = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && platformBrightness == Brightness.dark);
+    final isDark =
+        themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            platformBrightness == Brightness.dark);
 
     return SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -350,6 +462,7 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(realtimeProvider);
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeProvider);
@@ -370,10 +483,7 @@ class MyApp extends ConsumerWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [
-          Locale('en'),
-          Locale('tr'),
-        ],
+        supportedLocales: const [Locale('en'), Locale('tr')],
         routerConfig: router,
         builder: (context, child) {
           // Additional safety layer for status bar visibility

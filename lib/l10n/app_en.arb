@@ -58,6 +58,21 @@
   "themeSystem": "System",
   "tasks": "Tasks",
   "all": "All",
+  "quickMenu": "Quick Menu",
+  "deadlineKindBadge": "Deadline",
+  "linkToAcademicDeadline": "Link to deadline (optional)",
+  "noneLinkedDeadline": "None",
+  "relatedTasksSection": "Related tasks",
+  "addTaskToThisDeadline": "Add task to this deadline",
+  "deadlineLinkedTasksProgress": "{completed} / {total} tasks completed",
+  "@deadlineLinkedTasksProgress": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "deadlineNoLinkedTasks": "No tasks linked to this deadline yet.",
+  "taskLinkedToDeadline": "Linked to a deadline",
   "pending": "Pending",
   "deadlines": "Deadlines",
   "completed": "Completed",
@@ -74,11 +89,26 @@
   "save": "Save",
   "cancel": "Cancel",
   "study": "Study",
+  "liveStudySessions": "Live Study Sessions",
   "startStudySession": "Study Session",
   "start": "Start",
   "pause": "Pause",
   "resume": "Resume",
   "stop": "Stop",
+  "focusLabel": "Focus",
+  "breakLabel": "Break",
+  "reviewLabel": "Review",
+  "remainingLabel": "Remaining",
+  "stopSessionTitle": "Stop Session",
+  "stopSessionConfirm": "Are you sure you want to end this study session?",
+  "sessionPaused": "Session paused. Take a breath.",
+  "refreshYourself": "Refresh yourself. You're doing great.",
+  "stayFocused": "Stay focused. You're doing well.",
+  "deepWorkInProgress": "Deep work in progress...",
+  "dontStopNow": "Don't stop now, you're on a roll!",
+  "focusOnProcess": "Focus on the process, not the results.",
+  "almostThere": "Almost there! Keep pushing.",
+  "futureSelf": "Your future self will thank you.",
   "sessionCompleted": "Session completed",
   "recentStudySessions": "Recent Study Sessions",
   "stayOrganized": "Stay organized",
@@ -190,7 +220,8 @@
   "dontHaveAccount": "Don't have an account?",
   "signup": "Create Account",
   "invalidCredentials": "Incorrect email or password.",
-  "tooManyRequests": "Too many requests. Please try again later.",
+  "tooManyRequests": "Please wait a moment before trying again.",
+  "pleaseWait": "Please wait a moment before trying again.",
   "networkError": "Connection error. Try again.",
   "invalidEmail": "Enter a valid email",
   "passwordTooShort": "Password must be at least 8 characters",
@@ -204,7 +235,7 @@
   "passwordsDoNotMatch": "Passwords do not match",
   "emailAlreadyInUse": "This email is already registered. Try logging in instead.",
   "otpExpired": "Code expired. Request a new one.",
-  "tooManyAttempts": "Too many attempts. Please try again later.",
+  "tooManyAttempts": "Please wait a moment before trying again.",
   "invalidOtp": "Invalid verification code",
   "codeResent": "Code sent!",
   "verifyEmail": "Verify Email",
@@ -282,8 +313,10 @@
   "courseManagement": "Course Management",
   "myCourses": "My Courses",
   "manageSemesters": "Manage Semesters",
+  "allSemesters": "All Semesters",
   "addCourse": "Add Course",
   "editCourse": "Edit Course",
+  "courseTitle": "Course Title",
   "courseCode": "Course Code",
   "courseNameHint": "e.g. Advanced Mathematics",
   "courseCodeHint": "e.g. CS204",
@@ -293,8 +326,17 @@
   "sortAlphabetical": "Alphabetical",
   "sortStudyTime": "Study Time",
   "semester": "Semester",
+  "semesterSeason": "Season",
+  "fallSemester": "Fall",
+  "springSemester": "Spring",
+  "academicYearLabel": "Academic Year",
   "selectSemester": "Select Semester",
   "setAsActive": "Set as active semester",
+  "currentSemesterLabel": "Current",
+  "selectDate": "Select Date",
+  "noSemestersYet": "No semesters created yet",
+  "createFirstSemester": "Create your first semester to organize your courses.",
+  "deleteSemesterWarning": "This semester will be removed from your semester list.",
   "noCoursesYet": "No courses added yet",
   "addFirstCourse": "Add your first course to start tracking.",
   "addFirstCourseBtn": "Add My First Course",
@@ -303,6 +345,7 @@
   "addCourseFirst": "Add a course first",
   "selectCourse": "Select Course",
   "pleaseSelectCourse": "Please select a course",
+  "ectsRequired": "ECTS is required",
   "errorLoadingCourses": "Error loading courses",
   "academicInformation": "Academic Information",
   "editProfile": "Edit Profile",
@@ -476,8 +519,8 @@
   "riskStatusMessage": "{count} overdue {count, plural, =1{task} other{tasks}}",
   "riskInterpretationOnTrack": "You are on track. Keep your current study pace.",
   "riskInterpretationHigh": "You are at high risk due to missed deadlines and insufficient study hours.",
-  "riskInterpretationMedium": "Your risk is moderate; keep an eye on upcoming tasks and study goals.",
-  "riskInterpretationLow": "You are in a safe range. Maintain your current progress.",
+  "riskInterpretationMedium": "Your risk is moderate. Focus on completing tasks and increasing study time.",
+  "riskInterpretationLow": "You are in a safe range. Keep your current progress.",
   "riskHoursRemaining": "{hours}h remaining",
   "riskGoalReached": "Goal reached!",
   "@riskStatusMessage": {
@@ -504,7 +547,7 @@
       }
     }
   },
-  "riskTrendUp": "+{delta} risk increase",
+  "riskTrendUp": "Increased by {delta} points from last week",
   "@riskTrendUp": {
     "placeholders": {
       "delta": {
@@ -512,7 +555,7 @@
       }
     }
   },
-  "riskTrendDown": "-{delta} (improved)",
+  "riskTrendDown": "Improved by {delta} points from last week",
   "@riskTrendDown": {
     "placeholders": {
       "delta": {
@@ -520,7 +563,8 @@
       }
     }
   },
-  "riskTrendStable": "+0 (no change)",
+  "riskTrendStable": "No change",
+  "riskTrendNew": "New",
   "riskNoData": "No active risk factors",
   "overviewTitle": "Overview",
   "lastUpdated": "Last updated: {time}",
@@ -581,5 +625,687 @@
     }
   },
   "noStudyDataThisWeek": "No study sessions this week",
-  "noTasksThisWeek": "No tasks scheduled this week"
+  "noTasksThisWeek": "No tasks scheduled this week",
+  "examResults": "Course Results",
+  "addResult": "Add Result",
+  "editResult": "Edit Result",
+  "noResultsYet": "No results added yet",
+  "addFirstResultPrompt": "Add your first course result for this semester.",
+  "gradingComponents": "Grading Components",
+  "addComponent": "+ Add Component",
+  "finalSection": "Final",
+  "finalAverage": "Final Average",
+  "letterGrade": "Letter Grade",
+  "resultStatus": "Course Status",
+  "resultSuccessful": "Successful",
+  "resultFailed": "Failed",
+  "component": "Component",
+  "componentTitle": "Title",
+  "componentTitleHint": "e.g. Midterm, Project, Final, Quiz",
+  "score": "Score",
+  "scoreHint": "e.g. 85",
+  "percentage": "Percentage",
+  "percentageHint": "e.g. 40",
+  "finalAverageHint": "e.g. 78.5",
+  "numberRequired": "Enter a valid number",
+  "completeComponentsError": "Complete all components before saving",
+  "percentageNot100Warning": "Warning: total percentage is not 100",
+  "gradeDistribution": "Grade Distribution",
+  "noGradeDistributionYet": "No grade distribution data yet",
+  "pleaseSelectLetterGrade": "Please select a letter grade",
+  "noCoursesForSemester": "No courses found for this semester",
+  "trendAnalysis": "Trend Analysis",
+  "studyTrend": "Study Trend",
+  "taskCompletionTrend": "Task Completion Trend",
+  "workloadTrend": "Workload Trend",
+  "performanceTrend": "Performance Trend",
+  "daysFilter": "{count} days",
+  "@daysFilter": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trendTodayDuration": "{duration} today",
+  "@trendTodayDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "trendCompletedToday": "{count} completed today",
+  "@trendCompletedToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trendNewToday": "{count} new today",
+  "@trendNewToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trendStudySubtitle": "Hours studied per day over the selected period",
+  "trendTaskSubtitle": "Completed tasks per day over the selected period",
+  "trendWorkloadSubtitle": "Tasks and deadlines added per day",
+  "trendPerformanceSubtitle": "GPA change based on course results",
+  "trendTasksOneDayHint": "Most tasks were completed on one day.",
+  "trendWorkloadEmptyMessage": "No data yet.\nAdd tasks or deadlines to see workload trends.",
+  "trendStudyEmptyMessage": "No data yet.\nStart logging study sessions to see trends.",
+  "trendTaskEmptyMessage": "No completed tasks in this period.\nComplete tasks to track progress.",
+  "trendPerformanceEmptyMessage": "Add course results to track performance.",
+  "trendPerformanceNeedThreeResults": "Add at least 3 course results to see performance trends.",
+  "trendSummaryTitle": "Trend Summary",
+  "trendOverallStatusTitle": "Overall Status",
+  "trendNotEnoughData": "Not enough data",
+  "trendStable": "Stable",
+  "trendImproving": "Improving",
+  "trendDeclining": "Declining",
+  "trendLessThan30Minutes": "Less than 30 minutes in this period",
+  "trendHoursInPeriod": "{hours}h in this period",
+  "@trendHoursInPeriod": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "trendTasksCompletedFraction": "{completed} / {total} completed",
+  "@trendTasksCompletedFraction": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "trendTasksDeadlinesAdded": "{count} tasks/deadlines added",
+  "@trendTasksDeadlinesAdded": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trendVeryLowActivity": "Very low activity",
+  "trendLowActivity": "Low activity",
+  "trendNoTasks": "No tasks",
+  "trendNoTasksCompletedPeriod": "No tasks completed in this period",
+  "trendZeroCompleted": "0% completed",
+  "trendPercentCompleted": "{percent}% completed",
+  "@trendPercentCompleted": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "trendNoWorkload": "No workload",
+  "trendIncreased": "Increased",
+  "trendReducedComparedLastPeriod": "Reduced compared to last period",
+  "trendStatusOnTrack": "On track",
+  "trendStatusLowAndBehind": "Low activity and falling behind",
+  "trendStatusStudyNeedsImprovement": "Study consistency needs improvement",
+  "trendStatusTaskIncomplete": "Task progress is incomplete",
+  "trendStatusStableProgress": "Stable progress",
+  "trendStatusOnTrackDetail": "Your recent activity looks balanced. Keep this pace.",
+  "trendStatusNeedsFocusDetail": "Your activity is low and task progress is incomplete. Focus on completing tasks and increasing study time.",
+  "trendInsightBuildConsistencyTitle": "Build study consistency",
+  "trendInsightStudyIncreasedSignificantlyTitle": "Study increased significantly",
+  "trendInsightStudyImprovedTitle": "Study improved",
+  "trendInsightStudyDeclinedTitle": "Study declined",
+  "trendInsightNoTasksTitle": "No tasks in this period",
+  "trendInsightTaskLowTitle": "Task completion is low",
+  "trendInsightNoWorkloadTitle": "No new workload",
+  "trendInsightWorkloadSharpTitle": "Workload increased sharply",
+  "trendInsightWorkloadRisingTitle": "Workload is rising",
+  "trendInsightPerformanceDecliningTitle": "Performance declining",
+  "trendInsightPerformanceImprovingTitle": "Performance improving",
+  "trendInsightStableTitle": "Stable trends",
+  "trendInsightBuildConsistencyMessage": "Start building a daily study habit.",
+  "trendInsightStudyIncreasedMessage": "Study increased by {percent}%. Keep this pace to stay ahead.",
+  "@trendInsightStudyIncreasedMessage": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "trendInsightStudyDroppedMessage": "Study dropped by {percent}%. Consider scheduling extra sessions.",
+  "@trendInsightStudyDroppedMessage": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "trendInsightNoTasksMessage": "No tasks were due in this period.",
+  "trendInsightNoTasksCompletedMessage": "No tasks completed yet. Start completing tasks to track performance.",
+  "trendInsightTaskCompletedFractionMessage": "You completed {completed} of {total} tasks. Try to complete more next period.",
+  "@trendInsightTaskCompletedFractionMessage": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "trendInsightNoWorkloadMessage": "No new tasks or deadlines were added in this period.",
+  "trendInsightWorkloadAddedMessage": "You added {count} tasks/deadlines in this period. Plan ahead to avoid overload.",
+  "@trendInsightWorkloadAddedMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trendInsightPerformanceDecliningMessage": "Performance trend is decreasing. Review weak courses this week.",
+  "trendInsightPerformanceImprovingMessage": "Performance trend is improving. Keep the same study consistency.",
+  "trendInsightStableMessage": "No significant change yet. Keep logging consistently.",
+  "dashboardRiskLevelTitle": "Risk Level",
+  "dashboardRiskLevelValue": "Risk Level: {level}",
+  "@dashboardRiskLevelValue": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardTodaySnapshotTitle": "Today Snapshot",
+  "dashboardStudyToday": "Study: {time} today",
+  "@dashboardStudyToday": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardTasksCompletedToday": "Tasks: {count} completed",
+  "@dashboardTasksCompletedToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardWorkloadAddedToday": "Workload: {count} added",
+  "@dashboardWorkloadAddedToday": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardKeyInsightTitle": "Key Insight",
+  "dashboardNoInsightAvailable": "No key insight available yet.",
+  "dashboardQuickActionsTitle": "Quick Actions",
+  "dashboardProgressOverviewTitle": "Progress Overview",
+  "dashboardViewDetailedAnalysis": "View detailed analysis ->",
+  "analyticsSparseDataTitle": "Building your analytics",
+  "analyticsSparseDataBody": "Log study sessions, add tasks, and record grades. Charts fill in as you use the app.",
+  "custom": "Custom",
+  "customDurationLabel": "Custom: {minutes}m",
+  "@customDurationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "enterMinutes": "Enter minutes",
+  "quickPresets": "Quick Presets",
+  "setDuration": "Set Duration",
+  "focusedTime": "Focused time",
+  "startAnotherSession": "Start another session",
+  "sessionInsightShort": "Short session. Try longer focus next time.",
+  "sessionInsightMedium": "Good session. Stay consistent.",
+  "sessionInsightLong": "Strong focus session.",
+  "addedToWeeklyGoal": "+{minutes}m added to weekly goal",
+  "@addedToWeeklyGoal": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minimumSessionMessage": "Minimum session is 10 minutes",
+  "durationRangeHint": "Enter duration (10–240 minutes)",
+  "selectCourseToStart": "Select a course to start",
+  "todayProgress": "Today: {completed} / {goal}",
+  "@todayProgress": {
+    "placeholders": {
+      "completed": { "type": "String" },
+      "goal": { "type": "String" }
+    }
+  },
+  "weeklyProgress": "This week: {completed} / {goal}",
+  "@weeklyProgress": {
+    "placeholders": {
+      "completed": { "type": "String" },
+      "goal": { "type": "String" }
+    }
+  },
+  "streakDays": "{count} day streak",
+  "@streakDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "noStreak": "Start a streak today",
+  "insightTooShort": "Too short. Aim for at least 20 minutes.",
+  "insightDecent": "Decent start. Try extending your next session.",
+  "insightStrong": "Strong focus. Keep this consistency.",
+  "lowFocus": "Low Focus",
+  "mediumFocus": "Medium Focus",
+  "highFocus": "High Focus",
+  "goodFocus": "Good Focus",
+  "todayFocusedContext": "{minutes}m focused tonight • {sessions} sessions",
+  "@todayFocusedContext": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "sessions": { "type": "int" }
+    }
+  },
+  "studyIntent": "Study Intent",
+  "studyIntentHint": "What is your main focus for this session?",
+  "studyIntentPlaceholder": "e.g. Read Chapter 4, Solve Calculus set...",
+  "endsAt": "Ends at {time}",
+  "@endsAt": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "endsAround": "Ends around {time}",
+  "@endsAround": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "structuredSession": "Structured session",
+  "@structuredSession": {
+    "description": "Label for structure-based sessions like Pomodoro"
+  },
+  "remainingTime": "Remaining time",
+  "highFocus": "High Focus",
+  "deepFocus": "Deep Focus",
+  "goodFocus": "Good Focus",
+  "sessionProgress": "Session {current} of {total}",
+  "@sessionProgress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "stayFocusedMsg": "Stay focused. You're doing well.",
+  "halfwayMsg": "Halfway there!",
+  "almostDoneMsg": "Almost there, keeps it up!",
+  "youStayedFocused": "You stayed focused for {minutes} minutes",
+  "@youStayedFocused": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "recommended": "Recommended",
+  "weeklyGoalProgress": "Weekly Goal Progress",
+  "weeklyGoalTag": "Goal: {goal}m",
+  "@weeklyGoalTag": {
+    "placeholders": {
+      "goal": { "type": "int" }
+    }
+  },
+  "minutesDone": "{minutes}m done",
+  "@minutesDone": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "sessionTooShort": "Session Too Short",
+  "sessionTooShortDescription": "Minimum session duration is 10 minutes to ensure effective focus. This session was not recorded.",
+  "tryAgain": "Try Again",
+  "weeklyStudyGoal": "Weekly Study Goal",
+  "behindThisWeek": "You're behind this week — take action today",
+  "justGettingStarted": "Just getting started",
+  "remainingHours": "{hours}h remaining",
+  "@remainingHours": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "catchUpMessage": "{hours}h remaining • You need to catch up",
+  "@catchUpMessage": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "focusScore": "Focus Score",
+  "moderateFocus": "Moderate Focus",
+  "lowFocus": "Low Focus",
+  "highFocus": "High Focus",
+  "patternConsistent": "Pattern: Consistent",
+  "patternIrregular": "Pattern: Irregular",
+  "confidenceHigh": "Confidence: High",
+  "confidenceMedium": "Confidence: Medium",
+  "gettingStarted": "Getting started",
+  "noDataYet": "No data yet",
+  "statusStable": "Stable",
+  "statusImproving": "Improving",
+  "statusDeclining": "Declining",
+  "trySessionNow": "Try a {duration}-minute session now",
+  "@trySessionNow": {
+    "placeholders": {
+      "duration": { "type": "int" }
+    }
+  },
+  "startNow": "Start now",
+  "studyIntentHint": "What is your main focus for this session?",
+  "sessionTooShortTitle": "Session Too Short",
+  "sessionTooShortMessage": "Minimum session duration is 10 minutes. This session was not recorded.",
+  "focusRemaining": "Remaining time",
+  "focusLevel": "Focus Level",
+  "sessionCompleted": "Session completed",
+  "focusedTime": "Focused time",
+  "shortSessionInsight": "Short session. Try longer focus next time.",
+  "goodSessionInsight": "Good session. Stay consistent.",
+  "strongSessionInsight": "Strong focus session.",
+  "sessionEndedEarly": "Session ended early — try staying at least 15 min",
+  "niceProgressToday": "Nice progress today",
+  "studyConsistent": "Stay consistent this week",
+  "next15m": "Start a 15-minute session to rebuild focus",
+  "next25m": "Continue with a 25-minute focus session",
+  "next45m": "You’re in deep focus mode. Try a 45-minute session",
+  "sessionsCount": "{count} sessions",
+  "@sessionsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "minutesFocused": "{minutes}m focused",
+  "patternLabel": "Pattern",
+  "statusVariable": "Variable",
+  "overloadWarning": "You're pushing too hard. Take a proper break.",
+  "focusTrendMessage": "{trend} focus pattern this week",
+  "@focusTrendMessage": {
+    "placeholders": {
+      "trend": { "type": "String" }
+    }
+  },
+  "focusAnalysisBasis": "Based on recent sessions, consistency, and stability.",
+  "breakLabel": "Break",
+  "longBreakLabel": "Long Break",
+  "focusSessionCount": "Focus {current}/{total}",
+  "@focusSessionCount": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "improving": "Improving",
+  "declining": "Declining",
+  "stable": "Stable",
+  "focusShort": "Short Focus",
+  "focusGood": "Good Focus",
+  "focusDeep": "Deep Focus",
+  "statusCompleted": "Completed",
+  "statusStoppedEarly": "Stopped early",
+  "tryLongerFocus": "Try longer focus next time",
+  "solidSession": "Solid session, keep it up",
+  "excellentDeepWork": "Excellent deep work",
+  "focusScoreImpact": "Focus Score Impact",
+  "completedYes": "Yes",
+  "completedNo": "No",
+  "cycles": "Cycles",
+  "breaksSkipped": "Breaks skipped",
+  "studyIntent": "Study Intent",
+  "weeklyActivity": "Weekly Activity",
+  "streakDays": "{count} day{count, plural, =1{} other{s}}",
+  "@streakDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "streakWarningMessage": "🔥 Don't break your streak. Study today to keep it alive!",
+  "thisWeekLabel": "This week",
+  "preivousWeekLabel": "Last week",
+  "newWeekStart": "New week start",
+  "noStudyActivityYet": "No study activity yet",
+  "studiedOnlyOneDay": "You studied only one day this week",
+  "gettingStartedExtend": "Getting started. Try to extend sessions",
+  "buildingConsistency": "Building consistency",
+  "strongConsistentPattern": "Strong and consistent study pattern",
+  "noActivity": "No activity",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "sunday": "Sunday",
+  "weeklyProgressLabel": "Weekly Progress",
+  "newBadge": "New ⭐",
+  "weeklyGoalProgressHours": "{current} / {goal}",
+  "@weeklyGoalProgressHours": {
+    "placeholders": {
+      "current": { "type": "String" },
+      "goal": { "type": "String" }
+    }
+  },
+  "activeDaysCount": "{count} active day{count, plural, =1{} other{s}}",
+  "@activeDaysCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "peakDayLabel": "Peak: {day}",
+  "@peakDayLabel": {
+    "placeholders": {
+      "day": { "type": "String" }
+    }
+  },
+  "streakAtRisk": "Streak at Risk!",
+  "studyHabit": "Study Habit",
+  "startStreakToday": "Start your streak today",
+  "streakDay1": "Day 1 completed. Build consistency tomorrow",
+  "strongHabitForming": "Strong habit forming",
+  "excellentDiscipline": "Excellent discipline",
+  "lightFocus": "Light focus",
+  "goodFocus": "Good focus",
+  "deepFocus": "Deep focus",
+  "insightCycle": "High-quality focus pattern. Keep this cycle.",
+  "insightStart": "Strong start. Extend beyond 30m for deeper focus.",
+  "insightMomentum": "Building momentum toward deep work.",
+  "focusPoints": "{points} points",
+  "@focusPoints": {
+    "placeholders": {
+      "points": { "type": "String" }
+    }
+  },
+  "pomodoroFocusStep": "Focus • 25 min",
+  "pomodoroBreakStep": "Break • 5 min",
+  "pomodoroRepeatStep": "4 cycles total",
+  "pomodoroTotalFocusSummary": "Total focus: {minutes} min",
+  "@pomodoroTotalFocusSummary": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "pomodoroCompleted": "Pomodoro completed",
+  "cyclesCompleted": "{count} cycles completed",
+  "@cyclesCompleted": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "focusTimeBreakdown": "Focus time: {minutes} min",
+  "@focusTimeBreakdown": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "breakTimeBreakdown": "Break time: {minutes} min",
+  "@breakTimeBreakdown": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "excellentConsistency": "Excellent consistency",
+  "totalFocusTime": "Total focus time",
+  "statusStable": "Stable",
+  "streakDaysInARow": "{count} day{count, plural, =1{} other{s}} in a row",
+  "@streakDaysInARow": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "pomodoroMetrics": "Metrics",
+  "pomodoroPerformance": "Performance",
+  "pomodoroTimeline": "Cycle Timeline",
+
+  "pomodoroSubtitle": "Pomodoro • {done}/{total} cycles",
+  "@pomodoroSubtitle": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "focusCycleDone": "Focus {index}  •  {minutes} min",
+  "@focusCycleDone": {
+    "placeholders": {
+      "index": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "focusCycleInProgress": "Focus {index}  •  in progress",
+  "@focusCycleInProgress": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+
+  "focusCycleNotReached": "Focus {index}  •  not reached",
+  "@focusCycleNotReached": {
+    "placeholders": {
+      "index": { "type": "int" }
+    }
+  },
+
+  "breakDone": "Break  •  {minutes} min",
+  "@breakDone": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "breakPending": "Break",
+  "focusTimeLabel": "Focus Time",
+  "breakTimeLabel": "Break Time",
+
+  "completionOfCycles": "{percent}% of planned cycles",
+  "@completionOfCycles": {
+    "placeholders": {
+      "percent": { "type": "int" }
+    }
+  },
+
+  "minutesFocusedLabel": "{minutes} min focused",
+  "@minutesFocusedLabel": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "pomodoroHistorySubtitle": "{done} of {total} cycles • {time}",
+  "@pomodoroHistorySubtitle": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" },
+      "time": { "type": "String" }
+    }
+  },
+
+  "sessionHistorySubtitle": "{type} • {minutes}m • {time}",
+  "@sessionHistorySubtitle": {
+    "placeholders": {
+      "type": { "type": "String" },
+      "minutes": { "type": "int" },
+      "time": { "type": "String" }
+    }
+  },
+
+  "statusBadgeCompleted": "✔ Completed",
+  "statusBadgeStopped": "⏸ Stopped early",
+
+  "errorLoading": "Error: {error}",
+  "@errorLoading": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "pomodoroInsightConsistent": "You consistently complete full Pomodoro cycles",
+  "pomodoroInsightPartial": "You often stop mid-cycle. Try shorter sessions",
+  "pomodoroInsightNeedsWork": "You rarely complete Pomodoro cycles. Consider reducing duration",
+  "studyActivity": "Study Activity",
+  "heatmapTooltip": "{date}: {minutes}m • {sessions} sessions • Score: {score}",
+  "@heatmapTooltip": {
+    "placeholders": {
+      "date": { "type": "String" },
+      "minutes": { "type": "int" },
+      "sessions": { "type": "int" },
+      "score": { "type": "int" }
+    }
+  },
+  "heatmapLegendLess": "Less",
+  "heatmapLegendMore": "More",
+  "heatmapDayDetails": "Day Details",
+  "duration": "Duration",
+  "sessionsCount": "{count, plural, =0{No sessions} =1{1 session} other{{count} sessions}}",
+  "@sessionsCount": {
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "score": "Score",
+  "streakCount": "{count, plural, =1{1 day streak} other{{count} day streak}}",
+  "@streakCount": {
+    "placeholders": {
+      "count": { "type": "num" }
+    }
+  },
+  "studyIntensitySubtitle": "Your daily study intensity over time",
+  "buildStreak": "BUILD YOUR STREAK",
+  "buildStreakSubtitle": "Your study activity history will appear here",
+  "goodConsistency": "Good consistency",
+  "activity": "Activity",
+  "sessions": "Sessions",
+  "min": "min",
+  "heatmapActivityLegendTooltip": "Activity: {label}",
+  "minutesShort": "{count} min",
+  "startSession": "Start Session",
+  "targetPrefix": "Target: {target}",
+  "@targetPrefix": {
+    "placeholders": {
+      "target": { "type": "String" }
+    }
+  },
+  "reset": "Reset",
+  "@reset": {
+    "description": "Button label to reset a study session timer"
+  },
+  "status": "Status",
+  "@status": {
+    "description": "Label for the current status of a study session or item"
+  }
 }

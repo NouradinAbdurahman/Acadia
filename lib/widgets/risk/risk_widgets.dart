@@ -201,41 +201,66 @@ class RiskScoreCard extends ConsumerWidget {
 }
 
 class _TrendBadge extends StatelessWidget {
-  final int delta;
+  final int? delta;
 
-  const _TrendBadge({required this.delta});
+  const _TrendBadge({this.delta});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    if (delta == 0) {
-      return Text(
-        l10n.riskTrendStable,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-        ),
+    if (delta == null) {
+      return _buildContainer(
+        theme,
+        l10n.riskTrendNew,
+        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        null,
       );
     }
 
-    final isUp = delta > 0;
-    // For risk, going up is bad (red), going down is good (green)
-    final color = isUp ? const Color(0xFFEF4444) : const Color(0xFF22C55E);
-    final text = isUp ? l10n.riskTrendUp(delta) : l10n.riskTrendDown(delta.abs());
+    if (delta == 0) {
+      return _buildContainer(
+        theme,
+        l10n.riskTrendStable,
+        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        null,
+      );
+    }
 
+    final isUp = delta! > 0;
+    // For academic risk, going UP is BAD (red), going DOWN is GOOD (green)
+    final color = isUp ? const Color(0xFFEF4444) : const Color(0xFF22C55E);
+    final icon = isUp ? HeroIcons.arrowTrendingUp : HeroIcons.arrowTrendingDown;
+    final text = isUp 
+        ? l10n.riskTrendUp(delta!) 
+        : l10n.riskTrendDown(delta!.abs());
+
+    return _buildContainer(theme, text, color, icon);
+  }
+
+  Widget _buildContainer(ThemeData theme, String text, Color color, HeroIcons? icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
-      child: Text(
-        text,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            HeroIcon(icon, size: 10, color: color),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            text,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

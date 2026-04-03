@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'analytics_provider.dart';
 import '../services/supabase/auth_service.dart';
 import '../services/supabase/task_service.dart';
 import '../services/supabase/study_service.dart';
@@ -10,8 +9,10 @@ import '../services/supabase/mood_service.dart';
 import '../services/supabase/analytics_service.dart';
 import '../services/supabase/deadline_service.dart';
 import '../services/supabase/course_service.dart';
+import '../services/supabase/course_result_service.dart';
 import '../services/supabase/semester_service.dart';
 import '../services/supabase/notification_service.dart';
+import '../services/supabase/trend_service.dart';
 import '../services/storage/avatar_service.dart';
 
 import '../repositories/auth_repository.dart';
@@ -22,8 +23,10 @@ import '../repositories/mood_repository.dart';
 import '../repositories/analytics_repository.dart';
 import '../repositories/deadline_repository.dart';
 import '../repositories/course_repository.dart';
+import '../repositories/course_result_repository.dart';
 import '../repositories/semester_repository.dart';
 import '../repositories/notification_repository.dart';
+import '../repositories/trend_repository.dart';
 import '../models/app_user.dart';
 
 final supabaseProvider = Provider<SupabaseClient>((ref) {
@@ -40,8 +43,11 @@ final analyticsServiceProvider = Provider<AnalyticsService>((ref) => AnalyticsSe
 final deadlineServiceProvider =
     Provider<DeadlineService>((ref) => DeadlineService(ref.watch(supabaseProvider)));
 final courseServiceProvider = Provider<CourseService>((ref) => CourseService(ref.watch(supabaseProvider)));
+final courseResultServiceProvider =
+    Provider<CourseResultService>((ref) => CourseResultService(ref.watch(supabaseProvider)));
 final semesterServiceProvider = Provider<SemesterService>((ref) => SemesterService(ref.watch(supabaseProvider)));
 final notificationServiceProvider = Provider<NotificationService>((ref) => NotificationService(ref.watch(supabaseProvider)));
+final trendServiceProvider = Provider<TrendService>((ref) => TrendService(ref.watch(supabaseProvider)));
 final avatarServiceProvider = Provider<AvatarService>((ref) => AvatarService(ref.watch(supabaseProvider)));
 
 
@@ -55,8 +61,12 @@ final analyticsRepositoryProvider = Provider<AnalyticsRepository>((ref) => Analy
 final deadlineRepositoryProvider =
     Provider<DeadlineRepository>((ref) => DeadlineRepository(ref.watch(deadlineServiceProvider)));
 final courseRepositoryProvider = Provider<CourseRepository>((ref) => CourseRepository(ref.watch(courseServiceProvider)));
+final courseResultRepositoryProvider = Provider<CourseResultRepository>(
+  (ref) => CourseResultRepository(ref.watch(courseResultServiceProvider)),
+);
 final semesterRepositoryProvider = Provider<SemesterRepository>((ref) => SemesterRepository(ref.watch(semesterServiceProvider)));
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) => NotificationRepository(ref.watch(notificationServiceProvider)));
+final trendRepositoryProvider = Provider<TrendRepository>((ref) => TrendRepository(ref.watch(trendServiceProvider)));
 
 
 // --- STATE PROVIDERS ---

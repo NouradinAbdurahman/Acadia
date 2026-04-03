@@ -13,7 +13,7 @@ import '../../widgets/common/animated_pressable.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import 'create_course_screen.dart';
-import 'create_semester_screen.dart';
+import 'semester_management_screen.dart';
 import 'package:acadia/l10n/app_localizations.dart';
 import '../../components/app_glass_card.dart';
 
@@ -23,10 +23,12 @@ class CourseManagementScreen extends ConsumerStatefulWidget {
   const CourseManagementScreen({super.key});
 
   @override
-  ConsumerState<CourseManagementScreen> createState() => _CourseManagementScreenState();
+  ConsumerState<CourseManagementScreen> createState() =>
+      _CourseManagementScreenState();
 }
 
-class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen> {
+class _CourseManagementScreenState
+    extends ConsumerState<CourseManagementScreen> {
   _CourseSort _sortBy = _CourseSort.semester;
 
   @override
@@ -46,11 +48,21 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
               Haptics.vibrate(HapticsType.light);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CreateSemesterScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const SemesterManagementScreen(),
+                ),
               );
             },
             icon: const AppIcon(HeroIcons.calendar, size: 24),
             tooltip: l10n.manageSemesters,
+          ),
+          IconButton(
+            onPressed: () {
+              Haptics.vibrate(HapticsType.light);
+              context.push('/course-results');
+            },
+            icon: const AppIcon(HeroIcons.chartBar, size: 24),
+            tooltip: l10n.examResults,
           ),
           IconButton(
             onPressed: () {
@@ -83,13 +95,20 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
 
                 final sortedCourses = [...courses];
                 if (_sortBy == _CourseSort.alphabetical) {
-                  sortedCourses.sort((a, b) => a.courseName.compareTo(b.courseName));
+                  sortedCourses.sort(
+                    (a, b) => a.courseName.compareTo(b.courseName),
+                  );
                 } else if (_sortBy == _CourseSort.studyTime) {
-                  sortedCourses.sort((a, b) =>
-                      (studyMinutesByCourse[b.id] ?? 0).compareTo(studyMinutesByCourse[a.id] ?? 0));
+                  sortedCourses.sort(
+                    (a, b) => (studyMinutesByCourse[b.id] ?? 0).compareTo(
+                      studyMinutesByCourse[a.id] ?? 0,
+                    ),
+                  );
                 } else {
                   sortedCourses.sort((a, b) {
-                    final semCompare = (a.semester ?? 0).compareTo(b.semester ?? 0);
+                    final semCompare = (a.semester ?? 0).compareTo(
+                      b.semester ?? 0,
+                    );
                     if (semCompare != 0) return semCompare;
                     return a.courseName.compareTo(b.courseName);
                   });
@@ -100,16 +119,18 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
                   children: [
                     _buildSortSection(l10n),
                     const SizedBox(height: AppSpacing.md),
-                    ...sortedCourses.map((course) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: _buildCourseCard(
-                        context,
-                        ref,
-                        course,
-                        l10n,
-                        studyMinutesByCourse[course.id] ?? 0,
+                    ...sortedCourses.map(
+                      (course) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: _buildCourseCard(
+                          context,
+                          ref,
+                          course,
+                          l10n,
+                          studyMinutesByCourse[course.id] ?? 0,
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 );
               },
@@ -137,7 +158,8 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
           _buildFilterChip(
             label: l10n.sortAlphabetical,
             selected: _sortBy == _CourseSort.alphabetical,
-            onSelected: (_) => setState(() => _sortBy = _CourseSort.alphabetical),
+            onSelected: (_) =>
+                setState(() => _sortBy = _CourseSort.alphabetical),
           ),
           _buildFilterChip(
             label: l10n.sortStudyTime,
@@ -164,24 +186,26 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
         selected: selected,
         onSelected: onSelected,
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
-          color: selected 
-              ? Colors.white 
+          color: selected
+              ? Colors.white
               : theme.colorScheme.onSurface.withValues(alpha: 0.7),
           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           fontSize: 12,
         ),
         selectedColor: theme.colorScheme.primary,
-        backgroundColor: isDark 
-            ? Colors.white.withValues(alpha: 0.05) 
+        backgroundColor: isDark
+            ? Colors.white.withValues(alpha: 0.05)
             : Colors.black.withValues(alpha: 0.03),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: BorderSide(
-            color: selected 
-                ? theme.colorScheme.primary 
-                : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05)),
+            color: selected
+                ? theme.colorScheme.primary
+                : (isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.05)),
             width: 1,
           ),
         ),
@@ -210,12 +234,16 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
           const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.noCoursesYet,
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             l10n.addFirstCourse,
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.textTheme.bodySmall?.color),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.textTheme.bodySmall?.color,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -238,6 +266,10 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
   ) {
     final theme = Theme.of(context);
     final courseColor = course.uiColor;
+    final formattedStudyTime = _formatStudyDuration(
+      l10n: l10n,
+      totalMinutes: studyMinutes,
+    );
 
     return Dismissible(
       key: Key(course.id),
@@ -315,7 +347,7 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${l10n.sortStudyTime}: ${studyMinutes ~/ 60}${l10n.hoursAbbreviation}',
+                      '${l10n.sortStudyTime}: $formattedStudyTime',
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
@@ -353,5 +385,19 @@ class _CourseManagementScreenState extends ConsumerState<CourseManagementScreen>
         ),
       ),
     );
+  }
+
+  String _formatStudyDuration({
+    required AppLocalizations l10n,
+    required int totalMinutes,
+  }) {
+    if (totalMinutes <= 0) return '0${l10n.minutesAbbreviation}';
+
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+
+    if (hours == 0) return '$minutes${l10n.minutesAbbreviation}';
+    if (minutes == 0) return '$hours${l10n.hoursAbbreviation}';
+    return '$hours${l10n.hoursAbbreviation} $minutes${l10n.minutesAbbreviation}';
   }
 }

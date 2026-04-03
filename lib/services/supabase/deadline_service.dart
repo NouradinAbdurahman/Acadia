@@ -13,14 +13,8 @@ class DeadlineService {
         .order('deadline_date', ascending: true);
   }
 
-  Future<Map<String, dynamic>> createDeadline(
-    Map<String, dynamic> data,
-  ) async {
-    return _supabase
-        .from('academic_deadlines')
-        .insert(data)
-        .select()
-        .single();
+  Future<Map<String, dynamic>> createDeadline(Map<String, dynamic> data) async {
+    return _supabase.from('academic_deadlines').insert(data).select().single();
   }
 
   Future<Map<String, dynamic>> updateDeadline(
@@ -38,5 +32,19 @@ class DeadlineService {
   Future<void> deleteDeadline(String id) async {
     await _supabase.from('academic_deadlines').delete().eq('id', id);
   }
-}
 
+  Future<Map<String, dynamic>> markDeadlineCompleted({
+    required String id,
+    required bool isCompleted,
+  }) async {
+    return _supabase
+        .from('academic_deadlines')
+        .update({
+          'is_completed': isCompleted,
+          'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+  }
+}

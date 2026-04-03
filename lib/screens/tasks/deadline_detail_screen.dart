@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 
 import '../../providers/deadlines_provider.dart';
+import '../../providers/tasks_provider.dart';
+import '../../models/task.dart';
+import '../../domain/academic_deadline_task.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../core/design/app_icons.dart';
@@ -30,6 +33,7 @@ class DeadlineDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final deadlinesAsync = ref.watch(deadlinesProvider);
+    final tasksAsync = ref.watch(tasksProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -62,6 +66,7 @@ class DeadlineDetailScreen extends ConsumerWidget {
                 }
 
                 String countdown() {
+                  if (deadline.isCompleted) return l10n.completed;
                   final now = DateTime.now();
                   final today = DateTime(now.year, now.month, now.day);
                   final d = DateTime(
@@ -89,6 +94,13 @@ class DeadlineDetailScreen extends ConsumerWidget {
                   }
                 }
 
+                final status = deadlineStatus(deadline, DateTime.now());
+                final statusLabel = switch (status) {
+                  AcademicDeadlineStatus.completed => l10n.completed,
+                  AcademicDeadlineStatus.overdue => l10n.overdue,
+                  AcademicDeadlineStatus.pending => l10n.pending,
+                };
+
                 return SingleChildScrollView(
                   child: AppGlassCard(
                     padding: const EdgeInsets.all(AppSpacing.lg),
@@ -101,6 +113,28 @@ class DeadlineDetailScreen extends ConsumerWidget {
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
                           ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.xs,
+                          children: [
+                            _DeadlineKindChip(
+                              label: l10n.deadlineKindBadge,
+                              color: theme.colorScheme.primary,
+                            ),
+                            _DeadlineKindChip(
+                              label: statusLabel,
+                              color: switch (status) {
+                                AcademicDeadlineStatus.overdue =>
+                                  theme.colorScheme.error,
+                                AcademicDeadlineStatus.completed =>
+                                  theme.colorScheme.primary,
+                                AcademicDeadlineStatus.pending =>
+                                  theme.colorScheme.onSurface,
+                              },
+                            ),
+                          ],
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
@@ -153,7 +187,8 @@ class DeadlineDetailScreen extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        if (deadline.notes != null && deadline.notes!.isNotEmpty) ...[
+                        if (deadline.notes != null &&
+                            deadline.notes!.isNotEmpty) ...[
                           Row(
                             children: [
                               AppIcon(
@@ -174,7 +209,9 @@ class DeadlineDetailScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(AppSpacing.md),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.05,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -187,12 +224,120 @@ class DeadlineDetailScreen extends ConsumerWidget {
                           const SizedBox(height: AppSpacing.lg),
                         ],
                         Text(
+                          l10n.relatedTasksSection,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        tasksAsync.when(
+                          data: (tasks) {
+                            final progress = deadlineTaskProgress(
+                              tasks,
+                              deadline.id,
+                            );
+                            final linked = tasksForDeadline(tasks, deadline.id);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (progress.totalCount > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppSpacing.sm,
+                                    ),
+                                    child: Text(
+                                      l10n.deadlineLinkedTasksProgress(
+                                        progress.completedCount,
+                                        progress.totalCount,
+                                      ),
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                                  ),
+                                if (linked.isEmpty)
+                                  Text(
+                                    l10n.deadlineNoLinkedTasks,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                  )
+                                else
+                                  ...linked.map(
+                                    (Task t) => ListTile(
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text(t.title),
+                                      subtitle: Text(
+                                        t.status == 'completed'
+                                            ? l10n.completed
+                                            : l10n.pending,
+                                      ),
+                                      trailing: const AppIcon(
+                                        HeroIcons.chevronRight,
+                                        size: 18,
+                                      ),
+                                      onTap: () {
+                                        Haptics.vibrate(HapticsType.selection);
+                                        context.push('/task-detail?id=${t.id}');
+                                      },
+                                    ),
+                                  ),
+                                const SizedBox(height: AppSpacing.md),
+                                AppButton(
+                                  onPressed: () {
+                                    Haptics.vibrate(HapticsType.selection);
+                                    context.push(
+                                      '/create-task?deadlineId=${deadline.id}',
+                                    );
+                                  },
+                                  text: l10n.addTaskToThisDeadline,
+                                ),
+                              ],
+                            );
+                          },
+                          loading: () => const SizedBox(
+                            height: 24,
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          error: (_, _) => Text(
+                            l10n.couldNotLoadTasks,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Text(
                           countdown(),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
+                            color: deadline.isCompleted
+                                ? theme.colorScheme.primary
+                                : null,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
+                        AppButton(
+                          onPressed: () async {
+                            Haptics.vibrate(HapticsType.medium);
+                            try {
+                              await ref
+                                  .read(deadlinesProvider.notifier)
+                                  .toggleDeadlineCompletion(deadline.id);
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.networkError),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          text: deadline.isCompleted
+                              ? l10n.markAsPending
+                              : l10n.markAsComplete,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
                         AppButton(
                           onPressed: () {
                             Haptics.vibrate(HapticsType.selection);
@@ -204,11 +349,21 @@ class DeadlineDetailScreen extends ConsumerWidget {
                         AppButton(
                           onPressed: () async {
                             Haptics.vibrate(HapticsType.error);
-                            await ref
-                                .read(deadlinesProvider.notifier)
-                                .deleteDeadline(deadline.id);
-                            if (context.mounted) {
-                              context.pop();
+                            try {
+                              await ref
+                                  .read(deadlinesProvider.notifier)
+                                  .deleteDeadline(deadline.id);
+                              if (context.mounted) {
+                                context.pop();
+                              }
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.networkError),
+                                  ),
+                                );
+                              }
                             }
                           },
                           text: l10n.deleteDeadline,
@@ -218,9 +373,7 @@ class DeadlineDetailScreen extends ConsumerWidget {
                   ).animate().fade(duration: AppDurations.slow).slideY(begin: 0.1),
                 );
               },
-              loading: () => const Center(
-                child: CircularProgressIndicator(),
-              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, _) => Center(
                 child: Text(
                   l10n.couldNotLoadDeadlines,
@@ -229,6 +382,33 @@ class DeadlineDetailScreen extends ConsumerWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeadlineKindChip extends StatelessWidget {
+  const _DeadlineKindChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Text(
+        label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

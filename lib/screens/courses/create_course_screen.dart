@@ -13,6 +13,7 @@ import '../../widgets/common/animated_pressable.dart';
 import '../../providers/semester_provider.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 import '../../l10n/app_localizations.dart';
 
 class CreateCourseScreen extends ConsumerStatefulWidget {
@@ -47,8 +48,12 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.courseToEdit?.courseName);
-    _codeController = TextEditingController(text: widget.courseToEdit?.courseCode);
+    _nameController = TextEditingController(
+      text: widget.courseToEdit?.courseName,
+    );
+    _codeController = TextEditingController(
+      text: widget.courseToEdit?.courseCode,
+    );
     _semester = widget.courseToEdit?.semester ?? 1;
     _selectedSemesterId = widget.courseToEdit?.semesterId;
     _credits = widget.courseToEdit?.credits;
@@ -70,7 +75,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
       return;
     }
     if (_ects == null || _ects! <= 0) {
-      _showError("ECTS is required");
+      _showError(l10n.ectsRequired);
       return;
     }
 
@@ -84,7 +89,9 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
         id: widget.courseToEdit?.id ?? '',
         userId: user.id,
         courseName: _nameController.text.trim(),
-        courseCode: _codeController.text.trim().isEmpty ? null : _codeController.text.trim(),
+        courseCode: _codeController.text.trim().isEmpty
+            ? null
+            : _codeController.text.trim(),
         semester: _semester,
         semesterId: _selectedSemesterId,
         credits: _credits!,
@@ -112,9 +119,9 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
   }
 
   void _showError(String message) {
-     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-     );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -123,7 +130,9 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.courseToEdit == null ? l10n.addCourse : l10n.editCourse),
+        title: Text(
+          widget.courseToEdit == null ? l10n.addCourse : l10n.editCourse,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -137,14 +146,15 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   _buildSectionHeader(l10n.overview),
+                  _buildSectionHeader(l10n.overview),
                   const SizedBox(height: AppSpacing.md),
                   _buildTextField(
                     controller: _nameController,
-                    label: l10n.taskTitle, // or add courseName key
+                    label: l10n.courseTitle,
                     hint: l10n.courseNameHint,
                     icon: HeroIcons.bookOpen,
-                    validator: (val) => val == null || val.isEmpty ? l10n.requiredField : null,
+                    validator: (val) =>
+                        val == null || val.isEmpty ? l10n.requiredField : null,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildTextField(
@@ -176,7 +186,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: _buildNumberPicker(
-                          label: "ECTS",
+                          label: l10n.ectsLabel,
                           value: _ects,
                           onChanged: (val) => setState(() => _ects = val),
                         ),
@@ -202,22 +212,23 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
   }
 
   Widget _buildSaveButton(AppLocalizations l10n) {
-    final isValid = _credits != null && _credits! > 0 && _ects != null && _ects! > 0;
-    
+    final isValid =
+        _credits != null && _credits! > 0 && _ects != null && _ects! > 0;
+
     return AppButton(
       text: (widget.courseToEdit == null ? l10n.save : l10n.saveChanges),
       isLoading: _isLoading,
-      onPressed: isValid ? () {
-        Haptics.vibrate(HapticsType.light);
-        _saveCourse();
-      } : null,
+      onPressed: isValid
+          ? () {
+              Haptics.vibrate(HapticsType.light);
+              _saveCourse();
+            }
+          : null,
       isFullWidth: true,
     );
   }
 
   Widget _buildSemesterDropdown(AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final semestersAsync = ref.watch(semesterProvider);
 
     return semestersAsync.when(
@@ -225,34 +236,25 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
         if (semesters.isEmpty) {
           return const SizedBox.shrink();
         }
-        return Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.glassSurface : Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: isDark ? AppColors.glassBorder : theme.colorScheme.onSurface.withValues(alpha: 0.08),
-            ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButtonFormField<String>(
-              initialValue: _selectedSemesterId,
-              isExpanded: true,
-              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-              decoration: InputDecoration(
-                labelText: l10n.selectSemester,
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: AppIcon(HeroIcons.calendar, color: theme.colorScheme.primary, size: 20),
-                ),
-                border: InputBorder.none,
-              ),
-              items: semesters.map((s) => DropdownMenuItem(
-                value: s.id,
-                child: Text(s.name, style: theme.textTheme.bodyLarge),
-              )).toList(),
-              onChanged: (val) => setState(() => _selectedSemesterId = val),
-            ),
-          ),
+        String selectedSemesterName = l10n.selectSemester;
+        final options = <AppPickerOption<String>>[];
+        for (final semester in semesters) {
+          options.add(
+            AppPickerOption(value: semester.id, title: semester.name),
+          );
+          if (semester.id == _selectedSemesterId)
+            selectedSemesterName = semester.name;
+        }
+
+        return AppBottomSheetPicker<String>(
+          icon: HeroIcons.calendarDays,
+          fieldLabel: l10n.selectSemester,
+          sheetTitle: l10n.selectSemester,
+          selectedValue: _selectedSemesterId,
+          selectedDisplayText: selectedSemesterName,
+          options: options,
+          onChanged: (val) => setState(() => _selectedSemesterId = val),
+          emptyText: l10n.noSemestersYet,
         );
       },
       loading: () => const LinearProgressIndicator(),
@@ -264,10 +266,10 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-            letterSpacing: 1.2,
-          ),
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.primary,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
@@ -286,7 +288,9 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
         color: isDark ? AppColors.glassSurface : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: isDark ? AppColors.glassBorder : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+          color: isDark
+              ? AppColors.glassBorder
+              : theme.colorScheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       child: TextFormField(
@@ -301,7 +305,10 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
             child: AppIcon(icon, color: theme.colorScheme.primary, size: 20),
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -321,7 +328,9 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
         color: isDark ? AppColors.glassSurface : Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.lg),
         border: Border.all(
-          color: isDark ? AppColors.glassBorder : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+          color: isDark
+              ? AppColors.glassBorder
+              : theme.colorScheme.onSurface.withValues(alpha: 0.08),
         ),
       ),
       child: Column(
@@ -345,7 +354,9 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
               ),
               Text(
                 value?.toString() ?? "-",
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               _buildCompactButton(
                 icon: HeroIcons.plusCircle,
@@ -406,7 +417,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
                         color: color.withValues(alpha: 0.4),
                         blurRadius: 10,
                         spreadRadius: 2,
-                      )
+                      ),
                     ]
                   : null,
             ),

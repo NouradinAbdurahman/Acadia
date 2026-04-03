@@ -8,6 +8,8 @@ import '../tasks/tasks_list_screen.dart';
 import '../study/study_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../profile/profile_screen.dart';
+import '../../core/theme/app_colors.dart';
+import '../../providers/study_sessions_provider.dart';
 import 'liquid_glass_navbar.dart';
 
 class AppShell extends ConsumerWidget {
@@ -16,9 +18,13 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = ref.watch(bottomNavProvider);
+    final timerState = ref.watch(studyTimerProvider);
+    final isSessionActive = timerState.isRunning || timerState.isPaused;
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Background will come from children
+      extendBodyBehindAppBar: true,
+      primary: false,
+      backgroundColor: isSessionActive ? Theme.of(context).scaffoldBackgroundColor : Colors.transparent,
       body: Stack(
         children: [
           IndexedStack(
@@ -37,7 +43,7 @@ class AppShell extends ConsumerWidget {
             bottom: 0,
             child: SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: LiquidGlassNavbar(
                   selectedIndex: selectedIndex,
                   onSelectedIndex: (index) =>
@@ -51,4 +57,3 @@ class AppShell extends ConsumerWidget {
     );
   }
 }
-

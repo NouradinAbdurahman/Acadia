@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,6 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (_isLoading) return; // Prevent double-tap
     if (!_formKey.currentState!.validate()) return;
     
     setState(() {
@@ -117,7 +119,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           message = l10n?.networkError ?? '';
         }
       } else {
-        message = l10n?.networkError ?? '';
+        debugPrint('🚨 LOGIN ERROR: $e');
+        final isNetworkError = e.toString().contains('SocketException') ||
+            e.toString().contains('ClientException');
+        // In debug: show real error. In release: always show generic message.
+        message = kDebugMode && !isNetworkError
+            ? e.toString()
+            : (l10n?.networkError ?? '');
       }
 
       setState(() => _errorMessage = message);

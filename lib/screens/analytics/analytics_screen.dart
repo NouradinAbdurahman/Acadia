@@ -1,7 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../core/design/app_spacing.dart';
 import '../../components/app_glass_card.dart';
@@ -9,26 +12,65 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/course_provider.dart';
+import '../../providers/trend_provider.dart';
 import '../../models/analytics_data.dart';
 import '../../models/course.dart';
+import '../../models/trend_data.dart';
+import '../../widgets/common/weekly_activity_card.dart';
 import '../../widgets/risk/risk_widgets.dart';
 
-class AnalyticsScreen extends ConsumerWidget {
+class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
+}
+
+class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _trendsSectionKey = GlobalKey();
+
+  void _scrollToTrendsSection() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = _trendsSectionKey.currentContext;
+      if (context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.0,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<int>(analyticsJumpToTrendsTokenProvider, (previous, next) {
+      if (previous != next) _scrollToTrendsSection();
+    });
+
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final analyticsAsync = ref.watch(analyticsProvider);
+    final studyAnalytics = ref.watch(studyAnalyticsProvider);
+    final trendDays = ref.watch(trendDaysProvider);
+    final trendAsync = ref.watch(trendProvider(trendDays));
 
     return Scaffold(
       body: AuthBackgroundContainer(
         child: SafeArea(
-          bottom: false,
+          bottom: true,
           child: analyticsAsync.when(
             data: (data) => SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -37,7 +79,31 @@ class AnalyticsScreen extends ConsumerWidget {
                     style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
                   ).animate().fade().slideX(begin: -0.1),
                   const SizedBox(height: AppSpacing.xl),
-                  
+                  if (_isSparseAnalytics(data)) ...[
+                    AppGlassCard(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.analyticsSparseDataTitle,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            l10n.analyticsSparseDataBody,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+
                   // 0. Academic Risk Breakdown
                   _buildSectionTitle(theme, l10n.academicRisk),
                   const SizedBox(height: AppSpacing.md),
@@ -49,8 +115,13 @@ class AnalyticsScreen extends ConsumerWidget {
                   Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
                   const SizedBox(height: AppSpacing.md),
                   _StudyHoursBarChart(data: data),
+                  const SizedBox(height: AppSpacing.lg),
+                  WeeklyActivityCard(
+                    data: studyAnalytics.weeklyMinutes,
+                    analytics: studyAnalytics,
+                  ),
                   const SizedBox(height: AppSpacing.xl),
-                  
+
                   // 2. Task Completion
                   _buildSectionTitle(theme, l10n.weeklyTaskCompletion),
                   Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
@@ -58,18 +129,66 @@ class AnalyticsScreen extends ConsumerWidget {
                   _TaskCompletionPieChart(data: data),
                   const SizedBox(height: AppSpacing.xl),
 
+                  // 3. Grade Distribution
+                  _buildSectionTitle(theme, l10n.gradeDistribution),
+                  Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
+                  const SizedBox(height: AppSpacing.md),
+                  _GradeDistributionCard(data: data),
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // 4. Trend Analysis
+                  KeyedSubtree(
+                    key: _trendsSectionKey,
+                    child: _buildSectionTitle(theme, l10n.trendAnalysis),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    children: [7, 14, 30].map((days) {
+                      return ChoiceChip(
+                        label: Text(l10n.daysFilter(days)),
+                        selected: trendDays == days,
+                        onSelected: (_) =>
+                            ref.read(trendDaysProvider.notifier).state = days,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  trendAsync.when(
+                    data: (trend) => AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: _TrendAnalysisSection(
+                        key: ValueKey('trend-$trendDays'),
+                        trend: trend,
+                      ),
+                    ),
+                    loading: () => const AppGlassCard(
+                      height: 120,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (e, s) => AppGlassCard(
+                      height: 120,
+                      child: Center(child: Text(l10n.networkError)),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+
                   const SizedBox(height: 120),
                 ],
               ),
             ),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => _analyticsLoadingSkeleton(theme),
             error: (e, s) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     Text(l10n.networkError, textAlign: TextAlign.center),
                   ],
@@ -88,17 +207,1062 @@ class AnalyticsScreen extends ConsumerWidget {
       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
+
+  bool _isSparseAnalytics(AnalyticsData data) {
+    return data.totalTasks == 0 &&
+        data.studyHoursPerCourse.isEmpty &&
+        data.gradeDistribution.isEmpty;
+  }
+
+  Widget _analyticsLoadingSkeleton(ThemeData theme) {
+    final base = theme.colorScheme.surfaceContainerHighest;
+    final highlight = theme.colorScheme.surface;
+    Widget line(double h, {double width = double.infinity}) {
+      return Shimmer.fromColors(
+        baseColor: base,
+        highlightColor: highlight,
+        child: Container(
+          height: h,
+          width: width,
+          decoration: BoxDecoration(
+            color: base,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          line(28, width: 160),
+          const SizedBox(height: AppSpacing.xl),
+          line(20, width: 120),
+          const SizedBox(height: AppSpacing.md),
+          line(140),
+          const SizedBox(height: AppSpacing.xl),
+          line(20, width: 140),
+          const SizedBox(height: AppSpacing.md),
+          line(180),
+          const SizedBox(height: AppSpacing.xl),
+          line(20, width: 100),
+          const SizedBox(height: AppSpacing.md),
+          line(100),
+        ],
+      ),
+    );
+  }
 }
 
-class _StudyHoursBarChart extends ConsumerWidget {
+class _TrendAnalysisSection extends StatelessWidget {
+  const _TrendAnalysisSection({super.key, required this.trend});
+
+  final TrendData trend;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _TrendSummaryCard(trend: trend),
+        const SizedBox(height: AppSpacing.sm),
+        _OverallStatusCard(trend: trend),
+        const SizedBox(height: 20),
+        AppGlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.schedule, size: 16),
+                      SizedBox(width: 6),
+                      Text(l10n.studyTrend),
+                    ],
+                  ),
+                  Text(
+                    l10n.trendTodayDuration(
+                      _formatDurationFromHours(
+                        _latestDouble(trend.studyTrend),
+                        l10n,
+                      ),
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.trendStudySubtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: 140,
+                child: _TrendLineChart(
+                  data: trend.studyTrend,
+                  valueSuffix: l10n.hoursAbbreviation,
+                  emptyMessage: l10n.trendStudyEmptyMessage,
+                  useDurationLabels: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppGlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.checklist, size: 16),
+                      SizedBox(width: 6),
+                      Text(l10n.taskCompletionTrend),
+                    ],
+                  ),
+                  Text(
+                    l10n.trendCompletedToday(_latestInt(trend.taskTrend)),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.trendTaskSubtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: 140,
+                child: _TrendBarChart(data: trend.taskTrend, valueSuffix: ''),
+              ),
+              if (_activeDaysCount(trend.taskTrend) <= 2 &&
+                  trend.taskTrend.values.fold<int>(
+                        0,
+                        (sum, value) => sum + value,
+                      ) >
+                      0)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.sm),
+                  child: Text(
+                    l10n.trendTasksOneDayHint,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppGlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, size: 16),
+                      SizedBox(width: 6),
+                      Text(l10n.workloadTrend),
+                    ],
+                  ),
+                  Text(
+                    l10n.trendNewToday(_latestInt(trend.workloadTrend)),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.trendWorkloadSubtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: 140,
+                child: _TrendLineChart(
+                  data: trend.workloadTrend.map(
+                    (key, value) => MapEntry(key, value.toDouble()),
+                  ),
+                  valueSuffix: '',
+                  minActivePoints: 1,
+                  emptyMessage: l10n.trendWorkloadEmptyMessage,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppGlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.show_chart, size: 16),
+                  SizedBox(width: 6),
+                  Text(l10n.performanceTrend),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.trendPerformanceSubtitle,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: 140,
+                child: _TrendGradeLineChart(points: trend.gradeTrend),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        ..._sortedInsights(trend.insights).map(
+          (insight) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: AppGlassCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.insights_rounded,
+                    size: 18,
+                    color: switch (insight.type) {
+                      InsightType.good => Colors.green,
+                      InsightType.warning => Colors.orange,
+                      InsightType.critical => Colors.red,
+                    },
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _localizeInsightTitle(context, insight),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(_localizeInsightMessage(context, insight)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  double _latestDouble(Map<DateTime, double> values) {
+    if (values.isEmpty) return 0;
+    final entries = values.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return entries.last.value;
+  }
+
+  int _latestInt(Map<DateTime, int> values) {
+    if (values.isEmpty) return 0;
+    final entries = values.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return entries.last.value;
+  }
+
+  int _activeDaysCount(Map<DateTime, int> values) {
+    return values.values.where((value) => value > 0).length;
+  }
+
+  List<TrendInsight> _sortedInsights(List<TrendInsight> insights) {
+    int rank(InsightType type) => switch (type) {
+      InsightType.critical => 0,
+      InsightType.warning => 1,
+      InsightType.good => 2,
+    };
+    final sorted = [...insights];
+    sorted.sort((a, b) => rank(a.type).compareTo(rank(b.type)));
+    return sorted;
+  }
+
+  String _localizeInsightTitle(BuildContext context, TrendInsight insight) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (insight.key ?? insight.title) {
+      case 'Build study consistency':
+      case 'study_build_consistency':
+        return l10n.trendInsightBuildConsistencyTitle;
+      case 'Study increased significantly':
+      case 'study_increased':
+        return l10n.trendInsightStudyIncreasedSignificantlyTitle;
+      case 'Study improved':
+        return l10n.trendInsightStudyImprovedTitle;
+      case 'Study declined':
+      case 'study_declined':
+        return l10n.trendInsightStudyDeclinedTitle;
+      case 'No tasks in this period':
+      case 'no_tasks':
+        return l10n.trendInsightNoTasksTitle;
+      case 'Task completion is low':
+      case 'task_completion_low_none':
+      case 'task_completion_low_some':
+        return l10n.trendInsightTaskLowTitle;
+      case 'No new workload':
+      case 'no_workload':
+        return l10n.trendInsightNoWorkloadTitle;
+      case 'Workload increased sharply':
+      case 'workload_increased':
+        return l10n.trendInsightWorkloadSharpTitle;
+      case 'Workload is rising':
+        return l10n.trendInsightWorkloadRisingTitle;
+      case 'Performance declining':
+      case 'performance_declining':
+        return l10n.trendInsightPerformanceDecliningTitle;
+      case 'Performance improving':
+      case 'performance_improving':
+        return l10n.trendInsightPerformanceImprovingTitle;
+      case 'Stable trends':
+      case 'stable_trends':
+        return l10n.trendInsightStableTitle;
+      default:
+        return insight.title;
+    }
+  }
+
+  String _localizeInsightMessage(BuildContext context, TrendInsight insight) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (insight.key) {
+      case 'study_build_consistency':
+        return l10n.trendInsightBuildConsistencyMessage;
+      case 'study_increased':
+        return l10n.trendInsightStudyIncreasedMessage(
+          insight.params['percent'] ?? 0,
+        );
+      case 'study_declined':
+        return l10n.trendInsightStudyDroppedMessage(
+          insight.params['percent'] ?? 0,
+        );
+      case 'no_tasks':
+        return l10n.trendInsightNoTasksMessage;
+      case 'task_completion_low_none':
+        return l10n.trendInsightNoTasksCompletedMessage;
+      case 'task_completion_low_some':
+        return l10n.trendInsightTaskCompletedFractionMessage(
+          insight.params['completed'] ?? 0,
+          insight.params['total'] ?? 0,
+        );
+      case 'no_workload':
+        return l10n.trendInsightNoWorkloadMessage;
+      case 'workload_increased':
+        return l10n.trendInsightWorkloadAddedMessage(
+          insight.params['count'] ?? 0,
+        );
+      case 'performance_declining':
+        return l10n.trendInsightPerformanceDecliningMessage;
+      case 'performance_improving':
+        return l10n.trendInsightPerformanceImprovingMessage;
+      case 'stable_trends':
+        return l10n.trendInsightStableMessage;
+    }
+
+    final message = insight.message;
+    if (message ==
+        'You have just started tracking study sessions. Try to study daily.')
+      return l10n.trendInsightBuildConsistencyMessage;
+    if (message.startsWith('Study increased by ')) {
+      final match = RegExp(r'Study increased by (\d+)%').firstMatch(message);
+      final percent = int.tryParse(match?.group(1) ?? '') ?? 0;
+      return l10n.trendInsightStudyIncreasedMessage(percent);
+    }
+    if (message.startsWith('Study dropped by ')) {
+      final match = RegExp(r'Study dropped by (\d+)%').firstMatch(message);
+      final percent = int.tryParse(match?.group(1) ?? '') ?? 0;
+      return l10n.trendInsightStudyDroppedMessage(percent);
+    }
+    if (message == 'No tasks were due in this period.')
+      return l10n.trendInsightNoTasksMessage;
+    if (message ==
+        'No tasks completed yet. Start completing tasks to track performance.')
+      return l10n.trendInsightNoTasksCompletedMessage;
+    if (message.startsWith('You completed ')) {
+      final match = RegExp(
+        r'You completed (\d+) of (\d+) tasks',
+      ).firstMatch(message);
+      final completed = int.tryParse(match?.group(1) ?? '') ?? 0;
+      final total = int.tryParse(match?.group(2) ?? '') ?? 0;
+      return l10n.trendInsightTaskCompletedFractionMessage(completed, total);
+    }
+    if (message == 'No new tasks or deadlines were added in this period.')
+      return l10n.trendInsightNoWorkloadMessage;
+    if (message.startsWith('You added ')) {
+      final match = RegExp(
+        r'You added (\d+) tasks/deadlines',
+      ).firstMatch(message);
+      final total = int.tryParse(match?.group(1) ?? '') ?? 0;
+      return l10n.trendInsightWorkloadAddedMessage(total);
+    }
+    if (message ==
+        'Performance trend is decreasing. Review weak courses this week.')
+      return l10n.trendInsightPerformanceDecliningMessage;
+    if (message ==
+        'Performance trend is improving. Keep the same study consistency.')
+      return l10n.trendInsightPerformanceImprovingMessage;
+    if (message == 'No significant change yet. Keep logging consistently.')
+      return l10n.trendInsightStableMessage;
+    return message;
+  }
+
+  String _formatDurationFromHours(double hoursValue, AppLocalizations l10n) {
+    final totalMinutes = (hoursValue * 60).round();
+    if (totalMinutes <= 0) return '0${l10n.minutesAbbreviation}';
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (hours == 0) return '$minutes${l10n.minutesAbbreviation}';
+    if (minutes == 0) return '$hours${l10n.hoursAbbreviation}';
+    return '$hours${l10n.hoursAbbreviation} $minutes${l10n.minutesAbbreviation}';
+  }
+}
+
+class _TrendSummaryCard extends StatelessWidget {
+  const _TrendSummaryCard({required this.trend});
+
+  final TrendData trend;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final totalStudyHours = trend.studyTrend.values.fold<double>(
+      0,
+      (sum, value) => sum + value,
+    );
+    final totalCompletedTasks = trend.taskTrend.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
+    final totalTasksInRange = _estimatedTotalTasks(trend);
+    final totalWorkload = trend.workloadTrend.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
+    final perfLabel = trend.gradeTrend.isEmpty
+        ? l10n.trendNotEnoughData
+        : trend.performanceChange.abs() < 0.1
+        ? l10n.trendStable
+        : trend.performanceChange > 0
+        ? l10n.trendImproving
+        : l10n.trendDeclining;
+    final workloadLabel = _workloadSummaryLabel(trend, l10n);
+    final studyLabel = _studySummaryLabel(trend, l10n);
+    final tasksLabel = _taskSummaryLabel(trend, l10n);
+    final studyColor = _studyColor(theme, trend);
+    final tasksColor = _tasksColor(theme, trend);
+    final workloadColor = _workloadColor(theme, trend);
+    final performanceColor = _performanceColor(theme, trend);
+    return AppGlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.trendSummaryTitle,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            '${l10n.study}: $studyLabel',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: studyColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            totalStudyHours < 0.5
+                ? l10n.trendLessThan30Minutes
+                : l10n.trendHoursInPeriod(totalStudyHours.toStringAsFixed(1)),
+            style: theme.textTheme.bodySmall,
+          ),
+          Text(
+            '${l10n.tasks}: $tasksLabel',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: tasksColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (totalTasksInRange > 0)
+            Text(
+              l10n.trendTasksCompletedFraction(
+                totalCompletedTasks,
+                totalTasksInRange,
+              ),
+              style: theme.textTheme.bodySmall,
+            ),
+          Text(
+            '${l10n.workloadTrend}: $workloadLabel',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: workloadColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            l10n.trendTasksDeadlinesAdded(totalWorkload),
+            style: theme.textTheme.bodySmall,
+          ),
+          Text(
+            '${l10n.performanceTrend}: $perfLabel',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: performanceColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _signedPercent(double value) {
+    final rounded = value.round();
+    if (rounded > 0) return '+$rounded%';
+    return '$rounded%';
+  }
+
+  String _studySummaryLabel(TrendData trend, AppLocalizations l10n) {
+    final total = trend.studyTrend.values.fold<double>(
+      0,
+      (sum, value) => sum + value,
+    );
+    if (total < 0.5) return l10n.trendVeryLowActivity;
+    if (total < 1) return l10n.trendLowActivity;
+    return _signedPercent(trend.studyChangePercent);
+  }
+
+  String _taskSummaryLabel(TrendData trend, AppLocalizations l10n) {
+    final totalTasks = _estimatedTotalTasks(trend);
+    if (totalTasks == 0) return l10n.trendNoTasksCompletedPeriod;
+    final percent = (trend.taskCompletionRate * 100).round();
+    if (percent <= 0) return l10n.trendNoTasksCompletedPeriod;
+    return l10n.trendPercentCompleted(percent);
+  }
+
+  String _workloadSummaryLabel(TrendData trend, AppLocalizations l10n) {
+    final total = trend.workloadTrend.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
+    if (total == 0) return l10n.trendNoWorkload;
+    if (trend.workloadChangePercent > 10) return l10n.trendIncreased;
+    if (trend.workloadChangePercent < -10)
+      return l10n.trendReducedComparedLastPeriod;
+    return l10n.trendStable;
+  }
+
+  Color _studyColor(ThemeData theme, TrendData trend) {
+    final total = trend.studyTrend.values.fold<double>(
+      0,
+      (sum, value) => sum + value,
+    );
+    if (total < 1) return Colors.orange;
+    if (trend.studyChangePercent > 10) return Colors.green;
+    if (trend.studyChangePercent < -10) return theme.colorScheme.error;
+    return theme.colorScheme.onSurface;
+  }
+
+  Color _tasksColor(ThemeData theme, TrendData trend) {
+    final percent = (trend.taskCompletionRate * 100).round();
+    if (percent >= 60) return Colors.green;
+    if (percent > 0) return Colors.orange;
+    return theme.colorScheme.error;
+  }
+
+  Color _workloadColor(ThemeData theme, TrendData trend) {
+    final total = trend.workloadTrend.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
+    if (total == 0) return theme.colorScheme.onSurface;
+    if (trend.workloadChangePercent > 10) return Colors.orange;
+    if (trend.workloadChangePercent < -10) return theme.colorScheme.onSurface;
+    return theme.colorScheme.onSurface;
+  }
+
+  Color _performanceColor(ThemeData theme, TrendData trend) {
+    if (trend.gradeTrend.isEmpty) return theme.colorScheme.onSurface;
+    if (trend.performanceChange > 0) return Colors.green;
+    if (trend.performanceChange < 0) return theme.colorScheme.error;
+    return theme.colorScheme.onSurface;
+  }
+
+  int _estimatedTotalTasks(TrendData trend) {
+    final completed = trend.taskTrend.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
+    if (trend.taskCompletionRate <= 0) return completed == 0 ? 0 : completed;
+    return (completed / trend.taskCompletionRate).round();
+  }
+}
+
+class _TrendLineChart extends StatelessWidget {
+  const _TrendLineChart({
+    required this.data,
+    required this.valueSuffix,
+    this.emptyMessage,
+    this.useDurationLabels = false,
+    this.minActivePoints = 1,
+  });
+
+  final Map<DateTime, double> data;
+  final String valueSuffix;
+  final String? emptyMessage;
+  final bool useDurationLabels;
+  final int minActivePoints;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = data.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final activePoints = entries.where((entry) => entry.value > 0).length;
+    if (activePoints < minActivePoints) {
+      return Center(
+        child: Text(
+          emptyMessage ?? AppLocalizations.of(context)!.trendStudyEmptyMessage,
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    final values = entries.map((entry) => entry.value).toList();
+    final spots = values
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value))
+        .toList();
+    final maxY = values.reduce((a, b) => a > b ? a : b) + 1;
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: maxY,
+        titlesData: FlTitlesData(
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: maxY <= 4 ? 1 : (maxY / 4),
+              getTitlesWidget: (value, meta) => Text(
+                useDurationLabels
+                    ? _formatDurationFromHours(
+                        value,
+                        AppLocalizations.of(context)!,
+                      )
+                    : (valueSuffix.isEmpty
+                          ? value.toInt().toString()
+                          : '${value.toInt()}$valueSuffix'),
+                style: const TextStyle(fontSize: 10),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              getTitlesWidget: (value, meta) {
+                if (!_isWholeTick(value)) return const SizedBox.shrink();
+                final index = value.toInt();
+                if (index < 0 || index >= entries.length)
+                  return const SizedBox.shrink();
+                final step = _xAxisStep(entries.length);
+                if (index % step != 0) return const SizedBox.shrink();
+                final date = entries[index].key;
+                return Text(
+                  _formatDayLabel(date),
+                  style: const TextStyle(fontSize: 10),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          horizontalInterval: 1,
+          drawVerticalLine: false,
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, bar, index) =>
+                  FlDotCirclePainter(radius: 3),
+            ),
+            barWidth: 4,
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
+              ],
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.02),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDurationFromHours(double hoursValue, AppLocalizations l10n) {
+    final totalMinutes = (hoursValue * 60).round();
+    if (totalMinutes <= 0) return '0${l10n.minutesAbbreviation}';
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (hours == 0) return '$minutes${l10n.minutesAbbreviation}';
+    if (minutes == 0) return '$hours${l10n.hoursAbbreviation}';
+    return '$hours${l10n.hoursAbbreviation} $minutes${l10n.minutesAbbreviation}';
+  }
+}
+
+class _TrendBarChart extends StatelessWidget {
+  const _TrendBarChart({required this.data, required this.valueSuffix});
+
+  final Map<DateTime, int> data;
+  final String valueSuffix;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = data.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final totalCompleted = entries.fold<int>(
+      0,
+      (sum, entry) => sum + entry.value,
+    );
+    if (totalCompleted == 0) {
+      return Center(
+        child: Text(
+          AppLocalizations.of(context)!.trendTaskEmptyMessage,
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    final values = entries.map((entry) => entry.value).toList();
+    final maxY = values.reduce((a, b) => a > b ? a : b).toDouble() + 1;
+    return BarChart(
+      BarChartData(
+        minY: 0,
+        maxY: maxY,
+        titlesData: FlTitlesData(
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: maxY <= 4 ? 1 : (maxY / 4),
+              getTitlesWidget: (value, meta) => Text(
+                valueSuffix.isEmpty
+                    ? value.toInt().toString()
+                    : '${value.toInt()}$valueSuffix',
+                style: const TextStyle(fontSize: 10),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              getTitlesWidget: (value, meta) {
+                if (!_isWholeTick(value)) return const SizedBox.shrink();
+                final index = value.toInt();
+                if (index < 0 || index >= entries.length)
+                  return const SizedBox.shrink();
+                final step = _xAxisStep(entries.length);
+                if (index % step != 0) return const SizedBox.shrink();
+                final date = entries[index].key;
+                return Text(
+                  _formatDayLabel(date),
+                  style: const TextStyle(fontSize: 10),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          horizontalInterval: 1,
+          drawVerticalLine: false,
+        ),
+        barGroups: values
+            .asMap()
+            .entries
+            .map(
+              (e) => BarChartGroupData(
+                x: e.key,
+                barRods: [
+                  BarChartRodData(
+                    toY: e.value.toDouble(),
+                    width: 12,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Theme.of(context).colorScheme.primary,
+                        Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.35),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+}
+
+class _TrendGradeLineChart extends StatelessWidget {
+  const _TrendGradeLineChart({required this.points});
+  final List<GradePoint> points;
+
+  @override
+  Widget build(BuildContext context) {
+    if (points.isEmpty) {
+      return Center(
+        child: Text(
+          AppLocalizations.of(context)!.trendPerformanceEmptyMessage,
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    if (points.length < 3) {
+      return Center(
+        child: Text(
+          AppLocalizations.of(context)!.trendPerformanceNeedThreeResults,
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+    final spots = points
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.value))
+        .toList();
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: 4.0,
+        titlesData: FlTitlesData(
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: 1,
+              getTitlesWidget: (value, meta) => Text(
+                value.toStringAsFixed(1),
+                style: const TextStyle(fontSize: 10),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 24,
+              getTitlesWidget: (value, meta) {
+                if (!_isWholeTick(value)) return const SizedBox.shrink();
+                final index = value.toInt();
+                if (index < 0 || index >= points.length)
+                  return const SizedBox.shrink();
+                final step = _xAxisStep(points.length);
+                if (index % step != 0) return const SizedBox.shrink();
+                final date = points[index].date;
+                return Text(
+                  _formatDayLabel(date),
+                  style: const TextStyle(fontSize: 10),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(
+          show: true,
+          horizontalInterval: 1,
+          drawVerticalLine: false,
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, bar, index) =>
+                  FlDotCirclePainter(radius: 3),
+            ),
+            barWidth: 4,
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.tertiary,
+                Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.35),
+              ],
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.2),
+                  Theme.of(
+                    context,
+                  ).colorScheme.tertiary.withValues(alpha: 0.02),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverallStatusCard extends StatelessWidget {
+  const _OverallStatusCard({required this.trend});
+
+  final TrendData trend;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final totalStudyHours = trend.studyTrend.values.fold<double>(
+      0,
+      (sum, value) => sum + value,
+    );
+    final completed = trend.taskTrend.values.fold<int>(
+      0,
+      (sum, value) => sum + value,
+    );
+    final totalTasks = _estimatedTotalTasks(trend, completed);
+    final completionRate = totalTasks == 0 ? 0.0 : completed / totalTasks;
+    final isStudyLow = totalStudyHours < 1;
+    final isTasksLow = totalTasks > 0 && completionRate < 0.5;
+    final isOnTrack =
+        totalStudyHours >= 1 && (totalTasks == 0 || completionRate >= 0.6);
+
+    final l10n = AppLocalizations.of(context)!;
+    final status = isOnTrack
+        ? l10n.trendStatusOnTrack
+        : (isStudyLow && isTasksLow)
+        ? l10n.trendStatusLowAndBehind
+        : isStudyLow
+        ? l10n.trendStatusStudyNeedsImprovement
+        : isTasksLow
+        ? l10n.trendStatusTaskIncomplete
+        : l10n.trendStatusStableProgress;
+
+    final detail = isOnTrack
+        ? l10n.trendStatusOnTrackDetail
+        : l10n.trendStatusNeedsFocusDetail;
+    final color = isOnTrack ? Colors.green : Colors.orange;
+
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          Icon(Icons.assessment_rounded, color: color, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${l10n.trendOverallStatusTitle}: $status',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(detail, style: theme.textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _estimatedTotalTasks(TrendData trend, int completed) {
+    if (trend.taskCompletionRate <= 0) return completed == 0 ? 0 : completed;
+    return (completed / trend.taskCompletionRate).round();
+  }
+}
+
+class _StudyHoursBarChart extends ConsumerStatefulWidget {
   final AnalyticsData data;
   const _StudyHoursBarChart({required this.data});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_StudyHoursBarChart> createState() => _StudyHoursBarChartState();
+}
+
+class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
+  int? _selectedIndex;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final coursesAsync = ref.watch(courseProvider);
-    
+    final data = widget.data;
+
     if (data.studyHoursPerCourse.isEmpty) {
       return AppGlassCard(
         height: 200,
@@ -122,82 +1286,353 @@ class _StudyHoursBarChart extends ConsumerWidget {
               createdAt: DateTime.now(),
             ),
           );
-          barData.add(_BarData(course, hours));
+          barData.add(
+            _BarData(course, hours * 60.0, _formatCourseName(course.courseName)),
+          );
         });
 
         // Filter and sort for display
-        barData.sort((a, b) => b.hours.compareTo(a.hours));
+        barData.sort((a, b) => b.minutes.compareTo(a.minutes));
         final topBars = barData.take(5).toList();
+        final maxMinutes = topBars.isEmpty
+            ? 60.0
+            : topBars
+                  .map((e) => e.minutes)
+                  .reduce((a, b) => a > b ? a : b)
+                  .clamp(1.0, 24 * 60.0)
+                  .toDouble();
+        final maxY = maxMinutes <= 60
+            ? 60.0
+            : ((maxMinutes / 30).ceil() * 30).toDouble();
+        final yInterval = maxY <= 60 ? 15.0 : 60.0;
 
-        return AppGlassCard(
-          height: 240,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: topBars.isEmpty ? 5.0 : topBars.map((e) => e.hours).reduce((a, b) => a > b ? a : b) + 1,
-              barTouchData: BarTouchData(enabled: true),
-              titlesData: FlTitlesData(
-                show: true,
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 42,
-                    getTitlesWidget: (value, meta) {
-                      final index = value.toInt();
-                      if (index >= 0 && index < topBars.length) {
-                        final name = topBars[index].course.courseName;
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            name.length > 15 ? '${name.substring(0, 14)}..' : name,
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        return GestureDetector(
+          onTap: () {
+            if (_selectedIndex != null) {
+              Haptics.vibrate(HapticsType.selection);
+              setState(() => _selectedIndex = null);
+            }
+          },
+          behavior: HitTestBehavior.translucent,
+          child: AppGlassCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: maxY,
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchCallback: (FlTouchEvent event, barResponse) {
+                          if (event is FlTapUpEvent) {
+                            final tappedIndex = (barResponse == null ||
+                                    barResponse.spot == null)
+                                ? null
+                                : barResponse.spot!.touchedBarGroupIndex;
+
+                            final newIndex =
+                                tappedIndex == _selectedIndex ? null : tappedIndex;
+
+                            if (_selectedIndex != newIndex) {
+                              Haptics.vibrate(HapticsType.selection);
+                              setState(() {
+                                _selectedIndex = newIndex;
+                              });
+                            }
+                          }
+                        },
+                        touchTooltipData: BarTouchTooltipData(
+                          getTooltipColor: (_) => theme.colorScheme.surface,
+                          tooltipRoundedRadius: 8,
+                          tooltipPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
+                          tooltipMargin: 12,
+                          fitInsideHorizontally: true,
+                          fitInsideVertically: true,
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final bar = topBars[groupIndex];
+                            final courseCode =
+                                (bar.course.courseCode ?? '')
+                                    .replaceAll(RegExp(r'[\s\-]'), '')
+                                    .toUpperCase();
+                            final shortName =
+                                bar.displayName.length > 15
+                                    ? '${bar.displayName.substring(0, 15)}...'
+                                    : bar.displayName;
+                            final duration = _formatDurationFromMinutes(
+                              l10n: l10n,
+                              totalMinutes: rod.toY.round(),
+                            );
+
+                             return BarTooltipItem(
+                               '',
+                               theme.textTheme.labelMedium!,
+                               children: [
+                                 TextSpan(
+                                   text: courseCode.isEmpty
+                                       ? ''
+                                       : '$courseCode\n',
+                                   style: const TextStyle(
+                                     fontWeight: FontWeight.bold,
+                                   ),
+                                 ),
+                                 TextSpan(
+                                   text: '$shortName\n',
+                                   style: const TextStyle(
+                                     fontWeight: FontWeight.normal,
+                                     fontSize: 12,
+                                   ),
+                                 ),
+                                 TextSpan(
+                                   text: duration,
+                                   style: const TextStyle(
+                                     fontWeight: FontWeight.w600,
+                                   ),
+                                 ),
+                               ],
+                               textAlign: TextAlign.center,
+                             );
+                          },
+                        ),
+                      ),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 32,
+                            getTitlesWidget: (value, meta) {
+                              final index = value.toInt();
+                              if (index >= 0 && index < topBars.length) {
+                                final bar = topBars[index];
+                                final rawCode = bar.course.courseCode ??
+                                    (bar.displayName.length > 8
+                                        ? bar.displayName.substring(0, 7)
+                                        : bar.displayName);
+                                final normalizedCode =
+                                    rawCode
+                                        .replaceAll(RegExp(r'[\s\-]'), '')
+                                        .toUpperCase();
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: Text(
+                                    normalizedCode,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: index == _selectedIndex
+                                          ? FontWeight.w900
+                                          : FontWeight.bold,
+                                      color: _selectedIndex == null ||
+                                              _selectedIndex == index
+                                          ? theme.colorScheme.onSurface
+                                          : theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                );
+                              }
+                              return const Text('');
+                            },
+                          ),
+                        ),
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 42,
+                            interval: yInterval,
+                            getTitlesWidget: (value, meta) => Text(
+                              _formatDurationFromMinutes(
+                                l10n: l10n,
+                                totalMinutes: value.round(),
+                              ),
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        ),
+                        topTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: const AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      gridData: const FlGridData(show: false),
+                      borderData: FlBorderData(show: false),
+                      barGroups: topBars.asMap().entries.map((entry) {
+                        final isSelected = _selectedIndex == entry.key;
+                        final isDimmed =
+                            _selectedIndex != null && !isSelected;
+                        return BarChartGroupData(
+                          x: entry.key,
+                          showingTooltipIndicators: isSelected ? [0] : [],
+                          barRods: [
+                            BarChartRodData(
+                              toY:
+                                  entry.value.minutes < 1
+                                      ? 1
+                                      : entry.value.minutes,
+                              color: isDimmed
+                                  ? entry.value.course.uiColor
+                                      .withValues(alpha: 0.2)
+                                  : entry.value.course.uiColor,
+                              width: isSelected ? 18 : 16,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(4),
+                              ),
+                              borderSide: isSelected
+                                  ? BorderSide(
+                                      color: Colors.white.withValues(alpha: 0.6),
+                                      width: 1.5,
+                                    )
+                                  : BorderSide.none,
+                            ),
+                          ],
                         );
-                      }
-                      return const Text('');
-                    },
-                  ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 30,
-                    getTitlesWidget: (value, meta) => Text('${value.toInt()}${l10n.hoursAbbreviation}', style: const TextStyle(fontSize: 10)),
-                  ),
-                ),
-                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              gridData: const FlGridData(show: false),
-              borderData: FlBorderData(show: false),
-              barGroups: topBars.asMap().entries.map((entry) {
-                return BarChartGroupData(
-                  x: entry.key,
-                  barRods: [
-                    BarChartRodData(
-                      toY: entry.value.hours < 0.05 ? 0.05 : entry.value.hours,
-                      color: entry.value.course.uiColor,
-                      width: 16,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                      }).toList(),
                     ),
-                  ],
-                );
-              }).toList(),
+                    swapAnimationDuration: const Duration(milliseconds: 350),
+                    swapAnimationCurve: Curves.easeOutCubic,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                // Legend Section
+                ...topBars.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final bar = entry.value;
+                  final isSelected = _selectedIndex == index;
+                  final isDimmed = _selectedIndex != null && !isSelected;
+
+                  final displayCode = (bar.course.courseCode ??
+                          (bar.displayName.length > 8
+                              ? bar.displayName.substring(0, 7)
+                              : bar.displayName))
+                      .replaceAll(RegExp(r'[\s\-]'), '')
+                      .toUpperCase();
+
+                  final durationStr = _formatDurationFromMinutes(
+                    l10n: l10n,
+                    totalMinutes: bar.minutes.round(),
+                  );
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        Haptics.vibrate(HapticsType.selection);
+                        setState(() {
+                          _selectedIndex = isSelected ? null : index;
+                        });
+                      },
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: _selectedIndex == null || isSelected ? 1.0 : 0.3,
+                        child: Row(
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: isSelected ? 12 : 8,
+                              height: isSelected ? 12 : 8,
+                              decoration: BoxDecoration(
+                                color: bar.course.uiColor,
+                                shape: BoxShape.circle,
+                                boxShadow: isSelected
+                                    ? [
+                                        BoxShadow(
+                                          color: bar.course.uiColor
+                                              .withValues(alpha: 0.4),
+                                          blurRadius: 4,
+                                          spreadRadius: 2,
+                                        )
+                                      ]
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: RichText(
+                                text: TextSpan(
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: displayCode,
+                                      style: TextStyle(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w900
+                                            : FontWeight.w700,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: ' – ${bar.displayName}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: isSelected ? 0.9 : 0.6),
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: ' • $durationStr',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        color: theme.colorScheme.onSurface
+                                            .withValues(alpha: isSelected ? 1.0 : 0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
         );
       },
-      loading: () => const AppGlassCard(height: 240, child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => AppGlassCard(height: 240, child: Center(child: Text(l10n.networkError))),
+      loading: () => const AppGlassCard(
+        height: 240,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stackTrace) => AppGlassCard(
+        height: 240,
+        child: Center(child: Text(l10n.networkError)),
+      ),
     );
+  }
+
+  String _formatDurationFromMinutes({
+    required AppLocalizations l10n,
+    required int totalMinutes,
+  }) {
+    if (totalMinutes <= 0) return '0${l10n.minutesAbbreviation}';
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    if (hours == 0) return '$minutes${l10n.minutesAbbreviation}';
+    if (minutes == 0) return '$hours${l10n.hoursAbbreviation}';
+    return '$hours${l10n.hoursAbbreviation} $minutes${l10n.minutesAbbreviation}';
   }
 }
 
 class _BarData {
   final Course course;
-  final double hours;
-  _BarData(this.course, this.hours);
+  final double minutes;
+  final String displayName;
+  _BarData(this.course, this.minutes, this.displayName);
 }
 
 class _TaskCompletionPieChart extends StatelessWidget {
@@ -208,7 +1643,7 @@ class _TaskCompletionPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    
+
     if (data.totalTasks == 0) {
       return AppGlassCard(
         height: 200,
@@ -217,7 +1652,7 @@ class _TaskCompletionPieChart extends StatelessWidget {
     }
 
     final percentage = data.taskCompletionRate.clamp(0.0, 1.0);
-    
+
     return AppGlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -234,7 +1669,11 @@ class _TaskCompletionPieChart extends StatelessWidget {
                     title: '${(percentage * 100).toInt()}%',
                     color: theme.colorScheme.primary,
                     radius: 50,
-                    titleStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                    titleStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                   PieChartSectionData(
                     value: (1 - percentage) * 100,
@@ -249,7 +1688,9 @@ class _TaskCompletionPieChart extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             l10n.weeklyTaskCompletion,
-            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Text(
             l10n.tasksCompletedThisWeek(data.completedTasks, data.totalTasks),
@@ -261,3 +1702,113 @@ class _TaskCompletionPieChart extends StatelessWidget {
   }
 }
 
+class _GradeDistributionCard extends StatelessWidget {
+  const _GradeDistributionCard({required this.data});
+
+  final AnalyticsData data;
+
+  static const List<String> _gradeOrder = [
+    'AA',
+    'BA',
+    'BB',
+    'CB',
+    'CC',
+    'DC',
+    'DD',
+    'FF',
+    'EX',
+    'NA',
+    'S',
+    'U',
+    'I',
+    'P',
+    'W',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final distribution = data.gradeDistribution;
+
+    if (distribution.isEmpty) {
+      return AppGlassCard(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Center(child: Text(l10n.noGradeDistributionYet)),
+        ),
+      );
+    }
+
+    final orderedGrades = distribution.keys.toList()
+      ..sort((a, b) {
+        final aIndex = _gradeOrder.indexOf(a);
+        final bIndex = _gradeOrder.indexOf(b);
+        if (aIndex == -1 && bIndex == -1) return a.compareTo(b);
+        if (aIndex == -1) return 1;
+        if (bIndex == -1) return -1;
+        return aIndex.compareTo(bIndex);
+      });
+
+    return AppGlassCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          children: orderedGrades
+              .map(
+                (grade) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          grade,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        distribution[grade].toString(),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+String _formatDayLabel(DateTime date) {
+  return DateFormat('d').format(date);
+}
+
+int _xAxisStep(int length) {
+  if (length <= 7) return 1;
+  if (length <= 14) return 2;
+  return 4;
+}
+
+bool _isWholeTick(double value) {
+  return (value - value.roundToDouble()).abs() < 0.001;
+}
+
+String _formatCourseName(String input) {
+  if (input.trim().isEmpty) return input;
+
+  return input
+      .toLowerCase()
+      .split(RegExp(r'[\s_-]+'))
+      .map((word) {
+        if (word.isEmpty) return word;
+        return word[0].toUpperCase() + word.substring(1);
+      })
+      .join(' ');
+}

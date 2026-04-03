@@ -3,16 +3,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/deadline.dart';
 import 'app_providers.dart';
+import 'derived_invalidation.dart';
+import 'tasks_provider.dart';
 
-class DeadlinesNotifier
-    extends StateNotifier<AsyncValue<List<Deadline>>> {
+class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
   DeadlinesNotifier({
+    required Ref ref,
     required this.deadlineRepository,
     required this.supabaseClient,
-  }) : super(const AsyncValue.loading()) {
+  })  : _ref = ref,
+        super(const AsyncValue.loading()) {
     _loadDeadlines();
   }
 
+  final Ref _ref;
   final dynamic deadlineRepository;
   final SupabaseClient supabaseClient;
 
@@ -23,8 +27,8 @@ class DeadlinesNotifier
       return;
     }
     try {
-      final list = await deadlineRepository.getDeadlines(userId)
-          as List<Deadline>;
+      final list =
+          await deadlineRepository.getDeadlines(userId) as List<Deadline>;
       state = AsyncValue.data(list);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -36,54 +40,163 @@ class DeadlinesNotifier
   }
 
   Future<void> createDeadline(Deadline deadline) async {
+    final previous = state;
     try {
-      final created = await deadlineRepository.createDeadline(deadline)
-          as Deadline;
+      final created =
+          await deadlineRepository.createDeadline(deadline) as Deadline;
       state = state.whenData((items) => [created, ...items]);
+      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      state = previous;
+      Error.throwWithStackTrace(e, st);
     }
   }
 
   Future<void> deleteDeadline(String id) async {
+    final previous = state;
     try {
       await deadlineRepository.deleteDeadline(id);
       state = state.whenData(
         (items) => items.where((d) => d.id != id).toList(),
       );
+      _ref.invalidate(tasksProvider);
+      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      state = previous;
+      Error.throwWithStackTrace(e, st);
     }
   }
 
-  Future<void> updateDeadline(
-    String id,
-    Map<String, dynamic> patch,
-  ) async {
+  Future<void> updateDeadline(String id, Map<String, dynamic> patch) async {
+    final previous = state;
     try {
       final updated =
-          await deadlineRepository.updateDeadline(id, patch)
+          await deadlineRepository.updateDeadline(id, patch) as Deadline;
+      state = state.whenData(
+        (items) => items.map((d) => d.id == id ? updated : d).toList(),
+      );
+      invalidateAnalyticsAndTrend(_ref);
+    } catch (e, st) {
+      state = previous;
+      Error.throwWithStackTrace(e, st);
+    }
+  }
+
+  Future<void> markDeadlineCompleted(String id) async {
+    final previous = state;
+    try {
+      final updated =
+          await deadlineRepository.markDeadlineCompleted(
+                id: id,
+                isCompleted: true,
+              )
               as Deadline;
       state = state.whenData(
-        (items) => items
-            .map((d) => d.id == id ? updated : d)
-            .toList(),
+        (items) => items.map((d) => d.id == id ? updated : d).toList(),
       );
+      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      state = previous;
+      Error.throwWithStackTrace(e, st);
+    }
+  }
+
+  Future<void> toggleDeadlineCompletion(String id) async {
+    final current = state.value;
+    if (current == null) return;
+
+    Deadline? existing;
+    for (final deadline in current) {
+      if (deadline.id == id) {
+        existing = deadline;
+        break;
+      }
+    }
+    if (existing == null) return;
+
+    final previous = state;
+    try {
+      final updated =
+          await deadlineRepository.markDeadlineCompleted(
+                id: id,
+                isCompleted: !existing.isCompleted,
+              )
+              as Deadline;
+      state = state.whenData(
+        (items) => items.map((d) => d.id == id ? updated : d).toList(),
+      );
+      invalidateAnalyticsAndTrend(_ref);
+    } catch (e, st) {
+      state = previous;
+      Error.throwWithStackTrace(e, st);
     }
   }
 }
 
 final deadlinesProvider =
-    StateNotifierProvider<DeadlinesNotifier, AsyncValue<List<Deadline>>>(
-  (ref) {
-    final repo = ref.watch(deadlineRepositoryProvider);
-    final supabase = Supabase.instance.client;
-    return DeadlinesNotifier(
-      deadlineRepository: repo,
-      supabaseClient: supabase,
-    );
-  },
-);
+    StateNotifierProvider<DeadlinesNotifier, AsyncValue<List<Deadline>>>((ref) {
+      final repo = ref.watch(deadlineRepositoryProvider);
+      final supabase = Supabase.instance.client;
+      return DeadlinesNotifier(
+        ref: ref,
+        deadlineRepository: repo,
+        supabaseClient: supabase,
+      );
+    });
 
+final filteredDeadlinesProvider = Provider<AsyncValue<List<Deadline>>>((ref) {
+  final deadlinesAsync = ref.watch(deadlinesProvider);
+  final filter = ref.watch(taskFilterProvider);
+
+  int compareDeadlines(Deadline a, Deadline b) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    
+    final aDueDay = DateTime(a.deadlineDate.year, a.deadlineDate.month, a.deadlineDate.day);
+    final bDueDay = DateTime(b.deadlineDate.year, b.deadlineDate.month, b.deadlineDate.day);
+    
+    bool isOverdue(Deadline d, DateTime dueDay) {
+      if (d.isCompleted) return false;
+      return dueDay.isBefore(startOfToday);
+    }
+    
+    bool aIsOverdue = isOverdue(a, aDueDay);
+    bool bIsOverdue = isOverdue(b, bDueDay);
+    bool aIsCompleted = a.isCompleted;
+    bool bIsCompleted = b.isCompleted;
+
+    if (aIsCompleted && !bIsCompleted) return 1;
+    if (!aIsCompleted && bIsCompleted) return -1;
+    
+    if (aIsOverdue && !bIsOverdue) return -1;
+    if (!aIsOverdue && bIsOverdue) return 1;
+
+    return a.deadlineDate.compareTo(b.deadlineDate);
+  }
+
+  return deadlinesAsync.whenData((List<Deadline> deadlines) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    List<Deadline> filtered;
+    
+    switch (filter) {
+      case 'pending':
+        filtered = deadlines.where((d) => !d.isCompleted).toList();
+        break;
+      case 'completed':
+        filtered = deadlines.where((d) => d.isCompleted).toList();
+        break;
+      case 'overdue':
+        filtered = deadlines.where((d) {
+          final dueDay = DateTime(d.deadlineDate.year, d.deadlineDate.month, d.deadlineDate.day);
+          return !d.isCompleted && dueDay.isBefore(startOfToday);
+        }).toList();
+        break;
+      default:
+        filtered = deadlines;
+    }
+    
+    final sorted = List<Deadline>.from(filtered)..sort(compareDeadlines);
+    return sorted;
+  });
+});

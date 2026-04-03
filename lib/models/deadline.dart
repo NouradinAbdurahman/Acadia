@@ -8,7 +8,15 @@ class Deadline {
   final String deadlineType;
   final String priority;
   final String? notes;
+  final bool isCompleted;
+  final DateTime? completedAt;
   final DateTime createdAt;
+
+  /// Alias: fixed target date (same as [deadlineDate]).
+  DateTime get dueDate => deadlineDate;
+
+  /// Alias: event type (same as [deadlineType]).
+  String get type => deadlineType;
 
   Deadline({
     required this.id,
@@ -20,6 +28,8 @@ class Deadline {
     required this.deadlineType,
     required this.priority,
     this.notes,
+    this.isCompleted = false,
+    this.completedAt,
     required this.createdAt,
   });
 
@@ -34,6 +44,10 @@ class Deadline {
       deadlineType: json['deadline_type'] as String,
       priority: json['priority'] as String,
       notes: json['notes'] as String?,
+      isCompleted: json['is_completed'] as bool? ?? false,
+      completedAt: json['completed_at'] != null
+          ? DateTime.tryParse(json['completed_at'] as String)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -49,8 +63,40 @@ class Deadline {
       'deadline_type': deadlineType,
       'priority': priority,
       if (notes != null) 'notes': notes,
+      'is_completed': isCompleted,
+      if (completedAt != null) 'completed_at': completedAt!.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
     };
   }
-}
 
+  Deadline copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? course,
+    String? courseId,
+    DateTime? deadlineDate,
+    String? deadlineType,
+    String? priority,
+    String? notes,
+    bool? isCompleted,
+    DateTime? completedAt,
+    bool clearCompletedAt = false,
+    DateTime? createdAt,
+  }) {
+    return Deadline(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      course: course ?? this.course,
+      courseId: courseId ?? this.courseId,
+      deadlineDate: deadlineDate ?? this.deadlineDate,
+      deadlineType: deadlineType ?? this.deadlineType,
+      priority: priority ?? this.priority,
+      notes: notes ?? this.notes,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}

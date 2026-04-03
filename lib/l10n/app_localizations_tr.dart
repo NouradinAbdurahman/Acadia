@@ -126,6 +126,35 @@ class AppLocalizationsTr extends AppLocalizations {
   String get all => 'Hepsi';
 
   @override
+  String get quickMenu => 'Hızlı Menü';
+
+  @override
+  String get deadlineKindBadge => 'Son tarih';
+
+  @override
+  String get linkToAcademicDeadline => 'Son tarihe bağla (isteğe bağlı)';
+
+  @override
+  String get noneLinkedDeadline => 'Yok';
+
+  @override
+  String get relatedTasksSection => 'İlgili görevler';
+
+  @override
+  String get addTaskToThisDeadline => 'Bu son tarihe görev ekle';
+
+  @override
+  String deadlineLinkedTasksProgress(int completed, int total) {
+    return '$completed/$total görev tamamlandı';
+  }
+
+  @override
+  String get deadlineNoLinkedTasks => 'Bu son tarihe henüz görev bağlanmadı.';
+
+  @override
+  String get taskLinkedToDeadline => 'Bir son tarihe bağlı';
+
+  @override
   String get pending => 'Bekleyen';
 
   @override
@@ -174,6 +203,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get study => 'Çalış';
 
   @override
+  String get liveStudySessions => 'Canlı Çalışma Oturumları';
+
+  @override
   String get startStudySession => 'Çalışma Oturumu';
 
   @override
@@ -187,6 +219,49 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get stop => 'Durdur';
+
+  @override
+  String get focusLabel => 'Odaklanma';
+
+  @override
+  String get breakLabel => 'Ara';
+
+  @override
+  String get reviewLabel => 'Tekrar';
+
+  @override
+  String get remainingLabel => 'Kalan Süre';
+
+  @override
+  String get stopSessionTitle => 'Oturumu Durdur';
+
+  @override
+  String get stopSessionConfirm =>
+      'Bu çalışma oturumunu sonlandırmak istediğinizden emin misiniz?';
+
+  @override
+  String get sessionPaused => 'Oturum duraklatıldı. Bir nefes alın.';
+
+  @override
+  String get refreshYourself => 'Kendinizi tazeleyin. Harika gidiyorsunuz.';
+
+  @override
+  String get stayFocused => 'Odaklı kalın. İyi gidiyorsunuz.';
+
+  @override
+  String get deepWorkInProgress => 'Derin çalışma devam ediyor...';
+
+  @override
+  String get dontStopNow => 'Şimdi durmayın, harika gidiyorsunuz!';
+
+  @override
+  String get focusOnProcess => 'Sürece odaklanın, sonuçlara değil.';
+
+  @override
+  String get almostThere => 'Neredeyse bitti! Devam edin.';
+
+  @override
+  String get futureSelf => 'Gelecekteki kendiniz size teşekkür edecek.';
 
   @override
   String get sessionCompleted => 'Oturum tamamlandı';
@@ -313,7 +388,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get review => 'Tekrar';
 
   @override
-  String get deepFocus => 'Derin Odak';
+  String get deepFocus => 'Derin odak';
 
   @override
   String get analytics => 'Analiz';
@@ -410,8 +485,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get invalidCredentials => 'Geçersiz e-posta veya şifre.';
 
   @override
-  String get tooManyRequests =>
-      'Çok fazla istek. Lütfen daha sonra tekrar deneyin.';
+  String get tooManyRequests => 'Lütfen tekrar denemeden önce biraz bekleyin.';
+
+  @override
+  String get pleaseWait => 'Lütfen tekrar denemeden önce biraz bekleyin.';
 
   @override
   String get networkError => 'Bağlantı hatası. Tekrar deneyin.';
@@ -454,8 +531,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get otpExpired => 'Kodun süresi doldu. Yeni bir tane isteyin.';
 
   @override
-  String get tooManyAttempts =>
-      'Çok fazla deneme. Lütfen daha sonra tekrar deneyin.';
+  String get tooManyAttempts => 'Lütfen tekrar denemeden önce biraz bekleyin.';
 
   @override
   String get invalidOtp => 'Geçersiz doğrulama kodu';
@@ -697,10 +773,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get manageSemesters => 'Dönemleri Yönet';
 
   @override
+  String get allSemesters => 'Tüm Dönemler';
+
+  @override
   String get addCourse => 'Ders Ekle';
 
   @override
   String get editCourse => 'Dersi Düzenle';
+
+  @override
+  String get courseTitle => 'Ders Başlığı';
 
   @override
   String get courseCode => 'Ders Kodu';
@@ -730,10 +812,39 @@ class AppLocalizationsTr extends AppLocalizations {
   String get semester => 'Dönem';
 
   @override
+  String get semesterSeason => 'Dönem Türü';
+
+  @override
+  String get fallSemester => 'Güz';
+
+  @override
+  String get springSemester => 'Bahar';
+
+  @override
+  String get academicYearLabel => 'Akademik Yıl';
+
+  @override
   String get selectSemester => 'Dönem Seç';
 
   @override
   String get setAsActive => 'Aktif dönem olarak ayarla';
+
+  @override
+  String get currentSemesterLabel => 'Aktif';
+
+  @override
+  String get selectDate => 'Tarih Seç';
+
+  @override
+  String get noSemestersYet => 'Henüz dönem oluşturulmadı';
+
+  @override
+  String get createFirstSemester =>
+      'Derslerinizi düzenlemek için ilk döneminizi oluşturun.';
+
+  @override
+  String get deleteSemesterWarning =>
+      'Bu dönem, dönem listenizden kaldırılacak.';
 
   @override
   String get noCoursesYet => 'Henüz ders eklenmedi';
@@ -760,6 +871,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pleaseSelectCourse => 'Lütfen bir ders seçin';
+
+  @override
+  String get ectsRequired => 'AKTS zorunludur';
 
   @override
   String get errorLoadingCourses => 'Dersler yüklenirken hata oluştu';
@@ -951,7 +1065,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get greatFocusSession => 'Great focus session!';
 
   @override
-  String get focusLevel => 'Focus Level';
+  String get focusLevel => 'Odak Seviyesi';
 
   @override
   String get deepFlow => 'Deep Flow';
@@ -972,7 +1086,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get focusOnStudies => 'Focus on your studies today.';
 
   @override
-  String get thisWeekLabel => 'This Week';
+  String get thisWeekLabel => 'Bu hafta';
 
   @override
   String get noCourseSelected => 'No Course Selected';
@@ -1064,7 +1178,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get riskInterpretationMedium =>
-      'Riskiniz orta düzeyde; yaklaşan görevlere ve çalışma hedeflerine dikkat edin.';
+      'Riskiniz orta seviyede. Görevleri tamamlamaya ve çalışma süresini artırmaya odaklanın.';
 
   @override
   String get riskInterpretationLow =>
@@ -1093,16 +1207,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String riskTrendUp(int delta) {
-    return '+$delta risk artışı';
+    return 'Geçen haftaya göre $delta puan arttı';
   }
 
   @override
   String riskTrendDown(int delta) {
-    return '-$delta (iyileşti)';
+    return 'Geçen haftaya göre $delta puan iyileşti';
   }
 
   @override
-  String get riskTrendStable => '+0 (değişim yok)';
+  String get riskTrendStable => 'Değişim yok';
+
+  @override
+  String get riskTrendNew => 'Yeni';
 
   @override
   String get riskNoData => 'Aktif risk faktörü yok';
@@ -1154,4 +1271,1053 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noTasksThisWeek => 'Bu haftaya planlanmış görev yok';
+
+  @override
+  String get examResults => 'Ders Sonuçları';
+
+  @override
+  String get addResult => 'Sonuç Ekle';
+
+  @override
+  String get editResult => 'Sonucu Düzenle';
+
+  @override
+  String get noResultsYet => 'Henüz sonuç eklenmedi';
+
+  @override
+  String get addFirstResultPrompt =>
+      'Bu dönem için ilk ders sonucunuzu ekleyin.';
+
+  @override
+  String get gradingComponents => 'Not Bileşenleri';
+
+  @override
+  String get addComponent => '+ Bileşen Ekle';
+
+  @override
+  String get finalSection => 'Final';
+
+  @override
+  String get finalAverage => 'Dönem Sonu Ortalaması';
+
+  @override
+  String get letterGrade => 'Harf Notu';
+
+  @override
+  String get resultStatus => 'Ders Durumu';
+
+  @override
+  String get resultSuccessful => 'Başarılı';
+
+  @override
+  String get resultFailed => 'Başarısız';
+
+  @override
+  String get component => 'Bileşen';
+
+  @override
+  String get componentTitle => 'Başlık';
+
+  @override
+  String get componentTitleHint => 'örn. Vize, Proje, Final, Kısa Sınav';
+
+  @override
+  String get scoreHint => 'örn. 85';
+
+  @override
+  String get percentage => 'Yüzde';
+
+  @override
+  String get percentageHint => 'örn. 40';
+
+  @override
+  String get finalAverageHint => 'örn. 78.5';
+
+  @override
+  String get numberRequired => 'Geçerli bir sayı girin';
+
+  @override
+  String get completeComponentsError =>
+      'Kaydetmeden önce tüm bileşenleri tamamlayın';
+
+  @override
+  String get percentageNot100Warning => 'Uyarı: toplam yüzde 100 değil';
+
+  @override
+  String get gradeDistribution => 'Not Dağılımı';
+
+  @override
+  String get noGradeDistributionYet => 'Henüz not dağılımı verisi yok';
+
+  @override
+  String get pleaseSelectLetterGrade => 'Lütfen bir harf notu seçin';
+
+  @override
+  String get noCoursesForSemester => 'Bu dönem için ders bulunamadı';
+
+  @override
+  String get trendAnalysis => 'Trend Analizi';
+
+  @override
+  String get studyTrend => 'Çalışma Trendi';
+
+  @override
+  String get taskCompletionTrend => 'Görev Tamamlama Trendi';
+
+  @override
+  String get workloadTrend => 'İş Yükü Trendi';
+
+  @override
+  String get performanceTrend => 'Performans Trendi';
+
+  @override
+  String daysFilter(int count) {
+    return '$count gün';
+  }
+
+  @override
+  String trendTodayDuration(String duration) {
+    return 'bugün $duration';
+  }
+
+  @override
+  String trendCompletedToday(int count) {
+    return 'bugün $count tamamlandı';
+  }
+
+  @override
+  String trendNewToday(int count) {
+    return 'bugün $count yeni';
+  }
+
+  @override
+  String get trendStudySubtitle => 'Seçili dönemde günlük çalışılan saat';
+
+  @override
+  String get trendTaskSubtitle => 'Seçili dönemde günlük tamamlanan görev';
+
+  @override
+  String get trendWorkloadSubtitle =>
+      'Günlük eklenen görev ve son teslim tarihleri';
+
+  @override
+  String get trendPerformanceSubtitle =>
+      'Ders sonuçlarına göre not ortalaması değişimi';
+
+  @override
+  String get trendTasksOneDayHint =>
+      'Görevlerin çoğu tek bir günde tamamlandı.';
+
+  @override
+  String get trendWorkloadEmptyMessage =>
+      'Henüz veri yok.\nİş yükü trendini görmek için görev veya son tarih ekleyin.';
+
+  @override
+  String get trendStudyEmptyMessage =>
+      'Henüz veri yok.\nTrendleri görmek için çalışma oturumu ekleyin.';
+
+  @override
+  String get trendTaskEmptyMessage =>
+      'Bu dönemde tamamlanan görev yok.\nİlerlemeyi görmek için görevleri tamamlayın.';
+
+  @override
+  String get trendPerformanceEmptyMessage =>
+      'Performansı takip etmek için ders sonucu ekleyin.';
+
+  @override
+  String get trendPerformanceNeedThreeResults =>
+      'Performans trendini görmek için en az 3 ders sonucu ekleyin.';
+
+  @override
+  String get trendSummaryTitle => 'Trend Özeti';
+
+  @override
+  String get trendOverallStatusTitle => 'Genel Durum';
+
+  @override
+  String get trendNotEnoughData => 'Yeterli veri yok';
+
+  @override
+  String get trendStable => 'Stabil';
+
+  @override
+  String get trendImproving => 'İyileşiyor';
+
+  @override
+  String get trendDeclining => 'Düşüyor';
+
+  @override
+  String get trendLessThan30Minutes => 'Bu dönemde 30 dakikadan az';
+
+  @override
+  String trendHoursInPeriod(String hours) {
+    return 'Bu dönemde $hours sa';
+  }
+
+  @override
+  String trendTasksCompletedFraction(int completed, int total) {
+    return '$completed / $total tamamlandı';
+  }
+
+  @override
+  String trendTasksDeadlinesAdded(int count) {
+    return '$count görev/son tarih eklendi';
+  }
+
+  @override
+  String get trendVeryLowActivity => 'Çok düşük aktivite';
+
+  @override
+  String get trendLowActivity => 'Düşük aktivite';
+
+  @override
+  String get trendNoTasks => 'Görev yok';
+
+  @override
+  String get trendNoTasksCompletedPeriod => 'Bu dönemde tamamlanan görev yok';
+
+  @override
+  String get trendZeroCompleted => '%0 tamamlandı';
+
+  @override
+  String trendPercentCompleted(int percent) {
+    return '%$percent tamamlandı';
+  }
+
+  @override
+  String get trendNoWorkload => 'İş yükü yok';
+
+  @override
+  String get trendIncreased => 'Arttı';
+
+  @override
+  String get trendReducedComparedLastPeriod => 'Önceki döneme göre azaldı';
+
+  @override
+  String get trendStatusOnTrack => 'Yolunda';
+
+  @override
+  String get trendStatusLowAndBehind => 'Aktivite düşük ve geride kalıyorsun';
+
+  @override
+  String get trendStatusStudyNeedsImprovement =>
+      'Çalışma düzeni geliştirilmeli';
+
+  @override
+  String get trendStatusTaskIncomplete => 'Görev ilerlemesi yetersiz';
+
+  @override
+  String get trendStatusStableProgress => 'İlerleme stabil';
+
+  @override
+  String get trendStatusOnTrackDetail =>
+      'Son dönemdeki aktiviten dengeli görünüyor. Bu tempoyu koru.';
+
+  @override
+  String get trendStatusNeedsFocusDetail =>
+      'Aktiviten düşük ve görev ilerlemen yetersiz. Görevleri tamamlamaya ve çalışma süreni artırmaya odaklan.';
+
+  @override
+  String get trendInsightBuildConsistencyTitle => 'Çalışma düzeni oluştur';
+
+  @override
+  String get trendInsightStudyIncreasedSignificantlyTitle =>
+      'Çalışma süresi belirgin arttı';
+
+  @override
+  String get trendInsightStudyImprovedTitle => 'Çalışma süresi iyileşti';
+
+  @override
+  String get trendInsightStudyDeclinedTitle => 'Çalışma süresi düştü';
+
+  @override
+  String get trendInsightNoTasksTitle => 'Bu dönemde görev yok';
+
+  @override
+  String get trendInsightTaskLowTitle => 'Görev tamamlama düşük';
+
+  @override
+  String get trendInsightNoWorkloadTitle => 'Yeni iş yükü yok';
+
+  @override
+  String get trendInsightWorkloadSharpTitle => 'İş yükü keskin şekilde arttı';
+
+  @override
+  String get trendInsightWorkloadRisingTitle => 'İş yükü artıyor';
+
+  @override
+  String get trendInsightPerformanceDecliningTitle => 'Performans düşüyor';
+
+  @override
+  String get trendInsightPerformanceImprovingTitle => 'Performans iyileşiyor';
+
+  @override
+  String get trendInsightStableTitle => 'Trendler stabil';
+
+  @override
+  String get trendInsightBuildConsistencyMessage =>
+      'Günlük çalışma alışkanlığı oluşturmaya başla.';
+
+  @override
+  String trendInsightStudyIncreasedMessage(int percent) {
+    return 'Çalışma süresi %$percent arttı. Bu tempoyu koru.';
+  }
+
+  @override
+  String trendInsightStudyDroppedMessage(int percent) {
+    return 'Çalışma süresi %$percent düştü. Ek çalışma oturumları planlamayı düşün.';
+  }
+
+  @override
+  String get trendInsightNoTasksMessage =>
+      'Bu dönemde teslim tarihi olan görev yoktu.';
+
+  @override
+  String get trendInsightNoTasksCompletedMessage =>
+      'Henüz tamamlanan görev yok. Performansı takip etmek için görevleri tamamlamaya başla.';
+
+  @override
+  String trendInsightTaskCompletedFractionMessage(int completed, int total) {
+    return '$total görevin $completed tanesini tamamladın. Sonraki dönemde daha fazlasını tamamlamayı hedefle.';
+  }
+
+  @override
+  String get trendInsightNoWorkloadMessage =>
+      'Bu dönemde yeni görev veya son tarih eklenmedi.';
+
+  @override
+  String trendInsightWorkloadAddedMessage(int count) {
+    return 'Bu dönemde $count görev/son tarih ekledin. Aşırı yüklenmemek için planlama yap.';
+  }
+
+  @override
+  String get trendInsightPerformanceDecliningMessage =>
+      'Performans trendi düşüyor. Bu hafta zayıf derslerini gözden geçir.';
+
+  @override
+  String get trendInsightPerformanceImprovingMessage =>
+      'Performans trendi iyileşiyor. Aynı çalışma düzenini sürdür.';
+
+  @override
+  String get trendInsightStableMessage =>
+      'Henüz belirgin bir değişim yok. Düzenli kayıt tutmaya devam et.';
+
+  @override
+  String get dashboardRiskLevelTitle => 'Risk Seviyesi';
+
+  @override
+  String dashboardRiskLevelValue(String level) {
+    return 'Risk Seviyesi: $level';
+  }
+
+  @override
+  String get dashboardTodaySnapshotTitle => 'Bugün Özeti';
+
+  @override
+  String dashboardStudyToday(String time) {
+    return 'Çalışma: bugün $time';
+  }
+
+  @override
+  String dashboardTasksCompletedToday(int count) {
+    return 'Görevler: $count tamamlandı';
+  }
+
+  @override
+  String dashboardWorkloadAddedToday(int count) {
+    return 'İş yükü: $count eklendi';
+  }
+
+  @override
+  String get dashboardKeyInsightTitle => 'Temel İçgörü';
+
+  @override
+  String get dashboardNoInsightAvailable => 'Henüz temel bir içgörü yok.';
+
+  @override
+  String get dashboardQuickActionsTitle => 'Hızlı Eylemler';
+
+  @override
+  String get dashboardProgressOverviewTitle => 'İlerleme Özeti';
+
+  @override
+  String get dashboardViewDetailedAnalysis => 'Detaylı analizi görüntüle ->';
+
+  @override
+  String get analyticsSparseDataTitle => 'Analizleriniz oluşuyor';
+
+  @override
+  String get analyticsSparseDataBody =>
+      'Çalışma oturumu kaydedin, görev ekleyin ve notlarınızı girin. Uygulamayı kullandıkça grafikler dolacak.';
+
+  @override
+  String get custom => 'Özel';
+
+  @override
+  String customDurationLabel(int minutes) {
+    return 'Özel: ${minutes}dk';
+  }
+
+  @override
+  String get enterMinutes => 'Dakika girin';
+
+  @override
+  String get quickPresets => 'Hızlı Seçenekler';
+
+  @override
+  String get setDuration => 'Süreyi Ayarla';
+
+  @override
+  String get focusedTime => 'Odaklanılan süre';
+
+  @override
+  String get startAnotherSession => 'Yeni oturum başlat';
+
+  @override
+  String get sessionInsightShort =>
+      'Kısa oturum. Bir sonraki sefere daha uzun odaklanmayı dene.';
+
+  @override
+  String get sessionInsightMedium => 'İyi oturum. Devamlılığı koru.';
+
+  @override
+  String get sessionInsightLong => 'Güçlü odaklanma oturumu.';
+
+  @override
+  String addedToWeeklyGoal(int minutes) {
+    return '+${minutes}dk haftalık hedefe eklendi';
+  }
+
+  @override
+  String get minimumSessionMessage => 'Minimum oturum süresi 10 dakikadır';
+
+  @override
+  String get durationRangeHint => 'Süre girin (10–240 dakika)';
+
+  @override
+  String get selectCourseToStart => 'Başlamak için bir ders seçin';
+
+  @override
+  String todayProgress(String completed, String goal) {
+    return 'Bugün: $completed / $goal';
+  }
+
+  @override
+  String weeklyProgress(String completed, String goal) {
+    return 'Bu hafta: $completed / $goal';
+  }
+
+  @override
+  String streakDays(int count) {
+    return '$count gün';
+  }
+
+  @override
+  String get noStreak => 'Bugün bir seri başlat';
+
+  @override
+  String get insightTooShort => 'Çok kısa. En az 20 dakika hedefle.';
+
+  @override
+  String get insightDecent =>
+      'İyi başlangıç. Bir sonraki oturumunu uzatmayı dene.';
+
+  @override
+  String get insightStrong => 'Güçlü odaklanma. Bu devamlılığı koru.';
+
+  @override
+  String get lowFocus => 'Düşük Odak';
+
+  @override
+  String get mediumFocus => 'Orta Odak';
+
+  @override
+  String get highFocus => 'Yüksek Odak';
+
+  @override
+  String get goodFocus => 'İyi odak';
+
+  @override
+  String todayFocusedContext(int minutes, int sessions) {
+    return 'bu gece ${minutes}dk odaklanıldı • $sessions oturum';
+  }
+
+  @override
+  String get studyIntent => 'Çalışma Niyeti';
+
+  @override
+  String get studyIntentHint => 'Bu oturumdaki ana odağınız nedir?';
+
+  @override
+  String get studyIntentPlaceholder =>
+      'örn. 4. Bölümü oku, Kalkülüs sorularını çöz...';
+
+  @override
+  String endsAt(String time) {
+    return '$time vaktinde biter';
+  }
+
+  @override
+  String endsAround(String time) {
+    return '$time civarında biter';
+  }
+
+  @override
+  String get structuredSession => 'Yapılandırılmış oturum';
+
+  @override
+  String get remainingTime => 'Kalan süre';
+
+  @override
+  String sessionProgress(int current, int total) {
+    return 'Oturum $current / $total';
+  }
+
+  @override
+  String get stayFocusedMsg => 'Odaklanmaya devam et. Harika gidiyorsun.';
+
+  @override
+  String get halfwayMsg => 'Yolun yarısındasın!';
+
+  @override
+  String get almostDoneMsg => 'Bitmek üzere, devam et!';
+
+  @override
+  String youStayedFocused(int minutes) {
+    return '$minutes dakika boyunca odaklandın';
+  }
+
+  @override
+  String get recommended => 'Önerilen';
+
+  @override
+  String get weeklyGoalProgress => 'Haftalık Hedef İlerlemesi';
+
+  @override
+  String weeklyGoalTag(int goal) {
+    return 'Hedef: ${goal}dk';
+  }
+
+  @override
+  String minutesDone(int minutes) {
+    return '${minutes}dk tamamlandı';
+  }
+
+  @override
+  String get sessionTooShort => 'Oturum Çok Kısa';
+
+  @override
+  String get sessionTooShortDescription =>
+      'Etkili bir odaklanma için minimum oturum süresi 10 dakikadır. Bu oturum kaydedilmedi.';
+
+  @override
+  String get tryAgain => 'Tekrar Dene';
+
+  @override
+  String get weeklyStudyGoal => 'Haftalık Çalışma Hedefi';
+
+  @override
+  String get behindThisWeek => 'Bu hafta geridesin — bugün harekete geç';
+
+  @override
+  String get justGettingStarted => 'Henüz yeni başlıyoruz';
+
+  @override
+  String remainingHours(int hours) {
+    return '${hours}sa kaldı';
+  }
+
+  @override
+  String catchUpMessage(int hours) {
+    return '${hours}sa kaldı • Yetişmen gerekiyor';
+  }
+
+  @override
+  String get focusScore => 'Odak Puanı';
+
+  @override
+  String get moderateFocus => 'Orta Düzey Odak';
+
+  @override
+  String get patternConsistent => 'Çalışma düzeni: Tutarlı';
+
+  @override
+  String get patternIrregular => 'Çalışma düzeni: Değişken';
+
+  @override
+  String get confidenceHigh => 'Tahmin doğruluğu: Yüksek';
+
+  @override
+  String get confidenceMedium => 'Tahmin doğruluğu: Orta';
+
+  @override
+  String get gettingStarted => 'Yeni başlıyor';
+
+  @override
+  String get noDataYet => 'Henüz veri yok';
+
+  @override
+  String get statusStable => 'Stabil';
+
+  @override
+  String get statusImproving => 'Gelişiyor';
+
+  @override
+  String get statusDeclining => 'Düşüşte';
+
+  @override
+  String trySessionNow(int duration) {
+    return '$duration dakikalık bir çalışma dene';
+  }
+
+  @override
+  String get startNow => 'Şimdi başla';
+
+  @override
+  String get sessionTooShortTitle => 'Oturum Çok Kısa';
+
+  @override
+  String get sessionTooShortMessage =>
+      'Minimum oturum süresi 10 dakikadır. Bu oturum kaydedilmedi.';
+
+  @override
+  String get focusRemaining => 'Kalan süre';
+
+  @override
+  String get shortSessionInsight =>
+      'Kısa oturum. Bir dahaki sefere daha uzun odaklanmaya çalış.';
+
+  @override
+  String get goodSessionInsight => 'İyi oturum. Devamlılığı koru.';
+
+  @override
+  String get strongSessionInsight => 'Güçlü odak oturumu.';
+
+  @override
+  String get sessionEndedEarly =>
+      'Oturum erken sonlandırıldı — en az 15 dakika kalmayı dene';
+
+  @override
+  String get niceProgressToday => 'Bugün harika ilerleme kaydettin';
+
+  @override
+  String get studyConsistent => 'Bu hafta istikrarı korumaya devam et';
+
+  @override
+  String get next15m =>
+      'Odağı yeniden kazanmak için 15 dakikalık bir oturumla başla';
+
+  @override
+  String get next25m => '25 dakikalı bir odaklanma seansıyla devam et';
+
+  @override
+  String get next45m =>
+      'Derin odaklanma modundasın. 45 dakikalık bir seans dene';
+
+  @override
+  String sessionsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count oturum',
+      one: '1 oturum',
+      zero: 'Oturum yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String minutesFocused(Object minutes) {
+    return '${minutes}dk odaklanıldı';
+  }
+
+  @override
+  String get patternLabel => 'Çalışma düzeni';
+
+  @override
+  String get statusVariable => 'Değişken';
+
+  @override
+  String get overloadWarning =>
+      'Kendini çok fazla zorluyorsun. Düzgün bir ara ver.';
+
+  @override
+  String focusTrendMessage(String trend) {
+    return 'Haftalık odaklanma düzenin $trend.';
+  }
+
+  @override
+  String get focusAnalysisBasis =>
+      'Son seanslara, tutarlılığa ve istikrara dayalıdır.';
+
+  @override
+  String get longBreakLabel => 'Uzun Ara';
+
+  @override
+  String focusSessionCount(int current, int total) {
+    return 'Odaklanma $current/$total';
+  }
+
+  @override
+  String get improving => 'İyileşen';
+
+  @override
+  String get declining => 'Azalan';
+
+  @override
+  String get stable => 'Stabil';
+
+  @override
+  String get focusShort => 'Kısa Odak';
+
+  @override
+  String get focusGood => 'İyi Odak';
+
+  @override
+  String get focusDeep => 'Derin Odak';
+
+  @override
+  String get statusCompleted => 'Tamamlandı';
+
+  @override
+  String get statusStoppedEarly => 'Erken bitirildi';
+
+  @override
+  String get tryLongerFocus =>
+      'Bir dahaki sefere daha uzun süre odaklanmayı deneyin';
+
+  @override
+  String get solidSession => 'Sağlam seans, böyle devam et';
+
+  @override
+  String get excellentDeepWork => 'Mükemmel derin çalışma';
+
+  @override
+  String get focusScoreImpact => 'Odak Skoru Etkisi';
+
+  @override
+  String get completedYes => 'Evet';
+
+  @override
+  String get completedNo => 'Hayır';
+
+  @override
+  String get cycles => 'Döngüler';
+
+  @override
+  String get breaksSkipped => 'Atlanan molalar';
+
+  @override
+  String get weeklyActivity => 'Haftalık Aktivite';
+
+  @override
+  String get streakWarningMessage =>
+      '🔥 Serini bozma. Devam etmek için bugün çalış!';
+
+  @override
+  String get preivousWeekLabel => 'Geçen hafta';
+
+  @override
+  String get newWeekStart => 'Yeni hafta başlangıcı';
+
+  @override
+  String get noStudyActivityYet => 'Henüz çalışma aktivitesi yok';
+
+  @override
+  String get studiedOnlyOneDay => 'Bu hafta sadece bir gün çalıştın';
+
+  @override
+  String get gettingStartedExtend =>
+      'Başlangıç aşaması. Seansları uzatmaya çalış';
+
+  @override
+  String get buildingConsistency => 'İstikrar oluşuyor';
+
+  @override
+  String get strongConsistentPattern => 'Güçlü ve istikrarlı çalışma düzeni';
+
+  @override
+  String get noActivity => 'Aktivite yok';
+
+  @override
+  String get monday => 'Pazartesi';
+
+  @override
+  String get tuesday => 'Salı';
+
+  @override
+  String get wednesday => 'Çarşamba';
+
+  @override
+  String get thursday => 'Perşembe';
+
+  @override
+  String get friday => 'Cuma';
+
+  @override
+  String get saturday => 'Cumartesi';
+
+  @override
+  String get sunday => 'Pazar';
+
+  @override
+  String get weeklyProgressLabel => 'Haftalık İlerleme';
+
+  @override
+  String get newBadge => 'Yeni ⭐';
+
+  @override
+  String weeklyGoalProgressHours(String current, String goal) {
+    return '$current / $goal';
+  }
+
+  @override
+  String activeDaysCount(int count) {
+    return '$count aktif gün';
+  }
+
+  @override
+  String peakDayLabel(String day) {
+    return 'Zirve: $day';
+  }
+
+  @override
+  String get streakAtRisk => 'Seri Tehlikede!';
+
+  @override
+  String get studyHabit => 'Çalışma Alışkanlığı';
+
+  @override
+  String get startStreakToday => 'Serine bugün başla';
+
+  @override
+  String get streakDay1 => '1. gün tamamlandı. Yarın istikrarı koru';
+
+  @override
+  String get strongHabitForming => 'Güçlü alışkanlık oluşuyor';
+
+  @override
+  String get excellentDiscipline => 'Mükemmel disiplin';
+
+  @override
+  String get lightFocus => 'Hafif odak';
+
+  @override
+  String get insightCycle => 'Yüksek kaliteli odak düzeni. Bu döngüyü koru.';
+
+  @override
+  String get insightStart =>
+      'Güçlü başlangıç. Daha derin odak için 30 dakikayı aşın.';
+
+  @override
+  String get insightMomentum => 'Derin çalışmaya doğru ivme kazanılıyor.';
+
+  @override
+  String focusPoints(String points) {
+    return '$points puan';
+  }
+
+  @override
+  String get pomodoroFocusStep => 'Odak • 25 dk';
+
+  @override
+  String get pomodoroBreakStep => 'Mola • 5 dk';
+
+  @override
+  String get pomodoroRepeatStep => 'Toplam 4 döngü';
+
+  @override
+  String pomodoroTotalFocusSummary(int minutes) {
+    return 'Toplam odak: $minutes dk';
+  }
+
+  @override
+  String get pomodoroCompleted => 'Pomodoro tamamlandı';
+
+  @override
+  String cyclesCompleted(int count) {
+    return '$count döngü tamamlandı';
+  }
+
+  @override
+  String focusTimeBreakdown(int minutes) {
+    return 'Odak süresi: $minutes dk';
+  }
+
+  @override
+  String breakTimeBreakdown(int minutes) {
+    return 'Mola süresi: $minutes dk';
+  }
+
+  @override
+  String get excellentConsistency => 'Mükemmel tutarlılık';
+
+  @override
+  String get totalFocusTime => 'Toplam odak süresi';
+
+  @override
+  String streakDaysInARow(int count) {
+    return 'Üst üste $count gün';
+  }
+
+  @override
+  String get pomodoroMetrics => 'Metrikler';
+
+  @override
+  String get pomodoroPerformance => 'Performans';
+
+  @override
+  String get pomodoroTimeline => 'Döngü Zaman Çizelgesi';
+
+  @override
+  String pomodoroSubtitle(int done, int total) {
+    return 'Pomodoro • $done/$total döngü';
+  }
+
+  @override
+  String focusCycleDone(int index, int minutes) {
+    return 'Odak $index  •  $minutes dk';
+  }
+
+  @override
+  String focusCycleInProgress(int index) {
+    return 'Odak $index  •  devam ediyor';
+  }
+
+  @override
+  String focusCycleNotReached(int index) {
+    return 'Odak $index  •  ulaşılmadı';
+  }
+
+  @override
+  String breakDone(int minutes) {
+    return 'Mola  •  $minutes dk';
+  }
+
+  @override
+  String get breakPending => 'Mola';
+
+  @override
+  String get focusTimeLabel => 'Odak Süresi';
+
+  @override
+  String get breakTimeLabel => 'Mola Süresi';
+
+  @override
+  String completionOfCycles(int percent) {
+    return 'Planlanan döngülerin %$percent\'i';
+  }
+
+  @override
+  String minutesFocusedLabel(int minutes) {
+    return '$minutes dk odaklandı';
+  }
+
+  @override
+  String pomodoroHistorySubtitle(int done, int total, String time) {
+    return '$total döngüden $done\'i • $time';
+  }
+
+  @override
+  String sessionHistorySubtitle(String type, int minutes, String time) {
+    return '$type • ${minutes}dk • $time';
+  }
+
+  @override
+  String get statusBadgeCompleted => '✔ Tamamlandı';
+
+  @override
+  String get statusBadgeStopped => '⏸ Erken durduruldu';
+
+  @override
+  String errorLoading(String error) {
+    return 'Hata: $error';
+  }
+
+  @override
+  String get pomodoroInsightConsistent =>
+      'Pomodoro döngülerini tutarlı şekilde tamamlıyorsunuz';
+
+  @override
+  String get pomodoroInsightPartial =>
+      'Sık sık döngü ortasında duruyorsunuz. Daha kısa oturumlar deneyin';
+
+  @override
+  String get pomodoroInsightNeedsWork =>
+      'Pomodoro döngülerini nadiren tamamlıyorsunuz. Süreyi kısaltmayı düşünün';
+
+  @override
+  String get studyActivity => 'Çalışma Aktivitesi';
+
+  @override
+  String heatmapTooltip(String date, int minutes, int sessions, int score) {
+    return '$date: ${minutes}dk • $sessions oturum • Skor: $score';
+  }
+
+  @override
+  String get heatmapLegendLess => 'Az';
+
+  @override
+  String get heatmapLegendMore => 'Çok';
+
+  @override
+  String get heatmapDayDetails => 'Gün Detayları';
+
+  @override
+  String streakCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count günlük seri',
+      one: '1 günlük seri',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get studyIntensitySubtitle =>
+      'Zaman içindeki günlük çalışma yoğunluğunuz';
+
+  @override
+  String get buildStreak => 'SERİNİZİ OLUŞTURUN';
+
+  @override
+  String get buildStreakSubtitle =>
+      'Çalışma aktivite geçmişiniz burada görünecek';
+
+  @override
+  String get goodConsistency => 'İyi süreklilik';
+
+  @override
+  String get activity => 'Aktivite';
+
+  @override
+  String get sessions => 'Oturumlar';
+
+  @override
+  String get min => 'dk';
+
+  @override
+  String heatmapActivityLegendTooltip(Object label) {
+    return 'Aktivite: $label';
+  }
+
+  @override
+  String minutesShort(Object count) {
+    return '$count dk';
+  }
+
+  @override
+  String get startSession => 'Start Session';
+
+  @override
+  String targetPrefix(String target) {
+    return 'Hedef: $target';
+  }
+
+  @override
+  String get reset => 'Sıfırla';
+
+  @override
+  String get status => 'Durum';
 }

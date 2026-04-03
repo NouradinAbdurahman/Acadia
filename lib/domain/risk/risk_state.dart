@@ -5,12 +5,12 @@ import 'risk_result.dart';
 class RiskState {
   final RiskInput input;
   final RiskResult result;
-  final int trendDelta;
+  final int? trendDelta;
 
   const RiskState({
     required this.input,
     required this.result,
-    required this.trendDelta,
+    this.trendDelta,
   });
 
   /// Generates a smarter interpretation sentence based on risk level.

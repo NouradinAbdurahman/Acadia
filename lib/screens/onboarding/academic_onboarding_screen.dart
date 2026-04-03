@@ -9,6 +9,7 @@ import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../core/design/app_radius.dart';
 import '../../components/app_button.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 import '../../models/student_profile.dart';
 import '../../providers/student_profile_provider.dart';
 import '../../providers/app_providers.dart';
@@ -20,10 +21,12 @@ class AcademicOnboardingScreen extends ConsumerStatefulWidget {
   const AcademicOnboardingScreen({super.key});
 
   @override
-  ConsumerState<AcademicOnboardingScreen> createState() => _AcademicOnboardingScreenState();
+  ConsumerState<AcademicOnboardingScreen> createState() =>
+      _AcademicOnboardingScreenState();
 }
 
-class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScreen> {
+class _AcademicOnboardingScreenState
+    extends ConsumerState<AcademicOnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isSubmitting = false;
@@ -32,7 +35,7 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
   final _nameController = TextEditingController();
   final _universityController = TextEditingController();
   final _majorController = TextEditingController();
-  
+
   String? _selectedDegree;
   int _selectedYear = 1;
   int _selectedGradYear = DateTime.now().year + 4;
@@ -55,7 +58,8 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
       _majorController.text = profile.major ?? '';
       _selectedDegree = profile.degreeType;
       _selectedYear = profile.academicYear ?? 1;
-      _selectedGradYear = profile.expectedGraduationYear ?? (DateTime.now().year + 4);
+      _selectedGradYear =
+          profile.expectedGraduationYear ?? (DateTime.now().year + 4);
       _selectedSemester = profile.currentSemester ?? 1;
       _studyHours = (profile.studyHoursPerWeek ?? 20).toDouble();
       _preferredTime = profile.preferredStudyTime ?? 'morning';
@@ -72,22 +76,23 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
     super.dispose();
   }
 
-   void _nextStep() {
+  void _nextStep() {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Simple validation
     if (_currentStep == 0) {
-      if (_nameController.text.trim().isEmpty || _universityController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.requiredField)),
-        );
+      if (_nameController.text.trim().isEmpty ||
+          _universityController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.requiredField)));
         return;
       }
     } else if (_currentStep == 1) {
       if (_majorController.text.trim().isEmpty || _selectedDegree == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.requiredField)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.requiredField)));
         return;
       }
     }
@@ -106,9 +111,9 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
   Future<void> _finishOnboarding() async {
     if (_isSubmitting) return;
     setState(() => _isSubmitting = true);
-    
+
     Haptics.vibrate(HapticsType.success);
-    
+
     final profile = StudentProfile(
       id: '', // Will be handled by upsert
       userId: '', // Will be handled by service
@@ -129,17 +134,23 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
       updatedAt: DateTime.now(),
     );
 
-     try {
+    try {
       await ref.read(studentProfileProvider.notifier).updateProfile(profile);
       await ref.read(studentProfileProvider.notifier).completeOnboarding();
-      
+
       // Update the user table directly as single source of truth for Risk engine
       final appUser = ref.read(currentAppUserProvider).value;
       if (appUser != null) {
-        await ref.read(authRepositoryProvider).updateWeeklyStudyGoal(appUser.id, _studyHours.toInt());
-        ref.invalidate(currentAppUserProvider);
+        try {
+          await ref
+              .read(authRepositoryProvider)
+              .updateWeeklyStudyGoal(appUser.id, _studyHours.toInt());
+          ref.invalidate(currentAppUserProvider);
+        } catch (_) {
+          // Non-fatal: onboarding should continue if this optional column is unavailable.
+        }
       }
-      
+
       if (mounted) {
         context.go('/home');
       }
@@ -154,89 +165,99 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
     final theme = Theme.of(context);
 
     return PopScope(
-      canPop: ref.watch(studentProfileProvider).value?.onboardingComplete ?? false,
+      canPop:
+          ref.watch(studentProfileProvider).value?.onboardingComplete ?? false,
       child: Scaffold(
         body: AuthBackgroundContainer(
           child: SafeArea(
-          child: Column(
-            children: [
-              // Progress Header
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (_currentStep > 0)
-                          IconButton(
-                            onPressed: () => _pageController.previousPage(
-                              duration: AppDurations.normal, curve: Curves.easeInOut),
-                            icon: const AppIcon(HeroIcons.chevronLeft),
-                          )
-                        else
-                          const SizedBox(width: 48),
-                        
-                        Text(
-                          l10n?.academicProfileOnboarding ?? 'Academic Profile',
-                          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        
-                        const SizedBox(width: 48),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: List.generate(4, (index) {
-                        final isActive = index <= _currentStep;
-                        return Expanded(
-                          child: AnimatedContainer(
-                            duration: AppDurations.normal,
-                            height: 4,
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            decoration: BoxDecoration(
-                              color: isActive 
-                                  ? theme.colorScheme.primary 
-                                  : theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(2),
+            child: Column(
+              children: [
+                // Progress Header
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (_currentStep > 0)
+                            IconButton(
+                              onPressed: () => _pageController.previousPage(
+                                duration: AppDurations.normal,
+                                curve: Curves.easeInOut,
+                              ),
+                              icon: const AppIcon(HeroIcons.chevronLeft),
+                            )
+                          else
+                            const SizedBox(width: 48),
+
+                          Text(
+                            l10n?.academicProfileOnboarding ??
+                                'Academic Profile',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
 
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (val) => setState(() => _currentStep = val),
-                  children: [
-                    _buildIdentityStep(l10n, theme),
-                    _buildProgramStep(l10n, theme),
-                    _buildLoadStep(l10n, theme),
-                    _buildCalibrationStep(l10n, theme),
-                  ],
+                          const SizedBox(width: 48),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: List.generate(4, (index) {
+                          final isActive = index <= _currentStep;
+                          return Expanded(
+                            child: AnimatedContainer(
+                              duration: AppDurations.normal,
+                              height: 4,
+                              margin: const EdgeInsets.symmetric(horizontal: 2),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              // Bottom Button
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: AppButton(
-                  onPressed: _isSubmitting ? null : _nextStep,
-                  isLoading: _isSubmitting,
-                  text: _currentStep == 3 ? (l10n?.getStarted ?? 'Get Started') : (l10n?.next ?? 'Next'),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (val) => setState(() => _currentStep = val),
+                    children: [
+                      _buildIdentityStep(l10n, theme),
+                      _buildProgramStep(l10n, theme),
+                      _buildLoadStep(l10n, theme),
+                      _buildCalibrationStep(l10n, theme),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+
+                // Bottom Button
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: AppButton(
+                    onPressed: _isSubmitting ? null : _nextStep,
+                    isLoading: _isSubmitting,
+                    text: _currentStep == 3
+                        ? (l10n?.getStarted ?? 'Get Started')
+                        : (l10n?.next ?? 'Next'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-   );
+    );
   }
 
   Widget _buildIdentityStep(AppLocalizations? l10n, ThemeData theme) {
@@ -247,7 +268,8 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
         children: [
           _buildStepHeader(
             l10n?.basicIdentity ?? 'Basic Identity',
-            l10n?.identityDesc ?? 'Let\'s start with who you are and where you study.',
+            l10n?.identityDesc ??
+                'Let\'s start with who you are and where you study.',
             HeroIcons.identification,
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -281,7 +303,9 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
           const SizedBox(height: AppSpacing.xl),
           _buildDropdown(
             label: l10n?.degreeType ?? 'Degree Type',
-            value: (['Bachelor', 'Master', 'PhD'].contains(_selectedDegree)) ? _selectedDegree : null,
+            value: (['Bachelor', 'Master', 'PhD'].contains(_selectedDegree))
+                ? _selectedDegree
+                : null,
             items: {
               'Bachelor': l10n?.bachelor ?? 'Bachelor',
               'Master': l10n?.master ?? 'Master',
@@ -347,7 +371,9 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
           const SizedBox(height: AppSpacing.xl),
           Text(
             l10n?.studyHoursPerWeek ?? 'Weekly Study Goal (Hours)',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Container(
@@ -366,7 +392,8 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
             child: Column(
               children: [
                 Text(
-                  l10n?.hoursCount(_studyHours.toInt()) ?? '${_studyHours.toInt()} Hours',
+                  l10n?.hoursCount(_studyHours.toInt()) ??
+                      '${_studyHours.toInt()} Hours',
                   style: theme.textTheme.displaySmall?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -401,7 +428,9 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
           const SizedBox(height: AppSpacing.xl),
           Text(
             l10n?.preferredStudyTime ?? 'Preferred Study Time',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           _buildSegmentedControl(
@@ -416,13 +445,15 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
           const SizedBox(height: AppSpacing.xl),
           Text(
             l10n?.breakPattern ?? 'Break Pattern',
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           _buildSegmentedControl(
             value: _breakPattern,
             options: {
-                'pomodoro': l10n?.pomodoro ?? 'Pomodoro',
+              'pomodoro': l10n?.pomodoro ?? 'Pomodoro',
               'deep_work': l10n?.deepWork ?? 'Deep Work',
               'mixed': l10n?.mixed ?? 'Mixed',
             },
@@ -444,11 +475,7 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
             color: theme.colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppRadius.lg),
           ),
-          child: AppIcon(
-            icon,
-            color: theme.colorScheme.primary,
-            size: 32,
-          ),
+          child: AppIcon(icon, color: theme.colorScheme.primary, size: 32),
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
@@ -524,64 +551,22 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
     required HeroIcons icon,
     required ValueChanged<String?> onChanged,
   }) {
-    final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? AppColors.glassSurface
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? AppColors.glassBorder
-              : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButtonFormField<String>(
-          initialValue: items.containsKey(value) ? value : null,
-          isExpanded: true,
-          dropdownColor: theme.brightness == Brightness.dark 
-              ? const Color(0xFF1E293B) 
-              : Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          style: theme.textTheme.bodyMedium,
-          icon: Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: AppIcon(HeroIcons.chevronDown, size: 20),
-          ),
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: theme.textTheme.bodySmall?.copyWith(
-              color: theme.brightness == Brightness.dark
-                  ? AppColors.textSecondaryDark
-                  : AppColors.textSecondaryLight,
-            ),
-            prefixIcon: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: AppIcon(
-                icon,
-                size: 20,
-                color: theme.colorScheme.primary.withValues(alpha: 0.8),
-              ),
-            ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          ),
-          items: items.entries.map((e) => DropdownMenuItem(
-            value: e.key, 
-            child: Text(
-              e.value, 
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.brightness == Brightness.dark
-                    ? AppColors.textPrimaryDark
-                    : AppColors.textPrimaryLight,
-              ),
-            ),
-          )).toList(),
-          onChanged: onChanged,
-        ),
-      ),
+    final selectedValue = items.containsKey(value) ? value : null;
+    final selectedText = selectedValue == null
+        ? '-'
+        : (items[selectedValue] ?? '-');
+    final options = items.entries
+        .map((e) => AppPickerOption<String>(value: e.key, title: e.value))
+        .toList();
+
+    return AppBottomSheetPicker<String>(
+      icon: icon,
+      fieldLabel: label,
+      sheetTitle: label,
+      selectedValue: selectedValue,
+      selectedDisplayText: selectedText,
+      options: options,
+      onChanged: (selected) => onChanged(selected),
     );
   }
 
@@ -621,7 +606,9 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   value.toString(),
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 IconButton(
@@ -668,15 +655,21 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
                 duration: AppDurations.fast,
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(AppRadius.md),
-                  boxShadow: isSelected ? [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    )
-                  ] : [],
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [],
                 ),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -684,8 +677,12 @@ class _AcademicOnboardingScreenState extends ConsumerState<AcademicOnboardingScr
                     entry.value,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: isSelected ? Colors.white : theme.textTheme.bodyMedium?.color,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? Colors.white
+                          : theme.textTheme.bodyMedium?.color,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ),

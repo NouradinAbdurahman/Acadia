@@ -5,6 +5,9 @@ class Task {
   final String? course;
   final String? courseId;
   final DateTime? deadline;
+
+  /// Optional link to an [academic_deadlines] row (work target).
+  final String? deadlineId;
   final String? priority;
   final int? estimatedTime;
   final String status;
@@ -19,6 +22,7 @@ class Task {
     this.course,
     this.courseId,
     this.deadline,
+    this.deadlineId,
     this.priority,
     this.estimatedTime,
     this.status = 'pending',
@@ -31,7 +35,7 @@ class Task {
     // Standardize status: favor 'status' column, fallback to 'is_completed' if it exists
     String standardizedStatus = 'pending';
     if (json['status'] != null) {
-      standardizedStatus = json['status'];
+      standardizedStatus = json['status'].toString();
     } else if (json['is_completed'] == true) {
       standardizedStatus = 'completed';
     }
@@ -41,22 +45,28 @@ class Task {
       userId: json['user_id'] ?? '',
       title: json['title'] ?? 'Untitled Task',
       course: json['course'],
-      deadline: json['deadline'] != null 
-          ? DateTime.tryParse(json['deadline']) 
+      deadline: json['deadline'] != null
+          ? DateTime.tryParse(json['deadline'])
           : null,
       priority: json['priority'],
       estimatedTime: json['estimated_time'],
       status: standardizedStatus,
-      courseId: json['course_id'],
-      notes: json['notes'],
-      createdAt: json['created_at'] != null 
+      courseId: json['course_id']?.toString(),
+      deadlineId: json['deadline_id']?.toString(),
+      notes: json['notes']?.toString(),
+      createdAt: json['created_at'] != null
           ? (DateTime.tryParse(json['created_at']) ?? DateTime.now())
           : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
+      updatedAt: json['updated_at'] != null
           ? (DateTime.tryParse(json['updated_at']) ?? DateTime.now())
           : null,
     );
   }
+
+  bool get isCompleted => status == 'completed';
+
+  /// Completion timestamp when status is completed (uses [updatedAt]).
+  DateTime? get completedAt => isCompleted ? updatedAt : null;
 
   Task copyWith({
     String? id,
@@ -65,6 +75,8 @@ class Task {
     String? course,
     String? courseId,
     DateTime? deadline,
+    String? deadlineId,
+    bool clearDeadlineId = false,
     String? priority,
     int? estimatedTime,
     String? status,
@@ -79,6 +91,7 @@ class Task {
       course: course ?? this.course,
       courseId: courseId ?? this.courseId,
       deadline: deadline ?? this.deadline,
+      deadlineId: clearDeadlineId ? null : (deadlineId ?? this.deadlineId),
       priority: priority ?? this.priority,
       estimatedTime: estimatedTime ?? this.estimatedTime,
       status: status ?? this.status,
@@ -95,6 +108,7 @@ class Task {
       'title': title,
       if (course != null) 'course': course,
       if (deadline != null) 'deadline': deadline?.toIso8601String(),
+      if (deadlineId != null) 'deadline_id': deadlineId,
       if (priority != null) 'priority': priority,
       if (estimatedTime != null) 'estimated_time': estimatedTime,
       if (courseId != null) 'course_id': courseId,

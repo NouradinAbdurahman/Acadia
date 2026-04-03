@@ -80,7 +80,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         if (mounted) {
           final l10n = AppLocalizations.of(context);
           setState(() {
-            _errorMessage = result['error']?.toString() ?? l10n?.networkError ?? '';
+            _errorMessage = l10n?.networkError ?? '';
           });
         }
       }

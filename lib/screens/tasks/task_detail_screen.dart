@@ -194,14 +194,26 @@ class TaskDetailScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppSpacing.md),
                         AppButton(
-                          onPressed: () {
+                          onPressed: () async {
                             Haptics.vibrate(HapticsType.medium);
                             final newStatus = task.status == 'completed'
                                 ? 'pending'
                                 : 'completed';
-                            ref
-                                .read(tasksProvider.notifier)
-                                .updateTaskStatus(task.id, newStatus);
+                            try {
+                              await ref
+                                  .read(tasksProvider.notifier)
+                                  .updateTaskStatus(task.id, newStatus);
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(context)!.networkError,
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           },
                           text: task.status == 'completed'
                               ? AppLocalizations.of(context)!.markAsPending
@@ -211,11 +223,23 @@ class TaskDetailScreen extends ConsumerWidget {
                         AppButton(
                           onPressed: () async {
                             Haptics.vibrate(HapticsType.error);
-                            await ref
-                                .read(tasksProvider.notifier)
-                                .deleteTask(task.id);
-                            if (context.mounted) {
-                              context.pop();
+                            try {
+                              await ref
+                                  .read(tasksProvider.notifier)
+                                  .deleteTask(task.id);
+                              if (context.mounted) {
+                                context.pop();
+                              }
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      AppLocalizations.of(context)!.networkError,
+                                    ),
+                                  ),
+                                );
+                              }
                             }
                           },
                           text: AppLocalizations.of(context)!.deleteTask,

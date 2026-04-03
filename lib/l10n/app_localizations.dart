@@ -320,6 +320,60 @@ abstract class AppLocalizations {
   /// **'All'**
   String get all;
 
+  /// No description provided for @quickMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Menu'**
+  String get quickMenu;
+
+  /// No description provided for @deadlineKindBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline'**
+  String get deadlineKindBadge;
+
+  /// No description provided for @linkToAcademicDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Link to deadline (optional)'**
+  String get linkToAcademicDeadline;
+
+  /// No description provided for @noneLinkedDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get noneLinkedDeadline;
+
+  /// No description provided for @relatedTasksSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Related tasks'**
+  String get relatedTasksSection;
+
+  /// No description provided for @addTaskToThisDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task to this deadline'**
+  String get addTaskToThisDeadline;
+
+  /// No description provided for @deadlineLinkedTasksProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} / {total} tasks completed'**
+  String deadlineLinkedTasksProgress(int completed, int total);
+
+  /// No description provided for @deadlineNoLinkedTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks linked to this deadline yet.'**
+  String get deadlineNoLinkedTasks;
+
+  /// No description provided for @taskLinkedToDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to a deadline'**
+  String get taskLinkedToDeadline;
+
   /// No description provided for @pending.
   ///
   /// In en, this message translates to:
@@ -416,6 +470,12 @@ abstract class AppLocalizations {
   /// **'Study'**
   String get study;
 
+  /// No description provided for @liveStudySessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Study Sessions'**
+  String get liveStudySessions;
+
   /// No description provided for @startStudySession.
   ///
   /// In en, this message translates to:
@@ -445,6 +505,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop'**
   String get stop;
+
+  /// No description provided for @focusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get focusLabel;
+
+  /// No description provided for @breakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Break'**
+  String get breakLabel;
+
+  /// No description provided for @reviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get reviewLabel;
+
+  /// No description provided for @remainingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get remainingLabel;
+
+  /// No description provided for @stopSessionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop Session'**
+  String get stopSessionTitle;
+
+  /// No description provided for @stopSessionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to end this study session?'**
+  String get stopSessionConfirm;
+
+  /// No description provided for @sessionPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Session paused. Take a breath.'**
+  String get sessionPaused;
+
+  /// No description provided for @refreshYourself.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh yourself. You\'re doing great.'**
+  String get refreshYourself;
+
+  /// No description provided for @stayFocused.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay focused. You\'re doing well.'**
+  String get stayFocused;
+
+  /// No description provided for @deepWorkInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep work in progress...'**
+  String get deepWorkInProgress;
+
+  /// No description provided for @dontStopNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t stop now, you\'re on a roll!'**
+  String get dontStopNow;
+
+  /// No description provided for @focusOnProcess.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on the process, not the results.'**
+  String get focusOnProcess;
+
+  /// No description provided for @almostThere.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there! Keep pushing.'**
+  String get almostThere;
+
+  /// No description provided for @futureSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Your future self will thank you.'**
+  String get futureSelf;
 
   /// No description provided for @sessionCompleted.
   ///
@@ -677,7 +821,7 @@ abstract class AppLocalizations {
   /// No description provided for @deepFocus.
   ///
   /// In en, this message translates to:
-  /// **'Deep Focus'**
+  /// **'Deep focus'**
   String get deepFocus;
 
   /// No description provided for @analytics.
@@ -863,8 +1007,14 @@ abstract class AppLocalizations {
   /// No description provided for @tooManyRequests.
   ///
   /// In en, this message translates to:
-  /// **'Too many requests. Please try again later.'**
+  /// **'Please wait a moment before trying again.'**
   String get tooManyRequests;
+
+  /// No description provided for @pleaseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait a moment before trying again.'**
+  String get pleaseWait;
 
   /// No description provided for @networkError.
   ///
@@ -947,7 +1097,7 @@ abstract class AppLocalizations {
   /// No description provided for @tooManyAttempts.
   ///
   /// In en, this message translates to:
-  /// **'Too many attempts. Please try again later.'**
+  /// **'Please wait a moment before trying again.'**
   String get tooManyAttempts;
 
   /// No description provided for @invalidOtp.
@@ -1412,6 +1562,12 @@ abstract class AppLocalizations {
   /// **'Manage Semesters'**
   String get manageSemesters;
 
+  /// No description provided for @allSemesters.
+  ///
+  /// In en, this message translates to:
+  /// **'All Semesters'**
+  String get allSemesters;
+
   /// No description provided for @addCourse.
   ///
   /// In en, this message translates to:
@@ -1423,6 +1579,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Course'**
   String get editCourse;
+
+  /// No description provided for @courseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Course Title'**
+  String get courseTitle;
 
   /// No description provided for @courseCode.
   ///
@@ -1478,6 +1640,30 @@ abstract class AppLocalizations {
   /// **'Semester'**
   String get semester;
 
+  /// No description provided for @semesterSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get semesterSeason;
+
+  /// No description provided for @fallSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Fall'**
+  String get fallSemester;
+
+  /// No description provided for @springSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Spring'**
+  String get springSemester;
+
+  /// No description provided for @academicYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic Year'**
+  String get academicYearLabel;
+
   /// No description provided for @selectSemester.
   ///
   /// In en, this message translates to:
@@ -1489,6 +1675,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set as active semester'**
   String get setAsActive;
+
+  /// No description provided for @currentSemesterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get currentSemesterLabel;
+
+  /// No description provided for @selectDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Date'**
+  String get selectDate;
+
+  /// No description provided for @noSemestersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No semesters created yet'**
+  String get noSemestersYet;
+
+  /// No description provided for @createFirstSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first semester to organize your courses.'**
+  String get createFirstSemester;
+
+  /// No description provided for @deleteSemesterWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This semester will be removed from your semester list.'**
+  String get deleteSemesterWarning;
 
   /// No description provided for @noCoursesYet.
   ///
@@ -1537,6 +1753,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select a course'**
   String get pleaseSelectCourse;
+
+  /// No description provided for @ectsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'ECTS is required'**
+  String get ectsRequired;
 
   /// No description provided for @errorLoadingCourses.
   ///
@@ -1913,7 +2135,7 @@ abstract class AppLocalizations {
   /// No description provided for @thisWeekLabel.
   ///
   /// In en, this message translates to:
-  /// **'This Week'**
+  /// **'This week'**
   String get thisWeekLabel;
 
   /// No description provided for @noCourseSelected.
@@ -2075,13 +2297,13 @@ abstract class AppLocalizations {
   /// No description provided for @riskInterpretationMedium.
   ///
   /// In en, this message translates to:
-  /// **'Your risk is moderate; keep an eye on upcoming tasks and study goals.'**
+  /// **'Your risk is moderate. Focus on completing tasks and increasing study time.'**
   String get riskInterpretationMedium;
 
   /// No description provided for @riskInterpretationLow.
   ///
   /// In en, this message translates to:
-  /// **'You are in a safe range. Maintain your current progress.'**
+  /// **'You are in a safe range. Keep your current progress.'**
   String get riskInterpretationLow;
 
   /// No description provided for @riskHoursRemaining.
@@ -2117,20 +2339,26 @@ abstract class AppLocalizations {
   /// No description provided for @riskTrendUp.
   ///
   /// In en, this message translates to:
-  /// **'+{delta} risk increase'**
+  /// **'Increased by {delta} points from last week'**
   String riskTrendUp(int delta);
 
   /// No description provided for @riskTrendDown.
   ///
   /// In en, this message translates to:
-  /// **'-{delta} (improved)'**
+  /// **'Improved by {delta} points from last week'**
   String riskTrendDown(int delta);
 
   /// No description provided for @riskTrendStable.
   ///
   /// In en, this message translates to:
-  /// **'+0 (no change)'**
+  /// **'No change'**
   String get riskTrendStable;
+
+  /// No description provided for @riskTrendNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get riskTrendNew;
 
   /// No description provided for @riskNoData.
   ///
@@ -2209,6 +2437,1758 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No tasks scheduled this week'**
   String get noTasksThisWeek;
+
+  /// No description provided for @examResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Course Results'**
+  String get examResults;
+
+  /// No description provided for @addResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Result'**
+  String get addResult;
+
+  /// No description provided for @editResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Result'**
+  String get editResult;
+
+  /// No description provided for @noResultsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No results added yet'**
+  String get noResultsYet;
+
+  /// No description provided for @addFirstResultPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first course result for this semester.'**
+  String get addFirstResultPrompt;
+
+  /// No description provided for @gradingComponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Grading Components'**
+  String get gradingComponents;
+
+  /// No description provided for @addComponent.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add Component'**
+  String get addComponent;
+
+  /// No description provided for @finalSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Final'**
+  String get finalSection;
+
+  /// No description provided for @finalAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Final Average'**
+  String get finalAverage;
+
+  /// No description provided for @letterGrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter Grade'**
+  String get letterGrade;
+
+  /// No description provided for @resultStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Course Status'**
+  String get resultStatus;
+
+  /// No description provided for @resultSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Successful'**
+  String get resultSuccessful;
+
+  /// No description provided for @resultFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get resultFailed;
+
+  /// No description provided for @component.
+  ///
+  /// In en, this message translates to:
+  /// **'Component'**
+  String get component;
+
+  /// No description provided for @componentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get componentTitle;
+
+  /// No description provided for @componentTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Midterm, Project, Final, Quiz'**
+  String get componentTitleHint;
+
+  /// No description provided for @scoreHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 85'**
+  String get scoreHint;
+
+  /// No description provided for @percentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Percentage'**
+  String get percentage;
+
+  /// No description provided for @percentageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 40'**
+  String get percentageHint;
+
+  /// No description provided for @finalAverageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 78.5'**
+  String get finalAverageHint;
+
+  /// No description provided for @numberRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get numberRequired;
+
+  /// No description provided for @completeComponentsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all components before saving'**
+  String get completeComponentsError;
+
+  /// No description provided for @percentageNot100Warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: total percentage is not 100'**
+  String get percentageNot100Warning;
+
+  /// No description provided for @gradeDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade Distribution'**
+  String get gradeDistribution;
+
+  /// No description provided for @noGradeDistributionYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No grade distribution data yet'**
+  String get noGradeDistributionYet;
+
+  /// No description provided for @pleaseSelectLetterGrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a letter grade'**
+  String get pleaseSelectLetterGrade;
+
+  /// No description provided for @noCoursesForSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'No courses found for this semester'**
+  String get noCoursesForSemester;
+
+  /// No description provided for @trendAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Trend Analysis'**
+  String get trendAnalysis;
+
+  /// No description provided for @studyTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Trend'**
+  String get studyTrend;
+
+  /// No description provided for @taskCompletionTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Completion Trend'**
+  String get taskCompletionTrend;
+
+  /// No description provided for @workloadTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Workload Trend'**
+  String get workloadTrend;
+
+  /// No description provided for @performanceTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Trend'**
+  String get performanceTrend;
+
+  /// No description provided for @daysFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String daysFilter(int count);
+
+  /// No description provided for @trendTodayDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} today'**
+  String trendTodayDuration(String duration);
+
+  /// No description provided for @trendCompletedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} completed today'**
+  String trendCompletedToday(int count);
+
+  /// No description provided for @trendNewToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} new today'**
+  String trendNewToday(int count);
+
+  /// No description provided for @trendStudySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours studied per day over the selected period'**
+  String get trendStudySubtitle;
+
+  /// No description provided for @trendTaskSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed tasks per day over the selected period'**
+  String get trendTaskSubtitle;
+
+  /// No description provided for @trendWorkloadSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks and deadlines added per day'**
+  String get trendWorkloadSubtitle;
+
+  /// No description provided for @trendPerformanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'GPA change based on course results'**
+  String get trendPerformanceSubtitle;
+
+  /// No description provided for @trendTasksOneDayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Most tasks were completed on one day.'**
+  String get trendTasksOneDayHint;
+
+  /// No description provided for @trendWorkloadEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet.\nAdd tasks or deadlines to see workload trends.'**
+  String get trendWorkloadEmptyMessage;
+
+  /// No description provided for @trendStudyEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet.\nStart logging study sessions to see trends.'**
+  String get trendStudyEmptyMessage;
+
+  /// No description provided for @trendTaskEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed tasks in this period.\nComplete tasks to track progress.'**
+  String get trendTaskEmptyMessage;
+
+  /// No description provided for @trendPerformanceEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add course results to track performance.'**
+  String get trendPerformanceEmptyMessage;
+
+  /// No description provided for @trendPerformanceNeedThreeResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least 3 course results to see performance trends.'**
+  String get trendPerformanceNeedThreeResults;
+
+  /// No description provided for @trendSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trend Summary'**
+  String get trendSummaryTitle;
+
+  /// No description provided for @trendOverallStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall Status'**
+  String get trendOverallStatusTitle;
+
+  /// No description provided for @trendNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data'**
+  String get trendNotEnoughData;
+
+  /// No description provided for @trendStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get trendStable;
+
+  /// No description provided for @trendImproving.
+  ///
+  /// In en, this message translates to:
+  /// **'Improving'**
+  String get trendImproving;
+
+  /// No description provided for @trendDeclining.
+  ///
+  /// In en, this message translates to:
+  /// **'Declining'**
+  String get trendDeclining;
+
+  /// No description provided for @trendLessThan30Minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than 30 minutes in this period'**
+  String get trendLessThan30Minutes;
+
+  /// No description provided for @trendHoursInPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h in this period'**
+  String trendHoursInPeriod(String hours);
+
+  /// No description provided for @trendTasksCompletedFraction.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} / {total} completed'**
+  String trendTasksCompletedFraction(int completed, int total);
+
+  /// No description provided for @trendTasksDeadlinesAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tasks/deadlines added'**
+  String trendTasksDeadlinesAdded(int count);
+
+  /// No description provided for @trendVeryLowActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Very low activity'**
+  String get trendVeryLowActivity;
+
+  /// No description provided for @trendLowActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Low activity'**
+  String get trendLowActivity;
+
+  /// No description provided for @trendNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks'**
+  String get trendNoTasks;
+
+  /// No description provided for @trendNoTasksCompletedPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks completed in this period'**
+  String get trendNoTasksCompletedPeriod;
+
+  /// No description provided for @trendZeroCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'0% completed'**
+  String get trendZeroCompleted;
+
+  /// No description provided for @trendPercentCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% completed'**
+  String trendPercentCompleted(int percent);
+
+  /// No description provided for @trendNoWorkload.
+  ///
+  /// In en, this message translates to:
+  /// **'No workload'**
+  String get trendNoWorkload;
+
+  /// No description provided for @trendIncreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Increased'**
+  String get trendIncreased;
+
+  /// No description provided for @trendReducedComparedLastPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduced compared to last period'**
+  String get trendReducedComparedLastPeriod;
+
+  /// No description provided for @trendStatusOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'On track'**
+  String get trendStatusOnTrack;
+
+  /// No description provided for @trendStatusLowAndBehind.
+  ///
+  /// In en, this message translates to:
+  /// **'Low activity and falling behind'**
+  String get trendStatusLowAndBehind;
+
+  /// No description provided for @trendStatusStudyNeedsImprovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Study consistency needs improvement'**
+  String get trendStatusStudyNeedsImprovement;
+
+  /// No description provided for @trendStatusTaskIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Task progress is incomplete'**
+  String get trendStatusTaskIncomplete;
+
+  /// No description provided for @trendStatusStableProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable progress'**
+  String get trendStatusStableProgress;
+
+  /// No description provided for @trendStatusOnTrackDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recent activity looks balanced. Keep this pace.'**
+  String get trendStatusOnTrackDetail;
+
+  /// No description provided for @trendStatusNeedsFocusDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity is low and task progress is incomplete. Focus on completing tasks and increasing study time.'**
+  String get trendStatusNeedsFocusDetail;
+
+  /// No description provided for @trendInsightBuildConsistencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build study consistency'**
+  String get trendInsightBuildConsistencyTitle;
+
+  /// No description provided for @trendInsightStudyIncreasedSignificantlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Study increased significantly'**
+  String get trendInsightStudyIncreasedSignificantlyTitle;
+
+  /// No description provided for @trendInsightStudyImprovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Study improved'**
+  String get trendInsightStudyImprovedTitle;
+
+  /// No description provided for @trendInsightStudyDeclinedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Study declined'**
+  String get trendInsightStudyDeclinedTitle;
+
+  /// No description provided for @trendInsightNoTasksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks in this period'**
+  String get trendInsightNoTasksTitle;
+
+  /// No description provided for @trendInsightTaskLowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task completion is low'**
+  String get trendInsightTaskLowTitle;
+
+  /// No description provided for @trendInsightNoWorkloadTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No new workload'**
+  String get trendInsightNoWorkloadTitle;
+
+  /// No description provided for @trendInsightWorkloadSharpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workload increased sharply'**
+  String get trendInsightWorkloadSharpTitle;
+
+  /// No description provided for @trendInsightWorkloadRisingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workload is rising'**
+  String get trendInsightWorkloadRisingTitle;
+
+  /// No description provided for @trendInsightPerformanceDecliningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance declining'**
+  String get trendInsightPerformanceDecliningTitle;
+
+  /// No description provided for @trendInsightPerformanceImprovingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance improving'**
+  String get trendInsightPerformanceImprovingTitle;
+
+  /// No description provided for @trendInsightStableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable trends'**
+  String get trendInsightStableTitle;
+
+  /// No description provided for @trendInsightBuildConsistencyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Start building a daily study habit.'**
+  String get trendInsightBuildConsistencyMessage;
+
+  /// No description provided for @trendInsightStudyIncreasedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Study increased by {percent}%. Keep this pace to stay ahead.'**
+  String trendInsightStudyIncreasedMessage(int percent);
+
+  /// No description provided for @trendInsightStudyDroppedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Study dropped by {percent}%. Consider scheduling extra sessions.'**
+  String trendInsightStudyDroppedMessage(int percent);
+
+  /// No description provided for @trendInsightNoTasksMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks were due in this period.'**
+  String get trendInsightNoTasksMessage;
+
+  /// No description provided for @trendInsightNoTasksCompletedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks completed yet. Start completing tasks to track performance.'**
+  String get trendInsightNoTasksCompletedMessage;
+
+  /// No description provided for @trendInsightTaskCompletedFractionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You completed {completed} of {total} tasks. Try to complete more next period.'**
+  String trendInsightTaskCompletedFractionMessage(int completed, int total);
+
+  /// No description provided for @trendInsightNoWorkloadMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No new tasks or deadlines were added in this period.'**
+  String get trendInsightNoWorkloadMessage;
+
+  /// No description provided for @trendInsightWorkloadAddedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You added {count} tasks/deadlines in this period. Plan ahead to avoid overload.'**
+  String trendInsightWorkloadAddedMessage(int count);
+
+  /// No description provided for @trendInsightPerformanceDecliningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance trend is decreasing. Review weak courses this week.'**
+  String get trendInsightPerformanceDecliningMessage;
+
+  /// No description provided for @trendInsightPerformanceImprovingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance trend is improving. Keep the same study consistency.'**
+  String get trendInsightPerformanceImprovingMessage;
+
+  /// No description provided for @trendInsightStableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No significant change yet. Keep logging consistently.'**
+  String get trendInsightStableMessage;
+
+  /// No description provided for @dashboardRiskLevelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk Level'**
+  String get dashboardRiskLevelTitle;
+
+  /// No description provided for @dashboardRiskLevelValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk Level: {level}'**
+  String dashboardRiskLevelValue(String level);
+
+  /// No description provided for @dashboardTodaySnapshotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today Snapshot'**
+  String get dashboardTodaySnapshotTitle;
+
+  /// No description provided for @dashboardStudyToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Study: {time} today'**
+  String dashboardStudyToday(String time);
+
+  /// No description provided for @dashboardTasksCompletedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks: {count} completed'**
+  String dashboardTasksCompletedToday(int count);
+
+  /// No description provided for @dashboardWorkloadAddedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Workload: {count} added'**
+  String dashboardWorkloadAddedToday(int count);
+
+  /// No description provided for @dashboardKeyInsightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Key Insight'**
+  String get dashboardKeyInsightTitle;
+
+  /// No description provided for @dashboardNoInsightAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No key insight available yet.'**
+  String get dashboardNoInsightAvailable;
+
+  /// No description provided for @dashboardQuickActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get dashboardQuickActionsTitle;
+
+  /// No description provided for @dashboardProgressOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress Overview'**
+  String get dashboardProgressOverviewTitle;
+
+  /// No description provided for @dashboardViewDetailedAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'View detailed analysis ->'**
+  String get dashboardViewDetailedAnalysis;
+
+  /// No description provided for @analyticsSparseDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Building your analytics'**
+  String get analyticsSparseDataTitle;
+
+  /// No description provided for @analyticsSparseDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Log study sessions, add tasks, and record grades. Charts fill in as you use the app.'**
+  String get analyticsSparseDataBody;
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
+
+  /// No description provided for @customDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom: {minutes}m'**
+  String customDurationLabel(int minutes);
+
+  /// No description provided for @enterMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter minutes'**
+  String get enterMinutes;
+
+  /// No description provided for @quickPresets.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Presets'**
+  String get quickPresets;
+
+  /// No description provided for @setDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Duration'**
+  String get setDuration;
+
+  /// No description provided for @focusedTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Focused time'**
+  String get focusedTime;
+
+  /// No description provided for @startAnotherSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start another session'**
+  String get startAnotherSession;
+
+  /// No description provided for @sessionInsightShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Short session. Try longer focus next time.'**
+  String get sessionInsightShort;
+
+  /// No description provided for @sessionInsightMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Good session. Stay consistent.'**
+  String get sessionInsightMedium;
+
+  /// No description provided for @sessionInsightLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong focus session.'**
+  String get sessionInsightLong;
+
+  /// No description provided for @addedToWeeklyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'+{minutes}m added to weekly goal'**
+  String addedToWeeklyGoal(int minutes);
+
+  /// No description provided for @minimumSessionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum session is 10 minutes'**
+  String get minimumSessionMessage;
+
+  /// No description provided for @durationRangeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter duration (10–240 minutes)'**
+  String get durationRangeHint;
+
+  /// No description provided for @selectCourseToStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a course to start'**
+  String get selectCourseToStart;
+
+  /// No description provided for @todayProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {completed} / {goal}'**
+  String todayProgress(String completed, String goal);
+
+  /// No description provided for @weeklyProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'This week: {completed} / {goal}'**
+  String weeklyProgress(String completed, String goal);
+
+  /// No description provided for @streakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day{count, plural, =1{} other{s}}'**
+  String streakDays(int count);
+
+  /// No description provided for @noStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a streak today'**
+  String get noStreak;
+
+  /// No description provided for @insightTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Too short. Aim for at least 20 minutes.'**
+  String get insightTooShort;
+
+  /// No description provided for @insightDecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Decent start. Try extending your next session.'**
+  String get insightDecent;
+
+  /// No description provided for @insightStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong focus. Keep this consistency.'**
+  String get insightStrong;
+
+  /// No description provided for @lowFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Focus'**
+  String get lowFocus;
+
+  /// No description provided for @mediumFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium Focus'**
+  String get mediumFocus;
+
+  /// No description provided for @highFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'High Focus'**
+  String get highFocus;
+
+  /// No description provided for @goodFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Good focus'**
+  String get goodFocus;
+
+  /// No description provided for @todayFocusedContext.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m focused tonight • {sessions} sessions'**
+  String todayFocusedContext(int minutes, int sessions);
+
+  /// No description provided for @studyIntent.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Intent'**
+  String get studyIntent;
+
+  /// No description provided for @studyIntentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What is your main focus for this session?'**
+  String get studyIntentHint;
+
+  /// No description provided for @studyIntentPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Read Chapter 4, Solve Calculus set...'**
+  String get studyIntentPlaceholder;
+
+  /// No description provided for @endsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends at {time}'**
+  String endsAt(String time);
+
+  /// No description provided for @endsAround.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends around {time}'**
+  String endsAround(String time);
+
+  /// Label for structure-based sessions like Pomodoro
+  ///
+  /// In en, this message translates to:
+  /// **'Structured session'**
+  String get structuredSession;
+
+  /// No description provided for @remainingTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining time'**
+  String get remainingTime;
+
+  /// No description provided for @sessionProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Session {current} of {total}'**
+  String sessionProgress(int current, int total);
+
+  /// No description provided for @stayFocusedMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay focused. You\'re doing well.'**
+  String get stayFocusedMsg;
+
+  /// No description provided for @halfwayMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Halfway there!'**
+  String get halfwayMsg;
+
+  /// No description provided for @almostDoneMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there, keeps it up!'**
+  String get almostDoneMsg;
+
+  /// No description provided for @youStayedFocused.
+  ///
+  /// In en, this message translates to:
+  /// **'You stayed focused for {minutes} minutes'**
+  String youStayedFocused(int minutes);
+
+  /// No description provided for @recommended.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get recommended;
+
+  /// No description provided for @weeklyGoalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Goal Progress'**
+  String get weeklyGoalProgress;
+
+  /// No description provided for @weeklyGoalTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {goal}m'**
+  String weeklyGoalTag(int goal);
+
+  /// No description provided for @minutesDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m done'**
+  String minutesDone(int minutes);
+
+  /// No description provided for @sessionTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Too Short'**
+  String get sessionTooShort;
+
+  /// No description provided for @sessionTooShortDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum session duration is 10 minutes to ensure effective focus. This session was not recorded.'**
+  String get sessionTooShortDescription;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// No description provided for @weeklyStudyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Study Goal'**
+  String get weeklyStudyGoal;
+
+  /// No description provided for @behindThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re behind this week — take action today'**
+  String get behindThisWeek;
+
+  /// No description provided for @justGettingStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Just getting started'**
+  String get justGettingStarted;
+
+  /// No description provided for @remainingHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h remaining'**
+  String remainingHours(int hours);
+
+  /// No description provided for @catchUpMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h remaining • You need to catch up'**
+  String catchUpMessage(int hours);
+
+  /// No description provided for @focusScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Score'**
+  String get focusScore;
+
+  /// No description provided for @moderateFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate Focus'**
+  String get moderateFocus;
+
+  /// No description provided for @patternConsistent.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern: Consistent'**
+  String get patternConsistent;
+
+  /// No description provided for @patternIrregular.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern: Irregular'**
+  String get patternIrregular;
+
+  /// No description provided for @confidenceHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: High'**
+  String get confidenceHigh;
+
+  /// No description provided for @confidenceMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: Medium'**
+  String get confidenceMedium;
+
+  /// No description provided for @gettingStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting started'**
+  String get gettingStarted;
+
+  /// No description provided for @noDataYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet'**
+  String get noDataYet;
+
+  /// No description provided for @statusStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get statusStable;
+
+  /// No description provided for @statusImproving.
+  ///
+  /// In en, this message translates to:
+  /// **'Improving'**
+  String get statusImproving;
+
+  /// No description provided for @statusDeclining.
+  ///
+  /// In en, this message translates to:
+  /// **'Declining'**
+  String get statusDeclining;
+
+  /// No description provided for @trySessionNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a {duration}-minute session now'**
+  String trySessionNow(int duration);
+
+  /// No description provided for @startNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start now'**
+  String get startNow;
+
+  /// No description provided for @sessionTooShortTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Too Short'**
+  String get sessionTooShortTitle;
+
+  /// No description provided for @sessionTooShortMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum session duration is 10 minutes. This session was not recorded.'**
+  String get sessionTooShortMessage;
+
+  /// No description provided for @focusRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining time'**
+  String get focusRemaining;
+
+  /// No description provided for @shortSessionInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Short session. Try longer focus next time.'**
+  String get shortSessionInsight;
+
+  /// No description provided for @goodSessionInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Good session. Stay consistent.'**
+  String get goodSessionInsight;
+
+  /// No description provided for @strongSessionInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong focus session.'**
+  String get strongSessionInsight;
+
+  /// No description provided for @sessionEndedEarly.
+  ///
+  /// In en, this message translates to:
+  /// **'Session ended early — try staying at least 15 min'**
+  String get sessionEndedEarly;
+
+  /// No description provided for @niceProgressToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice progress today'**
+  String get niceProgressToday;
+
+  /// No description provided for @studyConsistent.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay consistent this week'**
+  String get studyConsistent;
+
+  /// No description provided for @next15m.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a 15-minute session to rebuild focus'**
+  String get next15m;
+
+  /// No description provided for @next25m.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with a 25-minute focus session'**
+  String get next25m;
+
+  /// No description provided for @next45m.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re in deep focus mode. Try a 45-minute session'**
+  String get next45m;
+
+  /// No description provided for @sessionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No sessions} =1{1 session} other{{count} sessions}}'**
+  String sessionsCount(num count);
+
+  /// No description provided for @minutesFocused.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m focused'**
+  String minutesFocused(Object minutes);
+
+  /// No description provided for @patternLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pattern'**
+  String get patternLabel;
+
+  /// No description provided for @statusVariable.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable'**
+  String get statusVariable;
+
+  /// No description provided for @overloadWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re pushing too hard. Take a proper break.'**
+  String get overloadWarning;
+
+  /// No description provided for @focusTrendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{trend} focus pattern this week'**
+  String focusTrendMessage(String trend);
+
+  /// No description provided for @focusAnalysisBasis.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on recent sessions, consistency, and stability.'**
+  String get focusAnalysisBasis;
+
+  /// No description provided for @longBreakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Break'**
+  String get longBreakLabel;
+
+  /// No description provided for @focusSessionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus {current}/{total}'**
+  String focusSessionCount(int current, int total);
+
+  /// No description provided for @improving.
+  ///
+  /// In en, this message translates to:
+  /// **'Improving'**
+  String get improving;
+
+  /// No description provided for @declining.
+  ///
+  /// In en, this message translates to:
+  /// **'Declining'**
+  String get declining;
+
+  /// No description provided for @stable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get stable;
+
+  /// No description provided for @focusShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Short Focus'**
+  String get focusShort;
+
+  /// No description provided for @focusGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good Focus'**
+  String get focusGood;
+
+  /// No description provided for @focusDeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Focus'**
+  String get focusDeep;
+
+  /// No description provided for @statusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get statusCompleted;
+
+  /// No description provided for @statusStoppedEarly.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped early'**
+  String get statusStoppedEarly;
+
+  /// No description provided for @tryLongerFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Try longer focus next time'**
+  String get tryLongerFocus;
+
+  /// No description provided for @solidSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid session, keep it up'**
+  String get solidSession;
+
+  /// No description provided for @excellentDeepWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent deep work'**
+  String get excellentDeepWork;
+
+  /// No description provided for @focusScoreImpact.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Score Impact'**
+  String get focusScoreImpact;
+
+  /// No description provided for @completedYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get completedYes;
+
+  /// No description provided for @completedNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get completedNo;
+
+  /// No description provided for @cycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycles'**
+  String get cycles;
+
+  /// No description provided for @breaksSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Breaks skipped'**
+  String get breaksSkipped;
+
+  /// No description provided for @weeklyActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Activity'**
+  String get weeklyActivity;
+
+  /// No description provided for @streakWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'🔥 Don\'t break your streak. Study today to keep it alive!'**
+  String get streakWarningMessage;
+
+  /// No description provided for @preivousWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last week'**
+  String get preivousWeekLabel;
+
+  /// No description provided for @newWeekStart.
+  ///
+  /// In en, this message translates to:
+  /// **'New week start'**
+  String get newWeekStart;
+
+  /// No description provided for @noStudyActivityYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No study activity yet'**
+  String get noStudyActivityYet;
+
+  /// No description provided for @studiedOnlyOneDay.
+  ///
+  /// In en, this message translates to:
+  /// **'You studied only one day this week'**
+  String get studiedOnlyOneDay;
+
+  /// No description provided for @gettingStartedExtend.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting started. Try to extend sessions'**
+  String get gettingStartedExtend;
+
+  /// No description provided for @buildingConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Building consistency'**
+  String get buildingConsistency;
+
+  /// No description provided for @strongConsistentPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong and consistent study pattern'**
+  String get strongConsistentPattern;
+
+  /// No description provided for @noActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity'**
+  String get noActivity;
+
+  /// No description provided for @monday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get monday;
+
+  /// No description provided for @tuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get tuesday;
+
+  /// No description provided for @wednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get wednesday;
+
+  /// No description provided for @thursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get thursday;
+
+  /// No description provided for @friday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get friday;
+
+  /// No description provided for @saturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get saturday;
+
+  /// No description provided for @sunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get sunday;
+
+  /// No description provided for @weeklyProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Progress'**
+  String get weeklyProgressLabel;
+
+  /// No description provided for @newBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'New ⭐'**
+  String get newBadge;
+
+  /// No description provided for @weeklyGoalProgressHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {goal}'**
+  String weeklyGoalProgressHours(String current, String goal);
+
+  /// No description provided for @activeDaysCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active day{count, plural, =1{} other{s}}'**
+  String activeDaysCount(int count);
+
+  /// No description provided for @peakDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak: {day}'**
+  String peakDayLabel(String day);
+
+  /// No description provided for @streakAtRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak at Risk!'**
+  String get streakAtRisk;
+
+  /// No description provided for @studyHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Habit'**
+  String get studyHabit;
+
+  /// No description provided for @startStreakToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your streak today'**
+  String get startStreakToday;
+
+  /// No description provided for @streakDay1.
+  ///
+  /// In en, this message translates to:
+  /// **'Day 1 completed. Build consistency tomorrow'**
+  String get streakDay1;
+
+  /// No description provided for @strongHabitForming.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong habit forming'**
+  String get strongHabitForming;
+
+  /// No description provided for @excellentDiscipline.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent discipline'**
+  String get excellentDiscipline;
+
+  /// No description provided for @lightFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Light focus'**
+  String get lightFocus;
+
+  /// No description provided for @insightCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'High-quality focus pattern. Keep this cycle.'**
+  String get insightCycle;
+
+  /// No description provided for @insightStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong start. Extend beyond 30m for deeper focus.'**
+  String get insightStart;
+
+  /// No description provided for @insightMomentum.
+  ///
+  /// In en, this message translates to:
+  /// **'Building momentum toward deep work.'**
+  String get insightMomentum;
+
+  /// No description provided for @focusPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'{points} points'**
+  String focusPoints(String points);
+
+  /// No description provided for @pomodoroFocusStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus • 25 min'**
+  String get pomodoroFocusStep;
+
+  /// No description provided for @pomodoroBreakStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Break • 5 min'**
+  String get pomodoroBreakStep;
+
+  /// No description provided for @pomodoroRepeatStep.
+  ///
+  /// In en, this message translates to:
+  /// **'4 cycles total'**
+  String get pomodoroRepeatStep;
+
+  /// No description provided for @pomodoroTotalFocusSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Total focus: {minutes} min'**
+  String pomodoroTotalFocusSummary(int minutes);
+
+  /// No description provided for @pomodoroCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoro completed'**
+  String get pomodoroCompleted;
+
+  /// No description provided for @cyclesCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cycles completed'**
+  String cyclesCompleted(int count);
+
+  /// No description provided for @focusTimeBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus time: {minutes} min'**
+  String focusTimeBreakdown(int minutes);
+
+  /// No description provided for @breakTimeBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Break time: {minutes} min'**
+  String breakTimeBreakdown(int minutes);
+
+  /// No description provided for @excellentConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent consistency'**
+  String get excellentConsistency;
+
+  /// No description provided for @totalFocusTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Total focus time'**
+  String get totalFocusTime;
+
+  /// No description provided for @streakDaysInARow.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day{count, plural, =1{} other{s}} in a row'**
+  String streakDaysInARow(int count);
+
+  /// No description provided for @pomodoroMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Metrics'**
+  String get pomodoroMetrics;
+
+  /// No description provided for @pomodoroPerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get pomodoroPerformance;
+
+  /// No description provided for @pomodoroTimeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle Timeline'**
+  String get pomodoroTimeline;
+
+  /// No description provided for @pomodoroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoro • {done}/{total} cycles'**
+  String pomodoroSubtitle(int done, int total);
+
+  /// No description provided for @focusCycleDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus {index}  •  {minutes} min'**
+  String focusCycleDone(int index, int minutes);
+
+  /// No description provided for @focusCycleInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus {index}  •  in progress'**
+  String focusCycleInProgress(int index);
+
+  /// No description provided for @focusCycleNotReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus {index}  •  not reached'**
+  String focusCycleNotReached(int index);
+
+  /// No description provided for @breakDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Break  •  {minutes} min'**
+  String breakDone(int minutes);
+
+  /// No description provided for @breakPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Break'**
+  String get breakPending;
+
+  /// No description provided for @focusTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Time'**
+  String get focusTimeLabel;
+
+  /// No description provided for @breakTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Break Time'**
+  String get breakTimeLabel;
+
+  /// No description provided for @completionOfCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of planned cycles'**
+  String completionOfCycles(int percent);
+
+  /// No description provided for @minutesFocusedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min focused'**
+  String minutesFocusedLabel(int minutes);
+
+  /// No description provided for @pomodoroHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} cycles • {time}'**
+  String pomodoroHistorySubtitle(int done, int total, String time);
+
+  /// No description provided for @sessionHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{type} • {minutes}m • {time}'**
+  String sessionHistorySubtitle(String type, int minutes, String time);
+
+  /// No description provided for @statusBadgeCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'✔ Completed'**
+  String get statusBadgeCompleted;
+
+  /// No description provided for @statusBadgeStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'⏸ Stopped early'**
+  String get statusBadgeStopped;
+
+  /// No description provided for @errorLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String errorLoading(String error);
+
+  /// No description provided for @pomodoroInsightConsistent.
+  ///
+  /// In en, this message translates to:
+  /// **'You consistently complete full Pomodoro cycles'**
+  String get pomodoroInsightConsistent;
+
+  /// No description provided for @pomodoroInsightPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'You often stop mid-cycle. Try shorter sessions'**
+  String get pomodoroInsightPartial;
+
+  /// No description provided for @pomodoroInsightNeedsWork.
+  ///
+  /// In en, this message translates to:
+  /// **'You rarely complete Pomodoro cycles. Consider reducing duration'**
+  String get pomodoroInsightNeedsWork;
+
+  /// No description provided for @studyActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Activity'**
+  String get studyActivity;
+
+  /// No description provided for @heatmapTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {minutes}m • {sessions} sessions • Score: {score}'**
+  String heatmapTooltip(String date, int minutes, int sessions, int score);
+
+  /// No description provided for @heatmapLegendLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Less'**
+  String get heatmapLegendLess;
+
+  /// No description provided for @heatmapLegendMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get heatmapLegendMore;
+
+  /// No description provided for @heatmapDayDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Details'**
+  String get heatmapDayDetails;
+
+  /// No description provided for @streakCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day streak} other{{count} day streak}}'**
+  String streakCount(num count);
+
+  /// No description provided for @studyIntensitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your daily study intensity over time'**
+  String get studyIntensitySubtitle;
+
+  /// No description provided for @buildStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'BUILD YOUR STREAK'**
+  String get buildStreak;
+
+  /// No description provided for @buildStreakSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study activity history will appear here'**
+  String get buildStreakSubtitle;
+
+  /// No description provided for @goodConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Good consistency'**
+  String get goodConsistency;
+
+  /// No description provided for @activity.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activity;
+
+  /// No description provided for @sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get sessions;
+
+  /// No description provided for @min.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get min;
+
+  /// No description provided for @heatmapActivityLegendTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity: {label}'**
+  String heatmapActivityLegendTooltip(Object label);
+
+  /// No description provided for @minutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String minutesShort(Object count);
+
+  /// No description provided for @startSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Session'**
+  String get startSession;
+
+  /// No description provided for @targetPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Target: {target}'**
+  String targetPrefix(String target);
+
+  /// Button label to reset a study session timer
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// Label for the current status of a study session or item
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get status;
 }
 
 class _AppLocalizationsDelegate

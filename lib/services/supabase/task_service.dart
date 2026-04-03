@@ -6,21 +6,40 @@ class TaskService {
   TaskService(this._supabase);
 
   Future<List<Map<String, dynamic>>> getTasks(String userId) async {
-    return await _supabase.from('tasks').select().eq('user_id', userId).order('created_at', ascending: false);
+    return await _supabase
+        .from('tasks')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+  }
+
+  Future<List<Map<String, dynamic>>> getTasksByDeadline({
+    required String userId,
+    required String deadlineId,
+  }) async {
+    return await _supabase
+        .from('tasks')
+        .select()
+        .eq('user_id', userId)
+        .eq('deadline_id', deadlineId)
+        .order('created_at', ascending: false);
   }
 
   Future<Map<String, dynamic>> createTask(Map<String, dynamic> data) async {
     return await _supabase.from('tasks').insert(data).select().single();
   }
 
-  Future<Map<String, dynamic>> updateTask(String id, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> updateTask(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
     final query = _supabase.from('tasks').update(data).eq('id', id);
-    
+
     // Safety: Ensure we only update rows belonging to the current user if user_id is in data
     if (data.containsKey('user_id')) {
       query.eq('user_id', data['user_id']);
     }
-    
+
     return await query.select().single();
   }
 

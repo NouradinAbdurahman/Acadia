@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,7 @@ import '../../components/app_button.dart';
 import '../../components/app_text_field.dart';
 import '../../components/app_glass_card.dart';
 import 'password_validation.dart';
+import '../../providers/app_providers.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -42,6 +44,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   Future<void> _signUp() async {
+    final l10n = AppLocalizations.of(context);
+    if (_isLoading) return;
+
     if (!_formKey.currentState!.validate()) return;
     
     setState(() {
@@ -51,26 +56,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     });
 
     try {
-      final response = await Supabase.instance.client.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        data: {
-          'full_name': _nameController.text.trim(),
-        }
+      debugPrint('SIGNUP CALLED');
+      final authRepo = ref.read(authRepositoryProvider);
+      final response = await authRepo.signUp(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
       
       Haptics.vibrate(HapticsType.success);
       
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
         
-        // If enumeration protection is on, Supabase returns success but with an empty identities list
-        // if the email is already taken. This tells us the user already exists.
+        // Handle existing email even if enumeration protection is on
         final user = response.user;
         if (user != null && user.identities != null && user.identities!.isEmpty) {
           setState(() {
-            _errorMessage = l10n?.emailAlreadyInUse ?? '';
-            _isLoading = false;
+            _errorMessage = l10n?.emailAlreadyInUse ?? 'Email already in use';
           });
           Haptics.vibrate(HapticsType.error);
           return;
@@ -81,37 +82,30 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } on AuthApiException catch (e) {
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        String errorMessage;
-
-        // Detect if email is already taken via explicit error (if enum protection is off)
-        if (e.message.toLowerCase().contains('already registered') || 
-            e.message.toLowerCase().contains('email already in use') ||
-            e.code == 'user_already_exists' ||
-            e.code == 'email_exists') {
-          errorMessage = l10n?.emailAlreadyInUse ?? '';
-        } 
-        // Detect rate limiting
-        else if (e.code == 'over_email_send_rate_limit') {
-          errorMessage = l10n?.tooManyRequests ?? '';
-        } 
-        // Weak / invalid password from backend
-        else if (e.code == 'weak_password') {
-          errorMessage = l10n?.passwordTooShort ?? '';
-        } else {
-          errorMessage = e.message;
+        String msg = l10n?.networkError ?? '';
+        
+        if (e.message.toLowerCase().contains('already registered') || e.code == 'user_already_exists') {
+          msg = l10n?.emailAlreadyInUse ?? '';
+        } else if (e.code == 'over_email_send_rate_limit') {
+          msg = l10n?.tooManyRequests ?? '';
+        } else if (e.code == 'weak_password') {
+          msg = l10n?.passwordTooShort ?? '';
         }
-
-        setState(() => _errorMessage = errorMessage);
+        
+        setState(() => _errorMessage = msg);
       }
     } catch (e) {
       Haptics.vibrate(HapticsType.error);
+      debugPrint('🚨 SIGNUP ERROR: $e');
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        setState(() => _errorMessage = l10n?.networkError ?? '');
+        setState(() => _errorMessage = l10n?.networkError ?? 'Network error');
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

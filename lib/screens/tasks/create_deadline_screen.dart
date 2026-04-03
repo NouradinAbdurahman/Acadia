@@ -7,16 +7,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../components/app_text_field.dart';
 import '../../components/app_button.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 import '../../core/design/app_spacing.dart';
-import '../../core/theme/app_colors.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_glass_card.dart';
 import '../../models/deadline.dart';
 import '../../providers/deadlines_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/course_provider.dart';
-import '../../core/design/app_icons.dart';
-import '../../core/design/app_radius.dart';
 import '../../core/design/app_durations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,8 +26,7 @@ class CreateDeadlineScreen extends ConsumerStatefulWidget {
       _CreateDeadlineScreenState();
 }
 
-class _CreateDeadlineScreenState
-    extends ConsumerState<CreateDeadlineScreen> {
+class _CreateDeadlineScreenState extends ConsumerState<CreateDeadlineScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _courseController = TextEditingController();
@@ -72,6 +69,14 @@ class _CreateDeadlineScreenState
       return;
     }
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_selectedCourseId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.pleaseSelectCourse),
+        ),
+      );
+      return;
+    }
 
     final courses = ref.read(courseProvider).value ?? [];
     if (courses.isEmpty) {
@@ -94,7 +99,9 @@ class _CreateDeadlineScreenState
         return;
       }
 
-      final selectedCourse = courses.firstWhere((c) => c.id == _selectedCourseId);
+      final selectedCourse = courses.firstWhere(
+        (c) => c.id == _selectedCourseId,
+      );
 
       final deadline = Deadline(
         id: '',
@@ -114,6 +121,14 @@ class _CreateDeadlineScreenState
       await ref.read(deadlinesProvider.notifier).createDeadline(deadline);
       Haptics.vibrate(HapticsType.success);
       if (mounted) Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.networkError),
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -160,8 +175,8 @@ class _CreateDeadlineScreenState
                         prefixIcon: HeroIcons.documentText,
                         validator: (value) =>
                             value == null || value.trim().isEmpty
-                                ? AppLocalizations.of(context)!.titleRequired
-                                : null,
+                            ? AppLocalizations.of(context)!.titleRequired
+                            : null,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       _buildCourseDropdown(),
@@ -175,7 +190,9 @@ class _CreateDeadlineScreenState
                                   ? ''
                                   : '${_deadlineDate!.day.toString().padLeft(2, '0')}/${_deadlineDate!.month.toString().padLeft(2, '0')}/${_deadlineDate!.year}',
                             ),
-                            labelText: AppLocalizations.of(context)!.deadlineDate,
+                            labelText: AppLocalizations.of(
+                              context,
+                            )!.deadlineDate,
                             prefixIcon: HeroIcons.calendarDays,
                           ),
                         ),
@@ -195,28 +212,32 @@ class _CreateDeadlineScreenState
                             value: 'assignment',
                             groupValue: _deadlineType,
                             color: theme.colorScheme.primary,
-                            onSelected: (v) => setState(() => _deadlineType = v),
+                            onSelected: (v) =>
+                                setState(() => _deadlineType = v),
                           ),
                           _ChoiceStyleChip(
                             label: AppLocalizations.of(context)!.exam,
                             value: 'exam',
                             groupValue: _deadlineType,
                             color: theme.colorScheme.primary,
-                            onSelected: (v) => setState(() => _deadlineType = v),
+                            onSelected: (v) =>
+                                setState(() => _deadlineType = v),
                           ),
                           _ChoiceStyleChip(
                             label: AppLocalizations.of(context)!.quiz,
                             value: 'quiz',
                             groupValue: _deadlineType,
                             color: theme.colorScheme.primary,
-                            onSelected: (v) => setState(() => _deadlineType = v),
+                            onSelected: (v) =>
+                                setState(() => _deadlineType = v),
                           ),
                           _ChoiceStyleChip(
                             label: AppLocalizations.of(context)!.project,
                             value: 'project',
                             groupValue: _deadlineType,
                             color: theme.colorScheme.primary,
-                            onSelected: (v) => setState(() => _deadlineType = v),
+                            onSelected: (v) =>
+                                setState(() => _deadlineType = v),
                           ),
                         ],
                       ),
@@ -255,14 +276,17 @@ class _CreateDeadlineScreenState
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(
                         controller: _notesController,
-                        labelText: '${AppLocalizations.of(context)!.notes} (${AppLocalizations.of(context)!.optional})',
+                        labelText:
+                            '${AppLocalizations.of(context)!.notes} (${AppLocalizations.of(context)!.optional})',
                         prefixIcon: HeroIcons.clipboardDocumentList,
                         maxLines: 3,
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       AppButton(
                         onPressed: _isSaving ? null : _submit,
-                        text: _isSaving ? AppLocalizations.of(context)!.saving : AppLocalizations.of(context)!.createDeadline,
+                        text: _isSaving
+                            ? AppLocalizations.of(context)!.saving
+                            : AppLocalizations.of(context)!.createDeadline,
                       ),
                     ],
                   ),
@@ -277,104 +301,50 @@ class _CreateDeadlineScreenState
 
   Widget _buildCourseDropdown() {
     final coursesAsync = ref.watch(courseProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
 
     return coursesAsync.when(
       data: (courses) {
         if (courses.isEmpty) {
           return AppButton(
             onPressed: () => context.push('/create-course'),
-            text: AppLocalizations.of(context)!.addCourseFirst,
+            text: l10n.addCourseFirst,
             variant: AppButtonVariant.secondary,
           );
         }
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.glassSurface : Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: isDark ? AppColors.glassBorder : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+        String selectedCourseName = l10n.selectCourse;
+        Color? selectedCourseColor;
+        final options = <AppPickerOption<String>>[];
+        for (final course in courses) {
+          options.add(
+            AppPickerOption(
+              value: course.id,
+              title: course.courseName,
+              subtitle: course.courseCode,
+              swatchColor: course.uiColor,
             ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButtonFormField<String>(
-              initialValue: _selectedCourseId,
-              hint: Text(AppLocalizations.of(context)!.selectCourse),
-              icon: const AppIcon(HeroIcons.chevronDown, size: 20),
-              isExpanded: true,
-              itemHeight: null,
-              dropdownColor: theme.colorScheme.surface,
-              validator: (val) => val == null ? AppLocalizations.of(context)!.pleaseSelectCourse : null,
-              selectedItemBuilder: (context) {
-                return courses.map((course) {
-                  return Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: course.uiColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          course.courseName,
-                          softWrap: true,
-                          maxLines: 2,
-                          overflow: TextOverflow.visible,
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList();
-              },
-              items: courses.map((course) {
-                return DropdownMenuItem(
-                  value: course.id,
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: course.uiColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          course.courseName,
-                          softWrap: true,
-                          maxLines: 2,
-                          overflow: TextOverflow.visible,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) => setState(() => _selectedCourseId = val),
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                labelText: AppLocalizations.of(context)!.course,
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: AppIcon(HeroIcons.academicCap, size: 20),
-                ),
-                prefixIconConstraints: const BoxConstraints(minWidth: 40),
-              ),
-            ),
-          ),
+          );
+          if (course.id == _selectedCourseId) {
+            selectedCourseName = course.courseName;
+            selectedCourseColor = course.uiColor;
+          }
+        }
+
+        return AppBottomSheetPicker<String>(
+          icon: HeroIcons.academicCap,
+          fieldLabel: l10n.course,
+          sheetTitle: l10n.course,
+          selectedValue: _selectedCourseId,
+          selectedDisplayText: selectedCourseName,
+          selectedSwatchColor: selectedCourseColor,
+          options: options,
+          onChanged: (val) => setState(() => _selectedCourseId = val),
+          emptyText: l10n.noCoursesYet,
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => Text(AppLocalizations.of(context)!.errorLoadingCourses),
+      error: (_, _) => Text(l10n.errorLoadingCourses),
     );
   }
 }
@@ -405,17 +375,18 @@ class _ChoiceStyleChip extends StatelessWidget {
       selected: selected,
       onSelected: (_) => onSelected(value),
       selectedColor: color,
-      backgroundColor:
-          isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+      backgroundColor: isDark
+          ? Colors.white.withValues(alpha: 0.05)
+          : Colors.black.withValues(alpha: 0.03),
       labelStyle: theme.textTheme.bodyMedium?.copyWith(
-        color: selected ? Colors.white : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        color: selected
+            ? Colors.white
+            : theme.colorScheme.onSurface.withValues(alpha: 0.7),
         fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         fontSize: 12,
       ),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     );
   }
 }

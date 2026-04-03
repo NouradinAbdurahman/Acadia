@@ -13,12 +13,16 @@ class AuthRepository {
   // Stream of auth state changes
   Stream<AuthState> get authStateChanges => _authService.authStateChanges;
 
+  DateTime? _lastResendTime;
+
   Future<AuthResponse> login(String email, String password) async {
     return await _authService.login(email, password);
   }
 
   Future<AuthResponse> signUp(String email, String password) async {
-    return await _authService.signUp(email, password);
+    return await _authService
+        .signUp(email, password)
+        .timeout(const Duration(seconds: 20));
   }
 
   Future<void> logout() async {
@@ -64,7 +68,8 @@ class AuthRepository {
   }
 
   Future<AuthResponse> verifyOTP(String email, String token, String fullName) async {
-    final response = await _authService.verifyOTP(email, token, OtpType.signup);
+    final response = await _authService.verifyOTP(email, token, OtpType.signup)
+        .timeout(const Duration(seconds: 20));
     
     // As instructed by PRD, after successful verification, create the user profile
     if (response.user != null) {
@@ -81,7 +86,18 @@ class AuthRepository {
   }
 
   Future<void> resendOTP(String email, {OtpType type = OtpType.signup}) async {
-    await _authService.resendOTP(email, type: type);
+    final now = DateTime.now();
+    if (_lastResendTime != null && 
+        now.difference(_lastResendTime!) < const Duration(seconds: 30)) {
+      throw AuthException(
+        'Please wait before requesting another code.',
+        code: 'over_email_send_rate_limit',
+      );
+    }
+    
+    _lastResendTime = now;
+    await _authService.resendOTP(email, type: type)
+        .timeout(const Duration(seconds: 20));
   }
 
   Future<AppUser?> getUserProfile(String userId) async {

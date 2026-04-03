@@ -1,13 +1,12 @@
 {
   "tr": [
     "greatFocusSession",
-    "focusLevel",
     "deepFlow",
     "building",
     "dailyInsight",
     "focusOnStudies",
-    "thisWeekLabel",
     "noCourseSelected",
-    "sessionFocus"
+    "sessionFocus",
+    "startSession"
   ]
 }

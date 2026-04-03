@@ -19,10 +19,7 @@ class AuthService {
   }
 
   Future<AuthResponse> signUp(String email, String password) async {
-    return await _supabase.auth.signUp(
-      email: email,
-      password: password,
-    );
+    return await _supabase.auth.signUp(email: email, password: password);
   }
 
   Future<void> logout() async {
@@ -34,7 +31,7 @@ class AuthService {
   }
 
   Future<void> sendPasswordResetOTP(String email) async {
-    // In Supabase, resetPasswordForEmail sends an OTP if the project is configured for it, 
+    // In Supabase, resetPasswordForEmail sends an OTP if the project is configured for it,
     // or a link. For a purely OTP flow, verifyOTP will handle the code.
     await _supabase.auth.resetPasswordForEmail(email);
   }
@@ -57,14 +54,22 @@ class AuthService {
   }) async {
     // If we have a session token (e.g. from a separate flow), we could set it here.
     // However, verifyOTP usually handles session management.
-    return await _supabase.auth.updateUser(UserAttributes(password: newPassword));
+    return await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
   }
 
   Future<UserResponse> updatePassword(String newPassword) async {
-    return await _supabase.auth.updateUser(UserAttributes(password: newPassword));
+    return await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
   }
 
-  Future<AuthResponse> verifyOTP(String email, String token, OtpType type) async {
+  Future<AuthResponse> verifyOTP(
+    String email,
+    String token,
+    OtpType type,
+  ) async {
     return await _supabase.auth.verifyOTP(
       email: email,
       token: token,
@@ -73,17 +78,38 @@ class AuthService {
   }
 
   Future<void> resendOTP(String email, {OtpType type = OtpType.signup}) async {
-    await _supabase.auth.resend(
-      type: type,
-      email: email,
-    );
+    await _supabase.auth.resend(type: type, email: email);
   }
 
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {
-    return await _supabase.from('users').select().eq('id', userId).maybeSingle();
+    return await _supabase
+        .from('users')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
   }
 
   Future<void> updateWeeklyStudyGoal(String userId, int goal) async {
-    await _supabase.from('users').update({'weekly_study_goal': goal}).eq('id', userId);
+    try {
+      await _supabase
+          .from('users')
+          .update({'weekly_study_goal': goal})
+          .eq('id', userId);
+    } on PostgrestException catch (e) {
+      // Backward compatibility: some environments may not have this column yet.
+      if (e.code == 'PGRST204' ||
+          (e.message).toLowerCase().contains('weekly_study_goal')) {
+        return;
+      }
+      rethrow;
+    } catch (e) {
+      // Fallback safety for schema cache/driver variants.
+      final message = e.toString().toLowerCase();
+      if (message.contains('weekly_study_goal') &&
+          (message.contains('pgrst204') || message.contains('schema cache'))) {
+        return;
+      }
+      rethrow;
+    }
   }
 }

@@ -1,30 +1,58 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../domain/tasks/task_deadline_validation.dart';
 import '../models/task.dart';
 import 'app_providers.dart';
+import 'deadlines_provider.dart';
+import 'derived_invalidation.dart';
 
 final taskFilterProvider = StateProvider<String>((ref) => 'all');
 
+/// Tasks screen primary tab: show only tasks or only deadlines (never mixed).
+final tasksListSegmentProvider = StateProvider<String>((ref) => 'tasks');
+
 final tasksProvider =
-    StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>>>(
-  (ref) {
-    final repo = ref.watch(taskRepositoryProvider);
-    final userId = ref.watch(currentUserProvider)?.id;
-    final supabase = Supabase.instance.client;
-    final notifier = TasksNotifier(taskRepository: repo, supabaseClient: supabase);
-    if (userId != null) {
-      notifier.loadTasks(userId);
-    }
-    return notifier;
-  },
-);
+    StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>>>((ref) {
+      final repo = ref.watch(taskRepositoryProvider);
+      final userId = ref.watch(currentUserProvider)?.id;
+      final supabase = Supabase.instance.client;
+      final notifier = TasksNotifier(
+        ref: ref,
+        taskRepository: repo,
+        supabaseClient: supabase,
+      );
+      if (userId != null) {
+        notifier.loadTasks(userId);
+      }
+      return notifier;
+    });
 
 final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
   final tasksAsync = ref.watch(tasksProvider);
   final filter = ref.watch(taskFilterProvider);
 
-  int byClosestDeadline(Task a, Task b) {
+  int compareTasks(Task a, Task b) {
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+    
+    bool isOverdue(Task t) {
+      if (t.status == 'completed') return false;
+      if (t.status == 'overdue') return true;
+      return t.deadline != null && t.deadline!.isBefore(startOfToday);
+    }
+    
+    bool aIsOverdue = isOverdue(a);
+    bool bIsOverdue = isOverdue(b);
+    bool aIsCompleted = a.status == 'completed';
+    bool bIsCompleted = b.status == 'completed';
+
+    if (aIsCompleted && !bIsCompleted) return 1;
+    if (!aIsCompleted && bIsCompleted) return -1;
+    
+    if (aIsOverdue && !bIsOverdue) return -1;
+    if (!aIsOverdue && bIsOverdue) return 1;
+
     final aDate = a.deadline;
     final bDate = b.deadline;
 
@@ -39,16 +67,15 @@ final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
     List<Task> filtered;
     switch (filter) {
       case 'pending':
-        filtered = tasks
-            .where((t) => t.status == 'pending')
-            .toList();
+        filtered = tasks.where((t) => t.status == 'pending').toList();
         break;
       case 'completed':
         filtered = tasks.where((t) => t.status == 'completed').toList();
         break;
       case 'overdue':
         filtered = tasks.where((t) {
-          final isPastDeadline = t.deadline != null &&
+          final isPastDeadline =
+              t.deadline != null &&
               t.deadline!.isBefore(DateTime(now.year, now.month, now.day));
           return t.status == 'overdue' || isPastDeadline;
         }).toList();
@@ -56,16 +83,16 @@ final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
       default:
         filtered = tasks;
     }
-    filtered.sort(byClosestDeadline);
-    return filtered;
+    
+    final sorted = List<Task>.from(filtered)..sort(compareTasks);
+    return sorted;
   });
 });
 
 final tasksTodayCountProvider = Provider<int>((ref) {
   final tasksAsync = ref.watch(tasksProvider);
   return tasksAsync.when(
-    data: (tasks) =>
-        tasks.where((t) => t.status != 'completed').length,
+    data: (tasks) => tasks.where((t) => t.status != 'completed').length,
     loading: () => 0,
     error: (_, _) => 0,
   );
@@ -73,10 +100,13 @@ final tasksTodayCountProvider = Provider<int>((ref) {
 
 class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
   TasksNotifier({
+    required Ref ref,
     required this.taskRepository,
     required this.supabaseClient,
-  }) : super(const AsyncValue.loading());
+  })  : _ref = ref,
+        super(const AsyncValue.loading());
 
+  final Ref _ref;
   final dynamic taskRepository;
   final SupabaseClient supabaseClient;
 
@@ -85,8 +115,6 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       final list = await taskRepository.getTasks(userId) as List<Task>;
       state = AsyncValue.data(list);
     } catch (e, st) {
-      print('TASK ERROR: $e');
-      print('STACK TRACE: $st');
       state = AsyncValue.error(e, st);
     }
   }
@@ -103,6 +131,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     String? course,
     String? courseId,
     DateTime? deadline,
+    String? deadlineId,
     String? priority,
     int? estimatedHours,
     String? notes,
@@ -111,6 +140,14 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) return;
 
+    final deadlinesList = _ref.read(deadlinesProvider).valueOrNull ?? const [];
+    final safeDeadlineId = validatedDeadlineIdForTask(
+      userId: userId,
+      taskCourseId: courseId,
+      deadlineId: deadlineId,
+      deadlines: deadlinesList,
+    );
+
     final newTask = Task(
       id: '',
       userId: userId,
@@ -118,6 +155,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       course: course?.isEmpty == true ? null : course,
       courseId: courseId,
       deadline: deadline,
+      deadlineId: safeDeadlineId,
       priority: priority,
       estimatedTime: estimatedHours,
       notes: notes,
@@ -125,33 +163,44 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       createdAt: DateTime.now(),
     );
 
+    final previous = state;
     try {
       final created = await taskRepository.createTask(newTask);
-      state = state.whenData(
-        (List<Task> tasks) => [created, ...tasks],
-      );
+      state = state.whenData((List<Task> tasks) => [created, ...tasks]);
+      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
-      print('TASK CREATE ERROR: $e');
-      print(st);
-      state = AsyncValue.error(e, st);
+      state = previous;
+      Error.throwWithStackTrace(e, st);
     }
   }
 
   Future<void> updateTask(Task task) async {
+    final deadlinesList = _ref.read(deadlinesProvider).valueOrNull ?? const [];
+    final safeDeadlineId = validatedDeadlineIdForTask(
+      userId: task.userId,
+      taskCourseId: task.courseId,
+      deadlineId: task.deadlineId,
+      deadlines: deadlinesList,
+    );
+    final taskWithUpdate = task
+        .copyWith(
+          deadlineId: safeDeadlineId,
+          clearDeadlineId: safeDeadlineId == null && task.deadlineId != null,
+          updatedAt: DateTime.now(),
+        );
+
+    final previous = state;
     try {
-      final taskWithUpdate = task.copyWith(updatedAt: DateTime.now());
       final updated = await taskRepository.updateTask(taskWithUpdate);
       state = state.whenData((List<Task> tasks) {
         return tasks
-            .map<Task>(
-              (t) => t.id == updated.id ? updated : t,
-            )
+            .map<Task>((t) => t.id == updated.id ? updated : t)
             .toList();
       });
+      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
-      print('TASK UPDATE ERROR: $e');
-      print(st);
-      state = AsyncValue.error(e, st);
+      state = previous;
+      Error.throwWithStackTrace(e, st);
     }
   }
 
@@ -172,16 +221,16 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
   }
 
   Future<void> deleteTask(String taskId) async {
+    final previous = state;
     try {
       await taskRepository.deleteTask(taskId);
       state = state.whenData((List<Task> tasks) {
         return tasks.where((t) => t.id != taskId).toList();
       });
+      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
-      print('TASK DELETE ERROR: $e');
-      print(st);
-      state = AsyncValue.error(e, st);
+      state = previous;
+      Error.throwWithStackTrace(e, st);
     }
   }
 }
-

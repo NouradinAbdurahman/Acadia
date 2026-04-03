@@ -6,6 +6,7 @@ class RiskInput {
   final int totalECTS;
   final double studyHours;
   final double studyGoal;
+  final double gradeRiskAdjustment;
   final dynamic stressLevel; // placeholder for Week 6
 
   const RiskInput({
@@ -14,6 +15,7 @@ class RiskInput {
     required this.totalECTS,
     required this.studyHours,
     required this.studyGoal,
+    this.gradeRiskAdjustment = 0.0,
     this.stressLevel,
   });
 }

@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -26,13 +27,17 @@ class ProfileScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeProvider);
     final appUser = ref.watch(currentAppUserProvider).asData?.value;
     final avatarUrl = appUser?.avatarUrl;
+    final bottomNavClearance = MediaQuery.of(context).padding.bottom + 120;
 
     Future<void> uploadAvatar(File file) async {
       try {
         Haptics.vibrate(HapticsType.medium);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.saving), duration: const Duration(seconds: 1)),
+            SnackBar(
+              content: Text(l10n.saving),
+              duration: const Duration(seconds: 1),
+            ),
           );
         }
 
@@ -40,14 +45,14 @@ class ProfileScreen extends ConsumerWidget {
         PaintingBinding.instance.imageCache.evict(NetworkImage(newUrl));
         PaintingBinding.instance.imageCache.clear();
         PaintingBinding.instance.imageCache.clearLiveImages();
-        
+
         ref.invalidate(currentAppUserProvider);
         await ref.read(currentAppUserProvider.future);
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.avatarUpdated)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.avatarUpdated)));
         }
       } catch (e) {
         debugPrint("Upload error: $e");
@@ -103,7 +108,12 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              trailing ?? HeroIcon(HeroIcons.chevronRight, color: theme.colorScheme.onSurface.withValues(alpha: 0.3), size: 20),
+              trailing ??
+                  HeroIcon(
+                    HeroIcons.chevronRight,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    size: 20,
+                  ),
             ],
           ),
         ),
@@ -163,87 +173,107 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 // --- HEADER ---
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: handleAvatarTap,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.blueAccent,
-                                    Colors.blueAccent.withValues(alpha: 0.3),
-                                    Colors.blueAccent.withValues(alpha: 0.1),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.blueAccent.withValues(alpha: isDark ? 0.3 : 0.15),
-                                    blurRadius: 20,
-                                    spreadRadius: 2,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: handleAvatarTap,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.blueAccent,
+                                        Colors.blueAccent.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        Colors.blueAccent.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.blueAccent.withValues(
+                                          alpha: isDark ? 0.3 : 0.15,
+                                        ),
+                                        blurRadius: 20,
+                                        spreadRadius: 2,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: 38,
-                                backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-                                backgroundImage: avatarUrl != null
-                                    ? NetworkImage(avatarUrl)
-                                    : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Colors.blueAccent,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: theme.colorScheme.surface, 
-                                    width: 2.5
+                                  child: CircleAvatar(
+                                    radius: 38,
+                                    backgroundColor: isDark
+                                        ? Colors.white.withValues(alpha: 0.1)
+                                        : Colors.black.withValues(alpha: 0.05),
+                                    backgroundImage: avatarUrl != null
+                                        ? NetworkImage(avatarUrl)
+                                        : const AssetImage(
+                                                'assets/images/default_avatar.png',
+                                              )
+                                              as ImageProvider,
                                   ),
                                 ),
-                                child: const HeroIcon(HeroIcons.camera, size: 14, color: Colors.white),
-                              ),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blueAccent,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: theme.colorScheme.surface,
+                                        width: 2.5,
+                                      ),
+                                    ),
+                                    child: const HeroIcon(
+                                      HeroIcons.camera,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  appUser?.name ?? l10n.student,
+                                  style: theme.textTheme.headlineSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onSurface,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  user?.email ?? '',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              appUser?.name ?? l10n.student,
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              user?.email ?? '',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ).animate().fade(duration: 400.ms).slideY(begin: 0.1, curve: Curves.easeOut),
+                    )
+                    .animate()
+                    .fade(duration: 400.ms)
+                    .slideY(begin: 0.1, curve: Curves.easeOut),
 
                 const SizedBox(height: 16),
 
@@ -276,50 +306,67 @@ class ProfileScreen extends ConsumerWidget {
                     buildItem(
                       icon: HeroIcons.language,
                       title: l10n.language,
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                      trailing: GestureDetector(
+                        onTap: () async {
+                          final selected =
+                              await showAppBottomSheetPicker<String>(
+                                context: context,
+                                theme: theme,
+                                icon: HeroIcons.language,
+                                sheetTitle: l10n.language,
+                                options: [
+                                  AppPickerOption(
+                                    value: 'en',
+                                    title: l10n.languageEnglish,
+                                  ),
+                                  AppPickerOption(
+                                    value: 'tr',
+                                    title: l10n.languageTurkish,
+                                  ),
+                                ],
+                                selectedValue: locale.languageCode,
+                              );
+                          if (selected == null) return;
+                          ref
+                              .read(localeProvider.notifier)
+                              .setLocale(Locale(selected));
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
                           ),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: locale.languageCode,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.06,
+                            ),
                             borderRadius: BorderRadius.circular(12),
-                            dropdownColor: theme.colorScheme.surface,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface,
-                              fontWeight: FontWeight.w600,
+                            border: Border.all(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.12,
+                              ),
                             ),
-                            icon: HeroIcon(
-                              HeroIcons.chevronDown,
-                              size: 16,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                            ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 'en',
-                                child: Text(
-                                  l10n.languageEnglish,
-                                  style: const TextStyle(fontSize: 14),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                locale.languageCode == 'tr'
+                                    ? l10n.languageTurkish
+                                    : l10n.languageEnglish,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              DropdownMenuItem(
-                                value: 'tr',
-                                child: Text(
-                                  l10n.languageTurkish,
-                                  style: const TextStyle(fontSize: 14),
+                              const SizedBox(width: 6),
+                              HeroIcon(
+                                HeroIcons.chevronDown,
+                                size: 16,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.65,
                                 ),
                               ),
                             ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                ref.read(localeProvider.notifier).setLocale(Locale(val));
-                              }
-                            },
                           ),
                         ),
                       ),
@@ -331,7 +378,9 @@ class ProfileScreen extends ConsumerWidget {
                         value: themeMode == ThemeMode.dark,
                         activeThumbColor: Colors.blueAccent,
                         onChanged: (val) {
-                          ref.read(themeProvider.notifier).setTheme(val ? ThemeMode.dark : ThemeMode.light);
+                          ref
+                              .read(themeProvider.notifier)
+                              .setTheme(val ? ThemeMode.dark : ThemeMode.light);
                         },
                       ),
                     ),
@@ -361,7 +410,7 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                 ),
 
-                const SizedBox(height: 40),
+                SizedBox(height: bottomNavClearance),
               ],
             ),
           ),
@@ -370,5 +419,3 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
-
-

@@ -1,0 +1,537 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/design/app_spacing.dart';
+import '../../../core/design/app_radius.dart';
+import '../../../components/app_glass_card.dart';
+import '../../../providers/study_heatmap_provider.dart';
+import '../../../providers/dashboard_provider.dart';
+import '../../../models/heatmap_day.dart';
+import '../../../l10n/app_localizations.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+
+class StudyHeatmap extends ConsumerStatefulWidget {
+  const StudyHeatmap({super.key});
+
+  @override
+  ConsumerState<StudyHeatmap> createState() => _StudyHeatmapState();
+}
+
+class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final heatmapAsync = ref.watch(studyHeatmapProvider);
+    final dashboardAsync = ref.watch(dashboardProvider);
+    final theme = Theme.of(context);
+
+    return heatmapAsync.when(
+      data: (data) {
+        final days = data.days;
+        if (days.isEmpty) return _buildEmptyState(context);
+
+        final streak = dashboardAsync.value?.streakCount ?? 0;
+        final maxScore = data.maxScore;
+
+        return AppGlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context, streak),
+              const SizedBox(height: AppSpacing.md),
+              Stack(
+                children: [
+                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildWeekdayLabels(context),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: 125,
+                              child: SingleChildScrollView(
+                                controller: _scrollController,
+                                scrollDirection: Axis.horizontal,
+                                physics: const BouncingScrollPhysics(),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildMonthLabels(context, days),
+                                    SizedBox(
+                                      height: 98,
+                                      width: ((days.length / 7).ceil() * 14.5) + 30, // Extra space for labels at the end
+                                      child: GridView.builder(
+                                        physics: const NeverScrollableScrollPhysics(),
+                                        scrollDirection: Axis.horizontal,
+                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 7,
+                                          mainAxisSpacing: 2.5,
+                                          crossAxisSpacing: 2.5,
+                                        ),
+                                        itemCount: days.length,
+                                        itemBuilder: (context, index) {
+                                          final day = days[index];
+                                            return _HeatmapCell(
+                                              day: day,
+                                              maxScore: maxScore,
+                                              index: index,
+                                            );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Fade Overlays
+                  Positioned(
+                    left: 28, // Offset for weekday labels
+                    top: 0,
+                    bottom: 0,
+                    width: 20,
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              theme.colorScheme.surface.withOpacity(0.1),
+                              theme.colorScheme.surface.withOpacity(0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 20,
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerRight,
+                            end: Alignment.centerLeft,
+                            colors: [
+                              theme.colorScheme.surface.withOpacity(0.2),
+                              theme.colorScheme.surface.withOpacity(0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
+          ),
+        ).animate().fade(duration: 400.ms).moveY(begin: 10, end: 0);
+      },
+      loading: () => _buildLoadingState(context),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, int streak) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.studyActivity,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.2,
+              ),
+            ),
+            Text(
+              l10n.studyIntensitySubtitle,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                fontWeight: FontWeight.w500,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ),
+        _buildLegend(context),
+      ],
+    );
+  }
+
+  Widget _buildWeekdayLabels(BuildContext context) {
+    final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    
+    // Get localized weekday names
+    final monday = DateFormat.E(locale).format(DateTime(2024, 1, 1)); // Monday
+    final wednesday = DateFormat.E(locale).format(DateTime(2024, 1, 3)); // Wednesday
+    final friday = DateFormat.E(locale).format(DateTime(2024, 1, 5)); // Friday
+    
+    final labels = ['', monday, '', wednesday, '', friday, ''];
+    
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        ...List.generate(7, (i) {
+          final label = labels[i];
+          return SizedBox(
+            height: 14.5,
+            child: label.isEmpty 
+              ? const SizedBox.shrink()
+              : Center(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w900,
+                      color: theme.colorScheme.onSurface.withOpacity(0.35),
+                    ),
+                  ),
+                ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildMonthLabels(BuildContext context, List<HeatmapDay> days) {
+    final theme = Theme.of(context);
+    final List<Widget> labels = [];
+    
+    int? lastRenderedMonth;
+    for (int i = 0; i < days.length; i += 7) {
+      final columnDays = days.sublist(i, (i + 7).clamp(0, days.length));
+      
+      DateTime? firstDayOfNewMonth;
+      for (final d in columnDays) {
+        if (lastRenderedMonth == null || d.date.month != lastRenderedMonth) {
+          firstDayOfNewMonth = d.date;
+          lastRenderedMonth = d.date.month;
+          break;
+        }
+      }
+
+      if (firstDayOfNewMonth != null) {
+        final locale = Localizations.localeOf(context).toString();
+        final monthName = DateFormat.MMM(locale).format(firstDayOfNewMonth).toUpperCase();
+        labels.add(
+          SizedBox(
+            width: 14.5,
+            height: 18,
+            child: OverflowBox(
+              maxWidth: 40,
+              maxHeight: 18,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                monthName,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                  color: theme.colorScheme.onSurface.withOpacity(0.35),
+                ),
+                softWrap: false,
+                overflow: TextOverflow.visible,
+              ),
+            ),
+          ),
+        );
+      } else {
+        labels.add(const SizedBox(width: 14.5));
+      }
+    }
+
+    return Container(
+      height: 18,
+      margin: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: labels,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Center(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withOpacity(0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.auto_awesome, color: theme.colorScheme.primary, size: 32),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              l10n.buildStreak,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.buildStreakSubtitle,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.4),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegend(BuildContext context) {
+    final theme = Theme.of(context);
+    final baseColor = theme.colorScheme.primary;
+
+    final l10n = AppLocalizations.of(context)!;
+    return Row(
+      children: [
+        Text(l10n.heatmapLegendLess, style: theme.textTheme.labelSmall?.copyWith(fontSize: 7, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withOpacity(0.4), letterSpacing: 0.5)),
+        const SizedBox(width: 8),
+        _legendItem(theme, theme.colorScheme.onSurface.withOpacity(0.06), "0${l10n.min}", context),
+        _legendItem(theme, baseColor.withOpacity(0.25), "30${l10n.min}", context),
+        _legendItem(theme, baseColor.withOpacity(0.45), "1${l10n.hoursAbbreviation}", context),
+        _legendItem(theme, baseColor.withOpacity(0.7), "2${l10n.hoursAbbreviation}", context),
+        _legendItem(theme, baseColor, "3${l10n.hoursAbbreviation}+", context),
+        const SizedBox(width: 8),
+        Text(l10n.heatmapLegendMore, style: theme.textTheme.labelSmall?.copyWith(fontSize: 7, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withOpacity(0.4), letterSpacing: 0.5)),
+      ],
+    );
+  }
+
+  Widget _legendItem(ThemeData theme, Color color, String label, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Tooltip(
+      message: l10n.heatmapActivityLegendTooltip(label),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 1.5),
+        child: Column(
+          children: [
+            _legendBox(theme, color),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontSize: 6,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface.withOpacity(0.3),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _legendBox(ThemeData theme, Color color) {
+    return Container(
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(2),
+        border: Border.all(color: theme.colorScheme.onSurface.withOpacity(0.05), width: 0.5),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState(BuildContext context) {
+    final theme = Theme.of(context);
+    return Shimmer.fromColors(
+      baseColor: theme.colorScheme.onSurface.withOpacity(0.05),
+      highlightColor: theme.colorScheme.onSurface.withOpacity(0.1),
+      child: AppGlassCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(width: 100, height: 14, decoration: BoxDecoration(color: theme.colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(4))),
+                Row(
+                  children: List.generate(5, (i) => Container(width: 10, height: 10, margin: const EdgeInsets.only(left: 3), decoration: BoxDecoration(color: theme.colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2)))),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Container(width: double.infinity, height: 100, decoration: BoxDecoration(color: theme.colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(8))),
+          ],
+        ),
+      ),
+    );
+  }
+
+}
+
+class _HeatmapCell extends StatelessWidget {
+  final HeatmapDay day;
+  final int maxScore;
+  final int index;
+  
+  const _HeatmapCell({
+    required this.day, 
+    required this.maxScore,
+    required this.index,
+  });
+
+  Color _getColor(BuildContext context) {
+    final theme = Theme.of(context);
+    if (day.score == 0) return theme.colorScheme.onSurface.withOpacity(0.06);
+    final primary = theme.colorScheme.primary;
+    
+    final double ratio = day.score / maxScore;
+    double opacity;
+    if (ratio < 0.2) opacity = 0.25;
+    else if (ratio < 0.5) opacity = 0.45;
+    else if (ratio < 0.8) opacity = 0.75;
+    else opacity = 1.0;
+    
+    return primary.withOpacity(opacity);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _getColor(context);
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final normalizedDay = DateTime(day.date.year, day.date.month, day.date.day);
+    final isFuture = normalizedDay.isAfter(today);
+    
+    return GestureDetector(
+      onTap: isFuture ? null : () {
+        HapticFeedback.lightImpact();
+        _showDetails(context);
+      },
+      child: Opacity(
+        opacity: isFuture ? 0.2 : 1.0,
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2.5),
+            border: Border.all(
+              color: theme.colorScheme.onSurface.withOpacity(0.04),
+              width: 0.5,
+            ),
+          ),
+          child: const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
+
+  void _showDetails(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final dateStr = DateFormat.yMMMMEEEEd(locale).format(day.date);
+    final isBest = day.score > 0 && day.score == maxScore;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface.withOpacity(0.99),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        ),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(dateStr, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+            const Divider(height: 32),
+            if (day.score > 0)
+              _highlightStat(context, Icons.check_circle, l10n.goodConsistency, theme.colorScheme.primary),
+            
+            _infoRow(context, l10n.activity, l10n.studySession),
+            _infoRow(context, l10n.duration, l10n.minutesShort(day.totalMinutes)),
+            _infoRow(context, l10n.sessions, "${day.sessionsCount}"),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _highlightStat(BuildContext context, IconData icon, String text, Color color) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: color.withOpacity(0.2))),
+        child: Row(children: [Icon(icon, color: color, size: 18), const SizedBox(width: 12), Text(text, style: theme.textTheme.labelLarge?.copyWith(color: color, fontWeight: FontWeight.bold))]),
+      ),
+    );
+  }
+
+  Widget _infoRow(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withOpacity(0.5))),
+          Text(value, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w900)),
+        ],
+      ),
+    );
+  }
+}
+

@@ -20,7 +20,8 @@ class _NotificationSeed {
   final String message;
 }
 
-class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationModel>>> {
+class NotificationsNotifier
+    extends StateNotifier<AsyncValue<List<NotificationModel>>> {
   NotificationsNotifier({
     required this.notificationRepository,
     required this.supabaseClient,
@@ -62,7 +63,8 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
 
     try {
       final notifications =
-          await notificationRepository.getNotifications(userId) as List<NotificationModel>;
+          await notificationRepository.getNotifications(userId)
+              as List<NotificationModel>;
       state = AsyncValue.data(notifications);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -146,10 +148,7 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
       if (existing['title'] != title || existing['message'] != message) {
         await supabaseClient
             .from('notifications')
-            .update({
-              'title': title,
-              'message': message,
-            })
+            .update({'title': title, 'message': message})
             .eq('id', existing['id']);
       }
       return;
@@ -247,7 +246,11 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
   }) {
     final normalizedTitle = _normalizeKeyPart(title);
     final normalizedCourse = _normalizeKeyPart(courseName);
-    final dateKey = DateTime(dueDate.year, dueDate.month, dueDate.day).toIso8601String();
+    final dateKey = DateTime(
+      dueDate.year,
+      dueDate.month,
+      dueDate.day,
+    ).toIso8601String();
     return '$normalizedTitle|$normalizedCourse|$dateKey';
   }
 
@@ -276,7 +279,9 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
     }
   }
 
-  Future<List<_NotificationSeed>> _buildTaskAndDeadlineSeeds(String userId) async {
+  Future<List<_NotificationSeed>> _buildTaskAndDeadlineSeeds(
+    String userId,
+  ) async {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
     final startOfTomorrow = startOfToday.add(const Duration(days: 1));
@@ -284,14 +289,19 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
 
     final taskRows = await supabaseClient
         .from('tasks')
-        .select('id,title,course,course_id,deadline,status,courses:course_id(course_name)')
+        .select(
+          'id,title,course,course_id,deadline,status,courses:course_id(course_name)',
+        )
         .eq('user_id', userId)
         .neq('status', 'completed');
 
     final deadlineRows = await supabaseClient
         .from('academic_deadlines')
-        .select('id,title,course,course_id,deadline_date,courses:course_id(course_name)')
-        .eq('user_id', userId);
+        .select(
+          'id,title,course,course_id,deadline_date,courses:course_id(course_name)',
+        )
+        .eq('user_id', userId)
+        .eq('is_completed', false);
 
     final seeds = <_NotificationSeed>[];
     final taskIdentityKeys = <String>{};
@@ -311,7 +321,8 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
       );
       if (type == null) continue;
 
-      final courseFromJoin = (row['courses'] as Map<String, dynamic>?)?['course_name']?.toString();
+      final courseFromJoin =
+          (row['courses'] as Map<String, dynamic>?)?['course_name']?.toString();
       final courseName =
           courseFromJoin ?? row['course']?.toString() ?? 'Course';
       final taskTitle = row['title']?.toString() ?? '';
@@ -353,7 +364,8 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
       );
       if (type == null) continue;
 
-      final courseFromJoin = (row['courses'] as Map<String, dynamic>?)?['course_name']?.toString();
+      final courseFromJoin =
+          (row['courses'] as Map<String, dynamic>?)?['course_name']?.toString();
       final courseName =
           courseFromJoin ?? row['course']?.toString() ?? 'Course';
       final deadlineTitle = row['title']?.toString() ?? '';
@@ -412,7 +424,9 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
 
       final weeklyGoalMinutes =
           (((profile?['study_hours_per_week'] as num?)?.toInt() ?? 20) * 60);
-      final startOfWeek = startOfToday.subtract(Duration(days: now.weekday - 1));
+      final startOfWeek = startOfToday.subtract(
+        Duration(days: now.weekday - 1),
+      );
 
       final weekSessions = await supabaseClient
           .from('study_sessions')
@@ -426,14 +440,18 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
       );
 
       if (weekMinutes < weeklyGoalMinutes) {
-        final weekKey = DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day)
-            .toIso8601String();
+        final weekKey = DateTime(
+          startOfWeek.year,
+          startOfWeek.month,
+          startOfWeek.day,
+        ).toIso8601String();
         await _ensureDailyNotification(
           userId: userId,
           referenceId: 'study_goal:$weekKey',
           type: 'study_goal',
           title: 'Weekly study goal missed',
-          message: 'You studied ${(weekMinutes / 60).toStringAsFixed(1)}h of ${(weeklyGoalMinutes / 60).toStringAsFixed(1)}h this week.',
+          message:
+              'You studied ${(weekMinutes / 60).toStringAsFixed(1)}h of ${(weeklyGoalMinutes / 60).toStringAsFixed(1)}h this week.',
         );
       }
     }
@@ -458,7 +476,8 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
       await _ensureRealtimeSubscription(userId);
       await _syncTriggeredNotifications(userId);
       final notifications =
-          await notificationRepository.getNotifications(userId) as List<NotificationModel>;
+          await notificationRepository.getNotifications(userId)
+              as List<NotificationModel>;
       state = AsyncValue.data(notifications);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -469,7 +488,8 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
 
   Future<void> markAsRead(String id) async {
     try {
-      final updated = await notificationRepository.markAsRead(id) as NotificationModel;
+      final updated =
+          await notificationRepository.markAsRead(id) as NotificationModel;
       state = state.whenData(
         (items) => items.map((n) => n.id == updated.id ? updated : n).toList(),
       );
@@ -490,16 +510,17 @@ class NotificationsNotifier extends StateNotifier<AsyncValue<List<NotificationMo
 }
 
 final notificationsProvider =
-    StateNotifierProvider<NotificationsNotifier, AsyncValue<List<NotificationModel>>>(
-  (ref) {
-    final repo = ref.watch(notificationRepositoryProvider);
-    final supabase = Supabase.instance.client;
-    return NotificationsNotifier(
-      notificationRepository: repo,
-      supabaseClient: supabase,
-    );
-  },
-);
+    StateNotifierProvider<
+      NotificationsNotifier,
+      AsyncValue<List<NotificationModel>>
+    >((ref) {
+      final repo = ref.watch(notificationRepositoryProvider);
+      final supabase = Supabase.instance.client;
+      return NotificationsNotifier(
+        notificationRepository: repo,
+        supabaseClient: supabase,
+      );
+    });
 
 final unreadNotificationsCountProvider = Provider<int>((ref) {
   final notificationsAsync = ref.watch(notificationsProvider);
