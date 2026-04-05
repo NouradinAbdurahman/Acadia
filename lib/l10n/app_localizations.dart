@@ -962,6 +962,12 @@ abstract class AppLocalizations {
   /// **'Welcome back'**
   String get welcome;
 
+  /// No description provided for @welcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back to your studies'**
+  String get welcomeSubtitle;
+
   /// No description provided for @password.
   ///
   /// In en, this message translates to:
@@ -1007,8 +1013,20 @@ abstract class AppLocalizations {
   /// No description provided for @tooManyRequests.
   ///
   /// In en, this message translates to:
-  /// **'Please wait a moment before trying again.'**
+  /// **'Too many attempts. Email service is temporarily limited. Please wait a few minutes before trying again.'**
   String get tooManyRequests;
+
+  /// No description provided for @emailRateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Email service is temporarily limited. Please wait a few minutes.'**
+  String get emailRateLimit;
+
+  /// No description provided for @emailRateLimitWithTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Email service is temporarily limited. Try again in {time}.'**
+  String emailRateLimitWithTimer(String time);
 
   /// No description provided for @pleaseWait.
   ///
@@ -1021,6 +1039,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection error. Try again.'**
   String get networkError;
+
+  /// No description provided for @checkInternetConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection.'**
+  String get checkInternetConnection;
+
+  /// No description provided for @requestTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Request timed out. Try again.'**
+  String get requestTimedOut;
 
   /// No description provided for @invalidEmail.
   ///
@@ -1183,6 +1213,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resend in {count} seconds'**
   String resendIn(Object count);
+
+  /// No description provided for @tryAgainIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {count}s'**
+  String tryAgainIn(Object count);
 
   /// No description provided for @selectLanguage.
   ///

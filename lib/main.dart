@@ -133,11 +133,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final email = state.uri.queryParameters['email'] ?? '';
           final fullName = state.uri.queryParameters['fullName'] ?? '';
-          final shouldResend = state.uri.queryParameters['resend'] == '1';
           return VerifyEmailScreen(
             email: email,
             fullName: fullName,
-            shouldResendCodeOnLoad: shouldResend,
           );
         },
       ),

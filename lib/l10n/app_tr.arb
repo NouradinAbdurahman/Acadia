@@ -213,6 +213,7 @@
   "updateTask": "Görevi Güncelle",
   "saveChanges": "Değişiklikleri Kaydet",
   "welcome": "Hoş geldiniz",
+  "welcomeSubtitle": "Sınav hazırlığınıza devam edin",
   "password": "Şifre",
   "rememberMe": "Beni hatırla",
   "forgotPassword": "Şifremi Unuttum?",
@@ -220,9 +221,20 @@
   "dontHaveAccount": "Hesabınız yok mu?",
   "signup": "Hesap Oluştur",
   "invalidCredentials": "Geçersiz e-posta veya şifre.",
-  "tooManyRequests": "Lütfen tekrar denemeden önce biraz bekleyin.",
+  "tooManyRequests": "Çok fazla deneme yapıldı. E-posta servisi geçici olarak kısıtlandı. Lütfen birkaç dakika bekleyin.",
+  "emailRateLimit": "Çok fazla deneme yapıldı. E-posta servisi geçici olarak kısıtlandı. Lütfen birkaç dakika bekleyin.",
+  "emailRateLimitWithTimer": "Çok fazla deneme yapıldı. E-posta servisi geçici olarak kısıtlandı. {time} sonra tekrar deneyin.",
+  "@emailRateLimitWithTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "pleaseWait": "Lütfen tekrar denemeden önce biraz bekleyin.",
   "networkError": "Bağlantı hatası. Tekrar deneyin.",
+  "checkInternetConnection": "Internet baglantinizi kontrol edin.",
+  "requestTimedOut": "Istek zaman asimina ugradi. Tekrar deneyin.",
   "invalidEmail": "Geçersiz bir e-posta girin",
   "passwordTooShort": "Şifre en az 8 karakter olmalıdır",
   "alreadyHaveAccount": "Zaten hesabınız var mı?",
@@ -250,6 +262,7 @@
   "newPassword": "Yeni Şifre",
   "passwordSameAsOld": "Yeni şifre mevcut şifrenizden farklı olmalıdır.",
   "resendIn": "{count} saniye içinde tekrar gönder",
+  "tryAgainIn": "{count}sn sonra tekrar dene",
   "selectLanguage": "Dil Seçin",
   "english": "İngilizce",
   "turkish": "Türkçe",

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,15 +28,39 @@ class _ForgotPasswordOTPScreenState extends ConsumerState<ForgotPasswordOTPScree
   final _formKey = GlobalKey<FormState>();
   bool _isSending = false;
   String? _error;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _emailController.dispose();
     super.dispose();
   }
 
   Future<void> _sendOTP() async {
     if (!_formKey.currentState!.validate()) return;
+    final l10n = AppLocalizations.of(context);
+    final authRepo = ref.read(authRepositoryProvider);
+    
+    if (authRepo.isBlockedForEmail()) {
+      final remaining = authRepo.remainingEmailRateLimitTime();
+      final timeStr = '${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, "0")}';
+      setState(() => _error = l10n?.emailRateLimitWithTimer(timeStr) ?? 'Please wait $timeStr');
+      return;
+    }
     
     setState(() {
       Haptics.vibrate(HapticsType.medium);
@@ -44,9 +69,7 @@ class _ForgotPasswordOTPScreenState extends ConsumerState<ForgotPasswordOTPScree
     });
 
     try {
-      final authRepo = ref.read(authRepositoryProvider);
       final email = _emailController.text.trim();
-      
       await authRepo.sendPasswordResetOTP(email);
       
       Haptics.vibrate(HapticsType.success);
@@ -57,12 +80,13 @@ class _ForgotPasswordOTPScreenState extends ConsumerState<ForgotPasswordOTPScree
     } catch (e) {
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
-        final l10n = AppLocalizations.of(context);
-        String errorMessage = l10n?.networkError ?? '';
+        String errorMessage = l10n?.networkError ?? 'Network error';
         
         if (e is AuthApiException) {
-          if (e.code == 'over_email_send_rate_limit') {
-            errorMessage = l10n?.tooManyRequests ?? '';
+          if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+            errorMessage = l10n?.emailRateLimit ?? 'Too many attempts. Email service is temporarily limited. Please wait a few minutes.';
+          } else {
+            errorMessage = e.message;
           }
         }
 
@@ -75,10 +99,18 @@ class _ForgotPasswordOTPScreenState extends ConsumerState<ForgotPasswordOTPScree
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final authRepo = ref.read(authRepositoryProvider);
+    final isRateLimited = authRepo.isBlockedForEmail();
+    final remaining = authRepo.remainingEmailRateLimitTime();
+    
+    final buttonText = isRateLimited 
+        ? l10n?.resendIn('${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}') ?? 'Wait ${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}'
+        : l10n?.sendResetLink ?? '';
     
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -151,9 +183,9 @@ class _ForgotPasswordOTPScreenState extends ConsumerState<ForgotPasswordOTPScree
                       ).animate().fade(delay: 200.ms).slideY(begin: 0.2),
                       const SizedBox(height: AppSpacing.xl),
                       AppButton(
-                        onPressed: _sendOTP,
+                        onPressed: isRateLimited ? null : _sendOTP,
                         isLoading: _isSending,
-                        text: l10n?.sendResetLink ?? '',
+                        text: buttonText,
                       ).animate().fade(delay: 300.ms).slideY(begin: 0.1),
                       const SizedBox(height: AppSpacing.lg),
                       AppButton(

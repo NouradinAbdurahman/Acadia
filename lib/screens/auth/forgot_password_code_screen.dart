@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,9 +33,24 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
   final _otpController = TextEditingController();
   bool _isVerifying = false;
   String? _error;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _otpController.dispose();
     super.dispose();
   }
@@ -72,11 +89,11 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
         if (mounted) {
           setState(() {
             if (errorMsg.contains('expired')) {
-              _error = l10n?.otpExpired ?? '';
-            } else if (errorMsg.contains('attempts')) {
-              _error = l10n?.tooManyAttempts ?? '';
+              _error = l10n?.otpExpired ?? 'Code expired, please try again.';
+            } else if (errorMsg.contains('attempts') || errorMsg.contains('rate limit')) {
+              _error = l10n?.emailRateLimit ?? 'Too many attempts. Email service is temporarily limited. Please wait a few minutes.';
             } else {
-              _error = l10n?.invalidOtp ?? '';
+              _error = l10n?.invalidOtp ?? 'Invalid code, please try again.';
             }
           });
           _otpController.clear();
@@ -86,7 +103,14 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        setState(() => _error = l10n?.networkError ?? '');
+        String message = l10n?.networkError ?? 'Network error';
+        if (e is AuthApiException && (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit'))) {
+          final authRepo = ref.read(authRepositoryProvider);
+          final remaining = authRepo.remainingEmailRateLimitTime();
+          final timeStr = '${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, "0")}';
+          message = l10n?.emailRateLimitWithTimer(timeStr) ?? 'Please wait $timeStr';
+        }
+        setState(() => _error = message);
         _otpController.clear();
       }
     } finally {
@@ -96,13 +120,19 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
 
   Future<void> _resendCode() async {
     final l10n = AppLocalizations.of(context);
-    setState(() {
-      _error = null;
-    });
-
     try {
       Haptics.vibrate(HapticsType.medium);
       final authRepo = ref.read(authRepositoryProvider);
+      
+      if (authRepo.isBlockedForEmail()) {
+        final remaining = authRepo.remainingEmailRateLimitTime();
+        final timeStr = '${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, "0")}';
+        setState(() {
+          _error = l10n?.emailRateLimitWithTimer(timeStr) ?? 'Please wait $timeStr';
+        });
+        return;
+      }
+
       await authRepo.sendPasswordResetOTP(widget.email);
       
       if (mounted) {
@@ -110,7 +140,7 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.codeResent ?? ''),
+            content: Text(l10n?.codeResent ?? 'Code sent! Check your inbox.'),
             backgroundColor: theme.colorScheme.primary,
           ),
         );
@@ -119,19 +149,30 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        String message = l10n?.networkError ?? '';
-        if (e is AuthApiException && e.code == 'over_email_send_rate_limit') {
-          message = l10n?.tooManyRequests ?? '';
+        String message = l10n?.networkError ?? 'Network error';
+        if (e is AuthApiException && (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit'))) {
+          message = l10n?.emailRateLimit ?? 'Too many attempts. Email service is temporarily limited. Please wait a few minutes.';
+        } else if (e is AuthApiException) {
+          message = e.message;
         }
         setState(() => _error = message);
       }
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final authRepo = ref.read(authRepositoryProvider);
+    
+    final remaining = authRepo.remainingEmailRateLimitTime();
+    final isBlocked = authRepo.isBlockedForEmail();
+    
+    final resendButtonText = isBlocked
+        ? (l10n?.resendIn('${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}') ?? 'Wait ${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}')
+        : (l10n?.resendCode ?? 'Resend Code');
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -200,6 +241,7 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
                     PinCodeTextField(
                       appContext: context,
                       length: 6,
+                      autoDisposeControllers: false,
                       obscureText: false,
                       animationType: AnimationType.fade,
                       keyboardType: TextInputType.number,
@@ -240,9 +282,9 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
                     ).animate().fade(delay: 400.ms).slideY(begin: 0.1),
                     const SizedBox(height: AppSpacing.lg),
                     AppButton(
-                      onPressed: _resendCode,
+                      onPressed: isBlocked ? null : _resendCode,
                       variant: AppButtonVariant.text,
-                      text: l10n?.resendCode ?? '',
+                      text: resendButtonText,
                     ).animate().fade(delay: 500.ms),
                   ],
                 ),

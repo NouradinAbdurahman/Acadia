@@ -464,6 +464,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get welcome => 'Hoş geldiniz';
 
   @override
+  String get welcomeSubtitle => 'Sınav hazırlığınıza devam edin';
+
+  @override
   String get password => 'Şifre';
 
   @override
@@ -485,13 +488,29 @@ class AppLocalizationsTr extends AppLocalizations {
   String get invalidCredentials => 'Geçersiz e-posta veya şifre.';
 
   @override
-  String get tooManyRequests => 'Lütfen tekrar denemeden önce biraz bekleyin.';
+  String get tooManyRequests =>
+      'Çok fazla deneme yapıldı. E-posta servisi geçici olarak kısıtlandı. Lütfen birkaç dakika bekleyin.';
+
+  @override
+  String get emailRateLimit =>
+      'Çok fazla deneme yapıldı. E-posta servisi geçici olarak kısıtlandı. Lütfen birkaç dakika bekleyin.';
+
+  @override
+  String emailRateLimitWithTimer(String time) {
+    return 'Çok fazla deneme yapıldı. E-posta servisi geçici olarak kısıtlandı. $time sonra tekrar deneyin.';
+  }
 
   @override
   String get pleaseWait => 'Lütfen tekrar denemeden önce biraz bekleyin.';
 
   @override
   String get networkError => 'Bağlantı hatası. Tekrar deneyin.';
+
+  @override
+  String get checkInternetConnection => 'Internet baglantinizi kontrol edin.';
+
+  @override
+  String get requestTimedOut => 'Istek zaman asimina ugradi. Tekrar deneyin.';
 
   @override
   String get invalidEmail => 'Geçersiz bir e-posta girin';
@@ -577,6 +596,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String resendIn(Object count) {
     return '$count saniye içinde tekrar gönder';
+  }
+
+  @override
+  String tryAgainIn(Object count) {
+    return '${count}sn sonra tekrar dene';
   }
 
   @override

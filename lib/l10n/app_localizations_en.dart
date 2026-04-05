@@ -464,6 +464,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome back';
 
   @override
+  String get welcomeSubtitle => 'Welcome back to your studies';
+
+  @override
   String get password => 'Password';
 
   @override
@@ -485,13 +488,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidCredentials => 'Incorrect email or password.';
 
   @override
-  String get tooManyRequests => 'Please wait a moment before trying again.';
+  String get tooManyRequests =>
+      'Too many attempts. Email service is temporarily limited. Please wait a few minutes before trying again.';
+
+  @override
+  String get emailRateLimit =>
+      'Too many attempts. Email service is temporarily limited. Please wait a few minutes.';
+
+  @override
+  String emailRateLimitWithTimer(String time) {
+    return 'Too many attempts. Email service is temporarily limited. Try again in $time.';
+  }
 
   @override
   String get pleaseWait => 'Please wait a moment before trying again.';
 
   @override
   String get networkError => 'Connection error. Try again.';
+
+  @override
+  String get checkInternetConnection => 'Check your internet connection.';
+
+  @override
+  String get requestTimedOut => 'Request timed out. Try again.';
 
   @override
   String get invalidEmail => 'Enter a valid email';
@@ -577,6 +596,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String resendIn(Object count) {
     return 'Resend in $count seconds';
+  }
+
+  @override
+  String tryAgainIn(Object count) {
+    return 'Try again in ${count}s';
   }
 
   @override

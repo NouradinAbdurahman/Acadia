@@ -20,13 +20,11 @@ import '../../components/app_button.dart';
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   final String email;
   final String fullName;
-  final bool shouldResendCodeOnLoad;
 
   const VerifyEmailScreen({
     super.key,
     required this.email,
     required this.fullName,
-    this.shouldResendCodeOnLoad = false,
   });
 
   @override
@@ -37,36 +35,25 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   final _otpController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  int _countdown = 30;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
-    if (widget.shouldResendCodeOnLoad) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _resendCode(force: true);
-      });
-    }
   }
 
   void _startTimer() {
-    _countdown = 30;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown == 0) {
-        timer.cancel();
-        if (mounted) setState(() {});
-      } else {
-        if (mounted) setState(() => _countdown--);
-      }
+      if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _otpController.dispose();
     super.dispose();
   }
 
@@ -94,13 +81,17 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        String message = l10n?.networkError ?? '';
+        String message = l10n?.networkError ?? 'Verification error';
         
         if (e is AuthApiException) {
           if (e.message.toLowerCase().contains('invalid') || e.code == 'invalid_otp') {
-            message = l10n?.invalidOtp ?? '';
+            message = l10n?.invalidOtp ?? 'Invalid code, please try again.';
           } else if (e.code == 'otp_expired' || e.message.toLowerCase().contains('expired')) {
-            message = l10n?.otpExpired ?? '';
+            message = l10n?.otpExpired ?? 'Code expired, please request a new one.';
+          } else if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+            message = l10n?.emailRateLimit ?? 'Too many attempts. Email service is temporarily limited. Please wait a few minutes.';
+          } else {
+            message = e.message;
           }
         }
         
@@ -115,38 +106,46 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     }
   }
 
-  Future<void> _resendCode({bool force = false}) async {
+  Future<void> _resendCode() async {
     final l10n = AppLocalizations.of(context);
-    if (_isLoading) return;
-    if (!force && _countdown > 0) return;
-    
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
+    final authRepo = ref.read(authRepositoryProvider);
     try {
       debugPrint('RESEND CODE CALLED');
-      final authRepo = ref.read(authRepositoryProvider);
+      
+      if (authRepo.isBlockedForEmail()) {
+        final remaining = authRepo.remainingEmailRateLimitTime();
+        final minutes = remaining.inMinutes;
+        final seconds = remaining.inSeconds % 60;
+        setState(() {
+          _errorMessage = l10n?.emailRateLimitWithTimer(
+            '${minutes}:${seconds.toString().padLeft(2, "0")}'
+          ) ?? 'Too many attempts. Try again in ${minutes}:${seconds.toString().padLeft(2, "0")}';
+        });
+        return;
+      }
+
       await authRepo.resendOTP(widget.email);
       
       if (mounted) {
         final theme = Theme.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n?.codeResent ?? ''),
+            content: Text(l10n?.codeResent ?? 'Code sent! Check your inbox.'),
             backgroundColor: theme.colorScheme.primary,
           ),
         );
-        _startTimer();
       }
     } catch (e) {
       if (mounted) {
-        String errorMessage = l10n?.networkError ?? '';
+        String errorMessage = l10n?.networkError ?? 'Network error';
 
         if (e is AuthApiException) {
-          if (e.code == 'over_email_send_rate_limit') {
-            errorMessage = l10n?.tooManyRequests ?? '';
+          if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+            final remaining = authRepo.remainingEmailRateLimitTime();
+            final timeStr = '${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, "0")}';
+            errorMessage = l10n?.emailRateLimitWithTimer(timeStr) ?? 'Please wait $timeStr';
+          } else {
+            errorMessage = e.message;
           }
         }
 
@@ -159,15 +158,19 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-
-    // Provide default text fallback if localized not found
-    final String resendButtonText = _countdown > 0 
-      ? (l10n?.resendIn(_countdown) ?? '')
-      : (l10n?.resendCode ?? '');
+    final authRepo = ref.read(authRepositoryProvider);
+    
+    final remaining = authRepo.remainingEmailRateLimitTime();
+    final isResendBlocked = authRepo.isBlockedForEmail();
+    
+    final String resendButtonText = isResendBlocked 
+      ? l10n?.resendIn('${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}') ?? 'Resend in ${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, '0')}'
+      : (l10n?.resendCode ?? 'Resend Code');
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -243,6 +246,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     PinCodeTextField(
                       appContext: context,
                       length: 6,
+                      autoDisposeControllers: false,
                       obscureText: false,
                       animationType: AnimationType.fade,
                       keyboardType: TextInputType.number,
@@ -268,10 +272,12 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                       controller: _otpController,
                       beforeTextPaste: (text) => true,
                       onCompleted: (v) {
-                        _verifyOtp(v);
+                        if (!_isLoading) _verifyOtp(v);
                       },
                       onChanged: (value) {
-                        Haptics.vibrate(HapticsType.selection);
+                        if (value.length == 6) {
+                          Haptics.vibrate(HapticsType.medium);
+                        }
                         if (mounted) setState(() {});
                       },
                     ).animate().fade(delay: 300.ms).slideY(begin: 0.2),
@@ -286,8 +292,7 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                     ).animate().fade(delay: 400.ms).slideY(begin: 0.1),
                     const SizedBox(height: AppSpacing.lg),
                     AppButton(
-                      onPressed:
-                          _countdown > 0 ? null : () => _resendCode(),
+                      onPressed: isResendBlocked ? null : () => _resendCode(),
                       variant: AppButtonVariant.text,
                       text: resendButtonText,
                     ).animate().fade(delay: 500.ms),

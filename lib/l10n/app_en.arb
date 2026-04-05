@@ -213,6 +213,7 @@
   "updateTask": "Update Task",
   "saveChanges": "Save Changes",
   "welcome": "Welcome back",
+  "welcomeSubtitle": "Welcome back to your studies",
   "password": "Password",
   "rememberMe": "Remember me",
   "forgotPassword": "Forgot Password?",
@@ -220,9 +221,20 @@
   "dontHaveAccount": "Don't have an account?",
   "signup": "Create Account",
   "invalidCredentials": "Incorrect email or password.",
-  "tooManyRequests": "Please wait a moment before trying again.",
+  "tooManyRequests": "Too many attempts. Email service is temporarily limited. Please wait a few minutes before trying again.",
+  "emailRateLimit": "Too many attempts. Email service is temporarily limited. Please wait a few minutes.",
+  "emailRateLimitWithTimer": "Too many attempts. Email service is temporarily limited. Try again in {time}.",
+  "@emailRateLimitWithTimer": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "pleaseWait": "Please wait a moment before trying again.",
   "networkError": "Connection error. Try again.",
+  "checkInternetConnection": "Check your internet connection.",
+  "requestTimedOut": "Request timed out. Try again.",
   "invalidEmail": "Enter a valid email",
   "passwordTooShort": "Password must be at least 8 characters",
   "alreadyHaveAccount": "Already have an account?",
@@ -250,6 +262,7 @@
   "newPassword": "New Password",
   "passwordSameAsOld": "New password must be different from your current password.",
   "resendIn": "Resend in {count} seconds",
+  "tryAgainIn": "Try again in {count}s",
   "selectLanguage": "Select Language",
   "english": "English",
   "turkish": "Turkish",

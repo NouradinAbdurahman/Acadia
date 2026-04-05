@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,11 +32,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isLoading = false;
   bool _rememberMe = false;
   String? _errorMessage;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _loadRememberedEmail();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) setState(() {});
+    });
   }
 
   Future<void> _loadRememberedEmail() async {
@@ -54,6 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -70,12 +81,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
+      debugPrint('LOGIN START');
       final authRepo = ref.read(authRepositoryProvider);
       final response = await authRepo.login(_emailController.text.trim(), _passwordController.text.trim());
       
       if (response.user != null && response.user!.emailConfirmedAt == null) {
         if (mounted) {
-          context.go('/verify-email?email=${Uri.encodeComponent(_emailController.text.trim())}&resend=1');
+          context.go('/verify-email?email=${Uri.encodeComponent(_emailController.text.trim())}');
         }
         return;
       }
@@ -91,7 +103,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
 
       // Successful login, GoRouter redirect will handle via authStateChanges
+      debugPrint('LOGIN SUCCESS');
       Haptics.vibrate(HapticsType.success);
+    } on TimeoutException {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
+      debugPrint('LOGIN ERROR: timeout');
+      setState(() => _errorMessage = l10n?.requestTimedOut ?? '');
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context);
@@ -103,29 +121,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // If email is not confirmed, force user into OTP verification flow
         if (e.code == 'email_not_confirmed' ||
             lower.contains('email not confirmed')) {
+          debugPrint('LOGIN ERROR: email_not_confirmed');
           Haptics.vibrate(HapticsType.warning);
           context.go(
-            '/verify-email?email=${Uri.encodeComponent(_emailController.text.trim())}&resend=1',
+            '/verify-email?email=${Uri.encodeComponent(_emailController.text.trim())}',
           );
           return;
         }
 
         if (e.code == 'invalid_credentials' ||
             lower.contains('invalid login credentials')) {
+          debugPrint('LOGIN ERROR: invalid_credentials');
           message = l10n?.invalidCredentials ?? '';
         } else if (e.code == 'over_email_send_rate_limit') {
+          debugPrint('LOGIN ERROR: email_rate_limit');
+          message = l10n?.emailRateLimit ?? '';
+        } else if (e.code == 'too_many_requests' || lower.contains('too many requests')) {
+          debugPrint('LOGIN ERROR: auth_rate_limit');
           message = l10n?.tooManyRequests ?? '';
         } else {
+          debugPrint('LOGIN ERROR: auth_unknown');
           message = l10n?.networkError ?? '';
         }
       } else {
-        debugPrint('🚨 LOGIN ERROR: $e');
+        debugPrint('LOGIN ERROR: unexpected');
         final isNetworkError = e.toString().contains('SocketException') ||
             e.toString().contains('ClientException');
-        // In debug: show real error. In release: always show generic message.
-        message = kDebugMode && !isNetworkError
-            ? e.toString()
-            : (l10n?.networkError ?? '');
+        if (isNetworkError) {
+          debugPrint('LOGIN ERROR: network');
+          message = l10n?.checkInternetConnection ?? '';
+        } else {
+          message = l10n?.networkError ?? '';
+        }
       }
 
       setState(() => _errorMessage = message);
@@ -138,40 +165,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final authRepo = ref.read(authRepositoryProvider);
     
+    final isAuthLimited = authRepo.isAuthRateLimited();
+    final remaining = authRepo.remainingAuthRateLimitTime();
+    
+    String buttonText = l10n?.login ?? '';
+    if (isAuthLimited && remaining.inSeconds > 0) {
+      final minutes = remaining.inMinutes;
+      final seconds = remaining.inSeconds % 60;
+      final timeStr = '$minutes:${seconds.toString().padLeft(2, '0')}';
+      buttonText = '${l10n?.login ?? "Login"} ($timeStr)';
+    }
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: AuthBackgroundContainer(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Image.asset('assets/logo.png', height: 120)
-                            .animate()
-                            .fade(duration: AppDurations.slow)
-                            .scale(delay: 200.ms, begin: const Offset(0.8, 0.8)),
-                        const SizedBox(height: AppSpacing.md),
-                        AppSectionTitle(
-                          title: 'Acadia',
-                          subtitle: l10n?.welcome ?? '',
-                        ).animate().fade().slideY(begin: 0.2, curve: Curves.easeOut),
-                        const SizedBox(height: AppSpacing.xxl),
-                        AppGlassCard(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
+        child: Stack(
+          children: [
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    children: [
+                       SizedBox(
+                         height: 120,
+                         child: Hero(
+                           tag: 'app_header_logo',
+                           child: Image.asset(
+                             'assets/grad_cap.png',
+                             fit: BoxFit.contain,
+                           ),
+                         ),
+                       ).animate().fade(duration: AppDurations.slow).scale(delay: 200.ms),
+                       const SizedBox(height: AppSpacing.md),
+                       Text(
+                         'Acadia',
+                         style: theme.textTheme.displayLarge?.copyWith(
+                           color: theme.colorScheme.onSurface,
+                           fontSize: 32,
+                           fontWeight: FontWeight.bold,
+                         ),
+                       ).animate().fade(delay: 300.ms).slideY(begin: 0.2),
+                      const SizedBox(height: AppSpacing.xl),
+                      AppGlassCard(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                                AppSectionTitle(
+                                  title: l10n?.login ?? 'Login',
+                                  subtitle: l10n?.welcomeSubtitle ?? 'Welcome back to your studies',
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
                                 if (_errorMessage != null) 
                                   Container(
                                     padding: const EdgeInsets.all(AppSpacing.md),
-                                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                                    margin: const EdgeInsets.only(bottom: AppSpacing.lg),
                                     decoration: BoxDecoration(
                                       color: theme.colorScheme.error.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
@@ -180,7 +237,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     child: Text(
                                       _errorMessage!,
                                       style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.error
+                                        color: theme.colorScheme.error,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -253,9 +310,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                  ),
                                 const SizedBox(height: AppSpacing.lg),
                                 AppButton(
-                                  onPressed: _login,
+                                  onPressed: (isAuthLimited || _isLoading) ? null : _login,
                                   isLoading: _isLoading,
-                                   text: l10n?.login ?? '',
+                                   text: buttonText,
                                 ),
                               ],
                             ),
@@ -295,7 +352,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }
