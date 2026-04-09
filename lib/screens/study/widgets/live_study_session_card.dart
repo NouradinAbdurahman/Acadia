@@ -3,7 +3,6 @@ import 'package:flutter/services.dart' as services;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'dart:ui';
 
 import '../../../core/design/app_spacing.dart';
 import '../../../core/design/app_radius.dart';
@@ -100,17 +99,6 @@ class LiveStudySessionCard extends ConsumerWidget {
         ],
       ),
     ).animate().fade().slideY(begin: 0.05, duration: 400.ms, curve: Curves.easeOutCubic);
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "$twoDigitMinutes:$twoDigitSeconds";
-  }
-
-  String _formatMinutes(int minutes) {
-    return "${minutes}m";
   }
 }
 

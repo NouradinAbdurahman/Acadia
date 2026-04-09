@@ -5,17 +5,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:go_router/go_router.dart';
+import 'package:heroicons/heroicons.dart';
 
 import '../../core/design/app_spacing.dart';
 import '../../components/app_glass_card.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
+import '../../providers/bottom_nav_provider.dart';
 import '../../providers/course_provider.dart';
+import '../../providers/decision_engine_provider_v2.dart';
+import '../../providers/study_sessions_provider.dart';
 import '../../providers/trend_provider.dart';
 import '../../models/analytics_data.dart';
 import '../../models/course.dart';
 import '../../models/trend_data.dart';
+import '../../widgets/analytics/decision_cards.dart';
 import '../../widgets/common/weekly_activity_card.dart';
 import '../../widgets/risk/risk_widgets.dart';
 
@@ -29,6 +35,39 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _trendsSectionKey = GlobalKey();
+
+  int _roundPlanMinutes(double minutes) {
+    if (minutes <= 0) return 0;
+    return ((minutes / 5).ceil() * 5).clamp(5, 240);
+  }
+
+  void _startStudyFromDecision({
+    required String courseId,
+    required int minutes,
+  }) {
+    final timerState = ref.read(studyTimerProvider);
+    final timer = ref.read(studyTimerProvider.notifier);
+
+    // If a session is already running, only navigate to Study tab.
+    if (timerState.isRunning || timerState.isPaused) {
+      ref.read(bottomNavProvider.notifier).state = 2;
+      return;
+    }
+
+    if (courseId.isEmpty) {
+      ref.read(bottomNavProvider.notifier).state = 2;
+      return;
+    }
+
+    // Analytics recommendations should always execute in Focus mode.
+    // Manual Study screen starts keep their existing behavior.
+    timer.setStudyType(StudyType.deepWork);
+    timer.setIntent('analytics_recommendation');
+    timer.setCourseId(courseId);
+    timer.setDuration(Duration(minutes: minutes));
+    timer.start();
+    ref.read(bottomNavProvider.notifier).state = 2;
+  }
 
   void _scrollToTrendsSection() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -59,6 +98,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final analyticsAsync = ref.watch(analyticsProvider);
+    final decisionAsync = ref.watch(decisionEngineActiveProvider);
     final studyAnalytics = ref.watch(studyAnalyticsProvider);
     final trendDays = ref.watch(trendDaysProvider);
     final trendAsync = ref.watch(trendProvider(trendDays));
@@ -68,115 +108,240 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         child: SafeArea(
           bottom: true,
           child: analyticsAsync.when(
-            data: (data) => SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.analytics,
-                    style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
-                  ).animate().fade().slideX(begin: -0.1),
-                  const SizedBox(height: AppSpacing.xl),
-                  if (_isSparseAnalytics(data)) ...[
-                    AppGlassCard(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.analyticsSparseDataTitle,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
+            data: (data) {
+              final hasData = _hasAnalyticsData(data);
+
+              return SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.analytics,
+                      style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
+                    ).animate().fade().slideX(begin: -0.1),
+                    const SizedBox(height: AppSpacing.xl),
+                    if (!hasData) ...[
+                      AppGlassCard(
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            HeroIcon(
+                              HeroIcons.presentationChartLine,
+                              size: 48,
+                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
                             ),
-                          ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            l10n.analyticsSparseDataBody,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              height: 1.35,
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              l10n.analyticsSparseDataTitle,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              l10n.analyticsSparseDataBody,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                height: 1.35,
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                             OutlinedButton.icon(
+                               onPressed: () {
+                                   Haptics.vibrate(HapticsType.selection);
+                                 ref.read(bottomNavProvider.notifier).state = 1;
+                                 context.go('/home');
+                               },
+                               icon: const HeroIcon(
+                                 HeroIcons.clipboardDocumentCheck,
+                                 size: 18,
+                               ),
+                               label: Text(l10n.startTrackingYourSemester),
+                             ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.lg),
+                      AppGlassCard(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.whatYouCanTrack,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _EmptyStateBulletRow(
+                              icon: HeroIcons.checkCircle,
+                              text: l10n.trackTasks,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            _EmptyStateBulletRow(
+                              icon: HeroIcons.checkCircle,
+                              text: l10n.trackStudySessions,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            _EmptyStateBulletRow(
+                              icon: HeroIcons.checkCircle,
+                              text: l10n.trackGrades,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            Text(
+                              l10n.whyItMatters,
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _EmptyStateBulletRow(
+                              icon: HeroIcons.sparkles,
+                              text: l10n.monitorProgress,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            _EmptyStateBulletRow(
+                              icon: HeroIcons.shieldCheck,
+                              text: l10n.reduceAcademicRisk,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ] else ...[
+                      decisionAsync.when(
+                        data: (snapshot) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TodayPlanCard(
+                              primary: snapshot.nextAction,
+                              secondary: snapshot.todayPlanSecondaryRecommendation ??
+                                  snapshot.focusRecommendation,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            if (studyAnalytics.weeklyDeficitHours > 2) ...[
+                              Builder(
+                                builder: (context) {
+                                  final totalDeficitMinutes = _roundPlanMinutes(
+                                    studyAnalytics.weeklyDeficitHours * 60,
+                                  );
+                                  final todayMinutes = _roundPlanMinutes(totalDeficitMinutes * 0.40);
+                                  final tomorrowMinutes = _roundPlanMinutes(totalDeficitMinutes * 0.35);
+                                  final day3Minutes = _roundPlanMinutes(totalDeficitMinutes * 0.25);
+                                  return RecoveryPlanCard(
+                                    todayMinutes: todayMinutes,
+                                    tomorrowMinutes: tomorrowMinutes,
+                                    day3Minutes: day3Minutes,
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                            ],
+                            DecisionNextActionCard(
+                              action: snapshot.nextAction,
+                              onStartSession: () => _startStudyFromDecision(
+                                courseId: snapshot.nextAction.courseId,
+                                minutes: snapshot.nextAction.durationMinutes,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            if (snapshot.focusRecommendation != null) ...[
+                              DecisionFocusRecommendationCard(
+                                recommendation: snapshot.focusRecommendation!,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                            ],
+                            DecisionWhatChangedCard(whatChanged: snapshot.whatChanged),
+                            const SizedBox(height: AppSpacing.xl),
+                          ],
+                        ),
+                        loading: () => const SizedBox.shrink(),
+                        error: (error, stackTrace) => const SizedBox.shrink(),
+                      ),
+
+                      // 0. Academic Risk Breakdown
+                      _buildSectionTitle(theme, l10n.academicRisk),
+                      const SizedBox(height: AppSpacing.md),
+                      const RiskBreakdownCard(),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      const BurnoutStatusCard(),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // 1. Study Hours by Course
+                      _buildSectionTitle(theme, l10n.studyHoursByCourse),
+                      Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
+                      const SizedBox(height: AppSpacing.md),
+                      _StudyHoursBarChart(data: data),
+                      const SizedBox(height: AppSpacing.lg),
+                      WeeklyActivityCard(
+                        data: studyAnalytics.weeklyMinutes,
+                        analytics: studyAnalytics,
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // 2. Task Completion
+                      _buildSectionTitle(theme, l10n.weeklyTaskCompletion),
+                      Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
+                      const SizedBox(height: AppSpacing.md),
+                      _TaskCompletionPieChart(data: data),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // 3. Grade Distribution
+                      _buildSectionTitle(theme, l10n.gradeDistribution),
+                      Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
+                      const SizedBox(height: AppSpacing.md),
+                      _GradeDistributionCard(data: data),
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // 4. Trend Analysis
+                      KeyedSubtree(
+                        key: _trendsSectionKey,
+                        child: _buildSectionTitle(theme, l10n.trendAnalysis),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        children: [7, 14, 30].map((days) {
+                          return ChoiceChip(
+                            label: Text(l10n.daysFilter(days)),
+                            selected: trendDays == days,
+                            onSelected: (_) =>
+                                ref.read(trendDaysProvider.notifier).state = days,
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      trendAsync.when(
+                        data: (trend) => AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: _TrendAnalysisSection(
+                            key: ValueKey('trend-$trendDays'),
+                            trend: trend,
+                          ),
+                        ),
+                        loading: () => const AppGlassCard(
+                          height: 120,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (e, s) => AppGlassCard(
+                          height: 120,
+                          child: Center(child: Text(l10n.networkError)),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
+
+                    const SizedBox(height: 120),
                   ],
-
-                  // 0. Academic Risk Breakdown
-                  _buildSectionTitle(theme, l10n.academicRisk),
-                  const SizedBox(height: AppSpacing.md),
-                  const RiskBreakdownCard(),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // 1. Study Hours by Course
-                  _buildSectionTitle(theme, l10n.studyHoursByCourse),
-                  Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
-                  const SizedBox(height: AppSpacing.md),
-                  _StudyHoursBarChart(data: data),
-                  const SizedBox(height: AppSpacing.lg),
-                  WeeklyActivityCard(
-                    data: studyAnalytics.weeklyMinutes,
-                    analytics: studyAnalytics,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // 2. Task Completion
-                  _buildSectionTitle(theme, l10n.weeklyTaskCompletion),
-                  Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
-                  const SizedBox(height: AppSpacing.md),
-                  _TaskCompletionPieChart(data: data),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // 3. Grade Distribution
-                  _buildSectionTitle(theme, l10n.gradeDistribution),
-                  Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
-                  const SizedBox(height: AppSpacing.md),
-                  _GradeDistributionCard(data: data),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // 4. Trend Analysis
-                  KeyedSubtree(
-                    key: _trendsSectionKey,
-                    child: _buildSectionTitle(theme, l10n.trendAnalysis),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    children: [7, 14, 30].map((days) {
-                      return ChoiceChip(
-                        label: Text(l10n.daysFilter(days)),
-                        selected: trendDays == days,
-                        onSelected: (_) =>
-                            ref.read(trendDaysProvider.notifier).state = days,
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  trendAsync.when(
-                    data: (trend) => AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: _TrendAnalysisSection(
-                        key: ValueKey('trend-$trendDays'),
-                        trend: trend,
-                      ),
-                    ),
-                    loading: () => const AppGlassCard(
-                      height: 120,
-                      child: Center(child: CircularProgressIndicator()),
-                    ),
-                    error: (e, s) => AppGlassCard(
-                      height: 120,
-                      child: Center(child: Text(l10n.networkError)),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  const SizedBox(height: 120),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
             loading: () => _analyticsLoadingSkeleton(theme),
             error: (e, s) => Center(
               child: Padding(
@@ -208,10 +373,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  bool _isSparseAnalytics(AnalyticsData data) {
-    return data.totalTasks == 0 &&
-        data.studyHoursPerCourse.isEmpty &&
-        data.gradeDistribution.isEmpty;
+  bool _hasAnalyticsData(AnalyticsData data) {
+    return data.totalTasks > 0 ||
+        data.studyHoursPerCourse.isNotEmpty ||
+        data.gradeDistribution.isNotEmpty;
   }
 
   Widget _analyticsLoadingSkeleton(ThemeData theme) {
@@ -252,6 +417,36 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           line(100),
         ],
       ),
+    );
+  }
+}
+
+class _EmptyStateBulletRow extends StatelessWidget {
+  const _EmptyStateBulletRow({required this.icon, required this.text});
+
+  final HeroIcons icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        HeroIcon(
+          icon,
+          size: 16,
+          color: theme.colorScheme.primary,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -588,8 +783,9 @@ class _TrendAnalysisSection extends StatelessWidget {
 
     final message = insight.message;
     if (message ==
-        'You have just started tracking study sessions. Try to study daily.')
+        'You have just started tracking study sessions. Try to study daily.') {
       return l10n.trendInsightBuildConsistencyMessage;
+    }
     if (message.startsWith('Study increased by ')) {
       final match = RegExp(r'Study increased by (\d+)%').firstMatch(message);
       final percent = int.tryParse(match?.group(1) ?? '') ?? 0;
@@ -600,11 +796,13 @@ class _TrendAnalysisSection extends StatelessWidget {
       final percent = int.tryParse(match?.group(1) ?? '') ?? 0;
       return l10n.trendInsightStudyDroppedMessage(percent);
     }
-    if (message == 'No tasks were due in this period.')
+    if (message == 'No tasks were due in this period.') {
       return l10n.trendInsightNoTasksMessage;
+    }
     if (message ==
-        'No tasks completed yet. Start completing tasks to track performance.')
+        'No tasks completed yet. Start completing tasks to track performance.') {
       return l10n.trendInsightNoTasksCompletedMessage;
+    }
     if (message.startsWith('You completed ')) {
       final match = RegExp(
         r'You completed (\d+) of (\d+) tasks',
@@ -613,8 +811,9 @@ class _TrendAnalysisSection extends StatelessWidget {
       final total = int.tryParse(match?.group(2) ?? '') ?? 0;
       return l10n.trendInsightTaskCompletedFractionMessage(completed, total);
     }
-    if (message == 'No new tasks or deadlines were added in this period.')
+    if (message == 'No new tasks or deadlines were added in this period.') {
       return l10n.trendInsightNoWorkloadMessage;
+    }
     if (message.startsWith('You added ')) {
       final match = RegExp(
         r'You added (\d+) tasks/deadlines',
@@ -623,13 +822,16 @@ class _TrendAnalysisSection extends StatelessWidget {
       return l10n.trendInsightWorkloadAddedMessage(total);
     }
     if (message ==
-        'Performance trend is decreasing. Review weak courses this week.')
+        'Performance trend is decreasing. Review weak courses this week.') {
       return l10n.trendInsightPerformanceDecliningMessage;
+    }
     if (message ==
-        'Performance trend is improving. Keep the same study consistency.')
+        'Performance trend is improving. Keep the same study consistency.') {
       return l10n.trendInsightPerformanceImprovingMessage;
-    if (message == 'No significant change yet. Keep logging consistently.')
+    }
+    if (message == 'No significant change yet. Keep logging consistently.') {
       return l10n.trendInsightStableMessage;
+    }
     return message;
   }
 
@@ -774,8 +976,9 @@ class _TrendSummaryCard extends StatelessWidget {
     );
     if (total == 0) return l10n.trendNoWorkload;
     if (trend.workloadChangePercent > 10) return l10n.trendIncreased;
-    if (trend.workloadChangePercent < -10)
+    if (trend.workloadChangePercent < -10) {
       return l10n.trendReducedComparedLastPeriod;
+    }
     return l10n.trendStable;
   }
 
@@ -896,8 +1099,9 @@ class _TrendLineChart extends StatelessWidget {
               getTitlesWidget: (value, meta) {
                 if (!_isWholeTick(value)) return const SizedBox.shrink();
                 final index = value.toInt();
-                if (index < 0 || index >= entries.length)
+                if (index < 0 || index >= entries.length) {
                   return const SizedBox.shrink();
+                }
                 final step = _xAxisStep(entries.length);
                 if (index % step != 0) return const SizedBox.shrink();
                 final date = entries[index].key;
@@ -1014,8 +1218,9 @@ class _TrendBarChart extends StatelessWidget {
               getTitlesWidget: (value, meta) {
                 if (!_isWholeTick(value)) return const SizedBox.shrink();
                 final index = value.toInt();
-                if (index < 0 || index >= entries.length)
+                if (index < 0 || index >= entries.length) {
                   return const SizedBox.shrink();
+                }
                 final step = _xAxisStep(entries.length);
                 if (index % step != 0) return const SizedBox.shrink();
                 final date = entries[index].key;
@@ -1119,8 +1324,9 @@ class _TrendGradeLineChart extends StatelessWidget {
               getTitlesWidget: (value, meta) {
                 if (!_isWholeTick(value)) return const SizedBox.shrink();
                 final index = value.toInt();
-                if (index < 0 || index >= points.length)
+                if (index < 0 || index >= points.length) {
                   return const SizedBox.shrink();
+                }
                 final step = _xAxisStep(points.length);
                 if (index % step != 0) return const SizedBox.shrink();
                 final date = points[index].date;
@@ -1280,6 +1486,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
               id: courseId,
               userId: '',
               courseName: 'Unknown',
+              academicSemester: 1,
               credits: 0,
               ects: 0,
               color: '#9E9E9E',
@@ -1506,7 +1713,6 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                   final index = entry.key;
                   final bar = entry.value;
                   final isSelected = _selectedIndex == index;
-                  final isDimmed = _selectedIndex != null && !isSelected;
 
                   final displayCode = (bar.course.courseCode ??
                           (bar.displayName.length > 8

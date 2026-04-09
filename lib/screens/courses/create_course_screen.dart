@@ -13,7 +13,6 @@ import '../../widgets/common/animated_pressable.dart';
 import '../../providers/semester_provider.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
-import '../../components/app_bottom_sheet_picker.dart';
 import '../../l10n/app_localizations.dart';
 
 class CreateCourseScreen extends ConsumerStatefulWidget {
@@ -28,12 +27,11 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _codeController;
-  late int _semester;
+  late int _academicSemester;
   int? _credits;
   int? _ects;
   late String _selectedColor;
   bool _isLoading = false;
-  String? _selectedSemesterId;
 
   final List<String> _availableColors = [
     '#3B82F6', // Blue
@@ -54,8 +52,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
     _codeController = TextEditingController(
       text: widget.courseToEdit?.courseCode,
     );
-    _semester = widget.courseToEdit?.semester ?? 1;
-    _selectedSemesterId = widget.courseToEdit?.semesterId;
+    _academicSemester = widget.courseToEdit?.academicSemester ?? 1;
     _credits = widget.courseToEdit?.credits;
     _ects = widget.courseToEdit?.ects;
     _selectedColor = widget.courseToEdit?.color ?? _availableColors[0];
@@ -81,6 +78,11 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
 
     final user = ref.read(currentUserProvider);
     if (user == null) return;
+    final activeSemester = ref.read(activeSemesterFullProvider);
+    if (activeSemester == null) {
+      _showError(l10n.noSemestersYet);
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -92,8 +94,8 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
         courseCode: _codeController.text.trim().isEmpty
             ? null
             : _codeController.text.trim(),
-        semester: _semester,
-        semesterId: _selectedSemesterId,
+        academicSemester: _academicSemester,
+        semesterId: activeSemester.id,
         credits: _credits!,
         ects: _ects!,
         color: _selectedColor,
@@ -127,6 +129,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final activeSemester = ref.watch(activeSemesterFullProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -166,16 +169,16 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   _buildSectionHeader(l10n.details),
                   const SizedBox(height: AppSpacing.md),
+                  _buildNumberPicker(
+                    label: l10n.academicSemester,
+                    value: _academicSemester,
+                    minValue: 1,
+                    maxValue: 8,
+                    onChanged: (val) => setState(() => _academicSemester = val),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
-                      Expanded(
-                        child: _buildNumberPicker(
-                          label: l10n.currentSemesterNumber,
-                          value: _semester,
-                          onChanged: (val) => setState(() => _semester = val),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: _buildNumberPicker(
                           label: l10n.creditsLabel,
@@ -194,7 +197,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _buildSemesterDropdown(l10n),
+                  _buildCurrentSemesterField(l10n, activeSemester?.name),
                   const SizedBox(height: AppSpacing.lg),
                   _buildSectionHeader(l10n.courseColor),
                   const SizedBox(height: AppSpacing.md),
@@ -228,37 +231,54 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
     );
   }
 
-  Widget _buildSemesterDropdown(AppLocalizations l10n) {
-    final semestersAsync = ref.watch(semesterProvider);
+  Widget _buildCurrentSemesterField(AppLocalizations l10n, String? semesterName) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    return semestersAsync.when(
-      data: (semesters) {
-        if (semesters.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        String selectedSemesterName = l10n.selectSemester;
-        final options = <AppPickerOption<String>>[];
-        for (final semester in semesters) {
-          options.add(
-            AppPickerOption(value: semester.id, title: semester.name),
-          );
-          if (semester.id == _selectedSemesterId)
-            selectedSemesterName = semester.name;
-        }
-
-        return AppBottomSheetPicker<String>(
-          icon: HeroIcons.calendarDays,
-          fieldLabel: l10n.selectSemester,
-          sheetTitle: l10n.selectSemester,
-          selectedValue: _selectedSemesterId,
-          selectedDisplayText: selectedSemesterName,
-          options: options,
-          onChanged: (val) => setState(() => _selectedSemesterId = val),
-          emptyText: l10n.noSemestersYet,
-        );
-      },
-      loading: () => const LinearProgressIndicator(),
-      error: (_, _) => const SizedBox.shrink(),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.glassSurface : Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: isDark
+              ? AppColors.glassBorder
+              : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+        ),
+      ),
+      child: Row(
+        children: [
+          AppIcon(
+            HeroIcons.calendarDays,
+            color: theme.colorScheme.primary,
+            size: 20,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.semester,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  semesterName ?? l10n.noSemestersYet,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  softWrap: true,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -318,6 +338,8 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
     required String label,
     required int? value,
     required ValueChanged<int> onChanged,
+    int minValue = 1,
+    int? maxValue,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -348,8 +370,10 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
             children: [
               _buildCompactButton(
                 icon: HeroIcons.minusCircle,
-                onTap: (value ?? 0) > 1 ? () => onChanged(value! - 1) : null,
-                enabled: (value ?? 0) > 1,
+                onTap: (value ?? 0) > minValue
+                    ? () => onChanged(value! - 1)
+                    : null,
+                enabled: (value ?? 0) > minValue,
                 theme: theme,
               ),
               Text(
@@ -360,8 +384,10 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
               ),
               _buildCompactButton(
                 icon: HeroIcons.plusCircle,
-                onTap: () => onChanged((value ?? 0) + 1),
-                enabled: true,
+                onTap: maxValue != null && (value ?? 0) >= maxValue
+                    ? null
+                    : () => onChanged((value ?? 0) + 1),
+                enabled: maxValue == null || (value ?? 0) < maxValue,
                 theme: theme,
               ),
             ],

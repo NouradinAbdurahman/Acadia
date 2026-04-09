@@ -1,7 +1,8 @@
+// ignore_for_file: deprecated_member_use, unnecessary_underscores, curly_braces_in_flow_control_structures
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/design/app_spacing.dart';
 import '../../../core/design/app_radius.dart';
 import '../../../components/app_glass_card.dart';
@@ -13,7 +14,6 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 
 class StudyHeatmap extends ConsumerStatefulWidget {
   const StudyHeatmap({super.key});
@@ -241,23 +241,33 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
   Widget _buildMonthLabels(BuildContext context, List<HeatmapDay> days) {
     final theme = Theme.of(context);
     final List<Widget> labels = [];
-    
-    int? lastRenderedMonth;
+
+    final renderedMonthKeys = <String>{};
     for (int i = 0; i < days.length; i += 7) {
       final columnDays = days.sublist(i, (i + 7).clamp(0, days.length));
-      
-      DateTime? firstDayOfNewMonth;
+
+      DateTime? labelDate;
+
+      // Prefer the column where the month actually starts.
       for (final d in columnDays) {
-        if (lastRenderedMonth == null || d.date.month != lastRenderedMonth) {
-          firstDayOfNewMonth = d.date;
-          lastRenderedMonth = d.date.month;
+        if (d.date.day == 1) {
+          labelDate = d.date;
           break;
         }
       }
 
-      if (firstDayOfNewMonth != null) {
+      // Keep the first column labeled, even when it begins mid-month.
+      labelDate ??= i == 0 && columnDays.isNotEmpty ? columnDays.first.date : null;
+
+      if (labelDate != null) {
+        final monthKey = '${labelDate.year}-${labelDate.month}';
+        if (!renderedMonthKeys.add(monthKey)) {
+          labels.add(const SizedBox(width: 14.5));
+          continue;
+        }
+
         final locale = Localizations.localeOf(context).toString();
-        final monthName = DateFormat.MMM(locale).format(firstDayOfNewMonth).toUpperCase();
+        final monthName = DateFormat.MMM(locale).format(labelDate).toUpperCase();
         labels.add(
           SizedBox(
             width: 14.5,
@@ -434,8 +444,9 @@ class _HeatmapCell extends StatelessWidget {
     
     final double ratio = day.score / maxScore;
     double opacity;
-    if (ratio < 0.2) opacity = 0.25;
-    else if (ratio < 0.5) opacity = 0.45;
+    if (ratio < 0.2) {
+      opacity = 0.25;
+    } else if (ratio < 0.5) opacity = 0.45;
     else if (ratio < 0.8) opacity = 0.75;
     else opacity = 1.0;
     
@@ -478,7 +489,6 @@ class _HeatmapCell extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final dateStr = DateFormat.yMMMMEEEEd(locale).format(day.date);
-    final isBest = day.score > 0 && day.score == maxScore;
 
     showModalBottomSheet(
       context: context,

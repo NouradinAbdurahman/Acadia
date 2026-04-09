@@ -5,6 +5,7 @@ class NotificationModel {
   final String title;
   final String message;
   final String type;
+  final String? semesterId;
   final bool isRead;
   final DateTime createdAt;
 
@@ -15,6 +16,7 @@ class NotificationModel {
     required this.title,
     required this.message,
     required this.type,
+    this.semesterId,
     this.isRead = false,
     required this.createdAt,
   });
@@ -27,6 +29,7 @@ class NotificationModel {
       title: json['title'],
       message: json['message'],
       type: json['type'],
+      semesterId: json['semester_id'] as String?,
       isRead: json['is_read'] ?? false,
       createdAt: DateTime.parse(json['created_at']),
     );
@@ -39,6 +42,7 @@ class NotificationModel {
       'title': title,
       'message': message,
       'type': type,
+      if (semesterId != null) 'semester_id': semesterId,
       'is_read': isRead,
       'created_at': createdAt.toIso8601String(),
     };

@@ -33,6 +33,9 @@
   "noDeadlinesWeek": "Bu hafta son tarih yok",
   "studyTimeToday": "Bugünkü Çalışma Süresi",
   "noStudyLogged": "Bugün çalışma kaydedilmedi",
+  "noTasksForThisCourse": "Bu ders için görev yok",
+  "noDeadlinesForThisCourse": "Bu ders için son tarih yok",
+  "noSessionsForThisCourse": "Bu ders için oturum yok",
   "profile": "Profil",
   "account": "Hesap",
   "preferences": "Tercihler",
@@ -180,6 +183,54 @@
   "studyHours": "Çalışma saatleri",
   "taskCompletionRate": "Görev tamamlama oranı",
   "stressTrends": "Stres eğilimleri",
+  "academicReport": "Akademik Rapor",
+  "academicHistory": "Akademik Geçmiş",
+  "requiresFocus": "Odaklanma Gerektirir",
+  "gradeAverage": "Not ortalaması",
+  "semesterTrend": "Dönem Trendi",
+  "noAcademicHistory": "Henüz akademik geçmiş yok",
+  "startLoggingContext": "Geçmiş profilinizi oluşturmak için çalışma oturumlarını kaydedin ve görevleri tamamlayın.",
+  "activeLabel": "Aktif",
+  "switchToSemester": "Bu Döneme Geç",
+  "setUpSemester": "Dönemi Ayarla",
+  "startAcademicTracking": "Akademik Takibe Başla",
+  "gpaPoints": "GPA Puanı",
+  "studyTimeDeltaMsg": "Haftalık çalışma süreniz %{percent} {action}",
+  "@studyTimeDeltaMsg": {
+    "placeholders": {
+      "action": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "riskIncreased": "Risk %{value} arttı",
+  "@riskIncreased": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "riskDecreased": "Risk %{value} azaldı",
+  "@riskDecreased": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "increased": "arttı",
+  "decreased": "azaldı",
+  "taskCompletionImproved": "Geçen döneme göre daha fazla görev tamamlıyorsunuz",
+  "taskCompletionDecreased": "Görev tamamlama oranınız düştü",
+  "academicRiskIncreased": "Akademik riskiniz arttı",
+  "academicPerformanceSummary": "Performans Özeti",
+  "performanceSummarySubtitle": "Tüm dönemler arasındaki uzun vadeli akademik eğilimler",
+  "bestSemester": "En İyi Dönem",
+  "worstSemester": "En Kötü Dönem",
+  "mostImproved": "En Çok Gelişen",
+  "highestGPA": "En Yüksek GPA",
+  "startStudySessionCTA": "Bir çalışma oturumu başlatın",
+  "addFirstTaskCTA": "İlk görevinizi ekleyin",
+  "startStudyingHint": "Burada etkinlik görmek için çalışmaya başlayın",
+  "viewHistoryMode": "Gecmiş Görüntüleniyor",
+  "increased": "arttı",
+  "decreased": "azaldı",
   "comingSoon": "Çok yakında",
   "taskDetail": "Görev Detayı",
   "deadlineDetail": "Son Tarih Detayı",
@@ -213,12 +264,17 @@
   "updateTask": "Görevi Güncelle",
   "saveChanges": "Değişiklikleri Kaydet",
   "welcome": "Hoş geldiniz",
+  "appName": "Acadia",
   "welcomeSubtitle": "Sınav hazırlığınıza devam edin",
+  "signupSubtitle": "Çalışmalarınızı yönetmeye başlamak için hesabınızı oluşturun",
   "password": "Şifre",
   "rememberMe": "Beni hatırla",
   "forgotPassword": "Şifremi Unuttum?",
   "login": "Giriş Yap",
   "dontHaveAccount": "Hesabınız yok mu?",
+  "orContinueWith": "Veya şununla devam edin",
+  "googleLabel": "Google",
+  "appleLabel": "Apple",
   "signup": "Hesap Oluştur",
   "invalidCredentials": "Geçersiz e-posta veya şifre.",
   "tooManyRequests": "Çok fazla deneme yapıldı. E-posta servisi geçici olarak kısıtlandı. Lütfen birkaç dakika bekleyin.",
@@ -292,9 +348,10 @@
   "allTasksCompleted": "Tüm görevler tamamlandı!",
   "dontForgetTasks": "Onları bitirmeyi unutmayın",
   "academicProfileOnboarding": "Akademik Profil",
+  "academicAnalyticsContext": "Bu bilgiler, akademik analizlerinizi ve önerileri kişiselleştirmeye yardımcı olur.",
   "basicIdentity": "Temel Kimlik",
   "academicProgram": "Akademik Program",
-  "currentSemesterLoad": "Dönem İş Yükü",
+  "currentSemesterLoad": "Mevcut Dönem",
   "learningPatternCalibration": "Öğrenme Modelleri",
   "universityName": "Üniversite Adı",
   "degreeType": "Derece Türü",
@@ -303,6 +360,17 @@
   "academicYear": "Akademik Yıl",
   "expectedGraduationYear": "Beklenen Mezuniyet Yılı",
   "currentSemesterNumber": "Mevcut Dönem",
+  "currentSemesterHint": "Mevcut dönem numaranızı girin.",
+  "semesterTrackingSetup": "Dönem Takibi Ayarları",
+  "optionalPreferencesTitle": "İsteğe Bağlı Tercihler",
+  "optionalPreferencesDesc": "Bunları istediğiniz zaman Çalışma Tercihleri ekranından değiştirebilirsiniz.",
+  "graduationYearHint": "Beklenen mezuniyet yılınızı seçin (bu yıl veya sonrası).",
+  "graduationYearInvalid": "Mezuniyet yılı bu yıl veya daha sonrası olmalıdır.",
+  "graduationYearSemesterMismatch": "",
+  "semesterNumberInvalid": "Dönem numarası en az 1 olmalıdır.",
+  "weeklyStudyGoalInvalid": "Haftalık çalışma hedefi 5 ile 40 saat arasında olmalıdır.",
+  "onboardingRiskImpactHint": "Döneminiz ve çalışma hedefiniz, akademik risk ve ilerleme içgörülerini hesaplamak için kullanılır.",
+  "studyGoalRecommendation": "Önerilen: haftada 10-25 saat",
   "coursesThisSemester": "Beklenen Dersler",
   "studyHoursPerWeek": "Haftalık Çalışma Hedefi (Saat)",
   "preferredStudyTime": "Tercih Edilen Çalışma Zamanı",
@@ -335,6 +403,7 @@
   "courseCodeHint": "örn. CS204",
   "details": "Detaylar",
   "courseColor": "Ders Rengi",
+  "academicSemester": "Akademik Dönem",
   "creditsLabel": "Kredi",
   "sortAlphabetical": "Alfabetik",
   "sortStudyTime": "Çalışma Süresi",
@@ -448,7 +517,7 @@
   "backToHome": "Ana Sayfaya Dön",
   "notEnoughData": "Henüz yeterli veri yok",
   "addCoursesPrompt": "İlerlemeyi izlemeye başlamak için kurslarınızı ekleyin.",
-  "noUpcomingDeadlines": "Yaklaşan teslim tarihi yok",
+  "noUpcomingDeadlines": "Yakında teslim tarihi yok",
   "caughtUp": "Her şey tamam!",
   "youStudiedFor": "{time} boyunca çalıştınız.",
   "@youStudiedFor": {
@@ -595,7 +664,7 @@
       }
     }
   },
-  "overviewNoUpcomingTasks": "Yaklaşan teslim tarihi yok",
+  "overviewNoUpcomingTasks": "Yakında teslim tarihi yok",
   "overviewCompletedToday": "Bugün tamamlanan {count} görev",
   "@overviewCompletedToday": {
     "placeholders": {
@@ -658,6 +727,9 @@
   "noGradeDistributionYet": "Henüz not dağılımı verisi yok",
   "pleaseSelectLetterGrade": "Lütfen bir harf notu seçin",
   "noCoursesForSemester": "Bu dönem için ders bulunamadı",
+  "semesterAlreadyExists": "Bu dönem zaten mevcut",
+  "semesterStartBeforeEndError": "Başlangıç tarihi bitiş tarihinden önce olmalıdır",
+  "gradeRangeError": "Değer 0 ile 100 arasında olmalıdır",
   "trendAnalysis": "Trend Analizi",
   "studyTrend": "Çalışma Trendi",
   "taskCompletionTrend": "Görev Tamamlama Trendi",
@@ -857,6 +929,14 @@
   "dashboardViewDetailedAnalysis": "Detaylı analizi görüntüle ->",
   "analyticsSparseDataTitle": "Analizleriniz oluşuyor",
   "analyticsSparseDataBody": "Çalışma oturumu kaydedin, görev ekleyin ve notlarınızı girin. Uygulamayı kullandıkça grafikler dolacak.",
+  "startTrackingYourSemester": "Döneminizi takip etmeye başlayın",
+  "whatYouCanTrack": "Neleri takip edebilirsiniz",
+  "trackTasks": "Görevler",
+  "trackStudySessions": "Çalışma oturumları",
+  "trackGrades": "Notlar",
+  "whyItMatters": "Neden önemli",
+  "monitorProgress": "İlerlemenizi takip edin",
+  "reduceAcademicRisk": "Akademik riski azaltın",
   "custom": "Özel",
   "customDurationLabel": "Özel: {minutes}dk",
   "@customDurationLabel": {
@@ -1001,6 +1081,7 @@
   "confidenceMedium": "Tahmin doğruluğu: Orta",
   "gettingStarted": "Yeni başlıyor",
   "noDataYet": "Henüz veri yok",
+  "noDataForSemesterYet": "Bu dönem için henüz veri yok",
   "statusStable": "Dengeli",
   "statusImproving": "Gelişiyor",
   "statusDeclining": "Düşüşte",
@@ -1303,6 +1384,258 @@
   "@targetPrefix": {
     "placeholders": {
       "target": { "type": "String" }
+    }
+  },
+  "recommendedForYouTitle": "Sizin için önerildi",
+  "keepMyPreference": "Tercihimi koru",
+  "followActualBehavior": "Gerçek davranışı takip et",
+  "bestStudyTimeBullet": "• En iyi çalışma zamanı: {time}",
+  "@bestStudyTimeBullet": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "suggestedSessionBullet": "• Önerilen oturum: {minutes} dk ({pattern})",
+  "@suggestedSessionBullet": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "pattern": { "type": "String" }
+    }
+  },
+  "dailyTargetNeededBullet": "• Yolda kalmak için günde ~{hours} saat çalışman gerekiyor",
+  "@dailyTargetNeededBullet": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "burnoutInputsHumanized": "• {deficit} saat geridesin ve çalışma zamanlaman tutarsız (%{inconsistency}).",
+  "@burnoutInputsHumanized": {
+    "placeholders": {
+      "deficit": { "type": "String" },
+      "inconsistency": { "type": "int" }
+    }
+  },
+  "patternIrregularThisWeek": "• Düzen notu: Bu hafta çalışma zamanların düzensiz.",
+  "adaptiveHintRecentStudyTime": "Son zamanlarda daha çok {time} çalışıyor görünüyorsun.",
+  "@adaptiveHintRecentStudyTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "weekSessionsBreakdown": "Bu hafta oturumlar: sabah {morning}, öğleden sonra {afternoon}, gece {night}.",
+  "@weekSessionsBreakdown": {
+    "placeholders": {
+      "morning": { "type": "int" },
+      "afternoon": { "type": "int" },
+      "night": { "type": "int" }
+    }
+  },
+  "confidenceBreakdown": "Güven: davranış %{behavior} • tercih uyumu {preference}% {trendText}",
+  "@confidenceBreakdown": {
+    "placeholders": {
+      "behavior": { "type": "int" },
+      "preference": { "type": "int" },
+      "trendText": { "type": "String" }
+    }
+  },
+  "trendDeltaVsLastWeek": "• trend geçen haftaya göre {delta}",
+  "@trendDeltaVsLastWeek": {
+    "placeholders": {
+      "delta": { "type": "String" }
+    }
+  },
+  "weeklyGoalBehindDetailed": "Haftalık hedefinin gerisindesin (şu ana kadar {logged}sa kaydedildi, beklenen {expected}sa).",
+  "@weeklyGoalBehindDetailed": {
+    "placeholders": {
+      "logged": { "type": "String" },
+      "expected": { "type": "String" }
+    }
+  },
+  "warningActionStartSession": "Yeniden yola girmek için şimdi 25-40 dakikalık bir oturum başlat.",
+  "weeklyGoalSlightlyBehind": "Haftalık hedefinin biraz gerisindesin. Mevcut tempoyu koru.",
+  "burnoutStatusTitle": "Tükenmişlik Durumu",
+  "burnoutOverallTrend": "Genel: {status}",
+  "@burnoutOverallTrend": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "burnoutTrendLine": "Trend: {status} {direction}",
+  "@burnoutTrendLine": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "direction": { "type": "String" }
+    }
+  },
+  "burnoutDeficitLine": "Açık: {status} {direction}",
+  "@burnoutDeficitLine": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "direction": { "type": "String" }
+    }
+  },
+  "burnoutConsistencyLine": "Tutarlılık: {status} {direction}",
+  "@burnoutConsistencyLine": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "direction": { "type": "String" }
+    }
+  },
+  "noRecoveryTrendDetectedYet": "Henüz toparlanma trendi tespit edilmedi.",
+  "notEnoughDataTrendYet": "Henüz trend tespiti için yeterli veri yok.",
+  "recoveryImprovingThisWeek": "Çalışma düzenin bu hafta iyileşiyor.",
+  "studyDeficitBasedOnWeeklyGoal": "Çalışma açığı haftalık hedefine göre hesaplanır ({hours}sa).",
+  "@studyDeficitBasedOnWeeklyGoal": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "softInterventionsTitle": "Nazik müdahaleler",
+  "burnoutLevelStable": "Stabil",
+  "burnoutLevelWarning": "Uyarı",
+  "burnoutLevelHighRisk": "Yüksek Risk",
+  "burnoutLevelBurnoutRisk": "Tükenmişlik Riski",
+  "burnoutExplanationStable": "Çalışma düzenin şu anda dengeli görünüyor.",
+  "burnoutExplanationWarning": "Çalışma düzenin tutarsızlaşıyor ve haftalık hedefinin gerisinde kalıyorsun.",
+  "burnoutExplanationHighRisk": "Tutarsız çalışma ve açık belirtileri görünmeye başladı.",
+  "burnoutExplanationBurnoutRisk": "Yükün yüksek ve düzenin dengesizleşiyor.",
+  "burnoutReasonBehindGoal": "Haftalık hedefinin {hours}sa gerisindesin.",
+  "@burnoutReasonBehindGoal": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "burnoutReasonInconsistentPattern": "Bu hafta çalışma düzenin tutarsız.",
+  "burnoutReasonSwitchingTimes": "Çalışma saatlerini sık sık değiştiriyorsun.",
+  "burnoutReasonLoadAboveGoal": "Toplam çalışma yükün haftalık hedefinin üzerinde.",
+  "burnoutReasonNoMajorSignals": "Henüz büyük bir tükenmişlik sinyali yok.",
+  "burnoutRecommendationStable1": "Mevcut düzenini koru.",
+  "burnoutRecommendationStable2": "Haftalık hedef takibini sürdür.",
+  "burnoutRecommendationWarning1": "Oturum süresini biraz kısalt.",
+  "burnoutRecommendationWarning2": "Çalışma saatini tek bir zaman diliminde sabitle.",
+  "burnoutRecommendationHigh1": "Oturumları kısalt ve daha sık mola ver.",
+  "burnoutRecommendationHigh2": "Bu hafta tek bir çalışma zaman penceresine odaklan.",
+  "burnoutRecommendationHigh3": "Kendini çok yorgun hissediyorsan bir toparlanma günü ekle.",
+  "burnoutRecommendationBurnout1": "Oturum süresini hemen azalt.",
+  "burnoutRecommendationBurnout2": "Molaları artır ve hedefleri sadeleştir.",
+  "burnoutRecommendationBurnout3": "Daha fazla yüklenmeden önce bir toparlanma günü ayır.",
+  "decisionNextActionTitle": "Sonraki Adım",
+  "decisionStudyAnyCourse": "Öncelikli dersin için çalış",
+  "decisionStudyCourse": "{course} dersine çalış",
+  "@decisionStudyCourse": {
+    "placeholders": {
+      "course": { "type": "String" }
+    }
+  },
+  "decisionMinutesToday": "Bugün {minutes} dakika",
+  "@decisionMinutesToday": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "decisionFocusRecommendationTitle": "Odak Önerisi",
+  "decisionWhatChangedTitle": "Neler Değişti",
+  "decisionTaskLoadLabel": "Görev Yükü",
+  "decisionConfidenceLow": "Tahmin doğruluğu: Düşük",
+  "startedFromAnalyticsRecommendation": "Analitik önerisinden başlatıldı",
+  "followedPlanToday": "Harika. Bugün planını uyguladın.",
+  "sessionImpactAddedToCourse": "+{minutes} dk {course} dersine eklendi",
+  "@sessionImpactAddedToCourse": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "course": { "type": "String" }
+    }
+  },
+  "sessionImpactCloserToGoal": "Artık haftalık hedefine daha yakınsın",
+  "decisionReasonOverdueAttention": "Süresi geçmiş görevler acil ilgi gerektiriyor",
+  "decisionReasonLeastStudied": "Bu hafta en az bu derse çalıştın",
+  "decisionReasonNoUrgentDeadlines": "Acil son tarih yok. Düzeni koru.",
+  "decisionReasonBehindWeeklyTarget": "Haftalık hedefinin gerisindesin",
+  "decisionReasonHeavyWorkload": "Bu derste açık görev yükü yüksek",
+  "decisionReasonHighestPriority": "Şu anda en yüksek öncelikli dersin bu",
+  "decisionReasonBuildRoutine": "Rutinini oluşturmaya başla",
+  "decisionReasonLowestStudyWeek": "Bu hafta en düşük çalışma süresi",
+  "decisionReasonNoStudyLogged": "Bu hafta çalışma kaydı yok",
+  "decisionReasonFallbackConsistency": "Yedek öneri: Bu hafta istikrarını koru",
+  "decisionReasonStudyProgress": "{target}sa hedefinin {studied}sa kadarını çalıştın",
+  "@decisionReasonStudyProgress": {
+    "placeholders": {
+      "studied": { "type": "String" },
+      "target": { "type": "String" }
+    }
+  },
+  "decisionReasonImportantCourse": "Önemli ders ({ects} AKTS)",
+  "@decisionReasonImportantCourse": {
+    "placeholders": {
+      "ects": { "type": "int" }
+    }
+  },
+  "decisionReasonHigherPriorityThan": "{course} dersinden daha acil",
+  "@decisionReasonHigherPriorityThan": {
+    "placeholders": {
+      "course": { "type": "String" }
+    }
+  },
+  "decisionReasonHigherPriorityGeneral": "Bu hafta diger derslerden daha acil",
+  "todayPlanTitle": "Bugun Plani",
+  "todayMinutesCompleted": "Bugun: {minutes} dk tamamlandi",
+  "@todayMinutesCompleted": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "recoveryPlanTitle": "Toparlanma Plani",
+  "recoveryPlanSplitFromWeeklyDeficit": "Haftalik acigina gore bolundu",
+  "planDay3Label": "3. Gun",
+  "suggestedSplitSessionsToday": "Oneri: Bugun {count} × {minutes} dk oturum",
+  "@suggestedSplitSessionsToday": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "suggestedFlexibleSessionsToday": "Oneri: Bugun 2-3 odakli oturum",
+  "suggestedShorterSessionsToday": "Oneri: Bugun 3-4 daha kisa oturum",
+  "needHoursTodayToStayOnTrack": "Yolda kalmak icin bugun {hours}sa ihtiyacin var",
+  "@needHoursTodayToStayOnTrack": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "minutesRemainingShort": "{minutes}dk kaldi",
+  "@minutesRemainingShort": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "decisionReasonDeadlineLowStudy": "Son teslime {days} gün var ve bu hafta normalden az çalıştın",
+  "@decisionReasonDeadlineLowStudy": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "decisionReasonDeadlineInDays": "Son teslime {days} gün kaldı",
+  "@decisionReasonDeadlineInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "decisionReasonLowestStudyWithDeadline": "Bu hafta en düşük çalışma süresi ve son teslime {days} gün kaldı",
+  "@decisionReasonLowestStudyWithDeadline": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "decisionReasonLowestStudyWithOpenTasks": "Bu hafta en düşük çalışma süresi ve {count} açık görev var",
+  "@decisionReasonLowestStudyWithOpenTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "decisionReasonHighCourseWeight": "Yüksek ders ağırlığı ({ects} AKTS)",
+  "@decisionReasonHighCourseWeight": {
+    "placeholders": {
+      "ects": { "type": "int" }
     }
   }
 }

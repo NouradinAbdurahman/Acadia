@@ -4,6 +4,7 @@ class StudySession {
   final String id;
   final String userId;
   final String courseId;
+  final String semesterId;
   final String sessionType;
   final int durationMinutes;
   final DateTime createdAt;
@@ -12,6 +13,7 @@ class StudySession {
   final bool completed;
   final int? completedCycles;
   final int? skippedBreaks;
+
 
   // ── Pomodoro structured session fields ──
   final bool isPomodoro;
@@ -24,6 +26,7 @@ class StudySession {
     required this.id,
     required this.userId,
     required this.courseId,
+    required this.semesterId,
     required this.sessionType,
     required this.durationMinutes,
     required this.createdAt,
@@ -33,6 +36,7 @@ class StudySession {
     this.completedCycles,
     this.skippedBreaks,
     this.isPomodoro = false,
+
     this.totalFocusMinutes,
     this.totalBreakMinutes,
     this.cyclesCompleted,
@@ -42,6 +46,11 @@ class StudySession {
   factory StudySession.fromJson(Map<String, dynamic> json) {
     final isPomodoro = json['is_pomodoro'] as bool? ?? false;
     final totalFocusMinutes = json['total_focus_minutes'] as int?;
+    final semesterId = (json['semester_id'] as String?) ??
+      (json['courses'] != null
+        ? (json['courses'] as Map<String, dynamic>)['semester_id'] as String?
+        : null) ??
+      '';
     // For Pomodoro sessions, durationMinutes mirrors totalFocusMinutes for
     // backwards-compatible analytics queries.
     final durationMinutes = isPomodoro
@@ -52,6 +61,7 @@ class StudySession {
       id: json['id'] as String,
       userId: json['user_id'] as String,
       courseId: json['course_id'] as String,
+      semesterId: semesterId,
       sessionType: json['session_type'] as String,
       durationMinutes: durationMinutes,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -61,6 +71,7 @@ class StudySession {
       completedCycles: json['completed_cycles'] as int?,
       skippedBreaks: json['skipped_breaks'] as int?,
       isPomodoro: isPomodoro,
+
       totalFocusMinutes: totalFocusMinutes,
       totalBreakMinutes: json['total_break_minutes'] as int?,
       cyclesCompleted: json['cycles_completed'] as int?,
@@ -73,6 +84,7 @@ class StudySession {
       if (id.isNotEmpty) 'id': id,
       'user_id': userId,
       'course_id': courseId,
+      'semester_id': semesterId,
       'session_type': sessionType,
       'duration_minutes': durationMinutes,
       'created_at': createdAt.toIso8601String(),
@@ -81,6 +93,7 @@ class StudySession {
       if (completedCycles != null) 'completed_cycles': completedCycles,
       if (skippedBreaks != null) 'skipped_breaks': skippedBreaks,
       'is_pomodoro': isPomodoro,
+
       if (totalFocusMinutes != null) 'total_focus_minutes': totalFocusMinutes,
       if (totalBreakMinutes != null) 'total_break_minutes': totalBreakMinutes,
       if (cyclesCompleted != null) 'cycles_completed': cyclesCompleted,

@@ -74,6 +74,12 @@ class _StudyPreferencesScreenState
         if (context.canPop()) context.pop();
         if (!context.canPop()) context.go('/profile');
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -116,11 +122,17 @@ class _StudyPreferencesScreenState
                   ),
                   Slider(
                     value: _studyHours,
-                    min: 1,
-                    max: 80,
-                    divisions: 79,
+                    min: 5,
+                    max: 40,
+                    divisions: 35,
                     label: l10n.hoursCount(_studyHours.toInt()),
                     onChanged: (v) => setState(() => _studyHours = v),
+                  ),
+                  Text(
+                    l10n.onboardingRiskImpactHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
@@ -171,6 +183,13 @@ class _StudyPreferencesScreenState
                     onSelectionChanged: (selection) {
                       setState(() => _breakPattern = selection.first);
                     },
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.optionalPreferencesDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   AppButton(

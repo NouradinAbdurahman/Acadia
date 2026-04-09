@@ -11,7 +11,6 @@ import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/course.dart';
 import '../../models/course_result.dart';
-import '../../models/semester.dart';
 import '../../providers/course_provider.dart';
 import '../../providers/course_results_provider.dart';
 import '../../providers/semester_provider.dart';
@@ -66,8 +65,6 @@ class _CourseResultEditorScreenState
   final _finalAverageController = TextEditingController();
   final List<_ComponentDraft> _components = [];
 
-  String? _selectedSemesterId;
-  String? _pendingSemesterId;
   String? _selectedCourseId;
   String _selectedLetterGrade = _gradeOptions.first;
   String _selectedResultStatus = 'successful';
@@ -78,7 +75,6 @@ class _CourseResultEditorScreenState
   @override
   void initState() {
     super.initState();
-    _pendingSemesterId = widget.initialSemesterId;
     _initialize();
   }
 
@@ -97,7 +93,6 @@ class _CourseResultEditorScreenState
           .read(courseResultsProvider.notifier)
           .getResultById(widget.resultId!);
       if (loaded != null) {
-        _pendingSemesterId = loaded.semesterId;
         _selectedCourseId = loaded.courseId;
         _selectedLetterGrade = _normalizeLetterGrade(loaded.letterGrade);
         _selectedResultStatus = _normalizeResultStatus(loaded.resultStatus);
@@ -122,7 +117,7 @@ class _CourseResultEditorScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final semestersAsync = ref.watch(semesterProvider);
+    final activeSemester = ref.watch(activeSemesterFullProvider);
     final coursesAsync = ref.watch(courseProvider);
 
     return Scaffold(
@@ -136,19 +131,13 @@ class _CourseResultEditorScreenState
         child: SafeArea(
           child: _isInitializing
               ? const Center(child: CircularProgressIndicator())
-              : semestersAsync.when(
-                  data: (semesters) {
-                    _ensureSemester(semesters);
-                    final selectedSemesterId = _selectedSemesterId;
-                    if (selectedSemesterId == null) {
-                      return Center(child: Text(l10n.noSemestersYet));
-                    }
+              : (() {
+                  final currentSemesterId = activeSemester?.id;
+                  if (currentSemesterId == null) {
+                    return Center(child: Text(l10n.noSemestersYet));
+                  }
 
-                    final allCourses = coursesAsync.value ?? <Course>[];
-                    final filteredCourses = _coursesForSemester(
-                      allCourses,
-                      selectedSemesterId,
-                    );
+                  final filteredCourses = coursesAsync.value ?? <Course>[];
                     final percentageTotal = _currentPercentageTotal();
                     final isPercentageComplete =
                         (percentageTotal - 100).abs() <= 0.01;
@@ -168,16 +157,25 @@ class _CourseResultEditorScreenState
                           children: [
                             _SectionTitle(title: l10n.overview),
                             const SizedBox(height: AppSpacing.md),
-                            _SemesterDropdown(
-                              selectedSemesterId: selectedSemesterId,
-                              semesters: semesters,
-                              onChanged: (semesterId) {
-                                if (semesterId == null) return;
-                                setState(() {
-                                  _selectedSemesterId = semesterId;
-                                  _selectedCourseId = null;
-                                });
-                              },
+                            AppGlassCard(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Row(
+                                children: [
+                                  AppIcon(
+                                    HeroIcons.calendarDays,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: Text(
+                                      '${l10n.semester}: ${activeSemester?.name ?? l10n.noSemestersYet}',
+                                      style: Theme.of(context).textTheme.titleSmall,
+                                      softWrap: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             _CourseDropdown(
@@ -292,7 +290,7 @@ class _CourseResultEditorScreenState
                             AppButton(
                               onPressed: _isLoading
                                   ? null
-                                  : () => _saveResult(selectedSemesterId),
+                                  : () => _saveResult(currentSemesterId),
                               isLoading: _isLoading,
                               isFullWidth: true,
                               text: l10n.save,
@@ -302,45 +300,10 @@ class _CourseResultEditorScreenState
                         ),
                       ),
                     );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stackTrace) =>
-                      Center(child: Text(l10n.networkError)),
-                ),
+                })(),
         ),
       ),
     );
-  }
-
-  void _ensureSemester(List<Semester> semesters) {
-    if (_selectedSemesterId != null) return;
-    if (semesters.isEmpty) return;
-
-    if (_pendingSemesterId != null &&
-        semesters.any((semester) => semester.id == _pendingSemesterId)) {
-      _selectedSemesterId = _pendingSemesterId;
-      _pendingSemesterId = null;
-      return;
-    }
-
-    String selected = semesters.first.id;
-    for (final semester in semesters) {
-      if (semester.isCurrent) {
-        selected = semester.id;
-        break;
-      }
-    }
-    _selectedSemesterId = selected;
-  }
-
-  List<Course> _coursesForSemester(
-    List<Course> courses,
-    String selectedSemesterId,
-  ) {
-    return courses
-        .where((course) => course.semesterId == selectedSemesterId)
-        .toList();
   }
 
   double _currentPercentageTotal() {
@@ -350,7 +313,7 @@ class _CourseResultEditorScreenState
     });
   }
 
-  Future<void> _saveResult(String selectedSemesterId) async {
+  Future<void> _saveResult(String currentSemesterId) async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCourseId == null) {
@@ -379,6 +342,12 @@ class _CourseResultEditorScreenState
         ).showSnackBar(SnackBar(content: Text(l10n.completeComponentsError)));
         return;
       }
+      if (score < 0 || score > 100 || percentage < 0 || percentage > 100) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.gradeRangeError)));
+        return;
+      }
       parsedComponents.add(
         CourseResultComponent(
           id: '',
@@ -404,13 +373,20 @@ class _CourseResultEditorScreenState
         ? null
         : double.tryParse(_finalAverageController.text.trim());
 
+    if (finalAverage != null && (finalAverage < 0 || finalAverage > 100)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.gradeRangeError)));
+      return;
+    }
+
     setState(() => _isLoading = true);
     final now = DateTime.now();
     final result = CourseResult(
       id: widget.resultId ?? '',
       userId: '',
       courseId: _selectedCourseId!,
-      semesterId: selectedSemesterId,
+      semesterId: currentSemesterId,
       finalAverage: finalAverage,
       letterGrade: _normalizeLetterGrade(_selectedLetterGrade),
       resultStatus: _normalizeResultStatus(_selectedResultStatus),
@@ -421,7 +397,7 @@ class _CourseResultEditorScreenState
 
     await ref
         .read(courseResultsProvider.notifier)
-        .saveResult(result: result, semesterId: selectedSemesterId);
+      .saveResult(result: result, semesterId: currentSemesterId);
     if (mounted) {
       setState(() => _isLoading = false);
       context.pop();
@@ -466,40 +442,6 @@ class _SectionTitle extends StatelessWidget {
         fontWeight: FontWeight.bold,
         color: theme.colorScheme.primary,
       ),
-    );
-  }
-}
-
-class _SemesterDropdown extends StatelessWidget {
-  const _SemesterDropdown({
-    required this.selectedSemesterId,
-    required this.semesters,
-    required this.onChanged,
-  });
-
-  final String selectedSemesterId;
-  final List<Semester> semesters;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    String selectedName = '-';
-    final options = <AppPickerOption<String>>[];
-    for (final semester in semesters) {
-      options.add(AppPickerOption(value: semester.id, title: semester.name));
-      if (semester.id == selectedSemesterId) selectedName = semester.name;
-    }
-
-    return AppBottomSheetPicker(
-      icon: HeroIcons.calendarDays,
-      fieldLabel: l10n.semester,
-      sheetTitle: l10n.semester,
-      selectedValue: selectedSemesterId,
-      selectedDisplayText: selectedName,
-      options: options,
-      onChanged: (value) => onChanged(value),
-      emptyText: l10n.noSemestersYet,
     );
   }
 }
@@ -613,9 +555,14 @@ class _ComponentCard extends StatelessWidget {
                       hintText: l10n.scoreHint,
                     ),
                     validator: (value) =>
-                        double.tryParse((value ?? '').trim()) == null
-                        ? l10n.numberRequired
-                        : null,
+                      double.tryParse((value ?? '').trim()) == null
+                      ? l10n.numberRequired
+                      : (() {
+                        final parsed = double.tryParse((value ?? '').trim())!;
+                        return (parsed < 0 || parsed > 100)
+                          ? l10n.gradeRangeError
+                          : null;
+                        })(),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -632,7 +579,12 @@ class _ComponentCard extends StatelessWidget {
                     validator: (value) =>
                         double.tryParse((value ?? '').trim()) == null
                         ? l10n.numberRequired
-                        : null,
+                        : (() {
+                            final parsed = double.tryParse((value ?? '').trim())!;
+                            return (parsed < 0 || parsed > 100)
+                                ? l10n.gradeRangeError
+                                : null;
+                          })(),
                   ),
                 ),
               ],

@@ -23,20 +23,4 @@ class SemesterService {
   Future<void> deleteSemester(String id) async {
     await _supabase.from('semesters').delete().eq('id', id);
   }
-
-  Future<void> setCurrentSemester(String id) async {
-    // Transactional update: set all others to false, this one to true
-    final user = _supabase.auth.currentUser;
-    if (user == null) return;
-
-    await _supabase
-        .from('semesters')
-        .update({'is_current': false})
-        .eq('user_id', user.id);
-        
-    await _supabase
-        .from('semesters')
-        .update({'is_current': true})
-        .eq('id', id);
-  }
 }

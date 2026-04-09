@@ -11,6 +11,7 @@ import '../../models/deadline.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 import '../../providers/deadlines_provider.dart';
 import '../../domain/academic_deadline_task.dart';
 import '../../l10n/app_localizations.dart';
@@ -28,6 +29,7 @@ class TasksListScreen extends ConsumerStatefulWidget {
 
 class _TasksListScreenState extends ConsumerState<TasksListScreen> {
   String? _lastAppliedQueryFilter;
+  String _selectedCourse = 'All';
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +43,16 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
     final queryFilter = routeState.uri.queryParameters['filter'];
     final isDashboardFocus =
         routeState.uri.queryParameters['source'] == 'dashboard';
+    final currentSemesterTasks = tasksAsync.valueOrNull ?? const [];
+    final currentSemesterDeadlines = deadlinesAsync.valueOrNull ?? const [];
+    final courseOptions = _buildCourseOptions(
+      currentSemesterTasks,
+      currentSemesterDeadlines,
+    );
+    final selectedCourse = _effectiveCourse(courseOptions, _selectedCourse);
+    final showCourseFilter = _shouldShowCourseFilter(courseOptions);
 
-    _syncFilterFromQuery(ref, queryFilter);
+    _syncFilterFromQuery(ref, queryFilter, isDashboardFocus);
 
     return Scaffold(
       body: AuthBackgroundContainer(
@@ -89,15 +99,40 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                   ],
                 ).animate().fade().slideX(begin: -0.1),
                 const SizedBox(height: AppSpacing.lg),
-                if (isDashboardFocus)
-                  _SingleFilterBadge(currentFilter: filter)
-                else ...[
+                if (isDashboardFocus) ...[
+                  if (showCourseFilter)
+                    _CourseFilterPicker(
+                      courses: courseOptions,
+                      selectedCourse: selectedCourse,
+                      onChanged: (value) {
+                        setState(() => _selectedCourse = value);
+                      },
+                    ),
+                  if (showCourseFilter) const SizedBox(height: AppSpacing.md),
+                  _SegmentTabs(
+                    currentSegment: segment,
+                    includeAll: true,
+                    onSegmentChanged: (value) {
+                      ref.read(tasksListSegmentProvider.notifier).state = value;
+                    },
+                  ),
+                ] else ...[
                   _SegmentTabs(
                     currentSegment: segment,
                     onSegmentChanged: (value) {
                       ref.read(tasksListSegmentProvider.notifier).state = value;
                     },
                   ),
+                  if (showCourseFilter) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _CourseFilterPicker(
+                      courses: courseOptions,
+                      selectedCourse: selectedCourse,
+                      onChanged: (value) {
+                        setState(() => _selectedCourse = value);
+                      },
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.md),
                   _StatusFilterTabs(
                     currentFilter: filter,
@@ -111,7 +146,9 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                     context: context,
                     tasksAsync: tasksAsync,
                     deadlinesAsync: deadlinesAsync,
-                    segment: isDashboardFocus ? 'tasks' : segment,
+                    segment: segment,
+                    selectedCourse: selectedCourse,
+                    isOverviewSource: isDashboardFocus,
                   ),
                 ),
               ],
@@ -195,15 +232,42 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
     );
   }
 
-  void _syncFilterFromQuery(WidgetRef ref, String? queryFilter) {
+  void _syncFilterFromQuery(
+    WidgetRef ref,
+    String? queryFilter,
+    bool isOverviewSource,
+  ) {
     if (queryFilter == null) return;
     if (_lastAppliedQueryFilter == queryFilter) return;
+
+    if (queryFilter == 'tasks') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(tasksListSegmentProvider.notifier).state = 'tasks';
+        ref.read(taskFilterProvider.notifier).state =
+            isOverviewSource ? 'pending' : 'all';
+      });
+      _lastAppliedQueryFilter = queryFilter;
+      return;
+    }
 
     if (queryFilter == 'deadlines') {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ref.read(tasksListSegmentProvider.notifier).state = 'deadlines';
-        ref.read(taskFilterProvider.notifier).state = 'all';
+        ref.read(taskFilterProvider.notifier).state =
+            isOverviewSource ? 'pending' : 'all';
+      });
+      _lastAppliedQueryFilter = queryFilter;
+      return;
+    }
+
+    if (queryFilter == 'all') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(tasksListSegmentProvider.notifier).state = 'all';
+        ref.read(taskFilterProvider.notifier).state =
+            isOverviewSource ? 'pending' : 'all';
       });
       _lastAppliedQueryFilter = queryFilter;
       return;
@@ -224,13 +288,102 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
     required AsyncValue<List<Task>> tasksAsync,
     required AsyncValue<List<Deadline>> deadlinesAsync,
     required String segment,
+    required String selectedCourse,
+    required bool isOverviewSource,
   }) {
     final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+
+    List<Task> overviewTasksOnly(List<Task> tasks) {
+      if (!isOverviewSource) return tasks;
+      return tasks.where((task) => !task.isCompleted).toList();
+    }
+
+    List<Deadline> overviewDeadlinesOnly(List<Deadline> deadlines) {
+      if (!isOverviewSource) return deadlines;
+      return deadlines
+          .where(
+            (deadline) =>
+                !deadline.isCompleted &&
+                !deadline.deadlineDate.isBefore(startOfToday),
+          )
+          .toList();
+    }
+
+    if (segment == 'all') {
+      final tasks = tasksAsync.valueOrNull;
+      final deadlines = deadlinesAsync.valueOrNull;
+
+      if (tasksAsync.isLoading || deadlinesAsync.isLoading) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      if (tasksAsync.hasError || deadlinesAsync.hasError) {
+        return Center(
+          child: Text(
+            l10n.networkError,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        );
+      }
+
+      final filteredTasks = _filterTasksByCourse(
+        overviewTasksOnly(tasks ?? const []),
+        selectedCourse,
+      );
+      final filteredDeadlines = _filterDeadlinesByCourse(
+        overviewDeadlinesOnly(deadlines ?? const []),
+        selectedCourse,
+      );
+
+      if (filteredTasks.isEmpty && filteredDeadlines.isEmpty) {
+        return _FilteredTasksEmptyState(message: l10n.noPendingAlerts);
+      }
+
+      return ListView(
+        padding: const EdgeInsets.only(bottom: 120),
+        children: [
+          if (filteredTasks.isNotEmpty) ...[
+            Text(
+              l10n.tasks,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ...filteredTasks.map(
+              (task) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: _TaskCard(task: task),
+              ),
+            ),
+          ],
+          if (filteredDeadlines.isNotEmpty) ...[
+            if (filteredTasks.isNotEmpty) const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.deadlines,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ...filteredDeadlines.map(
+              (deadline) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: _DeadlineCard(deadline: deadline),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
 
     if (segment == 'tasks') {
       return tasksAsync.when(
         data: (tasks) {
-          if (tasks.isEmpty) {
+          final currentSemesterTasks = overviewTasksOnly(tasks);
+          if (currentSemesterTasks.isEmpty) {
             return _TasksEmptyState(
               onCreate: () {
                 Haptics.vibrate(HapticsType.medium);
@@ -238,13 +391,22 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
               },
             );
           }
+          final filteredTasks = _filterTasksByCourse(
+            currentSemesterTasks,
+            selectedCourse,
+          );
+          if (filteredTasks.isEmpty) {
+            return _FilteredTasksEmptyState(
+              message: AppLocalizations.of(context)!.noTasksForThisCourse,
+            );
+          }
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 120),
-            itemCount: tasks.length,
+            itemCount: filteredTasks.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _TaskCard(task: tasks[index]),
+                child: _TaskCard(task: filteredTasks[index]),
               );
             },
           );
@@ -260,7 +422,8 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
     } else {
       return deadlinesAsync.when(
         data: (deadlines) {
-          if (deadlines.isEmpty) {
+          final currentSemesterDeadlines = overviewDeadlinesOnly(deadlines);
+          if (currentSemesterDeadlines.isEmpty) {
             return _DeadlinesEmptyState(
               onCreate: () {
                 Haptics.vibrate(HapticsType.medium);
@@ -268,13 +431,22 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
               },
             );
           }
+          final filteredDeadlines = _filterDeadlinesByCourse(
+            currentSemesterDeadlines,
+            selectedCourse,
+          );
+          if (filteredDeadlines.isEmpty) {
+            return _FilteredTasksEmptyState(
+              message: AppLocalizations.of(context)!.noDeadlinesForThisCourse,
+            );
+          }
           return ListView.builder(
             padding: const EdgeInsets.only(bottom: 120),
-            itemCount: deadlines.length,
+            itemCount: filteredDeadlines.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _DeadlineCard(deadline: deadlines[index]),
+                child: _DeadlineCard(deadline: filteredDeadlines[index]),
               );
             },
           );
@@ -289,6 +461,69 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
       );
     }
   }
+
+  bool _shouldShowCourseFilter(List<String> courseOptions) {
+    return courseOptions.length > 1;
+  }
+
+  List<String> _buildCourseOptions(
+    List<Task> tasks,
+    List<Deadline> deadlines,
+  ) {
+    return [
+      ...tasks.map(_taskCourseLabel),
+      ...deadlines.map(_deadlineCourseLabel),
+    ]
+        .where((course) => course.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  List<Task> _filterTasksByCourse(List<Task> tasks, String selectedCourse) {
+    if (selectedCourse == 'All') return tasks;
+    return tasks.where((task) => _taskCourseLabel(task) == selectedCourse).toList();
+  }
+
+  List<Deadline> _filterDeadlinesByCourse(
+    List<Deadline> deadlines,
+    String selectedCourse,
+  ) {
+    if (selectedCourse == 'All') return deadlines;
+    return deadlines
+        .where((deadline) => _deadlineCourseLabel(deadline) == selectedCourse)
+        .toList();
+  }
+
+  String _effectiveCourse(List<String> options, String selectedCourse) {
+    if (selectedCourse == 'All') return 'All';
+    return options.contains(selectedCourse) ? selectedCourse : 'All';
+  }
+
+  String _taskCourseLabel(Task task) {
+    final courseName = task.course;
+    if (courseName == null) return '';
+    return _normalizeCourseName(courseName);
+  }
+
+  String _deadlineCourseLabel(Deadline deadline) {
+    return _normalizeCourseName(deadline.course);
+  }
+
+  String _normalizeCourseName(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '';
+
+    return trimmed
+        .split(RegExp(r'\\s+'))
+        .map((word) {
+          if (word.isEmpty) return '';
+          final lower = word.toLowerCase();
+          return '${lower[0].toUpperCase()}${lower.substring(1)}';
+        })
+        .join(' ');
+  }
+
 }
 
 class _CreateOptionCard extends StatelessWidget {
@@ -394,14 +629,51 @@ class _TasksEmptyState extends StatelessWidget {
   }
 }
 
+class _FilteredTasksEmptyState extends StatelessWidget {
+  const _FilteredTasksEmptyState({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: AppGlassCard(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppIcon(
+              HeroIcons.folderOpen,
+              size: 48,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              message,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SegmentTabs extends StatelessWidget {
   const _SegmentTabs({
     required this.currentSegment,
     required this.onSegmentChanged,
+    this.includeAll = false,
   });
 
   final String currentSegment;
   final ValueChanged<String> onSegmentChanged;
+  final bool includeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -451,7 +723,49 @@ class _SegmentTabs extends StatelessWidget {
         children: [
           segChip('tasks', l10n.tasks),
           segChip('deadlines', l10n.deadlines),
+          if (includeAll) segChip('all', l10n.all),
         ],
+      ),
+    );
+  }
+}
+
+class _CourseFilterPicker extends StatelessWidget {
+  const _CourseFilterPicker({
+    required this.courses,
+    required this.selectedCourse,
+    required this.onChanged,
+  });
+
+  final List<String> courses;
+  final String selectedCourse;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final options = <AppPickerOption<String>>[
+      AppPickerOption<String>(value: l10n.all, title: l10n.all),
+      ...courses.map(
+        (course) => AppPickerOption<String>(value: course, title: course),
+      ),
+    ];
+
+    return AppBottomSheetPicker<String>(
+      icon: HeroIcons.bookOpen,
+      fieldLabel: l10n.course,
+      sheetTitle: l10n.course,
+      selectedValue: selectedCourse,
+      selectedDisplayText: selectedCourse,
+      options: options,
+      onChanged: onChanged,
+      fieldLabelTextStyle: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.primary,
+        fontWeight: FontWeight.w700,
+      ),
+      selectedTextStyle: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
       ),
     );
   }
@@ -516,45 +830,6 @@ class _StatusFilterTabs extends StatelessWidget {
           buildChip('completed', AppLocalizations.of(context)!.completed),
           buildChip('overdue', AppLocalizations.of(context)!.overdue),
         ],
-      ),
-    );
-  }
-}
-
-class _SingleFilterBadge extends StatelessWidget {
-  const _SingleFilterBadge({required this.currentFilter});
-
-  final String currentFilter;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    final label = switch (currentFilter) {
-      'pending' => l10n.pending,
-      'completed' => l10n.completed,
-      'overdue' => l10n.overdue,
-      _ => l10n.all,
-    };
-
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: theme.colorScheme.primary.withValues(alpha: 0.35),
-          ),
-        ),
-        child: Text(
-          label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ),
     );
   }

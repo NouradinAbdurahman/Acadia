@@ -23,6 +23,36 @@ create table if not exists public.student_profiles (
   updated_at timestamp with time zone default now()
 );
 
+-- Semesters Table
+create table if not exists public.semesters (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  name text not null,
+  start_date timestamp with time zone,
+  end_date timestamp with time zone,
+  is_current boolean default false,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.semesters enable row level security;
+
+drop policy if exists "Users can access own semesters" on public.semesters;
+create policy "Users can access own semesters" on public.semesters for all using (auth.uid() = user_id);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'student_profiles'
+      and column_name = 'active_semester_id'
+  ) then
+    alter table public.student_profiles
+      add column active_semester_id uuid references public.semesters(id) on delete set null;
+  end if;
+end $$;
+
 -- Courses Table
 create table if not exists public.courses (
   id uuid primary key default uuid_generate_v4(),
@@ -31,10 +61,25 @@ create table if not exists public.courses (
   course_code text,
   professor text,
   semester integer,
+  semester_id uuid references public.semesters(id) on delete set null,
   credits integer,
   color text,
   created_at timestamp with time zone default now()
 );
+
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'courses'
+      and column_name = 'semester_id'
+  ) then
+    alter table public.courses
+      add column semester_id uuid references public.semesters(id) on delete set null;
+  end if;
+end $$;
 
 -- Academic Calendar Table
 create table if not exists public.academic_calendar (
@@ -76,10 +121,31 @@ create table if not exists public.study_sessions (
   id uuid primary key default uuid_generate_v4(),
   user_id uuid not null references auth.users(id) on delete cascade,
   course_id uuid not null references public.courses(id) on delete cascade,
+  semester_id uuid not null,
   session_type text not null check (session_type in ('pomodoro','deep_work','review')),
   duration_minutes integer not null,
   created_at timestamp with time zone default now()
 );
+
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.table_constraints
+    where table_schema = 'public'
+      and table_name = 'study_sessions'
+      and constraint_name = 'fk_study_sessions_semester'
+  ) then
+    alter table public.study_sessions
+      add constraint fk_study_sessions_semester
+      foreign key (semester_id)
+      references public.semesters(id)
+      on delete cascade;
+  end if;
+end $$;
+
+create index if not exists idx_study_sessions_semester_id
+on public.study_sessions(semester_id);
 
 -- Academic Deadlines
 create table if not exists public.academic_deadlines (

@@ -118,8 +118,8 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
         final seconds = remaining.inSeconds % 60;
         setState(() {
           _errorMessage = l10n?.emailRateLimitWithTimer(
-            '${minutes}:${seconds.toString().padLeft(2, "0")}'
-          ) ?? 'Too many attempts. Try again in ${minutes}:${seconds.toString().padLeft(2, "0")}';
+            '$minutes:${seconds.toString().padLeft(2, "0")}'
+          ) ?? 'Too many attempts. Try again in $minutes:${seconds.toString().padLeft(2, "0")}';
         });
         return;
       }

@@ -106,8 +106,8 @@ class _CourseManagementScreenState
                   );
                 } else {
                   sortedCourses.sort((a, b) {
-                    final semCompare = (a.semester ?? 0).compareTo(
-                      b.semester ?? 0,
+                    final semCompare = a.academicSemester.compareTo(
+                      b.academicSemester,
                     );
                     if (semCompare != 0) return semCompare;
                     return a.courseName.compareTo(b.courseName);
@@ -342,7 +342,7 @@ class _CourseManagementScreenState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${course.courseCode ?? '---'} • ${l10n.semester} ${course.semester ?? 0}',
+                      '${course.courseCode ?? '---'} • ${l10n.semester} ${course.academicSemester}',
                       style: theme.textTheme.bodySmall,
                     ),
                     const SizedBox(height: 2),

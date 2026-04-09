@@ -15,6 +15,7 @@ import 'app_providers.dart';
 import 'deadlines_provider.dart';
 import 'study_sessions_provider.dart';
 import 'tasks_provider.dart';
+import 'semester_provider.dart';
 
 final riskProvider = FutureProvider<RiskState>((ref) async {
   // 1. Get user from currentAppUserProvider (ensuring it's fully synchronized with profile)
@@ -50,21 +51,23 @@ final riskProvider = FutureProvider<RiskState>((ref) async {
   // Connect study goal to Database exactly as requested
   final studyGoal = (user.weeklyStudyGoal ?? 10).toDouble();
 
+  final semesterId = ref.watch(activeSemesterProvider);
+
   // 2. Load dependencies via repos (sole source of truth reading DB)
   final courseRepo = ref.watch(courseRepositoryProvider);
   final taskRepo = ref.watch(taskRepositoryProvider);
   final studyRepo = ref.watch(studyRepositoryProvider);
-  final semesterRepo = ref.watch(semesterRepositoryProvider);
   final courseResultRepo = ref.watch(courseResultRepositoryProvider);
   final deadlineRepo = ref.watch(deadlineRepositoryProvider);
 
   // Fetch from Database
-  final coursesFut = courseRepo.getCourses(); // ECTS
-  final tasksFut = taskRepo.getTasks(user.id); // Upcoming + Overdue Tasks
-  final sessionsFut = studyRepo.getSessions(user.id); // Study Hours
+  final coursesFut = courseRepo.getCourses(semesterId: semesterId);
+  final tasksFut = taskRepo.getTasks(userId: user.id, semesterId: semesterId);
+  final sessionsFut = studyRepo.getSessions(userId: user.id, semesterId: semesterId);
   final deadlinesFut = deadlineRepo.getDeadlines(
-    user.id,
-  ); // Deadline completion signal
+    userId: user.id,
+    semesterId: semesterId,
+  );
 
   final results = await Future.wait([
     coursesFut,
@@ -78,23 +81,11 @@ final riskProvider = FutureProvider<RiskState>((ref) async {
   final sessions = results[2] as List<StudySession>;
   final deadlines = results[3] as List<Deadline>;
 
-  final semesters = await semesterRepo.getSemesters();
-  String? currentSemesterId;
-  for (final semester in semesters) {
-    if (semester.isCurrent) {
-      currentSemesterId = semester.id;
-      break;
-    }
-  }
-  if (currentSemesterId == null && semesters.isNotEmpty) {
-    currentSemesterId = semesters.first.id;
-  }
-
-  final courseResults = currentSemesterId == null
+  final courseResults = semesterId == null
       ? const <CourseResult>[]
       : await courseResultRepo.getResultsBySemester(
           userId: user.id,
-          semesterId: currentSemesterId,
+          semesterId: semesterId,
         );
 
   final now = DateTime.now();
@@ -143,11 +134,12 @@ final riskProvider = FutureProvider<RiskState>((ref) async {
 
   final currentStudyHours = currentDbMinutes / 60.0;
   final previousStudyHours = previousDbMinutes / 60.0;
-  final gradeRiskAdjustment =
-      _gradeAdjustment(courseResults) +
-      _completedDeadlineAdjustment(deadlines) +
-      _overdueDeadlinesPenalty(deadlines, startOfToday) +
-      _linkedTaskCompletionRelief(tasks, deadlines);
+  final gradeRiskAdjustment = _normalizeGradeRiskAdjustment(
+    _gradeAdjustment(courseResults) +
+        _completedDeadlineAdjustment(deadlines) +
+        _overdueDeadlinesPenalty(deadlines, startOfToday) +
+        _linkedTaskCompletionRelief(tasks, deadlines),
+  );
 
   // 6. Provide Data to Core Engine
   final currentInput = RiskInput(
@@ -187,7 +179,11 @@ double _gradeAdjustment(List<CourseResult> results) {
 
   for (final result in results) {
     final code = result.letterGrade.trim().toUpperCase().split(' ').first;
-    if (code == 'FF' || code == 'DD' || code == 'DC') {
+    if (code == 'FF') {
+      score += 10;
+      continue;
+    }
+    if (code == 'DD' || code == 'DC') {
       score += 10;
       continue;
     }
@@ -195,7 +191,11 @@ double _gradeAdjustment(List<CourseResult> results) {
       score += 5;
       continue;
     }
-    if (code == 'BA' || code == 'AA') {
+    if (code == 'BA') {
+      score -= 3;
+      continue;
+    }
+    if (code == 'AA') {
       score -= 5;
       continue;
     }
@@ -203,6 +203,11 @@ double _gradeAdjustment(List<CourseResult> results) {
   }
 
   return score;
+}
+
+double _normalizeGradeRiskAdjustment(double raw) {
+  // Keep grade/deadline modifiers meaningful without overpowering core inputs.
+  return raw.clamp(-20.0, 40.0);
 }
 
 double _completedDeadlineAdjustment(List<Deadline> deadlines) {

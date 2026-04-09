@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../core/design/app_icons.dart';
@@ -9,6 +10,7 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/course_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../providers/bottom_nav_provider.dart';
 import '../../components/app_glass_card.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -76,6 +78,36 @@ class NotificationsScreen extends ConsumerWidget {
     final parts = message.split(' • ');
     if (parts.isEmpty) return '';
     return parts.first.trim();
+  }
+
+  Future<void> _handleNotificationTap(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic notification,
+  ) async {
+    await ref.read(notificationsProvider.notifier).markAsRead(notification.id);
+    if (!context.mounted) return;
+
+    final referenceId = notification.referenceId?.toString();
+    if (referenceId != null && referenceId.startsWith('task:')) {
+      final taskId = referenceId.substring(5);
+      context.push('/task-detail?id=${Uri.encodeComponent(taskId)}');
+      return;
+    }
+
+    if (referenceId != null && referenceId.startsWith('deadline:')) {
+      final deadlineId = referenceId.substring(9);
+      context.push('/deadline-detail?id=${Uri.encodeComponent(deadlineId)}');
+      return;
+    }
+
+    if (notification.type == 'study_goal') {
+      ref.read(bottomNavProvider.notifier).state = 2;
+      context.go('/home');
+      return;
+    }
+
+    context.push('/tasks');
   }
 
   @override
@@ -180,11 +212,7 @@ class NotificationsScreen extends ConsumerWidget {
 
                             return GestureDetector(
                               behavior: HitTestBehavior.opaque,
-                              onTap: n.isRead
-                                  ? null
-                                  : () => ref
-                                      .read(notificationsProvider.notifier)
-                                      .markAsRead(n.id),
+                              onTap: () => _handleNotificationTap(context, ref, n),
                               child: AppGlassCard(
                                 margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                                 padding: const EdgeInsets.all(AppSpacing.md),

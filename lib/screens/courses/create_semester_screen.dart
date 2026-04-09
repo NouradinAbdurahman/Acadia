@@ -28,7 +28,6 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
   late TextEditingController _nameController;
   DateTime? _startDate;
   DateTime? _endDate;
-  bool _isCurrent = false;
   bool _isLoading = false;
   late String _selectedSeason;
   late int _selectedAcademicStartYear;
@@ -47,7 +46,6 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
     _selectedAcademicStartYear = currentAcademicStartYear;
     _selectedSeason = now.month >= 9 ? 'fall' : 'spring';
     _nameController = TextEditingController();
-    _isCurrent = widget.semesterToEdit?.isCurrent ?? false;
 
     if (widget.semesterToEdit != null) {
       final initial = _parseExistingSemester(widget.semesterToEdit!);
@@ -80,6 +78,23 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_startDate != null && _endDate != null && !_startDate!.isBefore(_endDate!)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.semesterStartBeforeEndError)));
+      return;
+    }
+
+    final semesters = ref.read(semesterProvider).value ?? const <Semester>[];
+    if (_hasDuplicateSemester(semesters)) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.semesterAlreadyExists)));
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -89,7 +104,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
         name: _nameController.text.trim(),
         startDate: _startDate,
         endDate: _endDate,
-        isCurrent: _isCurrent,
+        isCurrent: false,
         createdAt: widget.semesterToEdit?.createdAt ?? DateTime.now(),
       );
 
@@ -140,6 +155,21 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
         int.tryParse(parsedStartYear?.group(1) ?? '') ??
         (semester.startDate?.year ?? DateTime.now().year);
     return _SemesterDraft(season: season, academicStartYear: year);
+  }
+
+  bool _hasDuplicateSemester(List<Semester> semesters) {
+    for (final semester in semesters) {
+      if (widget.semesterToEdit != null && semester.id == widget.semesterToEdit!.id) {
+        continue;
+      }
+
+      final parsed = _parseExistingSemester(semester);
+      if (parsed.season == _selectedSeason &&
+          parsed.academicStartYear == _selectedAcademicStartYear) {
+        return true;
+      }
+    }
+    return false;
   }
 
   String _academicYearLabel(int startYear) {
@@ -261,14 +291,32 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
                     value: _endDate,
                     onChanged: (val) => setState(() => _endDate = val),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  SwitchListTile(
-                    title: Text(l10n.currentSemesterNumber),
-                    subtitle: Text(l10n.setAsActive),
-                    value: _isCurrent,
-                    onChanged: (val) => setState(() => _isCurrent = val),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+                  if (widget.semesterToEdit != null) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final activeSemesterId = ref.watch(activeSemesterProvider);
+                        final isActive =
+                            activeSemesterId == widget.semesterToEdit!.id;
+                        return AppButton(
+                          onPressed: isActive
+                              ? null
+                              : () async {
+                                  await ref
+                                      .read(activeSemesterProvider.notifier)
+                                      .setActiveSemester(widget.semesterToEdit!.id);
+                                },
+                          text: isActive
+                              ? l10n.currentSemesterLabel
+                              : l10n.setAsActive,
+                          variant: isActive
+                              ? AppButtonVariant.secondary
+                              : AppButtonVariant.primary,
+                          isFullWidth: true,
+                        );
+                      },
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.xl * 2),
                   AppButton(
                     onPressed: _isLoading ? null : _saveSemester,

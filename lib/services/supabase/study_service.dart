@@ -5,17 +5,22 @@ class StudyService {
 
   StudyService(this._supabase);
 
-  Future<List<Map<String, dynamic>>> getSessions(String userId) async {
-    // Join with courses to get name and color
-    return _supabase
+  Future<List<Map<String, dynamic>>> getSessions({
+    required String userId,
+    String? semesterId,
+  }) async {
+    if (semesterId == null) return [];
+
+    return await _supabase
         .from('study_sessions')
         .select('''
           *,
-          courses (
+          courses!inner (
             *
           )
         ''')
         .eq('user_id', userId)
+        .eq('courses.semester_id', semesterId)
         .order('created_at', ascending: false)
         .limit(50);
   }

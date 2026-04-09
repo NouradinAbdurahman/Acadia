@@ -5,7 +5,6 @@ import 'package:heroicons/heroicons.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/design/app_spacing.dart';
-import '../../core/design/app_durations.dart';
 import '../../core/design/app_radius.dart';
 import '../../components/app_button.dart';
 import '../../components/app_bottom_sheet_picker.dart';
@@ -35,7 +34,6 @@ class _EditAcademicProfileScreenState
   late final TextEditingController _majorController;
 
   String? _selectedDegree;
-  late int _selectedYear;
   late int _selectedGradYear;
   late int _selectedSemester;
   late double _studyHours;
@@ -53,9 +51,7 @@ class _EditAcademicProfileScreenState
     );
     _majorController = TextEditingController(text: profile?.major ?? '');
     _selectedDegree = profile?.degreeType ?? 'Bachelor';
-    _selectedYear = profile?.academicYear ?? 1;
-    _selectedGradYear =
-        profile?.expectedGraduationYear ?? (DateTime.now().year + 4);
+      _selectedGradYear = profile?.expectedGraduationYear ?? (DateTime.now().year + 4);
     _selectedSemester = profile?.currentSemester ?? 1;
     _studyHours = (profile?.studyHoursPerWeek ?? 20).toDouble();
     _preferredTime = profile?.preferredStudyTime ?? 'morning';
@@ -73,6 +69,21 @@ class _EditAcademicProfileScreenState
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = AppLocalizations.of(context)!;
+    if (_selectedSemester < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.semesterNumberInvalid)),
+      );
+      return;
+    }
+
+    if (_studyHours < 5 || _studyHours > 40) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.weeklyStudyGoalInvalid)),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
     Haptics.vibrate(HapticsType.medium);
 
@@ -84,9 +95,9 @@ class _EditAcademicProfileScreenState
       universityName: _universityController.text,
       degreeType: _selectedDegree,
       major: _majorController.text,
-      academicYear: _selectedYear,
+      academicYear: currentProfile?.academicYear,
       currentSemester: _selectedSemester,
-      expectedGraduationYear: _selectedGradYear,
+        expectedGraduationYear: _selectedGradYear,
       studyHoursPerWeek: _studyHours.toInt(),
       preferredStudyTime: _preferredTime,
       breakPattern: _breakPattern,
@@ -124,6 +135,11 @@ class _EditAcademicProfileScreenState
           SnackBar(content: Text(AppLocalizations.of(context)!.saveChanges)),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -193,30 +209,13 @@ class _EditAcademicProfileScreenState
                     icon: HeroIcons.commandLine,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildNumberPicker(
-                          label: l10n.academicYear,
-                          value: _selectedYear,
-                          min: 1,
-                          max: 6,
-                          onChanged: (val) =>
-                              setState(() => _selectedYear = val),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: _buildNumberPicker(
-                          label: l10n.expectedGraduationYear,
-                          value: _selectedGradYear,
-                          min: DateTime.now().year - 5,
-                          max: DateTime.now().year + 10,
-                          onChanged: (val) =>
-                              setState(() => _selectedGradYear = val),
-                        ),
-                      ),
-                    ],
+                  _buildNumberPicker(
+                    label: l10n.expectedGraduationYear,
+                    value: _selectedGradYear,
+                    min: DateTime.now().year - 5,
+                    max: DateTime.now().year + 10,
+                    onChanged: (val) =>
+                        setState(() => _selectedGradYear = val),
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
@@ -228,7 +227,7 @@ class _EditAcademicProfileScreenState
                     label: l10n.currentSemesterNumber,
                     value: _selectedSemester,
                     min: 1,
-                    max: 12,
+                    max: null,
                     onChanged: (val) => setState(() => _selectedSemester = val),
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -240,6 +239,13 @@ class _EditAcademicProfileScreenState
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildStudyHoursSlider(theme),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.onboardingRiskImpactHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    ),
+                  ),
 
                   const SizedBox(height: AppSpacing.xl),
                   _buildSectionHeader(
@@ -278,6 +284,13 @@ class _EditAcademicProfileScreenState
                       'mixed': l10n.mixed,
                     },
                     onChanged: (val) => setState(() => _breakPattern = val),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.optionalPreferencesDesc,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    ),
                   ),
 
                   const SizedBox(height: AppSpacing.xxl),
@@ -379,7 +392,7 @@ class _EditAcademicProfileScreenState
     required String label,
     required int value,
     required int min,
-    required int max,
+      int? max,
     required ValueChanged<int> onChanged,
   }) {
     final theme = Theme.of(context);
@@ -426,7 +439,9 @@ class _EditAcademicProfileScreenState
               IconButton(
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                onPressed: value < max ? () => onChanged(value + 1) : null,
+                  onPressed: max == null || value < max
+                    ? () => onChanged(value + 1)
+                    : null,
                 icon: const AppIcon(HeroIcons.plusCircle, size: 20),
               ),
             ],
@@ -460,8 +475,8 @@ class _EditAcademicProfileScreenState
           Slider(
             value: _studyHours,
             min: 5,
-            max: 60,
-            divisions: 55,
+            max: 40,
+            divisions: 35,
             onChanged: (val) => setState(() => _studyHours = val),
           ),
         ],
@@ -474,53 +489,20 @@ class _EditAcademicProfileScreenState
     required Map<String, String> options,
     required ValueChanged<String> onChanged,
   }) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? AppColors.glassSurface
-            : theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
-      ),
-      child: Row(
-        children: options.entries.map((entry) {
-          final isSelected = value == entry.key;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                Haptics.vibrate(HapticsType.light);
-                onChanged(entry.key);
-              },
-              child: AnimatedContainer(
-                duration: AppDurations.fast,
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-                child: Text(
-                  entry.value,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: isSelected
-                        ? Colors.white
-                        : theme.textTheme.bodyMedium?.color,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-              ),
+    return SegmentedButton<String>(
+      segments: options.entries
+          .map(
+            (entry) => ButtonSegment<String>(
+              value: entry.key,
+              label: Text(entry.value),
             ),
-          );
-        }).toList(),
-      ),
+          )
+          .toList(),
+      selected: {value},
+      onSelectionChanged: (selection) {
+        Haptics.vibrate(HapticsType.light);
+        onChanged(selection.first);
+      },
     );
   }
 }

@@ -3,7 +3,7 @@ import '../models/student_profile.dart';
 import '../services/supabase/student_profile_service.dart';
 import 'app_providers.dart';
 
-final studentProfileServiceProvider = Provider((ref) => StudentProfileService());
+final studentProfileServiceProvider = Provider<StudentProfileServiceBase>((ref) => StudentProfileService());
 
 final studentProfileProvider = StateNotifierProvider<StudentProfileNotifier, AsyncValue<StudentProfile?>>((ref) {
   // Watch currentUserProvider so the provider is recreated when the user changes
@@ -12,7 +12,7 @@ final studentProfileProvider = StateNotifierProvider<StudentProfileNotifier, Asy
 });
 
 class StudentProfileNotifier extends StateNotifier<AsyncValue<StudentProfile?>> {
-  final StudentProfileService _service;
+  final StudentProfileServiceBase _service;
   final Ref _ref;
 
   StudentProfileNotifier(this._service, this._ref) : super(const AsyncValue.loading()) {
@@ -26,6 +26,11 @@ class StudentProfileNotifier extends StateNotifier<AsyncValue<StudentProfile?>> 
   }
 
   Future<void> updateProfile(StudentProfile profile) async {
+    final payload = profile.toJson();
+    if (payload.containsKey('active_semester_id')) {
+      throw Exception('Profile must not control active semester');
+    }
+
     final success = await _service.createOrUpdateProfile(profile);
     if (success) {
       state = AsyncValue.data(profile);

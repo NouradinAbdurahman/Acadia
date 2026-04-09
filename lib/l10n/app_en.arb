@@ -33,6 +33,9 @@
   "noDeadlinesWeek": "No deadlines this week",
   "studyTimeToday": "Study Time Today",
   "noStudyLogged": "No study logged today",
+  "noTasksForThisCourse": "No tasks for this course",
+  "noDeadlinesForThisCourse": "No deadlines for this course",
+  "noSessionsForThisCourse": "No sessions for this course",
   "profile": "Profile",
   "account": "Account",
   "preferences": "Preferences",
@@ -180,6 +183,54 @@
   "studyHours": "Study hours",
   "taskCompletionRate": "Task completion rate",
   "stressTrends": "Stress trends",
+  "academicReport": "Academic Report",
+  "academicHistory": "Academic History",
+  "requiresFocus": "Requires focus",
+  "gradeAverage": "Grade average",
+  "semesterTrend": "Semester Trend",
+  "noAcademicHistory": "No academic history yet",
+  "startLoggingContext": "Log study sessions and complete tasks to build your historical profile.",
+  "activeLabel": "Active",
+  "switchToSemester": "Switch to this Semester",
+  "setUpSemester": "Set up Semester",
+  "startAcademicTracking": "Start academic tracking",
+  "gpaPoints": "GPA Points",
+  "studyTimeDeltaMsg": "Your weekly study time has {action} by {percent}%",
+  "@studyTimeDeltaMsg": {
+    "placeholders": {
+      "action": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "riskIncreased": "Risk increased by {value}%",
+  "@riskIncreased": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "riskDecreased": "Risk decreased by {value}%",
+  "@riskDecreased": {
+    "placeholders": {
+      "value": { "type": "int" }
+    }
+  },
+  "increased": "increased",
+  "decreased": "decreased",
+  "taskCompletionImproved": "You are completing more tasks than last semester",
+  "taskCompletionDecreased": "Your task completion rate has dropped",
+  "academicRiskIncreased": "Your academic risk has increased",
+  "academicPerformanceSummary": "Performance Summary",
+  "performanceSummarySubtitle": "Long-term academic trends across all semesters",
+  "bestSemester": "Best Semester",
+  "worstSemester": "Worst Semester",
+  "mostImproved": "Most Improved",
+  "highestGPA": "Highest GPA",
+  "startStudySessionCTA": "Start a study session",
+  "addFirstTaskCTA": "Add your first task",
+  "startStudyingHint": "Start studying to see activity here",
+  "viewHistoryMode": "Viewing History",
+  "increased": "increased",
+  "decreased": "decreased",
   "comingSoon": "Coming soon",
   "taskDetail": "Task Detail",
   "deadlineDetail": "Deadline Detail",
@@ -213,12 +264,17 @@
   "updateTask": "Update Task",
   "saveChanges": "Save Changes",
   "welcome": "Welcome back",
+  "appName": "Acadia",
   "welcomeSubtitle": "Welcome back to your studies",
+  "signupSubtitle": "Create your account to start managing your studies",
   "password": "Password",
   "rememberMe": "Remember me",
   "forgotPassword": "Forgot Password?",
   "login": "Login",
   "dontHaveAccount": "Don't have an account?",
+  "orContinueWith": "Or continue with",
+  "googleLabel": "Google",
+  "appleLabel": "Apple",
   "signup": "Create Account",
   "invalidCredentials": "Incorrect email or password.",
   "tooManyRequests": "Too many attempts. Email service is temporarily limited. Please wait a few minutes before trying again.",
@@ -292,9 +348,10 @@
   "allTasksCompleted": "All tasks completed!",
   "dontForgetTasks": "Don't forget to finish them",
   "academicProfileOnboarding": "Academic Profile",
+  "academicAnalyticsContext": "This information helps personalize your academic analytics and recommendations.",
   "basicIdentity": "Basic Identity",
   "academicProgram": "Academic Program",
-  "currentSemesterLoad": "Current Semester Load",
+  "currentSemesterLoad": "Current Semester",
   "learningPatternCalibration": "Learning Patterns",
   "universityName": "University Name",
   "degreeType": "Degree Type",
@@ -303,6 +360,17 @@
   "academicYear": "Academic Year",
   "expectedGraduationYear": "Expected Graduation Year",
   "currentSemesterNumber": "Current Semester",
+  "currentSemesterHint": "Enter your current semester number.",
+  "semesterTrackingSetup": "Semester Tracking Setup",
+  "optionalPreferencesTitle": "Optional Preferences",
+  "optionalPreferencesDesc": "You can adjust these anytime in Study Preferences.",
+  "graduationYearHint": "Choose your expected graduation year (this year or later).",
+  "graduationYearInvalid": "Graduation year must be this year or later.",
+  "graduationYearSemesterMismatch": "",
+  "semesterNumberInvalid": "Semester number must be at least 1.",
+  "weeklyStudyGoalInvalid": "Weekly study goal must be between 5 and 40 hours.",
+  "onboardingRiskImpactHint": "Your semester and study goal are used to calculate academic risk and progress insights.",
+  "studyGoalRecommendation": "Recommended: 10-25 hours per week",
   "coursesThisSemester": "Expected Courses",
   "studyHoursPerWeek": "Weekly Study Goal (Hours)",
   "preferredStudyTime": "Preferred Study Time",
@@ -335,6 +403,7 @@
   "courseCodeHint": "e.g. CS204",
   "details": "Details",
   "courseColor": "Course Color",
+  "academicSemester": "Academic Semester",
   "creditsLabel": "Credits",
   "sortAlphabetical": "Alphabetical",
   "sortStudyTime": "Study Time",
@@ -448,7 +517,7 @@
   "backToHome": "Back to Home",
   "notEnoughData": "Not enough data yet",
   "addCoursesPrompt": "Add your courses to start tracking progress.",
-  "noUpcomingDeadlines": "No upcoming deadlines",
+  "noUpcomingDeadlines": "No deadlines due soon",
   "caughtUp": "You are all caught up!",
   "youStudiedFor": "You studied for {time}.",
   "@youStudiedFor": {
@@ -604,7 +673,7 @@
       }
     }
   },
-  "overviewNoUpcomingTasks": "No upcoming deadlines",
+  "overviewNoUpcomingTasks": "No deadlines due soon",
   "overviewCompletedToday": "{count} tasks completed today",
   "@overviewCompletedToday": {
     "placeholders": {
@@ -667,6 +736,9 @@
   "noGradeDistributionYet": "No grade distribution data yet",
   "pleaseSelectLetterGrade": "Please select a letter grade",
   "noCoursesForSemester": "No courses found for this semester",
+  "semesterAlreadyExists": "This semester already exists",
+  "semesterStartBeforeEndError": "Start date must be before end date",
+  "gradeRangeError": "Value must be between 0 and 100",
   "trendAnalysis": "Trend Analysis",
   "studyTrend": "Study Trend",
   "taskCompletionTrend": "Task Completion Trend",
@@ -866,6 +938,14 @@
   "dashboardViewDetailedAnalysis": "View detailed analysis ->",
   "analyticsSparseDataTitle": "Building your analytics",
   "analyticsSparseDataBody": "Log study sessions, add tasks, and record grades. Charts fill in as you use the app.",
+  "startTrackingYourSemester": "Start tracking your semester",
+  "whatYouCanTrack": "What you can track",
+  "trackTasks": "Tasks",
+  "trackStudySessions": "Study sessions",
+  "trackGrades": "Grades",
+  "whyItMatters": "Why it matters",
+  "monitorProgress": "Monitor your progress",
+  "reduceAcademicRisk": "Reduce academic risk",
   "custom": "Custom",
   "customDurationLabel": "Custom: {minutes}m",
   "@customDurationLabel": {
@@ -1010,6 +1090,7 @@
   "confidenceMedium": "Confidence: Medium",
   "gettingStarted": "Getting started",
   "noDataYet": "No data yet",
+  "noDataForSemesterYet": "No data for this semester yet",
   "statusStable": "Stable",
   "statusImproving": "Improving",
   "statusDeclining": "Declining",
@@ -1311,6 +1392,258 @@
   "@targetPrefix": {
     "placeholders": {
       "target": { "type": "String" }
+    }
+  },
+  "recommendedForYouTitle": "Recommended for you",
+  "keepMyPreference": "Keep my preference",
+  "followActualBehavior": "Follow actual behavior",
+  "bestStudyTimeBullet": "• Best study time: {time}",
+  "@bestStudyTimeBullet": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "suggestedSessionBullet": "• Suggested session: {minutes} min ({pattern})",
+  "@suggestedSessionBullet": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "pattern": { "type": "String" }
+    }
+  },
+  "dailyTargetNeededBullet": "• You need ~{hours} hours/day to stay on track",
+  "@dailyTargetNeededBullet": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "burnoutInputsHumanized": "• You are {deficit}h behind and your study timing is inconsistent ({inconsistency}%).",
+  "@burnoutInputsHumanized": {
+    "placeholders": {
+      "deficit": { "type": "String" },
+      "inconsistency": { "type": "int" }
+    }
+  },
+  "patternIrregularThisWeek": "• Pattern note: your study times are currently irregular this week.",
+  "adaptiveHintRecentStudyTime": "You seem to study more in {time} recently.",
+  "@adaptiveHintRecentStudyTime": {
+    "placeholders": {
+      "time": { "type": "String" }
+    }
+  },
+  "weekSessionsBreakdown": "This week sessions: morning {morning}, afternoon {afternoon}, night {night}.",
+  "@weekSessionsBreakdown": {
+    "placeholders": {
+      "morning": { "type": "int" },
+      "afternoon": { "type": "int" },
+      "night": { "type": "int" }
+    }
+  },
+  "confidenceBreakdown": "Confidence: behavior {behavior}% • preference match {preference}% {trendText}",
+  "@confidenceBreakdown": {
+    "placeholders": {
+      "behavior": { "type": "int" },
+      "preference": { "type": "int" },
+      "trendText": { "type": "String" }
+    }
+  },
+  "trendDeltaVsLastWeek": "• trend {delta} vs last week",
+  "@trendDeltaVsLastWeek": {
+    "placeholders": {
+      "delta": { "type": "String" }
+    }
+  },
+  "weeklyGoalBehindDetailed": "You are behind your weekly goal ({logged}h logged vs {expected}h expected by now).",
+  "@weeklyGoalBehindDetailed": {
+    "placeholders": {
+      "logged": { "type": "String" },
+      "expected": { "type": "String" }
+    }
+  },
+  "warningActionStartSession": "Start a 25-40 min session now to get back on track.",
+  "weeklyGoalSlightlyBehind": "You are slightly behind your weekly goal. Keep your current pace.",
+  "burnoutStatusTitle": "Burnout Status",
+  "burnoutOverallTrend": "Overall: {status}",
+  "@burnoutOverallTrend": {
+    "placeholders": {
+      "status": { "type": "String" }
+    }
+  },
+  "burnoutTrendLine": "Trend: {status} {direction}",
+  "@burnoutTrendLine": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "direction": { "type": "String" }
+    }
+  },
+  "burnoutDeficitLine": "Deficit: {status} {direction}",
+  "@burnoutDeficitLine": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "direction": { "type": "String" }
+    }
+  },
+  "burnoutConsistencyLine": "Consistency: {status} {direction}",
+  "@burnoutConsistencyLine": {
+    "placeholders": {
+      "status": { "type": "String" },
+      "direction": { "type": "String" }
+    }
+  },
+  "noRecoveryTrendDetectedYet": "No recovery trend detected yet.",
+  "notEnoughDataTrendYet": "Not enough data to detect trend yet.",
+  "recoveryImprovingThisWeek": "Your study pattern is improving this week.",
+  "studyDeficitBasedOnWeeklyGoal": "Study deficit is based on your weekly goal ({hours}h).",
+  "@studyDeficitBasedOnWeeklyGoal": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "softInterventionsTitle": "Soft interventions",
+  "burnoutLevelStable": "Stable",
+  "burnoutLevelWarning": "Warning",
+  "burnoutLevelHighRisk": "High Risk",
+  "burnoutLevelBurnoutRisk": "Burnout Risk",
+  "burnoutExplanationStable": "Your study pattern looks balanced right now.",
+  "burnoutExplanationWarning": "Your study pattern is becoming inconsistent and you are falling behind your weekly goal.",
+  "burnoutExplanationHighRisk": "You are showing signs of inconsistent study and deficit.",
+  "burnoutExplanationBurnoutRisk": "Your load is high and your routine is becoming unstable.",
+  "burnoutReasonBehindGoal": "You are behind your weekly goal by {hours}h.",
+  "@burnoutReasonBehindGoal": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "burnoutReasonInconsistentPattern": "Your study pattern is inconsistent this week.",
+  "burnoutReasonSwitchingTimes": "You are switching study times frequently.",
+  "burnoutReasonLoadAboveGoal": "Your total study load is above your weekly goal.",
+  "burnoutReasonNoMajorSignals": "No major burnout signals detected yet.",
+  "burnoutRecommendationStable1": "Keep your current routine steady.",
+  "burnoutRecommendationStable2": "Continue tracking your weekly goal.",
+  "burnoutRecommendationWarning1": "Reduce session length a little.",
+  "burnoutRecommendationWarning2": "Keep your study time in one consistent slot.",
+  "burnoutRecommendationHigh1": "Shorten sessions and take breaks more often.",
+  "burnoutRecommendationHigh2": "Focus on one study time window this week.",
+  "burnoutRecommendationHigh3": "Take a recovery day if you feel drained.",
+  "burnoutRecommendationBurnout1": "Reduce session length right away.",
+  "burnoutRecommendationBurnout2": "Increase break frequency and simplify goals.",
+  "burnoutRecommendationBurnout3": "Take a recovery day before pushing harder.",
+  "decisionNextActionTitle": "Next Action",
+  "decisionStudyAnyCourse": "Study your priority course",
+  "decisionStudyCourse": "Study {course}",
+  "@decisionStudyCourse": {
+    "placeholders": {
+      "course": { "type": "String" }
+    }
+  },
+  "decisionMinutesToday": "{minutes} minutes today",
+  "@decisionMinutesToday": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "decisionFocusRecommendationTitle": "Focus Recommendation",
+  "decisionWhatChangedTitle": "What Changed",
+  "decisionTaskLoadLabel": "Task Load",
+  "decisionConfidenceLow": "Confidence: Low",
+  "startedFromAnalyticsRecommendation": "Started from Analytics recommendation",
+  "followedPlanToday": "Nice. You followed your plan today.",
+  "sessionImpactAddedToCourse": "+{minutes} min added to {course}",
+  "@sessionImpactAddedToCourse": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "course": { "type": "String" }
+    }
+  },
+  "sessionImpactCloserToGoal": "You're now closer to your weekly goal",
+  "decisionReasonOverdueAttention": "Overdue tasks need immediate attention",
+  "decisionReasonLeastStudied": "You studied this course the least this week",
+  "decisionReasonNoUrgentDeadlines": "No urgent deadlines. Stay consistent.",
+  "decisionReasonBehindWeeklyTarget": "You are behind your weekly target",
+  "decisionReasonHeavyWorkload": "Heavy open workload in this course",
+  "decisionReasonHighestPriority": "This is your highest-priority course right now",
+  "decisionReasonBuildRoutine": "Start building your routine",
+  "decisionReasonLowestStudyWeek": "Lowest study time this week",
+  "decisionReasonNoStudyLogged": "No study logged this week",
+  "decisionReasonFallbackConsistency": "Fallback recommendation: keep your consistency this week",
+  "decisionReasonStudyProgress": "You studied {studied}h of your {target}h target",
+  "@decisionReasonStudyProgress": {
+    "placeholders": {
+      "studied": { "type": "String" },
+      "target": { "type": "String" }
+    }
+  },
+  "decisionReasonImportantCourse": "Important course ({ects} ECTS)",
+  "@decisionReasonImportantCourse": {
+    "placeholders": {
+      "ects": { "type": "int" }
+    }
+  },
+  "decisionReasonHigherPriorityThan": "More urgent than {course}",
+  "@decisionReasonHigherPriorityThan": {
+    "placeholders": {
+      "course": { "type": "String" }
+    }
+  },
+  "decisionReasonHigherPriorityGeneral": "More urgent than other courses this week",
+  "todayPlanTitle": "Today Plan",
+  "todayMinutesCompleted": "Today: {minutes} min completed",
+  "@todayMinutesCompleted": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "recoveryPlanTitle": "Recovery Plan",
+  "recoveryPlanSplitFromWeeklyDeficit": "Split based on your weekly deficit",
+  "planDay3Label": "Day 3",
+  "suggestedSplitSessionsToday": "Suggested: {count} × {minutes} min sessions today",
+  "@suggestedSplitSessionsToday": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "suggestedFlexibleSessionsToday": "Suggested: 2-3 focused sessions today",
+  "suggestedShorterSessionsToday": "Suggested: 3-4 shorter sessions today",
+  "needHoursTodayToStayOnTrack": "You need {hours}h today to stay on track",
+  "@needHoursTodayToStayOnTrack": {
+    "placeholders": {
+      "hours": { "type": "String" }
+    }
+  },
+  "minutesRemainingShort": "{minutes}m left",
+  "@minutesRemainingShort": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "decisionReasonDeadlineLowStudy": "Deadline in {days} days and you studied less than usual this week",
+  "@decisionReasonDeadlineLowStudy": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "decisionReasonDeadlineInDays": "Deadline in {days} days",
+  "@decisionReasonDeadlineInDays": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "decisionReasonLowestStudyWithDeadline": "Lowest study time this week and deadline in {days} days",
+  "@decisionReasonLowestStudyWithDeadline": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "decisionReasonLowestStudyWithOpenTasks": "Lowest study time this week and {count} open tasks",
+  "@decisionReasonLowestStudyWithOpenTasks": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "decisionReasonHighCourseWeight": "High course weight ({ects} ECTS)",
+  "@decisionReasonHighCourseWeight": {
+    "placeholders": {
+      "ects": { "type": "int" }
     }
   },
   "reset": "Reset",

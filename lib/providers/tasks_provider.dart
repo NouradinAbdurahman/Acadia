@@ -6,27 +6,30 @@ import '../models/task.dart';
 import 'app_providers.dart';
 import 'deadlines_provider.dart';
 import 'derived_invalidation.dart';
+import 'semester_provider.dart';
+
 
 final taskFilterProvider = StateProvider<String>((ref) => 'all');
 
 /// Tasks screen primary tab: show only tasks or only deadlines (never mixed).
 final tasksListSegmentProvider = StateProvider<String>((ref) => 'tasks');
 
-final tasksProvider =
-    StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>>>((ref) {
-      final repo = ref.watch(taskRepositoryProvider);
-      final userId = ref.watch(currentUserProvider)?.id;
-      final supabase = Supabase.instance.client;
-      final notifier = TasksNotifier(
-        ref: ref,
-        taskRepository: repo,
-        supabaseClient: supabase,
-      );
-      if (userId != null) {
-        notifier.loadTasks(userId);
-      }
-      return notifier;
-    });
+final tasksProvider = StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>>>((ref) {
+  final repo = ref.watch(taskRepositoryProvider);
+  final userId = ref.watch(currentUserProvider)?.id;
+  final semesterId = ref.watch(activeSemesterProvider);
+  final supabase = Supabase.instance.client;
+  final notifier = TasksNotifier(
+    ref: ref,
+    taskRepository: repo,
+    supabaseClient: supabase,
+  );
+  if (userId != null) {
+    notifier.loadTasks(userId: userId, semesterId: semesterId);
+  }
+  return notifier;
+});
+
 
 final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
   final tasksAsync = ref.watch(tasksProvider);
@@ -110,21 +113,26 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
   final dynamic taskRepository;
   final SupabaseClient supabaseClient;
 
-  Future<void> loadTasks(String userId) async {
+  Future<void> loadTasks({required String userId, String? semesterId}) async {
     try {
-      final list = await taskRepository.getTasks(userId) as List<Task>;
+      state = const AsyncValue.loading();
+      final list = await taskRepository.getTasks(userId: userId, semesterId: semesterId) as List<Task>;
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<void> refresh() async {
     final userId = supabaseClient.auth.currentUser?.id;
+    final semesterId = _ref.read(activeSemesterProvider);
     if (userId != null) {
-      await loadTasks(userId);
+      await loadTasks(userId: userId, semesterId: semesterId);
     }
   }
+
 
   Future<void> createTask({
     required String title,
@@ -139,6 +147,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
   }) async {
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) return;
+
 
     final deadlinesList = _ref.read(deadlinesProvider).valueOrNull ?? const [];
     final safeDeadlineId = validatedDeadlineIdForTask(
@@ -162,6 +171,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       status: status,
       createdAt: DateTime.now(),
     );
+
 
     final previous = state;
     try {

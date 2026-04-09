@@ -51,6 +51,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noStudyLogged => 'Bugün çalışma kaydedilmedi';
 
   @override
+  String get noTasksForThisCourse => 'Bu ders için görev yok';
+
+  @override
+  String get noDeadlinesForThisCourse => 'Bu ders için son tarih yok';
+
+  @override
+  String get noSessionsForThisCourse => 'Bu ders için oturum yok';
+
+  @override
   String get profile => 'Profil';
 
   @override
@@ -403,6 +412,106 @@ class AppLocalizationsTr extends AppLocalizations {
   String get stressTrends => 'Stres eğilimleri';
 
   @override
+  String get academicReport => 'Akademik Rapor';
+
+  @override
+  String get academicHistory => 'Akademik Geçmiş';
+
+  @override
+  String get requiresFocus => 'Odaklanma Gerektirir';
+
+  @override
+  String get gradeAverage => 'Not ortalaması';
+
+  @override
+  String get semesterTrend => 'Dönem Trendi';
+
+  @override
+  String get noAcademicHistory => 'Henüz akademik geçmiş yok';
+
+  @override
+  String get startLoggingContext =>
+      'Geçmiş profilinizi oluşturmak için çalışma oturumlarını kaydedin ve görevleri tamamlayın.';
+
+  @override
+  String get activeLabel => 'Aktif';
+
+  @override
+  String get switchToSemester => 'Bu Döneme Geç';
+
+  @override
+  String get setUpSemester => 'Dönemi Ayarla';
+
+  @override
+  String get startAcademicTracking => 'Akademik Takibe Başla';
+
+  @override
+  String get gpaPoints => 'GPA Puanı';
+
+  @override
+  String studyTimeDeltaMsg(String action, int percent) {
+    return 'Haftalık çalışma süreniz %$percent $action';
+  }
+
+  @override
+  String riskIncreased(int value) {
+    return 'Risk %$value arttı';
+  }
+
+  @override
+  String riskDecreased(int value) {
+    return 'Risk %$value azaldı';
+  }
+
+  @override
+  String get increased => 'arttı';
+
+  @override
+  String get decreased => 'azaldı';
+
+  @override
+  String get taskCompletionImproved =>
+      'Geçen döneme göre daha fazla görev tamamlıyorsunuz';
+
+  @override
+  String get taskCompletionDecreased => 'Görev tamamlama oranınız düştü';
+
+  @override
+  String get academicRiskIncreased => 'Akademik riskiniz arttı';
+
+  @override
+  String get academicPerformanceSummary => 'Performans Özeti';
+
+  @override
+  String get performanceSummarySubtitle =>
+      'Tüm dönemler arasındaki uzun vadeli akademik eğilimler';
+
+  @override
+  String get bestSemester => 'En İyi Dönem';
+
+  @override
+  String get worstSemester => 'En Kötü Dönem';
+
+  @override
+  String get mostImproved => 'En Çok Gelişen';
+
+  @override
+  String get highestGPA => 'En Yüksek GPA';
+
+  @override
+  String get startStudySessionCTA => 'Bir çalışma oturumu başlatın';
+
+  @override
+  String get addFirstTaskCTA => 'İlk görevinizi ekleyin';
+
+  @override
+  String get startStudyingHint =>
+      'Burada etkinlik görmek için çalışmaya başlayın';
+
+  @override
+  String get viewHistoryMode => 'Gecmiş Görüntüleniyor';
+
+  @override
   String get comingSoon => 'Çok yakında';
 
   @override
@@ -464,7 +573,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get welcome => 'Hoş geldiniz';
 
   @override
+  String get appName => 'Acadia';
+
+  @override
   String get welcomeSubtitle => 'Sınav hazırlığınıza devam edin';
+
+  @override
+  String get signupSubtitle =>
+      'Çalışmalarınızı yönetmeye başlamak için hesabınızı oluşturun';
 
   @override
   String get password => 'Şifre';
@@ -480,6 +596,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dontHaveAccount => 'Hesabınız yok mu?';
+
+  @override
+  String get orContinueWith => 'Veya şununla devam edin';
+
+  @override
+  String get googleLabel => 'Google';
+
+  @override
+  String get appleLabel => 'Apple';
 
   @override
   String get signup => 'Hesap Oluştur';
@@ -695,13 +820,17 @@ class AppLocalizationsTr extends AppLocalizations {
   String get academicProfileOnboarding => 'Akademik Profil';
 
   @override
+  String get academicAnalyticsContext =>
+      'Bu bilgiler, akademik analizlerinizi ve önerileri kişiselleştirmeye yardımcı olur.';
+
+  @override
   String get basicIdentity => 'Temel Kimlik';
 
   @override
   String get academicProgram => 'Akademik Program';
 
   @override
-  String get currentSemesterLoad => 'Dönem İş Yükü';
+  String get currentSemesterLoad => 'Mevcut Dönem';
 
   @override
   String get learningPatternCalibration => 'Öğrenme Modelleri';
@@ -726,6 +855,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get currentSemesterNumber => 'Mevcut Dönem';
+
+  @override
+  String get currentSemesterHint => 'Mevcut dönem numaranızı girin.';
+
+  @override
+  String get semesterTrackingSetup => 'Dönem Takibi Ayarları';
+
+  @override
+  String get optionalPreferencesTitle => 'İsteğe Bağlı Tercihler';
+
+  @override
+  String get optionalPreferencesDesc =>
+      'Bunları istediğiniz zaman Çalışma Tercihleri ekranından değiştirebilirsiniz.';
+
+  @override
+  String get graduationYearHint =>
+      'Beklenen mezuniyet yılınızı seçin (bu yıl veya sonrası).';
+
+  @override
+  String get graduationYearInvalid =>
+      'Mezuniyet yılı bu yıl veya daha sonrası olmalıdır.';
+
+  @override
+  String get graduationYearSemesterMismatch => '';
+
+  @override
+  String get semesterNumberInvalid => 'Dönem numarası en az 1 olmalıdır.';
+
+  @override
+  String get weeklyStudyGoalInvalid =>
+      'Haftalık çalışma hedefi 5 ile 40 saat arasında olmalıdır.';
+
+  @override
+  String get onboardingRiskImpactHint =>
+      'Döneminiz ve çalışma hedefiniz, akademik risk ve ilerleme içgörülerini hesaplamak için kullanılır.';
+
+  @override
+  String get studyGoalRecommendation => 'Önerilen: haftada 10-25 saat';
 
   @override
   String get coursesThisSemester => 'Beklenen Dersler';
@@ -822,6 +989,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get courseColor => 'Ders Rengi';
+
+  @override
+  String get academicSemester => 'Akademik Dönem';
 
   @override
   String get creditsLabel => 'Kredi';
@@ -1058,7 +1228,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'İlerlemeyi izlemeye başlamak için kurslarınızı ekleyin.';
 
   @override
-  String get noUpcomingDeadlines => 'Yaklaşan teslim tarihi yok';
+  String get noUpcomingDeadlines => 'Yakında teslim tarihi yok';
 
   @override
   String get caughtUp => 'Her şey tamam!';
@@ -1267,7 +1437,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get overviewNoUpcomingTasks => 'Yaklaşan teslim tarihi yok';
+  String get overviewNoUpcomingTasks => 'Yakında teslim tarihi yok';
 
   @override
   String overviewCompletedToday(int count) {
@@ -1378,6 +1548,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noCoursesForSemester => 'Bu dönem için ders bulunamadı';
+
+  @override
+  String get semesterAlreadyExists => 'Bu dönem zaten mevcut';
+
+  @override
+  String get semesterStartBeforeEndError =>
+      'Başlangıç tarihi bitiş tarihinden önce olmalıdır';
+
+  @override
+  String get gradeRangeError => 'Değer 0 ile 100 arasında olmalıdır';
 
   @override
   String get trendAnalysis => 'Trend Analizi';
@@ -1675,6 +1855,30 @@ class AppLocalizationsTr extends AppLocalizations {
       'Çalışma oturumu kaydedin, görev ekleyin ve notlarınızı girin. Uygulamayı kullandıkça grafikler dolacak.';
 
   @override
+  String get startTrackingYourSemester => 'Döneminizi takip etmeye başlayın';
+
+  @override
+  String get whatYouCanTrack => 'Neleri takip edebilirsiniz';
+
+  @override
+  String get trackTasks => 'Görevler';
+
+  @override
+  String get trackStudySessions => 'Çalışma oturumları';
+
+  @override
+  String get trackGrades => 'Notlar';
+
+  @override
+  String get whyItMatters => 'Neden önemli';
+
+  @override
+  String get monitorProgress => 'İlerlemenizi takip edin';
+
+  @override
+  String get reduceAcademicRisk => 'Akademik riski azaltın';
+
+  @override
   String get custom => 'Özel';
 
   @override
@@ -1879,6 +2083,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noDataYet => 'Henüz veri yok';
+
+  @override
+  String get noDataForSemesterYet => 'Bu dönem için henüz veri yok';
 
   @override
   String get statusStable => 'Stabil';
@@ -2337,6 +2544,364 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String targetPrefix(String target) {
     return 'Hedef: $target';
+  }
+
+  @override
+  String get recommendedForYouTitle => 'Sizin için önerildi';
+
+  @override
+  String get keepMyPreference => 'Tercihimi koru';
+
+  @override
+  String get followActualBehavior => 'Gerçek davranışı takip et';
+
+  @override
+  String bestStudyTimeBullet(String time) {
+    return '• En iyi çalışma zamanı: $time';
+  }
+
+  @override
+  String suggestedSessionBullet(int minutes, String pattern) {
+    return '• Önerilen oturum: $minutes dk ($pattern)';
+  }
+
+  @override
+  String dailyTargetNeededBullet(String hours) {
+    return '• Yolda kalmak için günde ~$hours saat çalışman gerekiyor';
+  }
+
+  @override
+  String burnoutInputsHumanized(String deficit, int inconsistency) {
+    return '• $deficit saat geridesin ve çalışma zamanlaman tutarsız (%$inconsistency).';
+  }
+
+  @override
+  String get patternIrregularThisWeek =>
+      '• Düzen notu: Bu hafta çalışma zamanların düzensiz.';
+
+  @override
+  String adaptiveHintRecentStudyTime(String time) {
+    return 'Son zamanlarda daha çok $time çalışıyor görünüyorsun.';
+  }
+
+  @override
+  String weekSessionsBreakdown(int morning, int afternoon, int night) {
+    return 'Bu hafta oturumlar: sabah $morning, öğleden sonra $afternoon, gece $night.';
+  }
+
+  @override
+  String confidenceBreakdown(int behavior, int preference, String trendText) {
+    return 'Güven: davranış %$behavior • tercih uyumu $preference% $trendText';
+  }
+
+  @override
+  String trendDeltaVsLastWeek(String delta) {
+    return '• trend geçen haftaya göre $delta';
+  }
+
+  @override
+  String weeklyGoalBehindDetailed(String logged, String expected) {
+    return 'Haftalık hedefinin gerisindesin (şu ana kadar ${logged}sa kaydedildi, beklenen ${expected}sa).';
+  }
+
+  @override
+  String get warningActionStartSession =>
+      'Yeniden yola girmek için şimdi 25-40 dakikalık bir oturum başlat.';
+
+  @override
+  String get weeklyGoalSlightlyBehind =>
+      'Haftalık hedefinin biraz gerisindesin. Mevcut tempoyu koru.';
+
+  @override
+  String get burnoutStatusTitle => 'Tükenmişlik Durumu';
+
+  @override
+  String burnoutOverallTrend(String status) {
+    return 'Genel: $status';
+  }
+
+  @override
+  String burnoutTrendLine(String status, String direction) {
+    return 'Trend: $status $direction';
+  }
+
+  @override
+  String burnoutDeficitLine(String status, String direction) {
+    return 'Açık: $status $direction';
+  }
+
+  @override
+  String burnoutConsistencyLine(String status, String direction) {
+    return 'Tutarlılık: $status $direction';
+  }
+
+  @override
+  String get noRecoveryTrendDetectedYet =>
+      'Henüz toparlanma trendi tespit edilmedi.';
+
+  @override
+  String get notEnoughDataTrendYet =>
+      'Henüz trend tespiti için yeterli veri yok.';
+
+  @override
+  String get recoveryImprovingThisWeek =>
+      'Çalışma düzenin bu hafta iyileşiyor.';
+
+  @override
+  String studyDeficitBasedOnWeeklyGoal(String hours) {
+    return 'Çalışma açığı haftalık hedefine göre hesaplanır (${hours}sa).';
+  }
+
+  @override
+  String get softInterventionsTitle => 'Nazik müdahaleler';
+
+  @override
+  String get burnoutLevelStable => 'Stabil';
+
+  @override
+  String get burnoutLevelWarning => 'Uyarı';
+
+  @override
+  String get burnoutLevelHighRisk => 'Yüksek Risk';
+
+  @override
+  String get burnoutLevelBurnoutRisk => 'Tükenmişlik Riski';
+
+  @override
+  String get burnoutExplanationStable =>
+      'Çalışma düzenin şu anda dengeli görünüyor.';
+
+  @override
+  String get burnoutExplanationWarning =>
+      'Çalışma düzenin tutarsızlaşıyor ve haftalık hedefinin gerisinde kalıyorsun.';
+
+  @override
+  String get burnoutExplanationHighRisk =>
+      'Tutarsız çalışma ve açık belirtileri görünmeye başladı.';
+
+  @override
+  String get burnoutExplanationBurnoutRisk =>
+      'Yükün yüksek ve düzenin dengesizleşiyor.';
+
+  @override
+  String burnoutReasonBehindGoal(String hours) {
+    return 'Haftalık hedefinin ${hours}sa gerisindesin.';
+  }
+
+  @override
+  String get burnoutReasonInconsistentPattern =>
+      'Bu hafta çalışma düzenin tutarsız.';
+
+  @override
+  String get burnoutReasonSwitchingTimes =>
+      'Çalışma saatlerini sık sık değiştiriyorsun.';
+
+  @override
+  String get burnoutReasonLoadAboveGoal =>
+      'Toplam çalışma yükün haftalık hedefinin üzerinde.';
+
+  @override
+  String get burnoutReasonNoMajorSignals =>
+      'Henüz büyük bir tükenmişlik sinyali yok.';
+
+  @override
+  String get burnoutRecommendationStable1 => 'Mevcut düzenini koru.';
+
+  @override
+  String get burnoutRecommendationStable2 => 'Haftalık hedef takibini sürdür.';
+
+  @override
+  String get burnoutRecommendationWarning1 => 'Oturum süresini biraz kısalt.';
+
+  @override
+  String get burnoutRecommendationWarning2 =>
+      'Çalışma saatini tek bir zaman diliminde sabitle.';
+
+  @override
+  String get burnoutRecommendationHigh1 =>
+      'Oturumları kısalt ve daha sık mola ver.';
+
+  @override
+  String get burnoutRecommendationHigh2 =>
+      'Bu hafta tek bir çalışma zaman penceresine odaklan.';
+
+  @override
+  String get burnoutRecommendationHigh3 =>
+      'Kendini çok yorgun hissediyorsan bir toparlanma günü ekle.';
+
+  @override
+  String get burnoutRecommendationBurnout1 => 'Oturum süresini hemen azalt.';
+
+  @override
+  String get burnoutRecommendationBurnout2 =>
+      'Molaları artır ve hedefleri sadeleştir.';
+
+  @override
+  String get burnoutRecommendationBurnout3 =>
+      'Daha fazla yüklenmeden önce bir toparlanma günü ayır.';
+
+  @override
+  String get decisionNextActionTitle => 'Sonraki Adım';
+
+  @override
+  String get decisionStudyAnyCourse => 'Öncelikli dersin için çalış';
+
+  @override
+  String decisionStudyCourse(String course) {
+    return '$course dersine çalış';
+  }
+
+  @override
+  String decisionMinutesToday(int minutes) {
+    return 'Bugün $minutes dakika';
+  }
+
+  @override
+  String get decisionFocusRecommendationTitle => 'Odak Önerisi';
+
+  @override
+  String get decisionWhatChangedTitle => 'Neler Değişti';
+
+  @override
+  String get decisionTaskLoadLabel => 'Görev Yükü';
+
+  @override
+  String get decisionConfidenceLow => 'Tahmin doğruluğu: Düşük';
+
+  @override
+  String get startedFromAnalyticsRecommendation =>
+      'Analitik önerisinden başlatıldı';
+
+  @override
+  String get followedPlanToday => 'Harika. Bugün planını uyguladın.';
+
+  @override
+  String sessionImpactAddedToCourse(int minutes, String course) {
+    return '+$minutes dk $course dersine eklendi';
+  }
+
+  @override
+  String get sessionImpactCloserToGoal =>
+      'Artık haftalık hedefine daha yakınsın';
+
+  @override
+  String get decisionReasonOverdueAttention =>
+      'Süresi geçmiş görevler acil ilgi gerektiriyor';
+
+  @override
+  String get decisionReasonLeastStudied => 'Bu hafta en az bu derse çalıştın';
+
+  @override
+  String get decisionReasonNoUrgentDeadlines =>
+      'Acil son tarih yok. Düzeni koru.';
+
+  @override
+  String get decisionReasonBehindWeeklyTarget =>
+      'Haftalık hedefinin gerisindesin';
+
+  @override
+  String get decisionReasonHeavyWorkload => 'Bu derste açık görev yükü yüksek';
+
+  @override
+  String get decisionReasonHighestPriority =>
+      'Şu anda en yüksek öncelikli dersin bu';
+
+  @override
+  String get decisionReasonBuildRoutine => 'Rutinini oluşturmaya başla';
+
+  @override
+  String get decisionReasonLowestStudyWeek =>
+      'Bu hafta en düşük çalışma süresi';
+
+  @override
+  String get decisionReasonNoStudyLogged => 'Bu hafta çalışma kaydı yok';
+
+  @override
+  String get decisionReasonFallbackConsistency =>
+      'Yedek öneri: Bu hafta istikrarını koru';
+
+  @override
+  String decisionReasonStudyProgress(String studied, String target) {
+    return '${target}sa hedefinin ${studied}sa kadarını çalıştın';
+  }
+
+  @override
+  String decisionReasonImportantCourse(int ects) {
+    return 'Önemli ders ($ects AKTS)';
+  }
+
+  @override
+  String decisionReasonHigherPriorityThan(String course) {
+    return '$course dersinden daha acil';
+  }
+
+  @override
+  String get decisionReasonHigherPriorityGeneral =>
+      'Bu hafta diger derslerden daha acil';
+
+  @override
+  String get todayPlanTitle => 'Bugun Plani';
+
+  @override
+  String todayMinutesCompleted(int minutes) {
+    return 'Bugun: $minutes dk tamamlandi';
+  }
+
+  @override
+  String get recoveryPlanTitle => 'Toparlanma Plani';
+
+  @override
+  String get recoveryPlanSplitFromWeeklyDeficit =>
+      'Haftalik acigina gore bolundu';
+
+  @override
+  String get planDay3Label => '3. Gun';
+
+  @override
+  String suggestedSplitSessionsToday(int count, int minutes) {
+    return 'Oneri: Bugun $count × $minutes dk oturum';
+  }
+
+  @override
+  String get suggestedFlexibleSessionsToday => 'Oneri: Bugun 2-3 odakli oturum';
+
+  @override
+  String get suggestedShorterSessionsToday =>
+      'Oneri: Bugun 3-4 daha kisa oturum';
+
+  @override
+  String needHoursTodayToStayOnTrack(String hours) {
+    return 'Yolda kalmak icin bugun ${hours}sa ihtiyacin var';
+  }
+
+  @override
+  String minutesRemainingShort(int minutes) {
+    return '${minutes}dk kaldi';
+  }
+
+  @override
+  String decisionReasonDeadlineLowStudy(int days) {
+    return 'Son teslime $days gün var ve bu hafta normalden az çalıştın';
+  }
+
+  @override
+  String decisionReasonDeadlineInDays(int days) {
+    return 'Son teslime $days gün kaldı';
+  }
+
+  @override
+  String decisionReasonLowestStudyWithDeadline(int days) {
+    return 'Bu hafta en düşük çalışma süresi ve son teslime $days gün kaldı';
+  }
+
+  @override
+  String decisionReasonLowestStudyWithOpenTasks(int count) {
+    return 'Bu hafta en düşük çalışma süresi ve $count açık görev var';
+  }
+
+  @override
+  String decisionReasonHighCourseWeight(int ects) {
+    return 'Yüksek ders ağırlığı ($ects AKTS)';
   }
 
   @override

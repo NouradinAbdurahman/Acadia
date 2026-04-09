@@ -6,8 +6,14 @@ class NotificationRepository {
 
   NotificationRepository(this._service);
 
-  Future<List<NotificationModel>> getNotifications(String userId) async {
-    final data = await _service.getNotifications(userId);
+  Future<List<NotificationModel>> getNotifications({
+    required String userId,
+    required String semesterId,
+  }) async {
+    final data = await _service.getNotifications(
+      userId: userId,
+      semesterId: semesterId,
+    );
     return data.map((json) => NotificationModel.fromJson(json)).toList();
   }
 

@@ -5,12 +5,16 @@ class CourseService {
 
   CourseService(this._supabase);
 
-  Future<List<Map<String, dynamic>>> getCourses() async {
+  Future<List<Map<String, dynamic>>> getCourses({String? semesterId}) async {
+    if (semesterId == null) return [];
+    
     return await _supabase
         .from('courses')
         .select()
+        .eq('semester_id', semesterId)
         .order('course_name', ascending: true);
   }
+
 
   Future<Map<String, dynamic>> createCourse(Map<String, dynamic> data) async {
     return await _supabase.from('courses').insert(data).select().single();

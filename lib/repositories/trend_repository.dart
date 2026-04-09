@@ -9,6 +9,7 @@ class TrendRepository {
   Future<TrendData> getTrendData({
     required String userId,
     required int days,
+    String? semesterId,
   }) async {
     if (userId.trim().isEmpty || days <= 0) return const TrendData.empty();
 
@@ -17,10 +18,10 @@ class TrendRepository {
     final since = startOfToday.subtract(Duration(days: days - 1));
 
     final results = await Future.wait<List<Map<String, dynamic>>>([
-      _service.getStudySessions(userId: userId, since: since),
-      _service.getCompletedTasks(userId: userId, since: since),
-      _service.getCreatedTasks(userId: userId, since: since),
-      _service.getCreatedDeadlines(userId: userId, since: since),
+      _service.getStudySessions(userId: userId, since: since, semesterId: semesterId),
+      _service.getCompletedTasks(userId: userId, since: since, semesterId: semesterId),
+      _service.getCreatedTasks(userId: userId, since: since, semesterId: semesterId),
+      _service.getCreatedDeadlines(userId: userId, since: since, semesterId: semesterId),
       _service.getCourseResults(userId: userId, since: since),
     ]);
 

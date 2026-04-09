@@ -9,9 +9,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../services/notification_service.dart';
 import '../models/study_session.dart';
 import 'app_providers.dart' as app;
-import 'derived_invalidation.dart';
+import 'semester_provider.dart';
 import 'analytics_provider.dart';
 import 'dashboard_provider.dart';
+import 'derived_invalidation.dart';
 
 enum StudyType {
   pomodoro,
@@ -167,8 +168,6 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
 
       final now = DateTime.now();
       if (isRunning && lastUpdateStr != null) {
-        final lastUpdate = DateTime.parse(lastUpdateStr);
-        final diff = now.difference(lastUpdate);
         
         // Time-jump: Add the time passed while app was closed to elapsed
         final elapsed = _elapsedAt(now);
@@ -223,15 +222,15 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState lifecycleState) {
-    if (lifecycleState == AppLifecycleState.resumed && state.isRunning) {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && this.state.isRunning) {
       final now = DateTime.now();
       final elapsed = _elapsedAt(now);
-      if (elapsed >= state.targetDuration) {
-        state = state.copyWith(elapsed: state.targetDuration);
+      if (elapsed >= this.state.targetDuration) {
+        this.state = this.state.copyWith(elapsed: this.state.targetDuration);
         _onPhaseComplete();
       } else {
-        state = state.copyWith(elapsed: elapsed);
+        this.state = this.state.copyWith(elapsed: elapsed);
       }
       _persist();
     }
@@ -492,31 +491,30 @@ class StudySessionsNotifier
     required this.studyRepository,
     required this.supabaseClient,
     required this.ref,
-  }) : super(const AsyncValue.loading()) {
-    _loadSessions();
-  }
+  }) : super(const AsyncValue.loading());
 
   final dynamic studyRepository;
   final SupabaseClient supabaseClient;
   final Ref ref;
 
-  Future<void> _loadSessions() async {
-    final userId = supabaseClient.auth.currentUser?.id;
-    if (userId == null) {
-      state = const AsyncValue.data([]);
-      return;
-    }
+  Future<void> loadSessions({required String userId, String? semesterId}) async {
     try {
-      final sessions = await studyRepository.getSessions(userId)
-          as List<StudySession>;
-      state = AsyncValue.data(sessions);
+      state = const AsyncValue.loading();
+      final list = await studyRepository.getSessions(userId: userId, semesterId: semesterId) as List<StudySession>;
+      if (!mounted) return;
+      state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<void> refresh() async {
-    await _loadSessions();
+    final userId = supabaseClient.auth.currentUser?.id;
+    final semesterId = ref.read(activeSemesterProvider);
+    if (userId != null) {
+      await loadSessions(userId: userId, semesterId: semesterId);
+    }
   }
 
   bool _isSaving = false;
@@ -532,14 +530,17 @@ class StudySessionsNotifier
     String? sessionTypeOverride,
   }) async {
     final minutes = timerState.elapsed.inMinutes;
+    if (minutes > 240) {
+      return;
+    }
 
-    print("📥 saveFromTimer CALLED");
-    print("minutes = $minutes | isBreak = ${timerState.isBreak} | courseId = ${timerState.courseId}");
+    debugPrint("📥 saveFromTimer CALLED");
+    debugPrint("minutes = $minutes | isBreak = ${timerState.isBreak} | courseId = ${timerState.courseId}");
 
     // Business rule: completion = technical event, valid session = business rule
     final isValidSession = timerState.isCompleted && minutes >= 10;
     if (!isValidSession) {
-      print("❌ Not saved: completed=${timerState.isCompleted}, minutes=$minutes");
+      debugPrint("❌ Not saved: completed=${timerState.isCompleted}, minutes=$minutes");
       return;
     }
 
@@ -549,15 +550,20 @@ class StudySessionsNotifier
     if (userId == null) return;
 
     if (timerState.courseId == null) {
-      print("❌ No course selected");
+      debugPrint("❌ No course selected");
       return;
+    }
+
+    final semesterId = ref.read(activeSemesterProvider);
+    if (semesterId == null) {
+      throw Exception('No active semester set. Cannot save session.');
     }
 
     // Never save break phases
     if (timerState.isBreak) return;
 
     _isSaving = true;
-    print("[StudySession] Attempting to save: $minutes min");
+    debugPrint("[StudySession] Attempting to save: $minutes min");
 
     try {
       String mapSessionType(StudyType type) {
@@ -575,6 +581,7 @@ class StudySessionsNotifier
         id: '',
         userId: userId,
         courseId: timerState.courseId!,
+        semesterId: semesterId,
         sessionType: sessionTypeOverride ?? mapSessionType(timerState.sessionType),
         durationMinutes: minutes,
         createdAt: DateTime.now(),
@@ -584,6 +591,7 @@ class StudySessionsNotifier
         skippedBreaks: timerState.skippedBreak ? 1 : 0,
       );
 
+
       final previous = state;
       try {
         final created = await studyRepository.createSession(newSession)
@@ -592,10 +600,14 @@ class StudySessionsNotifier
         if (!mounted) return;
 
         state = state.whenData((sessions) => [created, ...sessions]);
-        print("✅ Saved: $minutes min");
+        debugPrint("✅ Saved: $minutes min");
+        ref
+          .read(analyticsProvider.notifier)
+          .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
         ref.invalidateSelf();
         ref.invalidate(studyAnalyticsProvider);
         ref.invalidate(dashboardProvider);
+        invalidateAnalyticsAndTrend(ref);
       } catch (e, st) {
         if (!mounted) return;
         state = previous;
@@ -612,20 +624,23 @@ class StudySessionsNotifier
     bool isFullyCompleted = false,
   }) async {
     final totalFocus = timerState.totalFocusAccumulated;
+    if (totalFocus > 240) {
+      return;
+    }
 
-    print("🍅 savePomodoroSession CALLED");
-    print("totalFocus = $totalFocus | cycles = ${timerState.completedCycles}/${timerState.totalRounds} | full=$isFullyCompleted");
+    debugPrint("🍅 savePomodoroSession CALLED");
+    debugPrint("totalFocus = $totalFocus | cycles = ${timerState.completedCycles}/${timerState.totalRounds} | full=$isFullyCompleted");
 
     // ── Validity gate ──
     final isValidPomodoro = totalFocus >= 10;
     if (!isValidPomodoro) {
-      print("❌ Pomodoro not saved: only ${totalFocus}m total focus");
+      debugPrint("❌ Pomodoro not saved: only ${totalFocus}m total focus");
       return;
     }
 
     // ── Duplicate save guard ──
     if (_pomodoroSaved) {
-      print("⚠️ Pomodoro already saved this session — skipping duplicate");
+      debugPrint("⚠️ Pomodoro already saved this session — skipping duplicate");
       return;
     }
     _pomodoroSaved = true;
@@ -636,8 +651,13 @@ class StudySessionsNotifier
     if (userId == null) return;
 
     if (timerState.courseId == null) {
-      print("❌ No course selected");
+      debugPrint("❌ No course selected");
       return;
+    }
+
+    final semesterId = ref.read(activeSemesterProvider);
+    if (semesterId == null) {
+      throw Exception('No active semester set. Cannot save session.');
     }
 
     _isSaving = true;
@@ -647,6 +667,7 @@ class StudySessionsNotifier
         id: '',
         userId: userId,
         courseId: timerState.courseId!,
+        semesterId: semesterId,
         sessionType: 'pomodoro',
         durationMinutes: totalFocus, // mirrors totalFocusMinutes for analytics
         createdAt: DateTime.now(),
@@ -660,6 +681,7 @@ class StudySessionsNotifier
         skippedBreaks: timerState.skippedBreak ? 1 : 0,
       );
 
+
       final previous = state;
       try {
         final created = await studyRepository.createSession(session)
@@ -668,10 +690,14 @@ class StudySessionsNotifier
         if (!mounted) return;
 
         state = state.whenData((sessions) => [created, ...sessions]);
-        print("✅ Pomodoro saved: ${totalFocus}m focus, ${timerState.completedCycles} cycles");
+        debugPrint("✅ Pomodoro saved: ${totalFocus}m focus, ${timerState.completedCycles} cycles");
+        ref
+          .read(analyticsProvider.notifier)
+          .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
         ref.invalidateSelf();
         ref.invalidate(studyAnalyticsProvider);
         ref.invalidate(dashboardProvider);
+        invalidateAnalyticsAndTrend(ref);
       } catch (e, st) {
         if (!mounted) return;
         state = previous;
@@ -692,14 +718,18 @@ class StudySessionsNotifier
 }
 
 final studySessionsProvider = StateNotifierProvider<StudySessionsNotifier,
-    AsyncValue<List<StudySession>>>(
-  (ref) {
-    final repo = ref.watch(app.studyRepositoryProvider);
-    final supabase = Supabase.instance.client;
-    return StudySessionsNotifier(
-      studyRepository: repo,
-      supabaseClient: supabase,
-      ref: ref,
-    );
-  },
-);
+    AsyncValue<List<StudySession>>>((ref) {
+  final repo = ref.watch(app.studyRepositoryProvider);
+  final userId = ref.watch(app.currentUserProvider)?.id;
+  final semesterId = ref.watch(activeSemesterProvider);
+  final supabase = Supabase.instance.client;
+  final notifier = StudySessionsNotifier(
+    studyRepository: repo,
+    supabaseClient: supabase,
+    ref: ref,
+  );
+  if (userId != null) {
+    notifier.loadSessions(userId: userId, semesterId: semesterId);
+  }
+  return notifier;
+});

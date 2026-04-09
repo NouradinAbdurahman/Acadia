@@ -5,11 +5,15 @@ class NotificationService {
 
   NotificationService(this._supabase);
 
-  Future<List<Map<String, dynamic>>> getNotifications(String userId) async {
+  Future<List<Map<String, dynamic>>> getNotifications({
+    required String userId,
+    required String semesterId,
+  }) async {
     return _supabase
         .from('notifications')
         .select()
         .eq('user_id', userId)
+        .eq('semester_id', semesterId)
         .order('created_at', ascending: false);
   }
 

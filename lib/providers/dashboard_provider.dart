@@ -108,7 +108,6 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final deadlines = deadlinesAsync.value ?? [];
   final pendingDeadlines = deadlines.where((d) => !d.isCompleted).toList();
   final sessions = sessionsAsync.value ?? [];
-  final semesters = semestersAsync.value ?? [];
 
   if (profile == null) return const AsyncValue.loading();
 
@@ -173,8 +172,7 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   // 4. Weekly Goal (Source of Truth: AppUser from users table)
   final appUserAsync = ref.watch(currentAppUserProvider);
   final weeklyStudyGoalMinutes =
-      (appUserAsync.value?.weeklyStudyGoal ?? profile.studyHoursPerWeek ?? 20) *
-      60;
+      (appUserAsync.value?.weeklyStudyGoal ?? 15) * 60;
 
   // Weekly Completed (Approx 7 days back)
   final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
@@ -182,20 +180,14 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
       .where((s) => s.createdAt.isAfter(startOfWeek))
       .fold(0, (sum, s) => sum + s.durationMinutes);
 
-  String? currentSemesterId;
-  for (final semester in semesters) {
-    if (semester.isCurrent) {
-      currentSemesterId = semester.id;
-      break;
-    }
-  }
+  final activeSemesterId = ref.watch(activeSemesterProvider);
 
-  // 5. Course Stats (filtered by semester_id)
+  // 5. Course Stats (filtered by active semester)
   final activeCoursesStats = courses
       .where((c) {
         if (!c.isActive) return false;
-        if (currentSemesterId == null) return true;
-        return c.semesterId == currentSemesterId;
+        if (activeSemesterId == null) return true;
+        return c.semesterId == activeSemesterId;
       })
       .map((c) {
         return CourseStats(

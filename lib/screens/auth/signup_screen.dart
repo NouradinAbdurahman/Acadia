@@ -6,17 +6,14 @@ import 'package:heroicons/heroicons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:acadia/l10n/app_localizations.dart';
 import '../../core/design/app_spacing.dart';
-import '../../core/design/app_durations.dart';
+
 import '../../widgets/auth/auth_background_container.dart';
-import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../components/app_text_field.dart';
-import '../../components/app_glass_card.dart';
 import 'password_validation.dart';
 import '../../providers/app_providers.dart';
 
@@ -69,16 +66,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       final remaining = authRepo.remainingEmailRateLimitTime();
       if (remaining != Duration.zero) {
         final timeStr = '${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, "0")}';
-        setState(() => _errorMessage = l10n?.emailRateLimitWithTimer(timeStr) ?? 'Try again in $timeStr');
+        setState(() => _errorMessage = l10n?.emailRateLimitWithTimer(timeStr) ?? '');
       } else {
-        setState(() => _errorMessage = l10n?.emailRateLimit ?? 'Too many attempts. Please wait a few minutes.');
+        setState(() => _errorMessage = l10n?.emailRateLimit ?? '');
       }
       return;
     }
 
     // 2. Check Signup Success Cooldown
     if (!authRepo.canSignup()) {
-      setState(() => _errorMessage = l10n?.pleaseWait ?? 'Please wait a moment before trying again.');
+      setState(() => _errorMessage = l10n?.pleaseWait ?? '');
       return;
     }
 
@@ -105,7 +102,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         final user = response.user;
         if (user != null && user.identities != null && user.identities!.isEmpty) {
           setState(() {
-            _errorMessage = l10n?.emailAlreadyInUse ?? 'Email already in use';
+            _errorMessage = l10n?.emailAlreadyInUse ?? '';
           });
           debugPrint('SIGNUP ERROR: email_already_in_use');
           Haptics.vibrate(HapticsType.error);
@@ -119,25 +116,25 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       Haptics.vibrate(HapticsType.error);
       debugPrint('SIGNUP ERROR: timeout');
       if (mounted) {
-        setState(() => _errorMessage = l10n?.requestTimedOut ?? 'Request timed out');
+        setState(() => _errorMessage = l10n?.requestTimedOut ?? '');
       }
     } on AuthApiException catch (e) {
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
-        String msg = l10n?.networkError ?? 'Authentication error';
+        String msg = l10n?.networkError ?? '';
         final lower = e.message.toLowerCase();
         
         if (e.code == 'over_email_send_rate_limit' || lower.contains('rate limit')) {
           debugPrint('SIGNUP ERROR: rate_limit detected');
-          msg = l10n?.emailRateLimit ?? 'Too many attempts. Please wait a few minutes.';
+          msg = l10n?.emailRateLimit ?? '';
         } else if (lower.contains('already registered') || e.code == 'user_already_exists') {
-          msg = l10n?.emailAlreadyInUse ?? 'Email already in use';
+          msg = l10n?.emailAlreadyInUse ?? '';
         } else if (e.code == 'invalid_email' || lower.contains('invalid email')) {
-          msg = l10n?.invalidEmail ?? 'Invalid email';
+          msg = l10n?.invalidEmail ?? '';
         } else if (e.code == 'weak_password') {
-          msg = l10n?.passwordTooShort ?? 'Password is too weak';
+          msg = l10n?.passwordTooShort ?? '';
         } else if (e.code == 'signup_cooldown') {
-          msg = l10n?.pleaseWait ?? 'Please wait a moment before trying again.';
+          msg = l10n?.pleaseWait ?? '';
         } else {
           msg = e.message;
         }
@@ -147,16 +144,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } on SocketException {
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
-        setState(() => _errorMessage = l10n?.checkInternetConnection ?? 'Check your internet connection');
+        setState(() => _errorMessage = l10n?.checkInternetConnection ?? '');
       }
     } catch (e) {
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
         final errText = e.toString();
         if (errText.contains('SocketException') || errText.contains('ClientException')) {
-          setState(() => _errorMessage = l10n?.checkInternetConnection ?? 'Check your internet connection');
+          setState(() => _errorMessage = l10n?.checkInternetConnection ?? '');
         } else {
-          setState(() => _errorMessage = l10n?.networkError ?? 'Network error');
+          setState(() => _errorMessage = l10n?.networkError ?? '');
         }
       }
     } finally {
@@ -181,187 +178,313 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       final minutes = remainingTime.inMinutes;
       final seconds = remainingTime.inSeconds % 60;
       final timeStr = '$minutes:${seconds.toString().padLeft(2, '0')}';
-      buttonText = l10n?.emailRateLimitWithTimer(timeStr) ?? 'Wait $timeStr';
+      buttonText = l10n?.emailRateLimitWithTimer(timeStr) ?? '';
     }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          l10n?.signup ?? '',
-          style: theme.textTheme.displayLarge?.copyWith(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: const SizedBox.shrink(),
         elevation: 0,
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
       ),
       body: AuthBackgroundContainer(
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-              child: AppGlassCard(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        height: 100,
-                        child: Lottie.asset(
-                          'assets/add_new_user.json',
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                                 AppIcon(
-                            HeroIcons.userPlus,
-                            size: 80,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      )
-                          .animate()
-                          .fade(duration: AppDurations.slow)
-                          .scale(delay: 200.ms),
-                      const SizedBox(height: AppSpacing.lg),
-                      if (_errorMessage != null) 
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
-                          ),
-                          child: Text(
-                            _errorMessage!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.error
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(
+                          height: 120,
+                          child: Hero(
+                            tag: 'app_header_logo_signup',
+                            child: Image.asset(
+                              'assets/logo.png',
+                              fit: BoxFit.contain,
                             ),
-                            textAlign: TextAlign.center,
                           ),
-                        ).animate().fade().scale(),
-                      AppTextField(
-                        controller: _nameController,
-                        labelText: l10n?.fullName ?? '', 
-                        prefixIcon: HeroIcons.user,
-                        validator: (value) => value == null || value.isEmpty 
-                          ? (l10n?.requiredField ?? '') 
-                          : null,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      AppTextField(
-                        controller: _emailController,
-                        labelText: l10n?.email ?? '', 
-                        prefixIcon: HeroIcons.envelope,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) => value == null || value.isEmpty || !value.contains('@') 
-                          ? (l10n?.invalidEmail ?? '') 
-                          : null,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      AppTextField(
-                        controller: _passwordController,
-                        onChanged: (_) => setState(() {}),
-                        labelText: l10n?.password ?? '', 
-                        prefixIcon: HeroIcons.lockClosed,
-                        obscureText: true,
-                        validator: (value) =>
-                            validatePasswordForSignup(value, l10n),
-                      ),
-                      // Animated Password Strength Indicator
-                      const SizedBox(height: AppSpacing.xs),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                        child: Column(
+                        ).animate().fade().slideY(begin: 0.1),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          l10n?.appName ?? '',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.displayLarge?.copyWith(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ).animate().fade(delay: 100.ms).slideY(begin: 0.1),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          l10n?.signupSubtitle ?? '',
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                          ),
+                        ).animate().fade(delay: 150.ms).slideY(begin: 0.1),
+                        const SizedBox(height: AppSpacing.lg),
+                        if (_errorMessage != null)
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.error.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: theme.colorScheme.error.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              _errorMessage!,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.error,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ).animate().fade().scale(),
+                        Column(
                           children: [
-                            if (_passwordController.text.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      passwordStrengthLabel(
-                                        _passwordController.text,
-                                        l10n,
-                                      ),
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: passwordStrengthColor(
-                                          theme,
-                                          _passwordController.text,
-                                        ),
+                            AppTextField(
+                              controller: _nameController,
+                              labelText: l10n?.fullName ?? '',
+                              prefixIcon: HeroIcons.user,
+                              fillColor: Colors.white.withValues(alpha: 0.06),
+                              borderColor: Colors.white.withValues(alpha: 0.15),
+                              focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                              validator: (value) =>
+                                  value == null || value.isEmpty ? (l10n?.requiredField ?? '') : null,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            AppTextField(
+                              controller: _emailController,
+                              labelText: l10n?.email ?? '',
+                              prefixIcon: HeroIcons.envelope,
+                              fillColor: Colors.white.withValues(alpha: 0.06),
+                              borderColor: Colors.white.withValues(alpha: 0.15),
+                              focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (value) =>
+                                  value == null || value.isEmpty || !value.contains('@')
+                                      ? (l10n?.invalidEmail ?? '')
+                                      : null,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            AppTextField(
+                              controller: _passwordController,
+                              onChanged: (_) => setState(() {}),
+                              labelText: l10n?.password ?? '',
+                              prefixIcon: HeroIcons.lockClosed,
+                              fillColor: Colors.white.withValues(alpha: 0.06),
+                              borderColor: Colors.white.withValues(alpha: 0.15),
+                              focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                              obscureText: true,
+                              validator: (value) => validatePasswordForSignup(value, l10n),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Column(
+                                children: [
+                                  if (_passwordController.text.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            passwordStrengthLabel(
+                                              _passwordController.text,
+                                              l10n,
+                                            ),
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: passwordStrengthColor(
+                                                theme,
+                                                _passwordController.text,
+                                              ),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (_passwordController.text.length < 8)
+                                            Text(
+                                              '${_passwordController.text.length}/8',
+                                              style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.textTheme.bodySmall?.color,
                                         fontSize: 10,
-                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                    if (_passwordController.text.length < 8)
-                                      Text(
-                                        '${_passwordController.text.length}/8',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.textTheme.bodySmall?.color,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ).animate().fade().slideY(begin: -0.5),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      AppTextField(
-                        controller: _confirmPasswordController,
-                        labelText: l10n?.confirmPassword ?? '', 
-                        prefixIcon: HeroIcons.lockClosed,
-                        obscureText: true,
-                        validator: (value) => validateConfirmPasswordForSignup(
-                          value,
-                          _passwordController.text,
-                          l10n,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      AppButton(
-                        onPressed: (_isLoading || isEmailLimited)
-                            ? null
-                            : _signUp,
-                        isLoading: _isLoading,
-                        text: buttonText,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      AppButton(
-                        onPressed: () => context.pop(),
-                        variant: AppButtonVariant.text,
-                        text: '', // Child is used
-                        child: RichText(
-                          text: TextSpan(
-                            text: '${l10n?.alreadyHaveAccount ?? ''} ',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.textTheme.bodySmall?.color,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: l10n?.login ?? '',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: theme.colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                ],
                               ),
-                            ],
+                            ).animate().fade().slideY(begin: -0.5),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    AppTextField(
+                      controller: _confirmPasswordController,
+                      labelText: l10n?.confirmPassword ?? '',
+                      prefixIcon: HeroIcons.lockClosed,
+                      fillColor: Colors.white.withValues(alpha: 0.06),
+                      borderColor: Colors.white.withValues(alpha: 0.15),
+                      focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                      obscureText: true,
+                      validator: (value) => validateConfirmPasswordForSignup(
+                        value,
+                        _passwordController.text,
+                        l10n,
+                      ),
+                    ),
+                  ],
+                ).animate().fade(delay: 200.ms).slideY(begin: 0.1),
+                const SizedBox(height: AppSpacing.xl),
+                AppButton(
+                  onPressed: (_isLoading || isEmailLimited) ? null : _signUp,
+                  isLoading: _isLoading,
+                  text: buttonText,
+                  isFullWidth: true,
+                ).animate().fade(delay: 300.ms).slideY(begin: 0.1),
+                const SizedBox(height: AppSpacing.md),
+                _buildOrContinueWith(context).animate().fade(delay: 350.ms).slideY(begin: 0.1),
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSocialButton(
+                        context: context,
+                        assetPath: 'assets/google.png',
+                        label: l10n?.googleLabel ?? '',
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _buildSocialButton(
+                        context: context,
+                        assetPath: 'assets/icons/apple.png',
+                        label: l10n?.appleLabel ?? '',
+                      ),
+                    ),
+                  ],
+                ).animate().fade(delay: 400.ms).slideY(begin: 0.1),
+                const SizedBox(height: AppSpacing.lg),
+                AppButton(
+                  onPressed: () => context.pop(),
+                  variant: AppButtonVariant.text,
+                  text: '',
+                  child: RichText(
+                    text: TextSpan(
+                      text: '${l10n?.alreadyHaveAccount ?? ''} ',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.textTheme.bodySmall?.color,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: l10n?.login ?? '',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                ).animate().fade(delay: 450.ms).slideY(begin: 0.1),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ).animate().fade(duration: AppDurations.slow, curve: Curves.easeOut).slideY(begin: 0.1),
+              );
+            },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildOrContinueWith(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.25),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          child: Text(
+            l10n?.orContinueWith ?? '',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.25),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required BuildContext context,
+    required String assetPath,
+    required String label,
+  }) {
+    final theme = Theme.of(context);
+    return OutlinedButton(
+      onPressed: () {},
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(50),
+        side: BorderSide(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.22),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        backgroundColor: Colors.white.withValues(alpha: 0.05),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            assetPath,
+            width: label == 'Google' ? 24 : 20,
+            height: label == 'Google' ? 24 : 20,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(
+                Icons.apple,
+                size: 20,
+                color: theme.colorScheme.onSurface,
+              );
+            },
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
     );
   }

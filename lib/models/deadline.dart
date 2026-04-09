@@ -12,6 +12,7 @@ class Deadline {
   final DateTime? completedAt;
   final DateTime createdAt;
 
+
   /// Alias: fixed target date (same as [deadlineDate]).
   DateTime get dueDate => deadlineDate;
 
@@ -33,6 +34,7 @@ class Deadline {
     required this.createdAt,
   });
 
+
   factory Deadline.fromJson(Map<String, dynamic> json) {
     return Deadline(
       id: json['id'] as String,
@@ -50,6 +52,7 @@ class Deadline {
           : null,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
+
   }
 
   Map<String, dynamic> toJson() {
@@ -67,6 +70,7 @@ class Deadline {
       if (completedAt != null) 'completed_at': completedAt!.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
     };
+
   }
 
   Deadline copyWith({
@@ -84,6 +88,7 @@ class Deadline {
     bool clearCompletedAt = false,
     DateTime? createdAt,
   }) {
+
     return Deadline(
       id: id ?? this.id,
       userId: userId ?? this.userId,
@@ -98,5 +103,6 @@ class Deadline {
       completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       createdAt: createdAt ?? this.createdAt,
     );
+
   }
 }

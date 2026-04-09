@@ -4,6 +4,10 @@ class AnalyticsData {
   final double taskCompletionRate;
   final int completedTasks;
   final int totalTasks;
+  final double averageGPA;
+  final double weeklyAverageStudyHours;
+  final int totalECTS;
+  final double riskScore;
 
   AnalyticsData({
     required this.studyHoursPerCourse,
@@ -11,5 +15,11 @@ class AnalyticsData {
     required this.taskCompletionRate,
     required this.completedTasks,
     required this.totalTasks,
+    this.averageGPA = 0.0,
+    this.weeklyAverageStudyHours = 0.0,
+    this.totalECTS = 0,
+    this.riskScore = 0.0,
   });
+
+  bool get hasValidGpa => gradeDistribution.isNotEmpty;
 }

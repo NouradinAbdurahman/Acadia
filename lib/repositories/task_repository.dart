@@ -6,21 +6,25 @@ class TaskRepository {
 
   TaskRepository(this._taskService);
 
-  Future<List<Task>> getTasks(String userId) async {
-    final data = await _taskService.getTasks(userId);
+  Future<List<Task>> getTasks({required String userId, String? semesterId}) async {
+    final data = await _taskService.getTasks(userId: userId, semesterId: semesterId);
     return data.map((json) => Task.fromJson(json)).toList();
   }
+
 
   Future<List<Task>> getTasksByDeadline({
     required String userId,
     required String deadlineId,
+    String? semesterId,
   }) async {
     final data = await _taskService.getTasksByDeadline(
       userId: userId,
       deadlineId: deadlineId,
+      semesterId: semesterId,
     );
     return data.map((json) => Task.fromJson(json)).toList();
   }
+
 
   Future<Task> createTask(Task task) async {
     // Excluding id and created_at because defaults are set in DB

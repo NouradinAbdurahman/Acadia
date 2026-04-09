@@ -3,32 +3,42 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/course_result.dart';
 import 'app_providers.dart';
-
-final selectedResultsSemesterProvider = StateProvider<String?>((ref) => null);
+import 'semester_provider.dart';
 
 final courseResultsProvider =
-    StateNotifierProvider<
-      CourseResultsNotifier,
-      AsyncValue<List<CourseResult>>
-    >((ref) {
-      final repository = ref.watch(courseResultRepositoryProvider);
-      final supabase = ref.watch(supabaseProvider);
-      return CourseResultsNotifier(
-        repository: repository,
-        supabaseClient: supabase,
-      );
-    });
+    StateNotifierProvider<CourseResultsNotifier, AsyncValue<List<CourseResult>>>(
+      (ref) {
+        final repository = ref.watch(courseResultRepositoryProvider);
+        final supabase = ref.watch(supabaseProvider);
+        final semesterId = ref.watch(activeSemesterProvider);
 
-class CourseResultsNotifier
-    extends StateNotifier<AsyncValue<List<CourseResult>>> {
-  CourseResultsNotifier({
-    required this.repository,
-    required this.supabaseClient,
-  }) : super(const AsyncValue.loading());
+        final notifier = CourseResultsNotifier(
+          repository: repository,
+          supabaseClient: supabase,
+        );
+
+        if (semesterId != null) {
+          notifier.loadForSemester(semesterId, forceRefresh: true);
+        } else {
+          notifier.clear();
+        }
+
+        return notifier;
+      },
+    );
+
+class CourseResultsNotifier extends StateNotifier<AsyncValue<List<CourseResult>>> {
+  CourseResultsNotifier({required this.repository, required this.supabaseClient})
+      : super(const AsyncValue.loading());
 
   final dynamic repository;
   final SupabaseClient supabaseClient;
   String? _lastLoadedSemesterId;
+
+  void clear() {
+    _lastLoadedSemesterId = null;
+    state = const AsyncValue.data([]);
+  }
 
   Future<void> loadForSemester(
     String semesterId, {
@@ -40,19 +50,16 @@ class CourseResultsNotifier
       return;
     }
 
-    if (!forceRefresh &&
-        _lastLoadedSemesterId == semesterId &&
-        state.hasValue) {
+    if (!forceRefresh && _lastLoadedSemesterId == semesterId && state.hasValue) {
       return;
     }
 
     try {
-      final items =
-          await repository.getResultsBySemester(
-                userId: userId,
-                semesterId: semesterId,
-              )
-              as List<CourseResult>;
+      final items = await repository.getResultsBySemester(
+            userId: userId,
+            semesterId: semesterId,
+          )
+          as List<CourseResult>;
       _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(items);
     } catch (e, st) {

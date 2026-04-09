@@ -8,7 +8,6 @@ import '../tasks/tasks_list_screen.dart';
 import '../study/study_screen.dart';
 import '../analytics/analytics_screen.dart';
 import '../profile/profile_screen.dart';
-import '../../core/theme/app_colors.dart';
 import '../../providers/study_sessions_provider.dart';
 import 'liquid_glass_navbar.dart';
 

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/notification.dart';
 import 'app_providers.dart';
+import 'semester_provider.dart';
 
 class _NotificationSeed {
   const _NotificationSeed({
@@ -23,12 +24,14 @@ class _NotificationSeed {
 class NotificationsNotifier
     extends StateNotifier<AsyncValue<List<NotificationModel>>> {
   NotificationsNotifier({
+    required this.ref,
     required this.notificationRepository,
     required this.supabaseClient,
   }) : super(const AsyncValue.loading()) {
     loadNotifications();
   }
 
+  final Ref ref;
   final dynamic notificationRepository;
   final SupabaseClient supabaseClient;
 
@@ -46,15 +49,21 @@ class NotificationsNotifier
   void _scheduleReload({required bool withSync}) {
     _reloadDebounce?.cancel();
     _reloadDebounce = Timer(const Duration(milliseconds: 350), () {
+      final semesterId = ref.read(activeSemesterProvider);
+      if (semesterId == null) {
+        state = const AsyncValue.data([]);
+        return;
+      }
+
       if (withSync) {
         loadNotifications();
       } else {
-        _fetchNotificationsOnly();
+        _fetchNotificationsOnly(semesterId: semesterId);
       }
     });
   }
 
-  Future<void> _fetchNotificationsOnly() async {
+  Future<void> _fetchNotificationsOnly({required String semesterId}) async {
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) {
       state = const AsyncValue.data([]);
@@ -63,11 +72,14 @@ class NotificationsNotifier
 
     try {
       final notifications =
-          await notificationRepository.getNotifications(userId)
+          await notificationRepository.getNotifications(
+                userId: userId,
+                semesterId: semesterId,
+              )
               as List<NotificationModel>;
       state = AsyncValue.data(notifications);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (_) {
+      state = const AsyncValue.data([]);
     }
   }
 
@@ -130,6 +142,7 @@ class NotificationsNotifier
 
   Future<void> _ensureDailyNotification({
     required String userId,
+    required String semesterId,
     required String referenceId,
     required String type,
     required String title,
@@ -139,6 +152,7 @@ class NotificationsNotifier
         .from('notifications')
         .select('id,title,message')
         .eq('user_id', userId)
+        .eq('semester_id', semesterId)
         .eq('reference_id', referenceId)
         .eq('type', type)
         .limit(1)
@@ -158,6 +172,7 @@ class NotificationsNotifier
       NotificationModel(
         id: '',
         userId: userId,
+        semesterId: semesterId,
         referenceId: referenceId,
         title: title,
         message: message,
@@ -279,9 +294,10 @@ class NotificationsNotifier
     }
   }
 
-  Future<List<_NotificationSeed>> _buildTaskAndDeadlineSeeds(
-    String userId,
-  ) async {
+  Future<List<_NotificationSeed>> _buildTaskAndDeadlineSeeds({
+    required String userId,
+    required String semesterId,
+  }) async {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
     final startOfTomorrow = startOfToday.add(const Duration(days: 1));
@@ -293,6 +309,7 @@ class NotificationsNotifier
           'id,title,course,course_id,deadline,status,courses:course_id(course_name)',
         )
         .eq('user_id', userId)
+        .eq('semester_id', semesterId)
         .neq('status', 'completed');
 
     final deadlineRows = await supabaseClient
@@ -301,6 +318,7 @@ class NotificationsNotifier
           'id,title,course,course_id,deadline_date,courses:course_id(course_name)',
         )
         .eq('user_id', userId)
+        .eq('semester_id', semesterId)
         .eq('is_completed', false);
 
     final seeds = <_NotificationSeed>[];
@@ -397,14 +415,21 @@ class NotificationsNotifier
     return seeds;
   }
 
-  Future<void> _syncTriggeredNotifications(String userId) async {
+  Future<void> _syncTriggeredNotifications({
+    required String userId,
+    required String semesterId,
+  }) async {
     await _removeLegacyStaticNotifications(userId);
     await _cleanupExistingDuplicates(userId);
 
-    final seeds = await _buildTaskAndDeadlineSeeds(userId);
+    final seeds = await _buildTaskAndDeadlineSeeds(
+      userId: userId,
+      semesterId: semesterId,
+    );
     for (final seed in seeds) {
       await _ensureDailyNotification(
         userId: userId,
+        semesterId: semesterId,
         referenceId: seed.referenceId,
         type: seed.type,
         title: seed.title,
@@ -416,14 +441,8 @@ class NotificationsNotifier
     final startOfToday = DateTime(now.year, now.month, now.day);
 
     if (now.weekday == DateTime.sunday) {
-      final profile = await supabaseClient
-          .from('student_profiles')
-          .select('study_hours_per_week')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      final weeklyGoalMinutes =
-          (((profile?['study_hours_per_week'] as num?)?.toInt() ?? 20) * 60);
+      final appUser = ref.read(currentAppUserProvider).valueOrNull;
+      final weeklyGoalMinutes = ((appUser?.weeklyStudyGoal ?? 15) * 60);
       final startOfWeek = startOfToday.subtract(
         Duration(days: now.weekday - 1),
       );
@@ -432,7 +451,8 @@ class NotificationsNotifier
           .from('study_sessions')
           .select('duration_minutes')
           .eq('user_id', userId)
-          .gte('start_time', startOfWeek.toIso8601String());
+          .eq('semester_id', semesterId)
+          .gte('created_at', startOfWeek.toIso8601String());
 
       final weekMinutes = weekSessions.fold<int>(
         0,
@@ -447,6 +467,7 @@ class NotificationsNotifier
         ).toIso8601String();
         await _ensureDailyNotification(
           userId: userId,
+          semesterId: semesterId,
           referenceId: 'study_goal:$weekKey',
           type: 'study_goal',
           title: 'Weekly study goal missed',
@@ -461,6 +482,7 @@ class NotificationsNotifier
     if (_isLoading) return;
 
     final userId = supabaseClient.auth.currentUser?.id;
+    final semesterId = ref.read(activeSemesterProvider);
     if (userId == null) {
       _subscribedUserId = null;
       if (_realtimeChannel != null) {
@@ -471,12 +493,28 @@ class NotificationsNotifier
       return;
     }
 
+    if (semesterId == null) {
+      state = const AsyncValue.data([]);
+      return;
+    }
+
     try {
       _isLoading = true;
       await _ensureRealtimeSubscription(userId);
-      await _syncTriggeredNotifications(userId);
+      try {
+        await _syncTriggeredNotifications(
+          userId: userId,
+          semesterId: semesterId,
+        );
+      } catch (_) {
+        // Non-critical: fetch existing notifications even if sync step fails.
+      }
+
       final notifications =
-          await notificationRepository.getNotifications(userId)
+          await notificationRepository.getNotifications(
+                userId: userId,
+                semesterId: semesterId,
+              )
               as List<NotificationModel>;
       state = AsyncValue.data(notifications);
     } catch (e, st) {
@@ -493,8 +531,8 @@ class NotificationsNotifier
       state = state.whenData(
         (items) => items.map((n) => n.id == updated.id ? updated : n).toList(),
       );
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (_) {
+      // Keep current state unchanged on mark-as-read transient failures.
     }
   }
 
@@ -514,9 +552,11 @@ final notificationsProvider =
       NotificationsNotifier,
       AsyncValue<List<NotificationModel>>
     >((ref) {
+      ref.watch(activeSemesterProvider);
       final repo = ref.watch(notificationRepositoryProvider);
       final supabase = Supabase.instance.client;
       return NotificationsNotifier(
+        ref: ref,
         notificationRepository: repo,
         supabaseClient: supabase,
       );

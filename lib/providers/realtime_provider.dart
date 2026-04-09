@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,6 +10,7 @@ import 'course_results_provider.dart';
 import 'deadlines_provider.dart';
 import 'derived_invalidation.dart';
 import 'risk_provider.dart';
+import 'semester_provider.dart';
 import 'study_sessions_provider.dart';
 import 'tasks_provider.dart';
 
@@ -42,12 +44,12 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
   }
 
   bool shouldRefreshSelectedSemesterResults(PostgresChangePayload payload) {
-    final selectedSemesterId = ref.read(selectedResultsSemesterProvider);
-    if (selectedSemesterId == null) return false;
+    final activeSemesterId = ref.read(activeSemesterProvider);
+    if (activeSemesterId == null) return false;
 
     final newSemesterId = payload.newRecord['semester_id']?.toString();
     final oldSemesterId = payload.oldRecord['semester_id']?.toString();
-    return newSemesterId == selectedSemesterId || oldSemesterId == selectedSemesterId;
+    return newSemesterId == activeSemesterId || oldSemesterId == activeSemesterId;
   }
 
   bool didCourseChangeAffectRisk(PostgresChangePayload payload) {
@@ -58,7 +60,7 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
   }
 
   void debugLog(String message) {
-    if (_kRealtimeDebug) print(message);
+    if (_kRealtimeDebug) debugPrint(message);
   }
 
   void scheduleTaskRefresh() {
@@ -91,12 +93,12 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
   void scheduleCourseResultsRefresh(String eventSemesterId) {
     courseResultsDebounce?.cancel();
     courseResultsDebounce = Timer(const Duration(milliseconds: 250), () async {
-      final selectedSemesterId = ref.read(selectedResultsSemesterProvider);
-      if (selectedSemesterId != null && selectedSemesterId == eventSemesterId) {
+      final activeSemesterId = ref.read(activeSemesterProvider);
+      if (activeSemesterId != null && activeSemesterId == eventSemesterId) {
         debugLog('Realtime: course results changed (selected semester)');
         await ref
             .read(courseResultsProvider.notifier)
-            .loadForSemester(selectedSemesterId, forceRefresh: true);
+            .loadForSemester(activeSemesterId, forceRefresh: true);
       }
       ref.invalidate(riskProvider);
       invalidateAnalyticsAndTrend(ref);

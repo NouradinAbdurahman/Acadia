@@ -5,7 +5,7 @@ class Course {
   final String userId;
   final String courseName;
   final String? courseCode;
-  final int? semester;
+  final int academicSemester;
   final String? semesterId;
   final int credits;
   final String? color;
@@ -18,7 +18,7 @@ class Course {
     required this.userId,
     required this.courseName,
     this.courseCode,
-    this.semester,
+    required this.academicSemester,
     this.semesterId,
     required this.credits,
     this.color,
@@ -33,7 +33,9 @@ class Course {
       userId: json['user_id'],
       courseName: json['course_name'],
       courseCode: json['course_code'],
-      semester: json['semester'],
+        academicSemester: (json['semester'] as num?)?.toInt() ??
+          int.tryParse(json['semester']?.toString() ?? '') ??
+          1,
       semesterId: json['semester_id'],
       credits: json['credits'] ?? 0,
       color: json['color'],
@@ -48,7 +50,7 @@ class Course {
       'user_id': userId,
       'course_name': courseName,
       'course_code': courseCode,
-      'semester': semester,
+      'semester': academicSemester,
       'semester_id': semesterId,
       'credits': credits,
       'color': color,
@@ -68,7 +70,7 @@ class Course {
     String? courseName,
     String? courseCode,
     String? semesterId,
-    int? semester,
+    int? academicSemester,
     int? credits,
     String? color,
     int? ects,
@@ -81,7 +83,7 @@ class Course {
       courseName: courseName ?? this.courseName,
       courseCode: courseCode ?? this.courseCode,
       semesterId: semesterId ?? this.semesterId,
-      semester: semester ?? this.semester,
+      academicSemester: academicSemester ?? this.academicSemester,
       credits: credits ?? this.credits,
       color: color ?? this.color,
       ects: ects ?? this.ects,
@@ -89,6 +91,9 @@ class Course {
       createdAt: createdAt ?? this.createdAt,
     );
   }
+
+  @Deprecated('Use academicSemester')
+  int get semester => academicSemester;
 
   Color get uiColor {
     if (color == null) return Colors.blue;

@@ -6,7 +6,6 @@ import '../../../core/design/app_spacing.dart';
 import '../../../providers/study_sessions_provider.dart';
 import '../../../providers/course_provider.dart';
 import '../../../l10n/app_localizations.dart';
-import 'dart:ui';
 import 'dart:math' as math;
 import 'study_session_dialogs.dart';
 
@@ -73,6 +72,17 @@ class ActiveSessionView extends ConsumerWidget {
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
+                if (timerState.intent == 'analytics_recommendation') ...[
+                  const SizedBox(height: 6),
+                  Text(
+                        l10n.startedFromAnalyticsRecommendation,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ).animate().fadeIn(delay: 250.ms),
+                ],
               ],
             ),
           ),

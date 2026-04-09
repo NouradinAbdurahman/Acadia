@@ -5,11 +5,17 @@ class DeadlineService {
 
   DeadlineService(this._supabase);
 
-  Future<List<Map<String, dynamic>>> getDeadlines(String userId) async {
-    return _supabase
+  Future<List<Map<String, dynamic>>> getDeadlines({
+    required String userId,
+    String? semesterId,
+  }) async {
+    if (semesterId == null) return [];
+
+    return await _supabase
         .from('academic_deadlines')
-        .select()
+      .select('*, courses!inner(semester_id)')
         .eq('user_id', userId)
+      .eq('courses.semester_id', semesterId)
         .order('deadline_date', ascending: true);
   }
 

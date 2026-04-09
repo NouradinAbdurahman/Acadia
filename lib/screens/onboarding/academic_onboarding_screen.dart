@@ -9,6 +9,7 @@ import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../core/design/app_radius.dart';
 import '../../components/app_button.dart';
+import '../../components/app_glass_card.dart';
 import '../../components/app_bottom_sheet_picker.dart';
 import '../../models/student_profile.dart';
 import '../../providers/student_profile_provider.dart';
@@ -30,6 +31,7 @@ class _AcademicOnboardingScreenState
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isSubmitting = false;
+  final int _currentYear = DateTime.now().year;
 
   // Form Controllers
   final _nameController = TextEditingController();
@@ -37,10 +39,9 @@ class _AcademicOnboardingScreenState
   final _majorController = TextEditingController();
 
   String? _selectedDegree;
-  int _selectedYear = 1;
   int _selectedGradYear = DateTime.now().year + 4;
   int _selectedSemester = 1;
-  double _studyHours = 20;
+  double _studyHours = 10;
   String _preferredTime = 'morning';
   String _breakPattern = 'pomodoro';
 
@@ -57,11 +58,11 @@ class _AcademicOnboardingScreenState
       _universityController.text = profile.universityName ?? '';
       _majorController.text = profile.major ?? '';
       _selectedDegree = profile.degreeType;
-      _selectedYear = profile.academicYear ?? 1;
-      _selectedGradYear =
-          profile.expectedGraduationYear ?? (DateTime.now().year + 4);
+        _selectedGradYear = (profile.expectedGraduationYear ?? (DateTime.now().year + 4))
+          .clamp(_currentYear, _currentYear + 10)
+          .toInt();
       _selectedSemester = profile.currentSemester ?? 1;
-      _studyHours = (profile.studyHoursPerWeek ?? 20).toDouble();
+        _studyHours = (profile.studyHoursPerWeek ?? 10).toDouble();
       _preferredTime = profile.preferredStudyTime ?? 'morning';
       _breakPattern = profile.breakPattern ?? 'pomodoro';
     }
@@ -95,6 +96,19 @@ class _AcademicOnboardingScreenState
         ).showSnackBar(SnackBar(content: Text(l10n.requiredField)));
         return;
       }
+    } else if (_currentStep == 2) {
+      if (_selectedSemester < 1) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.semesterNumberInvalid)));
+        return;
+      }
+      if (_studyHours < 1 || _studyHours > 80) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.weeklyStudyGoalInvalid)));
+        return;
+      }
     }
 
     if (_currentStep < 3) {
@@ -121,7 +135,7 @@ class _AcademicOnboardingScreenState
       universityName: _universityController.text,
       degreeType: _selectedDegree,
       major: _majorController.text,
-      academicYear: _selectedYear,
+      academicYear: null,
       currentSemester: _selectedSemester,
       expectedGraduationYear: _selectedGradYear,
       studyHoursPerWeek: _studyHours.toInt(),
@@ -177,6 +191,52 @@ class _AcademicOnboardingScreenState
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     children: [
+                      AppGlassCard(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(AppRadius.lg),
+                              ),
+                              child: AppIcon(
+                                HeroIcons.sparkles,
+                                color: theme.colorScheme.primary,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n?.academicAnalyticsContext ??
+                                        'This information helps personalize your academic analytics and recommendations.',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                                      height: 1.35,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    l10n?.onboardingRiskImpactHint ??
+                                        'Your semester and study goal are used to calculate academic risk and progress insights.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -321,28 +381,14 @@ class _AcademicOnboardingScreenState
             icon: HeroIcons.commandLine,
           ),
           const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: _buildNumberPicker(
-                  label: l10n?.academicYear ?? 'Year',
-                  value: _selectedYear,
-                  min: 1,
-                  max: 6,
-                  onChanged: (val) => setState(() => _selectedYear = val),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: _buildNumberPicker(
-                  label: l10n?.expectedGraduationYear ?? 'Grad Year',
-                  value: _selectedGradYear,
-                  min: DateTime.now().year,
-                  max: DateTime.now().year + 10,
-                  onChanged: (val) => setState(() => _selectedGradYear = val),
-                ),
-              ),
-            ],
+          _buildNumberPicker(
+            label: l10n?.expectedGraduationYear ?? 'Grad Year',
+            helperText: l10n?.graduationYearHint ??
+                'Choose your expected graduation year (this year or later).',
+            value: _selectedGradYear,
+            min: _currentYear,
+            max: _currentYear + 100,
+            onChanged: (val) => setState(() => _selectedGradYear = val),
           ),
         ],
       ).animate().fade().slideY(begin: 0.1),
@@ -356,16 +402,17 @@ class _AcademicOnboardingScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStepHeader(
-            l10n?.currentSemesterLoad ?? 'Semester Load',
+            l10n?.semesterTrackingSetup ?? 'Semester Tracking Setup',
             l10n?.loadDesc ?? 'Help us calibrate your expected workload.',
             HeroIcons.briefcase,
           ),
           const SizedBox(height: AppSpacing.xl),
           _buildNumberPicker(
             label: l10n?.currentSemesterNumber ?? 'Current Semester',
+            helperText: l10n?.currentSemesterHint ?? 'Enter your current semester number.',
             value: _selectedSemester,
             min: 1,
-            max: 12,
+            max: null,
             onChanged: (val) => setState(() => _selectedSemester = val),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -401,10 +448,20 @@ class _AcademicOnboardingScreenState
                 ),
                 Slider(
                   value: _studyHours,
-                  min: 5,
-                  max: 60,
-                  divisions: 55,
+                  min: 1,
+                  max: 80,
+                  divisions: 79,
                   onChanged: (val) => setState(() => _studyHours = val),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n?.studyGoalRecommendation ??
+                        'Recommended: 10-25 hours per week',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -421,8 +478,8 @@ class _AcademicOnboardingScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStepHeader(
-            l10n?.learningPatternCalibration ?? 'Learning Patterns',
-            l10n?.learningPatternDesc ?? 'When and how do you learn best?',
+            l10n?.optionalPreferencesTitle ?? 'Optional Preferences',
+            l10n?.optionalPreferencesDesc ?? 'You can change these later.',
             HeroIcons.sparkles,
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -572,9 +629,10 @@ class _AcademicOnboardingScreenState
 
   Widget _buildNumberPicker({
     required String label,
+    String? helperText,
     required int value,
     required int min,
-    required int max,
+    int? max,
     required ValueChanged<int> onChanged,
   }) {
     final theme = Theme.of(context);
@@ -592,8 +650,19 @@ class _AcademicOnboardingScreenState
         ),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: theme.textTheme.labelLarge),
+          if (helperText != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              helperText,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Row(
@@ -612,7 +681,9 @@ class _AcademicOnboardingScreenState
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 IconButton(
-                  onPressed: value < max ? () => onChanged(value + 1) : null,
+                  onPressed: max == null || value < max
+                      ? () => onChanged(value + 1)
+                      : null,
                   icon: const AppIcon(HeroIcons.plusCircle),
                 ),
               ],

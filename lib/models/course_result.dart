@@ -4,6 +4,8 @@ class CourseResult {
     required this.userId,
     required this.courseId,
     required this.semesterId,
+    this.courseName,
+    this.courseCode,
     required this.letterGrade,
     this.resultStatus,
     this.finalAverage,
@@ -16,6 +18,8 @@ class CourseResult {
   final String userId;
   final String courseId;
   final String semesterId;
+  final String? courseName;
+  final String? courseCode;
   final double? finalAverage;
   final String letterGrade;
   final String? resultStatus;
@@ -26,11 +30,14 @@ class CourseResult {
   factory CourseResult.fromJson(Map<String, dynamic> json) {
     final rawComponents =
         json['course_result_components'] as List<dynamic>? ?? const [];
+    final courseJoin = json['courses'] as Map<String, dynamic>?;
     return CourseResult(
       id: json['id'] as String,
       userId: json['user_id'] as String,
       courseId: json['course_id'] as String,
       semesterId: json['semester_id'] as String,
+      courseName: courseJoin?['course_name'] as String?,
+      courseCode: courseJoin?['course_code'] as String?,
       finalAverage: (json['final_average'] as num?)?.toDouble(),
       letterGrade: json['letter_grade'] as String,
       resultStatus: json['result_status'] as String?,
@@ -65,6 +72,8 @@ class CourseResult {
     String? userId,
     String? courseId,
     String? semesterId,
+    String? courseName,
+    String? courseCode,
     double? finalAverage,
     String? letterGrade,
     String? resultStatus,
@@ -77,6 +86,8 @@ class CourseResult {
       userId: userId ?? this.userId,
       courseId: courseId ?? this.courseId,
       semesterId: semesterId ?? this.semesterId,
+      courseName: courseName ?? this.courseName,
+      courseCode: courseCode ?? this.courseCode,
       finalAverage: finalAverage ?? this.finalAverage,
       letterGrade: letterGrade ?? this.letterGrade,
       resultStatus: resultStatus ?? this.resultStatus,

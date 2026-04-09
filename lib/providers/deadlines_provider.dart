@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/deadline.dart';
 import 'app_providers.dart';
+import 'semester_provider.dart';
+
 import 'derived_invalidation.dart';
 import 'tasks_provider.dart';
 
@@ -12,31 +14,31 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
     required this.deadlineRepository,
     required this.supabaseClient,
   })  : _ref = ref,
-        super(const AsyncValue.loading()) {
-    _loadDeadlines();
-  }
+        super(const AsyncValue.loading());
+
 
   final Ref _ref;
   final dynamic deadlineRepository;
   final SupabaseClient supabaseClient;
 
-  Future<void> _loadDeadlines() async {
-    final userId = supabaseClient.auth.currentUser?.id;
-    if (userId == null) {
-      state = const AsyncValue.data([]);
-      return;
-    }
+  Future<void> loadDeadlines({required String userId, String? semesterId}) async {
     try {
-      final list =
-          await deadlineRepository.getDeadlines(userId) as List<Deadline>;
+      state = const AsyncValue.loading();
+      final list = await deadlineRepository.getDeadlines(userId: userId, semesterId: semesterId) as List<Deadline>;
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<void> refresh() async {
-    await _loadDeadlines();
+    final userId = supabaseClient.auth.currentUser?.id;
+    final semesterId = _ref.read(activeSemesterProvider);
+    if (userId != null) {
+      await loadDeadlines(userId: userId, semesterId: semesterId);
+    }
   }
 
   Future<void> createDeadline(Deadline deadline) async {
@@ -136,12 +138,18 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
 final deadlinesProvider =
     StateNotifierProvider<DeadlinesNotifier, AsyncValue<List<Deadline>>>((ref) {
       final repo = ref.watch(deadlineRepositoryProvider);
+      final userId = ref.watch(currentUserProvider)?.id;
+      final semesterId = ref.watch(activeSemesterProvider);
       final supabase = Supabase.instance.client;
-      return DeadlinesNotifier(
+      final notifier = DeadlinesNotifier(
         ref: ref,
         deadlineRepository: repo,
         supabaseClient: supabase,
       );
+      if (userId != null) {
+        notifier.loadDeadlines(userId: userId, semesterId: semesterId);
+      }
+      return notifier;
     });
 
 final filteredDeadlinesProvider = Provider<AsyncValue<List<Deadline>>>((ref) {

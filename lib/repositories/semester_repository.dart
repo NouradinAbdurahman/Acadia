@@ -24,8 +24,4 @@ class SemesterRepository {
   Future<void> deleteSemester(String id) async {
     await _service.deleteSemester(id);
   }
-
-  Future<void> setCurrentSemester(String id) async {
-    await _service.setCurrentSemester(id);
-  }
 }

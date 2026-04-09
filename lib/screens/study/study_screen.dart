@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element, unused_local_variable
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +23,8 @@ import '../../providers/course_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../providers/analytics_provider.dart';
+import '../../providers/student_profile_provider.dart';
+import '../../providers/decision_engine_provider_v2.dart';
 import '../../l10n/app_localizations.dart';
 import 'study_history_screen.dart';
 
@@ -37,6 +41,7 @@ class StudyScreen extends ConsumerStatefulWidget {
 
 class _StudyScreenState extends ConsumerState<StudyScreen> {
   ProviderSubscription? _timerSub;
+  ProviderSubscription<AdaptationMode>? _modeSub;
 
   @override
   void initState() {
@@ -44,26 +49,125 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     
     _timerSub = ref.listenManual(studyTimerProvider, (prev, next) {
       if (next.isCompleted && prev?.isCompleted != true) {
-        print("LISTENER FIRED → (no save, provider handles it)");
+        debugPrint("LISTENER FIRED → (no save, provider handles it)");
       }
     });
+
+    _modeSub = ref.listenManual<AdaptationMode>(
+      studyAdaptationModeProvider,
+      (previous, next) {
+        if (!mounted) return;
+        final timerState = ref.read(studyTimerProvider);
+        final isIdle =
+            !timerState.isRunning && !timerState.isPaused && !timerState.isCompleted;
+        if (!isIdle) return;
+
+        final analytics = ref.read(studyAnalyticsProvider);
+        final minutes = _recommendedDurationForMode(analytics, next);
+        ref.read(studyTimerProvider.notifier).setDuration(Duration(minutes: minutes));
+      },
+    );
 
     // Auto-apply suggested duration on screen load if idle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final analytics = ref.read(studyAnalyticsProvider);
+        final adaptationMode = ref.read(studyAdaptationModeProvider);
+        final profile = ref.read(studentProfileProvider).valueOrNull;
         final timerState = ref.read(studyTimerProvider);
         final bool isIdle = !timerState.isRunning && !timerState.isPaused && !timerState.isCompleted;
         if (isIdle) {
-          ref.read(studyTimerProvider.notifier).setDuration(Duration(minutes: analytics.suggestedDuration));
+          final notifier = ref.read(studyTimerProvider.notifier);
+          final breakPattern = profile?.breakPattern ?? 'mixed';
+          notifier.setStudyType(_studyTypeFromPattern(breakPattern));
+          notifier.setDuration(
+            Duration(
+              minutes: _recommendedDurationForMode(analytics, adaptationMode),
+            ),
+          );
         }
       }
     });
   }
 
+  StudyType _studyTypeFromPattern(String pattern) {
+    switch (pattern) {
+      case 'pomodoro':
+        return StudyType.pomodoro;
+      case 'deep_work':
+        return StudyType.deepWork;
+      default:
+        return StudyType.review;
+    }
+  }
+
+  String _preferredTimeLabel(AppLocalizations l10n, String? preferredTime) {
+    switch (preferredTime) {
+      case 'night':
+        return l10n.night;
+      case 'afternoon':
+        return l10n.afternoon;
+      default:
+        return l10n.morning;
+    }
+  }
+
+  String _breakPatternLabel(AppLocalizations l10n, String? breakPattern) {
+    switch (breakPattern) {
+      case 'pomodoro':
+        return l10n.pomodoro;
+      case 'deep_work':
+        return l10n.deepWork;
+      default:
+        return l10n.mixed;
+    }
+  }
+
+  int _roundPlanMinutes(double minutes) {
+    if (minutes <= 0) return 0;
+    return ((minutes / 5).ceil() * 5).clamp(5, 240);
+  }
+
+  int _roundToFive(double minutes) {
+    if (minutes <= 0) return 0;
+    return ((minutes / 5).round() * 5).clamp(5, 240);
+  }
+
+  int _recommendedDurationForMode(StudyAnalytics analytics, AdaptationMode mode) {
+    if (mode == AdaptationMode.followBehavior) {
+      return analytics.recommendedDurationForMode(mode).clamp(30, 45);
+    }
+    return 60;
+  }
+
+  double _weeklyGoalHours(StudyAnalytics analytics) {
+    return analytics.weeklyGoalMinutes / 60.0;
+  }
+
+  double _dailyTargetHours(StudyAnalytics analytics) {
+    final weekHours = _currentWeekHours(analytics);
+    final remainingWeeklyHours = (_weeklyGoalHours(analytics) - weekHours)
+        .clamp(0.0, 40.0);
+    final remainingDays = (8 - DateTime.now().weekday).clamp(1, 7);
+    final dailyTarget = remainingWeeklyHours / remainingDays;
+    return dailyTarget.clamp(0.0, 3.0);
+  }
+
+  double _currentWeekHours(StudyAnalytics analytics) {
+    final thisWeekMinutes = analytics.weeklyTotals['thisWeek'] ?? 0;
+    return thisWeekMinutes / 60.0;
+  }
+
+  double _expectedHoursByToday(StudyAnalytics analytics) {
+    final weekday = DateTime.now().weekday.clamp(1, 7);
+    final expectedMinutes = (analytics.weeklyGoalMinutes * (weekday / 7.0));
+    return expectedMinutes / 60.0;
+  }
+
   @override
   void dispose() {
     _timerSub?.close();
+    _modeSub?.close();
     super.dispose();
   }
 
@@ -84,8 +188,6 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final bool isCompleted = timerState.isCompleted;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      primary: false,
       body: AuthBackgroundContainer(
         child: SafeArea(
           top: false,
@@ -208,6 +310,41 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   ) {
     final canStart = state.courseId != null &&
         state.targetDuration.inMinutes >= _kMinMinutes;
+    final decisionAsync = ref.watch(decisionEngineActiveProvider);
+    final sessionsToday = (ref.watch(studySessionsProvider).valueOrNull ?? const [])
+        .where((s) {
+          final now = DateTime.now();
+          return s.createdAt.year == now.year &&
+              s.createdAt.month == now.month &&
+              s.createdAt.day == now.day;
+        })
+        .toList();
+    final adaptationMode = ref.watch(studyAdaptationModeProvider);
+    final profile = ref.watch(studentProfileProvider).valueOrNull;
+    final suggestedMinutes = _recommendedDurationForMode(analytics, adaptationMode);
+    final followBehavior = adaptationMode == AdaptationMode.followBehavior;
+    final dominantSlot = analytics.dominantStudyTime;
+    final hasStableSignal = analytics.hasReliableBehaviorSignal;
+    final recommendedSlot =
+      adaptationMode == AdaptationMode.followBehavior && hasStableSignal
+        ? (dominantSlot ?? profile?.preferredStudyTime)
+        : profile?.preferredStudyTime;
+    final dailyTargetHours = _dailyTargetHours(analytics);
+    final weekHours = _currentWeekHours(analytics);
+    final expectedHours = _expectedHoursByToday(analytics);
+    final isBehindGoal = weekHours < expectedHours;
+    final adaptiveHintTime = analytics.adaptiveHintStudyTime;
+    final morningCount = analytics.sessionsForSlot('morning');
+    final afternoonCount = analytics.sessionsForSlot('afternoon');
+    final nightCount = analytics.sessionsForSlot('night');
+    final behaviorConfidence = analytics.behaviorConfidence.toInt();
+    final preferenceConfidence = analytics.preferenceConfidence.toInt();
+    final weeklyDeficitHours = analytics.weeklyDeficitHours;
+    final weeklyGoalHours = analytics.weeklyGoalHours;
+    final inconsistencyScore = analytics.timeInconsistencyScore.toInt();
+    final irregularPattern = analytics.irregularStudyPattern;
+    final recoveryDetected = analytics.recoveryDetected;
+    final hasBurnoutTrendHistory = analytics.hasBurnoutTrendHistory;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +364,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                 ).animate().fade().slideX(begin: -0.1),
                 const SizedBox(height: 4),
                 Text(
-                  "${l10n.minutesFocused(analytics.todayMinutes)} • ${analytics.isStable ? l10n.statusStable : l10n.statusVariable}",
+                  l10n.todayMinutesCompleted(analytics.todayMinutes),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w500,
@@ -250,6 +387,246 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
+        AppGlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.recommendedForYouTitle,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SegmentedButton<AdaptationMode>(
+                segments: [
+                  ButtonSegment<AdaptationMode>(
+                    value: AdaptationMode.keepPreference,
+                    label: Text(l10n.keepMyPreference),
+                  ),
+                  ButtonSegment<AdaptationMode>(
+                    value: AdaptationMode.followBehavior,
+                    label: Text(l10n.followActualBehavior),
+                  ),
+                ],
+                showSelectedIcon: true,
+                emptySelectionAllowed: false,
+                selected: {adaptationMode},
+                onSelectionChanged: (selection) {
+                  final next = selection.first;
+                  ref.read(studyAdaptationModeProvider.notifier).setMode(next);
+                  ref
+                      .read(studyTimerProvider.notifier)
+                      .setDuration(
+                        Duration(
+                          minutes: _recommendedDurationForMode(analytics, next),
+                        ),
+                      );
+                },
+                style: ButtonStyle(
+                  textStyle: WidgetStateProperty.resolveWith((states) {
+                    return theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    );
+                  }),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l10n.bestStudyTimeBullet(_preferredTimeLabel(l10n, recommendedSlot)),
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                followBehavior
+                    ? l10n.suggestedShorterSessionsToday
+                    : l10n.suggestedFlexibleSessionsToday,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              if (isBehindGoal)
+                Text(
+                  l10n.needHoursTodayToStayOnTrack(
+                    '~${dailyTargetHours.toStringAsFixed(1)}',
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              else
+                Text(
+                  l10n.dailyTargetNeededBullet(dailyTargetHours.toStringAsFixed(1)),
+                  style: theme.textTheme.bodyMedium,
+                ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.burnoutInputsHumanized(
+                  weeklyDeficitHours.toStringAsFixed(1),
+                  inconsistencyScore,
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              if (irregularPattern)
+                Text(
+                  l10n.patternIrregularThisWeek,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              if (adaptiveHintTime != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.adaptiveHintRecentStudyTime(
+                    _preferredTimeLabel(l10n, adaptiveHintTime),
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.weekSessionsBreakdown(morningCount, afternoonCount, nightCount),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.confidenceBreakdown(
+                    behaviorConfidence,
+                    preferenceConfidence,
+                    dominantSlot != null
+                        ? l10n.trendDeltaVsLastWeek(
+                            analytics.slotTrendDelta(dominantSlot) >= 0
+                                ? '+${analytics.slotTrendDelta(dominantSlot)}'
+                                : analytics.slotTrendDelta(dominantSlot).toString(),
+                          )
+                        : '',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                  ),
+                ),
+              ],
+              if (recoveryDetected) ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Text(
+                    l10n.recoveryImprovingThisWeek,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF22C55E),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 8),
+                Text(
+                  hasBurnoutTrendHistory
+                      ? l10n.noRecoveryTrendDetectedYet
+                      : l10n.notEnoughDataTrendYet,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        decisionAsync.when(
+          data: (snapshot) {
+            final secondMinutes =
+                _roundToFive(snapshot.nextAction.durationMinutes * 0.67);
+            final courseMinutesToday = <String, int>{};
+            for (final session in sessionsToday) {
+              courseMinutesToday[session.courseId] =
+                  (courseMinutesToday[session.courseId] ?? 0) +
+                      session.durationMinutes;
+            }
+
+            final firstDone =
+                courseMinutesToday[snapshot.nextAction.courseId] ?? 0;
+            final secondPlan =
+              snapshot.todayPlanSecondaryRecommendation ?? snapshot.focusRecommendation;
+            final secondCourseId = secondPlan?.courseId;
+            final secondDone = secondCourseId == null
+                ? 0
+                : (courseMinutesToday[secondCourseId] ?? 0);
+
+            return AppGlassCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.todayPlanTitle,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildStudyPlanRow(
+                    context: context,
+                    done: firstDone >= snapshot.nextAction.durationMinutes,
+                    minutes: snapshot.nextAction.durationMinutes,
+                    course: snapshot.nextAction.courseName,
+                    remainingMinutes:
+                        (snapshot.nextAction.durationMinutes - firstDone)
+                            .clamp(0, 240),
+                  ),
+                  if (secondPlan != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    _buildStudyPlanRow(
+                      context: context,
+                      done: secondDone >= secondMinutes,
+                      minutes: secondMinutes,
+                      course: secondPlan.courseName,
+                      remainingMinutes:
+                          (secondMinutes - secondDone).clamp(0, 240),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+          loading: () => const SizedBox.shrink(),
+          error: (error, stack) => const SizedBox.shrink(),
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        if (profile != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Text(
+              '${l10n.preferredStudyTime}: ${_preferredTimeLabel(l10n, profile.preferredStudyTime)} • ${l10n.breakPattern}: ${_breakPatternLabel(l10n, profile.breakPattern)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
 
         // 1.1 Session Type
         Text(l10n.sessionType, style: theme.textTheme.titleSmall),
@@ -284,17 +661,21 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
             fillColor: theme.colorScheme.onSurface.withValues(alpha: 0.04),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+              borderSide:
+                  BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
-              borderSide: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
+              borderSide:
+                  BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
 
+        // 1.2 Course
         // 1.3 Duration
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -380,7 +761,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                 );
               },
               loading: () => const SizedBox(height: 60),
-              error: (_, __) => const SizedBox(height: 60),
+              error: (error, stack) => const SizedBox(height: 60),
             ),
 
         const SizedBox(height: AppSpacing.xl),
@@ -410,6 +791,46 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildStudyPlanRow({
+    required BuildContext context,
+    required bool done,
+    required int minutes,
+    required String course,
+    required int remainingMinutes,
+  }) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Row(
+      children: [
+        AppIcon(
+          done ? HeroIcons.checkCircle : HeroIcons.minusCircle,
+          size: 16,
+          color: done
+              ? Colors.green
+              : theme.colorScheme.onSurface.withValues(alpha: 0.55),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            '$minutes min $course',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        if (!done)
+          Text(
+            l10n.minutesRemainingShort(remainingMinutes),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
       ],
     );
   }
@@ -825,6 +1246,34 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         ).animate().fade(delay: 500.ms).slideY(begin: 0.05),
 
         const SizedBox(height: AppSpacing.md),
+
+        if (state.intent == 'analytics_recommendation') ...[
+          AppGlassCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              children: [
+                Text(
+                  l10n.sessionImpactAddedToCourse(displayMinutes, courseName),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n.sessionImpactCloserToGoal,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ).animate().fade(delay: 520.ms).slideY(begin: 0.05),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
         // 5. Progress context (today + weekly)
         AppGlassCard(

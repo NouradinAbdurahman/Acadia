@@ -16,6 +16,8 @@ import '../../core/design/app_spacing.dart';
 import '../../core/design/app_radius.dart';
 import '../../components/app_glass_card.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../widgets/semester/semester_comparison_card.dart';
+import '../../widgets/semester/smart_insights_card.dart';
 import '../../providers/student_profile_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../widgets/common/animated_pressable.dart';
@@ -27,6 +29,8 @@ import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../models/trend_data.dart';
 import '../../widgets/risk/risk_widgets.dart';
+import '../../providers/semester_provider.dart';
+import '../../widgets/semester/semester_switcher_bottom_sheet.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -69,24 +73,74 @@ class HomeScreen extends ConsumerWidget {
 
                     const SizedBox(height: AppSpacing.lg),
 
-                    // --- SECTION 1.5: STUDY HEATMAP ---
+                    // --- SECTION 1.5: SEMESTER SELECTOR ---
+                    const _SemesterBanner(),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // --- SECTION 1.6: STUDY HEATMAP ---
                     const StudyHeatmap(),
                     const SizedBox(height: AppSpacing.lg),
                     const LiveStudySessionCard(),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.md),
 
                     // --- SECTION 2: RISK SCORE CARD ---
                     const RiskScoreCard(),
 
                     const SizedBox(height: AppSpacing.lg),
 
-                    // --- SECTION 3: OVERVIEW ---
-                    _StatusPanel(data: data),
+                    // --- SECTION 3: OVERVIEW & EMPTY STATE ---
+                    if (data.topCourses.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                        child: AppGlassCard(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          child: Column(
+                            children: [
+                              HeroIcon(
+                                HeroIcons.sparkles,
+                                size: 48,
+                                color: theme.colorScheme.primary.withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Text(
+                                l10n.noCoursesForSemester,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                l10n.addCoursesPrompt,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              AppButton(
+                                text: l10n.addCourse,
+                                onPressed: () => context.push('/create-course'),
+                                variant: AppButtonVariant.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ).animate().fade().slideY(begin: 0.1)
+                    else ...[
+                      _StatusPanel(data: data),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // --- SECTION 4: PROGRESS OVERVIEW & HISTORICAL COMPARISON ---
+                    _ProgressOverviewCard(trendAsync: trendAsync),
 
                     const SizedBox(height: AppSpacing.lg),
+                    const SemesterComparisonCard(),
 
-                    // --- SECTION 4: PROGRESS OVERVIEW ---
-                    _ProgressOverviewCard(trendAsync: trendAsync),
+                    const SizedBox(height: AppSpacing.md),
+                    const SmartInsightsCard(),
+                    ],
 
                     const SizedBox(height: AppSpacing.lg),
 
@@ -156,6 +210,8 @@ class HomeScreen extends ConsumerWidget {
                   Flexible(
                     child: Text(
                       l10n.helloUser(greetingName),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -165,14 +221,16 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-              Text(
-                '${studentProfile?.major ?? l10n.student} • ${l10n.semester} ${studentProfile?.currentSemester ?? "?"}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
+                  Text(
+                    studentProfile?.major ?? l10n.student,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
             ],
           ),
         ),
@@ -237,13 +295,20 @@ class HomeScreen extends ConsumerWidget {
     String motivationText = analytics.isStable 
         ? l10n.justGettingStarted 
         : l10n.justGettingStarted;
-    if (analytics.trend == 'improving') motivationText = l10n.statusImproving; // Improving as a placeholder for positive progress
-    if (isUrgent) motivationText = l10n.behindThisWeek;
+    if (analytics.trend == 'improving') {
+      motivationText = l10n.statusImproving; // Improving as a placeholder for positive progress
+    }
+    if (isUrgent) {
+      motivationText = l10n.behindThisWeek;
+    }
 
     // 2. Score Interpretation
     String scoreLabel = l10n.moderateFocus;
-    if (analytics.focusScore < 40) scoreLabel = l10n.lowFocus;
-    else if (analytics.focusScore >= 70) scoreLabel = l10n.highFocus;
+    if (analytics.focusScore < 40) {
+      scoreLabel = l10n.lowFocus;
+    } else if (analytics.focusScore >= 70) {
+      scoreLabel = l10n.highFocus;
+    }
 
     return AppGlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -261,7 +326,7 @@ class HomeScreen extends ConsumerWidget {
                     Row(
                       children: [
                         AppIcon(
-                          HeroIcons.flag,
+                          HeroIcons.cursorArrowRays,
                           size: 18,
                           color: theme.colorScheme.primary,
                           solid: true,
@@ -524,6 +589,11 @@ class HomeScreen extends ConsumerWidget {
         route: '/semesters',
       ),
       _DashboardQuickMenuItem(
+        icon: HeroIcons.bookOpen,
+        title: 'Academic History',
+        route: '/academic-history',
+      ),
+      _DashboardQuickMenuItem(
         icon: HeroIcons.plusCircle,
         title: l10n.addCourse,
         route: '/create-course',
@@ -777,19 +847,6 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  String _formatDuration({
-    required AppLocalizations l10n,
-    required int totalMinutes,
-  }) {
-    if (totalMinutes <= 0) return '0${l10n.minutesAbbreviation}';
-
-    final hours = totalMinutes ~/ 60;
-    final minutes = totalMinutes % 60;
-
-    if (hours == 0) return '$minutes${l10n.minutesAbbreviation}';
-    if (minutes == 0) return '$hours${l10n.hoursAbbreviation}';
-    return '$hours${l10n.hoursAbbreviation} $minutes${l10n.minutesAbbreviation}';
-  }
 }
 
 // --- SUB-WIDGETS ---
@@ -1107,8 +1164,10 @@ class _StatusPanel extends StatelessWidget {
     final hh = now.hour.toString().padLeft(2, '0');
     final mm = now.minute.toString().padLeft(2, '0');
 
+    final overviewFilter = _overviewFilterForData(data);
+
     return AnimatedPressable(
-      onTap: () => context.push('/tasks?filter=pending&source=dashboard'),
+      onTap: () => context.push('/tasks?filter=$overviewFilter&source=dashboard'),
       child: AppGlassCard(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -1183,6 +1242,18 @@ class _StatusPanel extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _overviewFilterForData(DashboardData data) {
+    final hasDeadlines = data.upcomingDeadlinesCount > 0;
+    final hasTasks = data.pendingTasksToday > 0 ||
+        data.overdueTasksCount > 0 ||
+        data.completedTodayCount > 0 ||
+        data.workloadAddedTodayCount > 0;
+
+    if (hasDeadlines && hasTasks) return 'all';
+    if (hasDeadlines) return 'deadlines';
+    return 'tasks';
   }
 
   Widget _summaryLine(
@@ -1355,6 +1426,90 @@ class _CourseActivityCard extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SemesterBanner extends ConsumerWidget {
+  const _SemesterBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeSemester = ref.watch(activeSemesterFullProvider);
+    final isSwitching = ref.watch(isSemesterSwitchingProvider);
+    final theme = Theme.of(context);
+
+    if (activeSemester == null) return const SizedBox.shrink();
+
+    return AnimatedPressable(
+      onTap: isSwitching ? null : () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => const SemesterSwitcherBottomSheet(),
+        );
+      },
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: isSwitching ? 0.6 : 1.0,
+        child: AppGlassCard(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: HeroIcon(
+                   HeroIcons.calendarDays,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Selected Semester',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      activeSemester.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSwitching)
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  ),
+                )
+              else
+                HeroIcon(
+                  HeroIcons.chevronUpDown,
+                  size: 20,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                ),
+            ],
+          ),
         ),
       ),
     );

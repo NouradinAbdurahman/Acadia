@@ -287,7 +287,6 @@ class SessionDetailScreen extends ConsumerWidget {
       final isDone = i <= completed;
       // "in progress" = the cycle being worked when stopped (only for partial sessions)
       final isInProgress = !session.completed && i == completed + 1;
-      final isStopped = !session.completed && i > completed + 1;
 
       // Focus row
       rows.add(Row(

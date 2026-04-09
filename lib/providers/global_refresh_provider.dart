@@ -20,22 +20,9 @@ final globalRefreshProvider = Provider<Future<void> Function()>((ref) {
 
     await ref.read(semesterProvider.notifier).loadSemesters();
 
-    final semesters = ref.read(semesterProvider).value ?? const [];
-    String? semesterId = ref.read(selectedResultsSemesterProvider);
-    if (semesterId == null && semesters.isNotEmpty) {
-      String resolvedSemesterId = semesters.first.id;
-      for (final semester in semesters) {
-        if (semester.isCurrent) {
-          resolvedSemesterId = semester.id;
-          break;
-        }
-      }
-      semesterId = resolvedSemesterId;
-      ref.read(selectedResultsSemesterProvider.notifier).state =
-          resolvedSemesterId;
-    }
+    final semesterId = ref.read(activeSemesterProvider);
 
-    await Future.wait([
+    await Future.wait<void>([
       ref.read(courseProvider.notifier).loadCourses(),
       ref.read(tasksProvider.notifier).refresh(),
       ref.read(deadlinesProvider.notifier).refresh(),

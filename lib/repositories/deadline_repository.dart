@@ -6,8 +6,8 @@ class DeadlineRepository {
 
   DeadlineRepository(this._deadlineService);
 
-  Future<List<Deadline>> getDeadlines(String userId) async {
-    final data = await _deadlineService.getDeadlines(userId);
+  Future<List<Deadline>> getDeadlines({required String userId, String? semesterId}) async {
+    final data = await _deadlineService.getDeadlines(userId: userId, semesterId: semesterId);
     return data.map((json) => Deadline.fromJson(json)).toList();
   }
 

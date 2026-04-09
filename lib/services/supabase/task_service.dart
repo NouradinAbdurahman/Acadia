@@ -5,25 +5,39 @@ class TaskService {
 
   TaskService(this._supabase);
 
-  Future<List<Map<String, dynamic>>> getTasks(String userId) async {
+  Future<List<Map<String, dynamic>>> getTasks({
+    required String userId,
+    String? semesterId,
+  }) async {
+    if (semesterId == null) return [];
+
     return await _supabase
         .from('tasks')
-        .select()
+      .select('*, courses!inner(semester_id)')
         .eq('user_id', userId)
+      .eq('courses.semester_id', semesterId)
         .order('created_at', ascending: false);
   }
+
 
   Future<List<Map<String, dynamic>>> getTasksByDeadline({
     required String userId,
     required String deadlineId,
+    String? semesterId,
   }) async {
-    return await _supabase
+    final query = _supabase
         .from('tasks')
-        .select()
+        .select('*, courses!inner(semester_id)')
         .eq('user_id', userId)
-        .eq('deadline_id', deadlineId)
-        .order('created_at', ascending: false);
+        .eq('deadline_id', deadlineId);
+
+    if (semesterId != null) {
+      query.eq('courses.semester_id', semesterId);
+    }
+
+    return await query.order('created_at', ascending: false);
   }
+
 
   Future<Map<String, dynamic>> createTask(Map<String, dynamic> data) async {
     return await _supabase.from('tasks').insert(data).select().single();

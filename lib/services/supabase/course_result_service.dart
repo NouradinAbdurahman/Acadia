@@ -11,7 +11,7 @@ class CourseResultService {
   }) async {
     return await _supabase
         .from('course_results')
-        .select('*, course_result_components(*)')
+        .select('*, course_result_components(*), courses:course_id(course_name,course_code)')
         .eq('user_id', userId)
         .eq('semester_id', semesterId)
         .order('updated_at', ascending: false);
@@ -23,7 +23,7 @@ class CourseResultService {
   }) async {
     return await _supabase
         .from('course_results')
-        .select('*, course_result_components(*)')
+        .select('*, course_result_components(*), courses:course_id(course_name,course_code)')
         .eq('id', resultId)
         .eq('user_id', userId)
         .maybeSingle();

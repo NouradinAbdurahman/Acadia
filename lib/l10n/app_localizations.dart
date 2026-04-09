@@ -170,6 +170,24 @@ abstract class AppLocalizations {
   /// **'No study logged today'**
   String get noStudyLogged;
 
+  /// No description provided for @noTasksForThisCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks for this course'**
+  String get noTasksForThisCourse;
+
+  /// No description provided for @noDeadlinesForThisCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'No deadlines for this course'**
+  String get noDeadlinesForThisCourse;
+
+  /// No description provided for @noSessionsForThisCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'No sessions for this course'**
+  String get noSessionsForThisCourse;
+
   /// No description provided for @profile.
   ///
   /// In en, this message translates to:
@@ -848,6 +866,186 @@ abstract class AppLocalizations {
   /// **'Stress trends'**
   String get stressTrends;
 
+  /// No description provided for @academicReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic Report'**
+  String get academicReport;
+
+  /// No description provided for @academicHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic History'**
+  String get academicHistory;
+
+  /// No description provided for @requiresFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires focus'**
+  String get requiresFocus;
+
+  /// No description provided for @gradeAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade average'**
+  String get gradeAverage;
+
+  /// No description provided for @semesterTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester Trend'**
+  String get semesterTrend;
+
+  /// No description provided for @noAcademicHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No academic history yet'**
+  String get noAcademicHistory;
+
+  /// No description provided for @startLoggingContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Log study sessions and complete tasks to build your historical profile.'**
+  String get startLoggingContext;
+
+  /// No description provided for @activeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeLabel;
+
+  /// No description provided for @switchToSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to this Semester'**
+  String get switchToSemester;
+
+  /// No description provided for @setUpSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Semester'**
+  String get setUpSemester;
+
+  /// No description provided for @startAcademicTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Start academic tracking'**
+  String get startAcademicTracking;
+
+  /// No description provided for @gpaPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'GPA Points'**
+  String get gpaPoints;
+
+  /// No description provided for @studyTimeDeltaMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Your weekly study time has {action} by {percent}%'**
+  String studyTimeDeltaMsg(String action, int percent);
+
+  /// No description provided for @riskIncreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk increased by {value}%'**
+  String riskIncreased(int value);
+
+  /// No description provided for @riskDecreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk decreased by {value}%'**
+  String riskDecreased(int value);
+
+  /// No description provided for @increased.
+  ///
+  /// In en, this message translates to:
+  /// **'increased'**
+  String get increased;
+
+  /// No description provided for @decreased.
+  ///
+  /// In en, this message translates to:
+  /// **'decreased'**
+  String get decreased;
+
+  /// No description provided for @taskCompletionImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'You are completing more tasks than last semester'**
+  String get taskCompletionImproved;
+
+  /// No description provided for @taskCompletionDecreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Your task completion rate has dropped'**
+  String get taskCompletionDecreased;
+
+  /// No description provided for @academicRiskIncreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Your academic risk has increased'**
+  String get academicRiskIncreased;
+
+  /// No description provided for @academicPerformanceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Summary'**
+  String get academicPerformanceSummary;
+
+  /// No description provided for @performanceSummarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-term academic trends across all semesters'**
+  String get performanceSummarySubtitle;
+
+  /// No description provided for @bestSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Semester'**
+  String get bestSemester;
+
+  /// No description provided for @worstSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Worst Semester'**
+  String get worstSemester;
+
+  /// No description provided for @mostImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Most Improved'**
+  String get mostImproved;
+
+  /// No description provided for @highestGPA.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest GPA'**
+  String get highestGPA;
+
+  /// No description provided for @startStudySessionCTA.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a study session'**
+  String get startStudySessionCTA;
+
+  /// No description provided for @addFirstTaskCTA.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first task'**
+  String get addFirstTaskCTA;
+
+  /// No description provided for @startStudyingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start studying to see activity here'**
+  String get startStudyingHint;
+
+  /// No description provided for @viewHistoryMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewing History'**
+  String get viewHistoryMode;
+
   /// No description provided for @comingSoon.
   ///
   /// In en, this message translates to:
@@ -962,11 +1160,23 @@ abstract class AppLocalizations {
   /// **'Welcome back'**
   String get welcome;
 
+  /// No description provided for @appName.
+  ///
+  /// In en, this message translates to:
+  /// **'Acadia'**
+  String get appName;
+
   /// No description provided for @welcomeSubtitle.
   ///
   /// In en, this message translates to:
   /// **'Welcome back to your studies'**
   String get welcomeSubtitle;
+
+  /// No description provided for @signupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your account to start managing your studies'**
+  String get signupSubtitle;
 
   /// No description provided for @password.
   ///
@@ -997,6 +1207,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Don\'t have an account?'**
   String get dontHaveAccount;
+
+  /// No description provided for @orContinueWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Or continue with'**
+  String get orContinueWith;
+
+  /// No description provided for @googleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Google'**
+  String get googleLabel;
+
+  /// No description provided for @appleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple'**
+  String get appleLabel;
 
   /// No description provided for @signup.
   ///
@@ -1394,6 +1622,12 @@ abstract class AppLocalizations {
   /// **'Academic Profile'**
   String get academicProfileOnboarding;
 
+  /// No description provided for @academicAnalyticsContext.
+  ///
+  /// In en, this message translates to:
+  /// **'This information helps personalize your academic analytics and recommendations.'**
+  String get academicAnalyticsContext;
+
   /// No description provided for @basicIdentity.
   ///
   /// In en, this message translates to:
@@ -1409,7 +1643,7 @@ abstract class AppLocalizations {
   /// No description provided for @currentSemesterLoad.
   ///
   /// In en, this message translates to:
-  /// **'Current Semester Load'**
+  /// **'Current Semester'**
   String get currentSemesterLoad;
 
   /// No description provided for @learningPatternCalibration.
@@ -1459,6 +1693,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current Semester'**
   String get currentSemesterNumber;
+
+  /// No description provided for @currentSemesterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current semester number.'**
+  String get currentSemesterHint;
+
+  /// No description provided for @semesterTrackingSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester Tracking Setup'**
+  String get semesterTrackingSetup;
+
+  /// No description provided for @optionalPreferencesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional Preferences'**
+  String get optionalPreferencesTitle;
+
+  /// No description provided for @optionalPreferencesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You can adjust these anytime in Study Preferences.'**
+  String get optionalPreferencesDesc;
+
+  /// No description provided for @graduationYearHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your expected graduation year (this year or later).'**
+  String get graduationYearHint;
+
+  /// No description provided for @graduationYearInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Graduation year must be this year or later.'**
+  String get graduationYearInvalid;
+
+  /// No description provided for @graduationYearSemesterMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get graduationYearSemesterMismatch;
+
+  /// No description provided for @semesterNumberInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester number must be at least 1.'**
+  String get semesterNumberInvalid;
+
+  /// No description provided for @weeklyStudyGoalInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly study goal must be between 5 and 40 hours.'**
+  String get weeklyStudyGoalInvalid;
+
+  /// No description provided for @onboardingRiskImpactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your semester and study goal are used to calculate academic risk and progress insights.'**
+  String get onboardingRiskImpactHint;
+
+  /// No description provided for @studyGoalRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended: 10-25 hours per week'**
+  String get studyGoalRecommendation;
 
   /// No description provided for @coursesThisSemester.
   ///
@@ -1651,6 +1951,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Course Color'**
   String get courseColor;
+
+  /// No description provided for @academicSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic Semester'**
+  String get academicSemester;
 
   /// No description provided for @creditsLabel.
   ///
@@ -2081,7 +2387,7 @@ abstract class AppLocalizations {
   /// No description provided for @noUpcomingDeadlines.
   ///
   /// In en, this message translates to:
-  /// **'No upcoming deadlines'**
+  /// **'No deadlines due soon'**
   String get noUpcomingDeadlines;
 
   /// No description provided for @caughtUp.
@@ -2429,7 +2735,7 @@ abstract class AppLocalizations {
   /// No description provided for @overviewNoUpcomingTasks.
   ///
   /// In en, this message translates to:
-  /// **'No upcoming deadlines'**
+  /// **'No deadlines due soon'**
   String get overviewNoUpcomingTasks;
 
   /// No description provided for @overviewCompletedToday.
@@ -2635,6 +2941,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No courses found for this semester'**
   String get noCoursesForSemester;
+
+  /// No description provided for @semesterAlreadyExists.
+  ///
+  /// In en, this message translates to:
+  /// **'This semester already exists'**
+  String get semesterAlreadyExists;
+
+  /// No description provided for @semesterStartBeforeEndError.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date must be before end date'**
+  String get semesterStartBeforeEndError;
+
+  /// No description provided for @gradeRangeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Value must be between 0 and 100'**
+  String get gradeRangeError;
 
   /// No description provided for @trendAnalysis.
   ///
@@ -3122,6 +3446,54 @@ abstract class AppLocalizations {
   /// **'Log study sessions, add tasks, and record grades. Charts fill in as you use the app.'**
   String get analyticsSparseDataBody;
 
+  /// No description provided for @startTrackingYourSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking your semester'**
+  String get startTrackingYourSemester;
+
+  /// No description provided for @whatYouCanTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'What you can track'**
+  String get whatYouCanTrack;
+
+  /// No description provided for @trackTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get trackTasks;
+
+  /// No description provided for @trackStudySessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Study sessions'**
+  String get trackStudySessions;
+
+  /// No description provided for @trackGrades.
+  ///
+  /// In en, this message translates to:
+  /// **'Grades'**
+  String get trackGrades;
+
+  /// No description provided for @whyItMatters.
+  ///
+  /// In en, this message translates to:
+  /// **'Why it matters'**
+  String get whyItMatters;
+
+  /// No description provided for @monitorProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor your progress'**
+  String get monitorProgress;
+
+  /// No description provided for @reduceAcademicRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce academic risk'**
+  String get reduceAcademicRisk;
+
   /// No description provided for @custom.
   ///
   /// In en, this message translates to:
@@ -3469,6 +3841,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No data yet'**
   String get noDataYet;
+
+  /// No description provided for @noDataForSemesterYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No data for this semester yet'**
+  String get noDataForSemesterYet;
 
   /// No description provided for @statusStable.
   ///
@@ -4213,6 +4591,540 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Target: {target}'**
   String targetPrefix(String target);
+
+  /// No description provided for @recommendedForYouTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended for you'**
+  String get recommendedForYouTitle;
+
+  /// No description provided for @keepMyPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep my preference'**
+  String get keepMyPreference;
+
+  /// No description provided for @followActualBehavior.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow actual behavior'**
+  String get followActualBehavior;
+
+  /// No description provided for @bestStudyTimeBullet.
+  ///
+  /// In en, this message translates to:
+  /// **'• Best study time: {time}'**
+  String bestStudyTimeBullet(String time);
+
+  /// No description provided for @suggestedSessionBullet.
+  ///
+  /// In en, this message translates to:
+  /// **'• Suggested session: {minutes} min ({pattern})'**
+  String suggestedSessionBullet(int minutes, String pattern);
+
+  /// No description provided for @dailyTargetNeededBullet.
+  ///
+  /// In en, this message translates to:
+  /// **'• You need ~{hours} hours/day to stay on track'**
+  String dailyTargetNeededBullet(String hours);
+
+  /// No description provided for @burnoutInputsHumanized.
+  ///
+  /// In en, this message translates to:
+  /// **'• You are {deficit}h behind and your study timing is inconsistent ({inconsistency}%).'**
+  String burnoutInputsHumanized(String deficit, int inconsistency);
+
+  /// No description provided for @patternIrregularThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'• Pattern note: your study times are currently irregular this week.'**
+  String get patternIrregularThisWeek;
+
+  /// No description provided for @adaptiveHintRecentStudyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'You seem to study more in {time} recently.'**
+  String adaptiveHintRecentStudyTime(String time);
+
+  /// No description provided for @weekSessionsBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'This week sessions: morning {morning}, afternoon {afternoon}, night {night}.'**
+  String weekSessionsBreakdown(int morning, int afternoon, int night);
+
+  /// No description provided for @confidenceBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: behavior {behavior}% • preference match {preference}% {trendText}'**
+  String confidenceBreakdown(int behavior, int preference, String trendText);
+
+  /// No description provided for @trendDeltaVsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'• trend {delta} vs last week'**
+  String trendDeltaVsLastWeek(String delta);
+
+  /// No description provided for @weeklyGoalBehindDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'You are behind your weekly goal ({logged}h logged vs {expected}h expected by now).'**
+  String weeklyGoalBehindDetailed(String logged, String expected);
+
+  /// No description provided for @warningActionStartSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a 25-40 min session now to get back on track.'**
+  String get warningActionStartSession;
+
+  /// No description provided for @weeklyGoalSlightlyBehind.
+  ///
+  /// In en, this message translates to:
+  /// **'You are slightly behind your weekly goal. Keep your current pace.'**
+  String get weeklyGoalSlightlyBehind;
+
+  /// No description provided for @burnoutStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Burnout Status'**
+  String get burnoutStatusTitle;
+
+  /// No description provided for @burnoutOverallTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall: {status}'**
+  String burnoutOverallTrend(String status);
+
+  /// No description provided for @burnoutTrendLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Trend: {status} {direction}'**
+  String burnoutTrendLine(String status, String direction);
+
+  /// No description provided for @burnoutDeficitLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Deficit: {status} {direction}'**
+  String burnoutDeficitLine(String status, String direction);
+
+  /// No description provided for @burnoutConsistencyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency: {status} {direction}'**
+  String burnoutConsistencyLine(String status, String direction);
+
+  /// No description provided for @noRecoveryTrendDetectedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No recovery trend detected yet.'**
+  String get noRecoveryTrendDetectedYet;
+
+  /// No description provided for @notEnoughDataTrendYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data to detect trend yet.'**
+  String get notEnoughDataTrendYet;
+
+  /// No description provided for @recoveryImprovingThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study pattern is improving this week.'**
+  String get recoveryImprovingThisWeek;
+
+  /// No description provided for @studyDeficitBasedOnWeeklyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Study deficit is based on your weekly goal ({hours}h).'**
+  String studyDeficitBasedOnWeeklyGoal(String hours);
+
+  /// No description provided for @softInterventionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft interventions'**
+  String get softInterventionsTitle;
+
+  /// No description provided for @burnoutLevelStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get burnoutLevelStable;
+
+  /// No description provided for @burnoutLevelWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get burnoutLevelWarning;
+
+  /// No description provided for @burnoutLevelHighRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'High Risk'**
+  String get burnoutLevelHighRisk;
+
+  /// No description provided for @burnoutLevelBurnoutRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Burnout Risk'**
+  String get burnoutLevelBurnoutRisk;
+
+  /// No description provided for @burnoutExplanationStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study pattern looks balanced right now.'**
+  String get burnoutExplanationStable;
+
+  /// No description provided for @burnoutExplanationWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study pattern is becoming inconsistent and you are falling behind your weekly goal.'**
+  String get burnoutExplanationWarning;
+
+  /// No description provided for @burnoutExplanationHighRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'You are showing signs of inconsistent study and deficit.'**
+  String get burnoutExplanationHighRisk;
+
+  /// No description provided for @burnoutExplanationBurnoutRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Your load is high and your routine is becoming unstable.'**
+  String get burnoutExplanationBurnoutRisk;
+
+  /// No description provided for @burnoutReasonBehindGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'You are behind your weekly goal by {hours}h.'**
+  String burnoutReasonBehindGoal(String hours);
+
+  /// No description provided for @burnoutReasonInconsistentPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study pattern is inconsistent this week.'**
+  String get burnoutReasonInconsistentPattern;
+
+  /// No description provided for @burnoutReasonSwitchingTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'You are switching study times frequently.'**
+  String get burnoutReasonSwitchingTimes;
+
+  /// No description provided for @burnoutReasonLoadAboveGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Your total study load is above your weekly goal.'**
+  String get burnoutReasonLoadAboveGoal;
+
+  /// No description provided for @burnoutReasonNoMajorSignals.
+  ///
+  /// In en, this message translates to:
+  /// **'No major burnout signals detected yet.'**
+  String get burnoutReasonNoMajorSignals;
+
+  /// No description provided for @burnoutRecommendationStable1.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your current routine steady.'**
+  String get burnoutRecommendationStable1;
+
+  /// No description provided for @burnoutRecommendationStable2.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue tracking your weekly goal.'**
+  String get burnoutRecommendationStable2;
+
+  /// No description provided for @burnoutRecommendationWarning1.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce session length a little.'**
+  String get burnoutRecommendationWarning1;
+
+  /// No description provided for @burnoutRecommendationWarning2.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your study time in one consistent slot.'**
+  String get burnoutRecommendationWarning2;
+
+  /// No description provided for @burnoutRecommendationHigh1.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorten sessions and take breaks more often.'**
+  String get burnoutRecommendationHigh1;
+
+  /// No description provided for @burnoutRecommendationHigh2.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on one study time window this week.'**
+  String get burnoutRecommendationHigh2;
+
+  /// No description provided for @burnoutRecommendationHigh3.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a recovery day if you feel drained.'**
+  String get burnoutRecommendationHigh3;
+
+  /// No description provided for @burnoutRecommendationBurnout1.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce session length right away.'**
+  String get burnoutRecommendationBurnout1;
+
+  /// No description provided for @burnoutRecommendationBurnout2.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase break frequency and simplify goals.'**
+  String get burnoutRecommendationBurnout2;
+
+  /// No description provided for @burnoutRecommendationBurnout3.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a recovery day before pushing harder.'**
+  String get burnoutRecommendationBurnout3;
+
+  /// No description provided for @decisionNextActionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Action'**
+  String get decisionNextActionTitle;
+
+  /// No description provided for @decisionStudyAnyCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Study your priority course'**
+  String get decisionStudyAnyCourse;
+
+  /// No description provided for @decisionStudyCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Study {course}'**
+  String decisionStudyCourse(String course);
+
+  /// No description provided for @decisionMinutesToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes today'**
+  String decisionMinutesToday(int minutes);
+
+  /// No description provided for @decisionFocusRecommendationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Recommendation'**
+  String get decisionFocusRecommendationTitle;
+
+  /// No description provided for @decisionWhatChangedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What Changed'**
+  String get decisionWhatChangedTitle;
+
+  /// No description provided for @decisionTaskLoadLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Task Load'**
+  String get decisionTaskLoadLabel;
+
+  /// No description provided for @decisionConfidenceLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: Low'**
+  String get decisionConfidenceLow;
+
+  /// No description provided for @startedFromAnalyticsRecommendation.
+  ///
+  /// In en, this message translates to:
+  /// **'Started from Analytics recommendation'**
+  String get startedFromAnalyticsRecommendation;
+
+  /// No description provided for @followedPlanToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice. You followed your plan today.'**
+  String get followedPlanToday;
+
+  /// No description provided for @sessionImpactAddedToCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'+{minutes} min added to {course}'**
+  String sessionImpactAddedToCourse(int minutes, String course);
+
+  /// No description provided for @sessionImpactCloserToGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re now closer to your weekly goal'**
+  String get sessionImpactCloserToGoal;
+
+  /// No description provided for @decisionReasonOverdueAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue tasks need immediate attention'**
+  String get decisionReasonOverdueAttention;
+
+  /// No description provided for @decisionReasonLeastStudied.
+  ///
+  /// In en, this message translates to:
+  /// **'You studied this course the least this week'**
+  String get decisionReasonLeastStudied;
+
+  /// No description provided for @decisionReasonNoUrgentDeadlines.
+  ///
+  /// In en, this message translates to:
+  /// **'No urgent deadlines. Stay consistent.'**
+  String get decisionReasonNoUrgentDeadlines;
+
+  /// No description provided for @decisionReasonBehindWeeklyTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'You are behind your weekly target'**
+  String get decisionReasonBehindWeeklyTarget;
+
+  /// No description provided for @decisionReasonHeavyWorkload.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy open workload in this course'**
+  String get decisionReasonHeavyWorkload;
+
+  /// No description provided for @decisionReasonHighestPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your highest-priority course right now'**
+  String get decisionReasonHighestPriority;
+
+  /// No description provided for @decisionReasonBuildRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Start building your routine'**
+  String get decisionReasonBuildRoutine;
+
+  /// No description provided for @decisionReasonLowestStudyWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest study time this week'**
+  String get decisionReasonLowestStudyWeek;
+
+  /// No description provided for @decisionReasonNoStudyLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'No study logged this week'**
+  String get decisionReasonNoStudyLogged;
+
+  /// No description provided for @decisionReasonFallbackConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Fallback recommendation: keep your consistency this week'**
+  String get decisionReasonFallbackConsistency;
+
+  /// No description provided for @decisionReasonStudyProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'You studied {studied}h of your {target}h target'**
+  String decisionReasonStudyProgress(String studied, String target);
+
+  /// No description provided for @decisionReasonImportantCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Important course ({ects} ECTS)'**
+  String decisionReasonImportantCourse(int ects);
+
+  /// No description provided for @decisionReasonHigherPriorityThan.
+  ///
+  /// In en, this message translates to:
+  /// **'More urgent than {course}'**
+  String decisionReasonHigherPriorityThan(String course);
+
+  /// No description provided for @decisionReasonHigherPriorityGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'More urgent than other courses this week'**
+  String get decisionReasonHigherPriorityGeneral;
+
+  /// No description provided for @todayPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today Plan'**
+  String get todayPlanTitle;
+
+  /// No description provided for @todayMinutesCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {minutes} min completed'**
+  String todayMinutesCompleted(int minutes);
+
+  /// No description provided for @recoveryPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery Plan'**
+  String get recoveryPlanTitle;
+
+  /// No description provided for @recoveryPlanSplitFromWeeklyDeficit.
+  ///
+  /// In en, this message translates to:
+  /// **'Split based on your weekly deficit'**
+  String get recoveryPlanSplitFromWeeklyDeficit;
+
+  /// No description provided for @planDay3Label.
+  ///
+  /// In en, this message translates to:
+  /// **'Day 3'**
+  String get planDay3Label;
+
+  /// No description provided for @suggestedSplitSessionsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: {count} × {minutes} min sessions today'**
+  String suggestedSplitSessionsToday(int count, int minutes);
+
+  /// No description provided for @suggestedFlexibleSessionsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: 2-3 focused sessions today'**
+  String get suggestedFlexibleSessionsToday;
+
+  /// No description provided for @suggestedShorterSessionsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: 3-4 shorter sessions today'**
+  String get suggestedShorterSessionsToday;
+
+  /// No description provided for @needHoursTodayToStayOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'You need {hours}h today to stay on track'**
+  String needHoursTodayToStayOnTrack(String hours);
+
+  /// No description provided for @minutesRemainingShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m left'**
+  String minutesRemainingShort(int minutes);
+
+  /// No description provided for @decisionReasonDeadlineLowStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline in {days} days and you studied less than usual this week'**
+  String decisionReasonDeadlineLowStudy(int days);
+
+  /// No description provided for @decisionReasonDeadlineInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline in {days} days'**
+  String decisionReasonDeadlineInDays(int days);
+
+  /// No description provided for @decisionReasonLowestStudyWithDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest study time this week and deadline in {days} days'**
+  String decisionReasonLowestStudyWithDeadline(int days);
+
+  /// No description provided for @decisionReasonLowestStudyWithOpenTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest study time this week and {count} open tasks'**
+  String decisionReasonLowestStudyWithOpenTasks(int count);
+
+  /// No description provided for @decisionReasonHighCourseWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'High course weight ({ects} ECTS)'**
+  String decisionReasonHighCourseWeight(int ects);
 
   /// Button label to reset a study session timer
   ///

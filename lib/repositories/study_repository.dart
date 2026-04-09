@@ -6,8 +6,8 @@ class StudyRepository {
 
   StudyRepository(this._studyService);
 
-  Future<List<StudySession>> getSessions(String userId) async {
-    final List<dynamic> data = await _studyService.getSessions(userId);
+  Future<List<StudySession>> getSessions({required String userId, String? semesterId}) async {
+    final List<dynamic> data = await _studyService.getSessions(userId: userId, semesterId: semesterId);
     return data.map((json) => StudySession.fromJson(json as Map<String, dynamic>)).toList();
   }
 

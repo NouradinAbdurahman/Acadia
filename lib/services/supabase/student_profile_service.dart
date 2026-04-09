@@ -2,9 +2,16 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/student_profile.dart';
 
-class StudentProfileService {
+abstract class StudentProfileServiceBase {
+  Future<StudentProfile?> getProfile();
+  Future<bool> createOrUpdateProfile(StudentProfile profile);
+  Future<bool> markOnboardingComplete();
+}
+
+class StudentProfileService implements StudentProfileServiceBase {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  @override
   Future<StudentProfile?> getProfile() async {
     try {
       final user = _supabase.auth.currentUser;
@@ -24,12 +31,20 @@ class StudentProfileService {
     }
   }
 
+  @override
   Future<bool> createOrUpdateProfile(StudentProfile profile) async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return false;
 
       final data = profile.toJson();
+      assert(!data.containsKey('active_semester_id'));
+
+      if (data.containsKey('active_semester_id')) {
+        debugPrint('Blocked illegal active_semester_id write from profile');
+        data.remove('active_semester_id');
+      }
+
       data['user_id'] = user.id;
       data['updated_at'] = DateTime.now().toIso8601String();
 
@@ -46,6 +61,7 @@ class StudentProfileService {
     }
   }
 
+  @override
   Future<bool> markOnboardingComplete() async {
     try {
       final user = _supabase.auth.currentUser;

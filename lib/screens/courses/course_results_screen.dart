@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
 
-import '../../components/app_bottom_sheet_picker.dart';
 import '../../components/app_button.dart';
 import '../../components/app_glass_card.dart';
 import '../../core/design/app_icons.dart';
@@ -18,23 +17,16 @@ import '../../providers/course_results_provider.dart';
 import '../../providers/semester_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 
-class CourseResultsScreen extends ConsumerStatefulWidget {
+class CourseResultsScreen extends ConsumerWidget {
   const CourseResultsScreen({super.key});
 
   @override
-  ConsumerState<CourseResultsScreen> createState() =>
-      _CourseResultsScreenState();
-}
-
-class _CourseResultsScreenState extends ConsumerState<CourseResultsScreen> {
-  String? _selectedSemesterId;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final semestersAsync = ref.watch(semesterProvider);
+    final semestersAsync = ref.watch(orderedSemestersProvider);
     final coursesAsync = ref.watch(courseProvider);
     final resultsAsync = ref.watch(courseResultsProvider);
+    final activeSemesterId = ref.watch(activeSemesterProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -43,11 +35,9 @@ class _CourseResultsScreenState extends ConsumerState<CourseResultsScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: _selectedSemesterId == null
+            onPressed: activeSemesterId == null
                 ? null
-                : () => context.push(
-                    '/course-results/edit?semesterId=${Uri.encodeComponent(_selectedSemesterId!)}',
-                  ),
+                : () => context.push('/course-results/edit'),
             icon: const AppIcon(HeroIcons.plus),
             tooltip: l10n.addResult,
           ),
@@ -65,30 +55,37 @@ class _CourseResultsScreenState extends ConsumerState<CourseResultsScreen> {
             ),
             child: semestersAsync.when(
               data: (semesters) {
-                _ensureSemesterSelection(semesters);
-                final selectedSemesterId = _selectedSemesterId;
-                if (selectedSemesterId == null) {
+                final currentSemesterId = activeSemesterId;
+                if (currentSemesterId == null) {
                   return Center(child: Text(l10n.noSemestersYet));
                 }
+                final currentSemesterName = _semesterNameById(
+                  semesters,
+                  currentSemesterId,
+                  l10n.noSemestersYet,
+                );
                 final courses = coursesAsync.value ?? <Course>[];
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SemesterSelector(
-                      selectedSemesterId: selectedSemesterId,
-                      semesters: semesters,
-                      onChanged: (semesterId) {
-                        if (semesterId == null) return;
-                        setState(() => _selectedSemesterId = semesterId);
-                        ref
-                                .read(selectedResultsSemesterProvider.notifier)
-                                .state =
-                            semesterId;
-                        ref
-                            .read(courseResultsProvider.notifier)
-                            .loadForSemester(semesterId);
-                      },
+                    AppGlassCard(
+                      child: Row(
+                        children: [
+                          AppIcon(
+                            HeroIcons.calendarDays,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              '${l10n.semester}: $currentSemesterName',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     Expanded(
@@ -96,9 +93,7 @@ class _CourseResultsScreenState extends ConsumerState<CourseResultsScreen> {
                         data: (results) {
                           if (results.isEmpty) {
                             return _EmptyResultsState(
-                              onAdd: () => context.push(
-                                '/course-results/edit?semesterId=${Uri.encodeComponent(selectedSemesterId)}',
-                              ),
+                              onAdd: () => context.push('/course-results/edit'),
                             );
                           }
                           return ListView.separated(
@@ -118,17 +113,21 @@ class _CourseResultsScreenState extends ConsumerState<CourseResultsScreen> {
                               );
                               return _CourseResultCard(
                                 result: result,
-                                courseName: course?.courseName ?? '-',
-                                courseCode: course?.courseCode,
+                                courseName:
+                                    course?.courseName ??
+                                    result.courseName ??
+                                    l10n.noCoursesYet,
+                                courseCode:
+                                    course?.courseCode ?? result.courseCode,
                                 onEdit: () => context.push(
-                                  '/course-results/edit?id=${result.id}&semesterId=${Uri.encodeComponent(selectedSemesterId)}',
+                                  '/course-results/edit?id=${result.id}',
                                 ),
                                 onDelete: () async {
                                   await ref
                                       .read(courseResultsProvider.notifier)
                                       .deleteResult(
                                         resultId: result.id,
-                                        semesterId: selectedSemesterId,
+                                        semesterId: currentSemesterId,
                                       );
                                 },
                               );
@@ -151,12 +150,10 @@ class _CourseResultsScreenState extends ConsumerState<CourseResultsScreen> {
           ),
         ),
       ),
-      floatingActionButton: _selectedSemesterId == null
+      floatingActionButton: activeSemesterId == null
           ? null
           : FloatingActionButton.extended(
-              onPressed: () => context.push(
-                '/course-results/edit?semesterId=${Uri.encodeComponent(_selectedSemesterId!)}',
-              ),
+              onPressed: () => context.push('/course-results/edit'),
               icon: const AppIcon(
                 HeroIcons.plus,
                 color: Colors.white,
@@ -167,65 +164,24 @@ class _CourseResultsScreenState extends ConsumerState<CourseResultsScreen> {
     );
   }
 
-  void _ensureSemesterSelection(List<Semester> semesters) {
-    if (_selectedSemesterId != null) return;
-    if (semesters.isEmpty) return;
-
-    String selected = semesters.first.id;
-    for (final semester in semesters) {
-      if (semester.isCurrent) {
-        selected = semester.id;
-        break;
-      }
-    }
-
-    _selectedSemesterId = selected;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref.read(selectedResultsSemesterProvider.notifier).state = selected;
-      ref.read(courseResultsProvider.notifier).loadForSemester(selected);
-    });
-  }
-
   Course? _courseById(List<Course> courses, String courseId) {
     for (final course in courses) {
       if (course.id == courseId) return course;
     }
     return null;
   }
-}
 
-class _SemesterSelector extends StatelessWidget {
-  const _SemesterSelector({
-    required this.selectedSemesterId,
-    required this.semesters,
-    required this.onChanged,
-  });
-
-  final String selectedSemesterId;
-  final List<Semester> semesters;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    String selectedName = '-';
-    final options = <AppPickerOption<String>>[];
+  String _semesterNameById(
+    List<Semester> semesters,
+    String semesterId,
+    String fallback,
+  ) {
     for (final semester in semesters) {
-      options.add(AppPickerOption(value: semester.id, title: semester.name));
-      if (semester.id == selectedSemesterId) selectedName = semester.name;
+      if (semester.id == semesterId) {
+        return semester.name;
+      }
     }
-
-    return AppBottomSheetPicker(
-      icon: HeroIcons.calendarDays,
-      fieldLabel: l10n.semester,
-      sheetTitle: l10n.semester,
-      selectedValue: selectedSemesterId,
-      selectedDisplayText: selectedName,
-      options: options,
-      onChanged: (value) => onChanged(value),
-      emptyText: l10n.noSemestersYet,
-    );
+    return fallback;
   }
 }
 

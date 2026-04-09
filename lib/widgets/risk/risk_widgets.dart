@@ -9,6 +9,7 @@ import '../../components/app_glass_card.dart';
 import '../../core/design/app_icons.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../providers/analytics_provider.dart';
 import '../../providers/risk_provider.dart';
 
 /// Displays the Academic Risk Score card on the Home screen.
@@ -349,6 +350,14 @@ class RiskBreakdownCard extends ConsumerWidget {
             maxContribution: 15.0,
             color: const Color(0xFF3B82F6), // blue
           ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.studyDeficitBasedOnWeeklyGoal(input.studyGoal.toStringAsFixed(0)),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     ).animate().fade(delay: 150.ms).slideY(begin: 0.08);
@@ -363,6 +372,362 @@ class RiskBreakdownCard extends ConsumerWidget {
       default:
         return const Color(0xFF22C55E);
     }
+  }
+}
+
+class BurnoutStatusCard extends ConsumerWidget {
+  const BurnoutStatusCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final analytics = ref.watch(studyAnalyticsProvider);
+
+    if (!analytics.hasData) {
+      return const SizedBox.shrink();
+    }
+
+    final score = analytics.burnoutScore;
+    final level = analytics.burnoutLevel;
+    final color = _burnoutColor(level);
+    final localizedLevel = _localizedBurnoutLevel(l10n, level);
+    final localizedExplanation = _localizedBurnoutExplanation(l10n, level);
+    final localizedReasons = _localizedBurnoutReasons(l10n, analytics);
+    final localizedRecommendations = _localizedBurnoutRecommendations(l10n, level);
+    final trendColor = _trendColor(analytics.burnoutTrendLabel);
+    final deficitTrendColor = _trendColor(analytics.deficitTrendLabel);
+    final consistencyTrendColor = _trendColor(analytics.consistencyTrendLabel);
+    final hasFullyStableTrends =
+      analytics.burnoutTrendLabel == 'Stable' &&
+      analytics.deficitTrendLabel == 'Stable' &&
+      analytics.consistencyTrendLabel == 'Stable';
+    final burnoutTrendLabel = _localizedTrendLabel(l10n, analytics.burnoutTrendLabel);
+    final deficitTrendLabel = _localizedTrendLabel(l10n, analytics.deficitTrendLabel);
+    final consistencyTrendLabel =
+      _localizedTrendLabel(l10n, analytics.consistencyTrendLabel);
+
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: AppIcon(
+                  HeroIcons.fire,
+                  size: 20,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.burnoutStatusTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      localizedLevel,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  '${score.toStringAsFixed(0)}%',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            localizedExplanation,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (analytics.hasBurnoutTrendHistory)
+            hasFullyStableTrends
+                ? Text(
+                    l10n.burnoutOverallTrend(burnoutTrendLabel),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: trendColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                : Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      Text(
+                        l10n.burnoutTrendLine(
+                          burnoutTrendLabel,
+                          analytics.burnoutTrendDirection,
+                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: trendColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        l10n.burnoutDeficitLine(
+                          deficitTrendLabel,
+                          analytics.deficitTrendDirection,
+                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: deficitTrendColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        l10n.burnoutConsistencyLine(
+                          consistencyTrendLabel,
+                          analytics.consistencyTrendDirection,
+                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: consistencyTrendColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  )
+          else
+            Text(
+              l10n.notEnoughDataTrendYet,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          if (analytics.recoveryDetected)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: const Color(0xFF22C55E).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.18),
+                ),
+              ),
+              child: Text(
+                l10n.recoveryImprovingThisWeek,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF22C55E),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            )
+          else if (analytics.hasBurnoutTrendHistory)
+            Text(
+              l10n.noRecoveryTrendDetectedYet,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.studyDeficitBasedOnWeeklyGoal(
+              analytics.weeklyGoalHours.toStringAsFixed(0),
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ...localizedReasons.map(
+            (reason) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.circle, size: 8, color: color.withValues(alpha: 0.9)),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      reason,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            l10n.softInterventionsTitle,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...localizedRecommendations.map(
+            (recommendation) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.arrow_right, size: 16, color: color),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      recommendation,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fade(delay: 120.ms).slideY(begin: 0.08);
+  }
+}
+
+String _localizedTrendLabel(AppLocalizations l10n, String label) {
+  switch (label) {
+    case 'Improving':
+      return l10n.statusImproving;
+    case 'Worsening':
+      return l10n.statusDeclining;
+    case 'Unstable':
+      return l10n.statusVariable;
+    case 'Stable':
+      return l10n.statusStable;
+    default:
+      return label;
+  }
+}
+
+String _localizedBurnoutLevel(AppLocalizations l10n, BurnoutLevel level) {
+  switch (level) {
+    case BurnoutLevel.stable:
+      return l10n.burnoutLevelStable;
+    case BurnoutLevel.warning:
+      return l10n.burnoutLevelWarning;
+    case BurnoutLevel.highRisk:
+      return l10n.burnoutLevelHighRisk;
+    case BurnoutLevel.burnoutRisk:
+      return l10n.burnoutLevelBurnoutRisk;
+  }
+}
+
+String _localizedBurnoutExplanation(AppLocalizations l10n, BurnoutLevel level) {
+  switch (level) {
+    case BurnoutLevel.stable:
+      return l10n.burnoutExplanationStable;
+    case BurnoutLevel.warning:
+      return l10n.burnoutExplanationWarning;
+    case BurnoutLevel.highRisk:
+      return l10n.burnoutExplanationHighRisk;
+    case BurnoutLevel.burnoutRisk:
+      return l10n.burnoutExplanationBurnoutRisk;
+  }
+}
+
+List<String> _localizedBurnoutReasons(AppLocalizations l10n, StudyAnalytics analytics) {
+  final reasons = <String>[];
+  if (analytics.weeklyDeficitHours > 0.25) {
+    reasons.add(
+      l10n.burnoutReasonBehindGoal(analytics.weeklyDeficitHours.toStringAsFixed(1)),
+    );
+  }
+  if (analytics.timeInconsistencyScore >= 45) {
+    reasons.add(l10n.burnoutReasonInconsistentPattern);
+  }
+  if (analytics.irregularStudyPattern) {
+    reasons.add(l10n.burnoutReasonSwitchingTimes);
+  }
+  if (analytics.excessiveStudy) {
+    reasons.add(l10n.burnoutReasonLoadAboveGoal);
+  }
+  if (reasons.isEmpty) {
+    reasons.add(l10n.burnoutReasonNoMajorSignals);
+  }
+  return reasons;
+}
+
+List<String> _localizedBurnoutRecommendations(AppLocalizations l10n, BurnoutLevel level) {
+  switch (level) {
+    case BurnoutLevel.stable:
+      return [
+        l10n.burnoutRecommendationStable1,
+        l10n.burnoutRecommendationStable2,
+      ];
+    case BurnoutLevel.warning:
+      return [
+        l10n.burnoutRecommendationWarning1,
+        l10n.burnoutRecommendationWarning2,
+      ];
+    case BurnoutLevel.highRisk:
+      return [
+        l10n.burnoutRecommendationHigh1,
+        l10n.burnoutRecommendationHigh2,
+        l10n.burnoutRecommendationHigh3,
+      ];
+    case BurnoutLevel.burnoutRisk:
+      return [
+        l10n.burnoutRecommendationBurnout1,
+        l10n.burnoutRecommendationBurnout2,
+        l10n.burnoutRecommendationBurnout3,
+      ];
+  }
+}
+
+Color _burnoutColor(BurnoutLevel level) {
+  switch (level) {
+    case BurnoutLevel.stable:
+      return const Color(0xFF22C55E);
+    case BurnoutLevel.warning:
+      return const Color(0xFFF59E0B);
+    case BurnoutLevel.highRisk:
+      return const Color(0xFFF97316);
+    case BurnoutLevel.burnoutRisk:
+      return const Color(0xFFEF4444);
+  }
+}
+
+Color _trendColor(String label) {
+  switch (label) {
+    case 'Improving':
+      return const Color(0xFF22C55E);
+    case 'Worsening':
+      return const Color(0xFFEF4444);
+    case 'Unstable':
+      return const Color(0xFFF97316);
+    default:
+      return const Color(0xFF6B7280);
   }
 }
 

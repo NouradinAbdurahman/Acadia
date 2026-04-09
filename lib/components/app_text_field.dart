@@ -14,6 +14,10 @@ class AppTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
   final int maxLines;
+  final Color? fillColor;
+  final Color? borderColor;
+  final Color? focusedBorderColor;
+  final double focusedBorderWidth;
 
   const AppTextField({
     super.key,
@@ -25,6 +29,10 @@ class AppTextField extends StatefulWidget {
     this.validator,
     this.onChanged,
     this.maxLines = 1,
+    this.fillColor,
+    this.borderColor,
+    this.focusedBorderColor,
+    this.focusedBorderWidth = 2,
   });
 
   @override
@@ -43,6 +51,10 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final borderColor =
+      widget.borderColor ?? theme.colorScheme.outline;
+    final focusedBorderColor =
+      widget.focusedBorderColor ?? theme.colorScheme.primary;
     
     return TextFormField(
       controller: widget.controller,
@@ -78,18 +90,21 @@ class _AppTextFieldState extends State<AppTextField> {
               )
             : null,
         filled: true,
-        fillColor: theme.colorScheme.surface,
+        fillColor: widget.fillColor ?? theme.colorScheme.surface,
         border: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
-          borderSide: BorderSide(color: theme.colorScheme.outline),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
-          borderSide: BorderSide(color: theme.colorScheme.outline),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,
-          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+          borderSide: BorderSide(
+            color: focusedBorderColor,
+            width: widget.focusedBorderWidth,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderMd,

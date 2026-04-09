@@ -6,10 +6,11 @@ class CourseRepository {
 
   CourseRepository(this._service);
 
-  Future<List<Course>> getCourses() async {
-    final data = await _service.getCourses();
+  Future<List<Course>> getCourses({String? semesterId}) async {
+    final data = await _service.getCourses(semesterId: semesterId);
     return data.map((json) => Course.fromJson(json)).toList();
   }
+
 
   Future<Course> createCourse(Course course) async {
     final data = await _service.createCourse(course.toJson());

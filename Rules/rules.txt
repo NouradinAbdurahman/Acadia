@@ -7,26 +7,42 @@
 
 
 ────────────────────────────────────────────────────────────────────────────────
-  RULE 1 — ICONS: ONE LIBRARY ONLY
+  RULE 1 — ICONS: PRIMARY + FALLBACK SYSTEM
 ────────────────────────────────────────────────────────────────────────────────
 - User preference: always use HeroIcons instead of Material Icons in UI changes when feasible.
 
 
-  ONLY use the Heroicons library for all icons in the app.
+  PRIMARY icon library: Heroicons
   Package: heroicons ^0.10.0
 
-  ALWAYS use the AppIcon wrapper, never HeroIcon directly in screens:
+  SECONDARY (fallback) icon library: Phosphor
+  Package: phosphor_flutter
+
+  ICON PRIORITY RULE:
+    1) Use HeroIcons first.
+    2) If a suitable icon is not available or visual quality is not good enough,
+       use phosphor_flutter for that icon.
+
+    HeroIcons usage:
+    ALWAYS use the AppIcon wrapper, never HeroIcon directly in screens:
 
       import 'package:acadia/core/design/app_icons.dart';
 
       AppIcon(HeroIcons.academicCap, size: 24)
       AppIcon(HeroIcons.checkCircle, solid: true, color: AppColors.primary)
 
+    Phosphor usage (fallback only):
+
+      import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+      PhosphorIcon(PhosphorIcons.chartLineUp(), size: 22)
+
   NEVER use:
     - Icons.xxx            (Flutter Material icons)
     - CupertinoIcons.xxx   (Cupertino icons)
     - HeroIcon(...)        (direct use without AppIcon wrapper)
-    - Any other icon package (Lucide, FontAwesome, Feather, etc.)
+    - Any icon package other than Heroicons and phosphor_flutter
+      (e.g. Lucide, FontAwesome, Feather, etc.)
 
   The AppIcon widget lives at:
       lib/core/design/app_icons.dart
@@ -386,7 +402,7 @@
   UI LAYER
     [ ] Use ONLY AppLocalizations for all strings (add to both .arb files first)
     [ ] Run flutter gen-l10n before writing any UI code that uses new keys
-    [ ] Use ONLY HeroIcons via AppIcon widget
+    [ ] Use HeroIcons as primary and phosphor_flutter as fallback when needed
     [ ] Use ONLY AppColors, AppSpacing, AppRadius (never hardcode values)
     [ ] Use AppGlassCard, AppButton, AppSectionTitle from components
     [ ] Register new route in main.dart routerProvider
@@ -509,6 +525,29 @@
     - Any user-facing summaries
 
 
+────────────────────────────────────────────────────────────────────────────────
+  RULE 18 — SQL LOGGING: MANDATORY CORE DOCUMENTATION
+────────────────────────────────────────────────────────────────────────────────
+
+  Whenever an agent executes an SQL script or schema change via MCP (Supabase),
+  that EXACT script MUST be saved as a new .sql file in the `supabase/` directory.
+
+  This is NON-NEGOTIABLE for:
+    - Tables (CREATE)
+    - Columns (ALTER)
+    - Constraints (FOREIGN KEY, CHECK, NOT NULL)
+    - Policies (RLS)
+    - Functions/Triggers (PL/PGSQL)
+    - Data Migrations (UPDATE/INSERT backfills)
+
+  Naming Convention:
+    - YYYYMMDDNN_description.sql
+    - (e.g., 2026040501_semester_isolation.sql)
+
+  This ensures that the local repository always matching the remote database 
+  state and provides a clear audit trail of all schema evolution.
+
+
 ================================================================================
-  END OF RULES — Last updated: 2026-03-16
+  END OF RULES — Last updated: 2026-04-05
 ================================================================================

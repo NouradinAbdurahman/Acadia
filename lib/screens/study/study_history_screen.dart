@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/design/app_spacing.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_bottom_sheet_picker.dart';
 import '../../providers/study_sessions_provider.dart';
 import '../../models/study_session.dart';
 import '../../widgets/auth/auth_background_container.dart';
@@ -12,11 +13,18 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
 import 'session_detail_screen.dart';
 
-class StudyHistoryScreen extends ConsumerWidget {
+class StudyHistoryScreen extends ConsumerStatefulWidget {
   const StudyHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StudyHistoryScreen> createState() => _StudyHistoryScreenState();
+}
+
+class _StudyHistoryScreenState extends ConsumerState<StudyHistoryScreen> {
+  String _selectedCourse = 'All';
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final sessionsAsync = ref.watch(studySessionsProvider);
@@ -33,9 +41,42 @@ class StudyHistoryScreen extends ConsumerWidget {
               _buildHeader(context, theme, l10n),
               Expanded(
                 child: sessionsAsync.when(
-                  data: (sessions) => sessions.isEmpty
-                      ? _buildEmptyState(theme, l10n)
-                      : _buildSessionList(context, theme, ref, sessions, l10n),
+                  data: (sessions) {
+                    final validSessions = _validSessions(sessions);
+                    if (validSessions.isEmpty) {
+                      return _buildEmptyState(theme, l10n);
+                    }
+
+                    final courseOptions = _buildCourseOptions(validSessions);
+                    final effectiveCourse = _effectiveCourse(courseOptions, _selectedCourse);
+                    final filteredSessions = _filterSessionsByCourse(validSessions, effectiveCourse);
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (courseOptions.length > 1)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: AppSpacing.lg,
+                              right: AppSpacing.lg,
+                              bottom: AppSpacing.md,
+                            ),
+                            child: _CourseFilterPicker(
+                              courses: courseOptions,
+                              selectedCourse: effectiveCourse,
+                              onChanged: (value) {
+                                setState(() => _selectedCourse = value);
+                              },
+                            ),
+                          ),
+                        Expanded(
+                          child: filteredSessions.isEmpty
+                              ? _buildFilteredEmptyState(theme, l10n)
+                              : _buildSessionList(context, theme, filteredSessions, l10n),
+                        ),
+                      ],
+                    );
+                  },
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (err, stack) => Center(child: Text(l10n.errorLoading(err.toString()))),
                 ),
@@ -91,32 +132,40 @@ class StudyHistoryScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildFilteredEmptyState(ThemeData theme, AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AppIcon(HeroIcons.clock, size: 48, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            l10n.noSessionsForThisCourse,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSessionList(
     BuildContext context,
     ThemeData theme,
-    WidgetRef ref,
     List<StudySession> sessions,
     AppLocalizations l10n,
   ) {
-    // Grouping by date
     final now = DateTime.now();
     final localeTag = Localizations.localeOf(context).toLanguageTag();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    // Filter out invalid/short sessions and degenerate Pomodoro records (0 cycles, 0 focus)
-    final validSessions = sessions.where((s) {
-      if (s.isPomodoro) {
-        return (s.cyclesCompleted ?? 0) > 0 && (s.totalFocusMinutes ?? s.durationMinutes) > 0;
-      }
-      return s.durationMinutes >= 10;
-    }).toList();
-    if (validSessions.isEmpty) return _buildEmptyState(theme, l10n);
-
     final analytics = ref.watch(studyAnalyticsProvider);
 
     final Map<String, List<StudySession>> grouped = {};
-    for (var session in validSessions) {
+    for (var session in sessions) {
       final date = DateTime(session.createdAt.year, session.createdAt.month, session.createdAt.day);
       String key;
       if (date == today) {
@@ -163,6 +212,56 @@ class StudyHistoryScreen extends ConsumerWidget {
     );
   }
 
+  List<StudySession> _validSessions(List<StudySession> sessions) {
+    return sessions.where((s) {
+      if (s.isPomodoro) {
+        return (s.cyclesCompleted ?? 0) > 0 && (s.totalFocusMinutes ?? s.durationMinutes) > 0;
+      }
+      return s.durationMinutes >= 10;
+    }).toList();
+  }
+
+  List<String> _buildCourseOptions(List<StudySession> sessions) {
+    return sessions
+        .map(_courseLabel)
+        .where((course) => course.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+  }
+
+  List<StudySession> _filterSessionsByCourse(List<StudySession> sessions, String selectedCourse) {
+    if (selectedCourse == 'All') return sessions;
+    return sessions.where((session) => _courseLabel(session) == selectedCourse).toList();
+  }
+
+  String _effectiveCourse(List<String> options, String selectedCourse) {
+    if (selectedCourse == 'All') return 'All';
+    return options.contains(selectedCourse) ? selectedCourse : 'All';
+  }
+
+  String _courseLabel(StudySession session) {
+    final courseName = session.course?.courseName.trim();
+    if (courseName != null && courseName.isNotEmpty) {
+      return _normalizeCourseName(courseName);
+    }
+    return _normalizeCourseName(_toReadableCourseName(session.courseId));
+  }
+
+  String _normalizeCourseName(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return '';
+
+    return trimmed
+        .split(RegExp(r'\\s+'))
+        .map((word) {
+          if (word.isEmpty) return '';
+          final lower = word.toLowerCase();
+          return '${lower[0].toUpperCase()}${lower.substring(1)}';
+        })
+        .join(' ');
+  }
+
   Widget _buildSessionItem(
     BuildContext context,
     ThemeData theme,
@@ -172,7 +271,7 @@ class StudyHistoryScreen extends ConsumerWidget {
   ) {
     final localeTag = Localizations.localeOf(context).toLanguageTag();
     
-    Color _getSessionColor(StudySession session) {
+    Color getSessionColor(StudySession session) {
       if (session.course?.color != null) {
         return session.course!.uiColor;
       }
@@ -184,7 +283,7 @@ class StudyHistoryScreen extends ConsumerWidget {
       }
     }
 
-    final color = _getSessionColor(session);
+    final color = getSessionColor(session);
     final timeFormatted = DateFormat('HH:mm', localeTag).format(session.createdAt);
     final courseName = _toReadableCourseName(
       session.course?.courseName ?? l10n.course,
@@ -350,5 +449,46 @@ class StudyHistoryScreen extends ConsumerWidget {
       }
     }
     return formatted.join(' ');
+  }
+}
+
+class _CourseFilterPicker extends StatelessWidget {
+  const _CourseFilterPicker({
+    required this.courses,
+    required this.selectedCourse,
+    required this.onChanged,
+  });
+
+  final List<String> courses;
+  final String selectedCourse;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final options = <AppPickerOption<String>>[
+      AppPickerOption<String>(value: l10n.all, title: l10n.all),
+      ...courses.map(
+        (course) => AppPickerOption<String>(value: course, title: course),
+      ),
+    ];
+
+    return AppBottomSheetPicker<String>(
+      icon: HeroIcons.bookOpen,
+      fieldLabel: l10n.course,
+      sheetTitle: l10n.course,
+      selectedValue: selectedCourse,
+      selectedDisplayText: selectedCourse,
+      options: options,
+      onChanged: onChanged,
+      fieldLabelTextStyle: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.primary,
+        fontWeight: FontWeight.w700,
+      ),
+      selectedTextStyle: theme.textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+      ),
+    );
   }
 }

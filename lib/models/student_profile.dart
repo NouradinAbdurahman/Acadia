@@ -17,6 +17,7 @@ class StudentProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+
   StudentProfile({
     required this.id,
     required this.userId,
@@ -36,6 +37,7 @@ class StudentProfile {
     required this.createdAt,
     required this.updatedAt,
   });
+
 
   factory StudentProfile.fromJson(Map<String, dynamic> json) {
     return StudentProfile(
@@ -57,6 +59,7 @@ class StudentProfile {
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
+
   }
 
   Map<String, dynamic> toJson() {
@@ -75,6 +78,7 @@ class StudentProfile {
       'country': country,
       'onboarding_complete': onboardingComplete,
     };
+
   }
 
   StudentProfile copyWith({
@@ -92,6 +96,7 @@ class StudentProfile {
     String? country,
     bool? onboardingComplete,
   }) {
+
     return StudentProfile(
       id: id,
       userId: userId,
@@ -111,5 +116,6 @@ class StudentProfile {
       createdAt: createdAt,
       updatedAt: DateTime.now(),
     );
+
   }
 }

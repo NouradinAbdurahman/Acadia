@@ -51,6 +51,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noStudyLogged => 'No study logged today';
 
   @override
+  String get noTasksForThisCourse => 'No tasks for this course';
+
+  @override
+  String get noDeadlinesForThisCourse => 'No deadlines for this course';
+
+  @override
+  String get noSessionsForThisCourse => 'No sessions for this course';
+
+  @override
   String get profile => 'Profile';
 
   @override
@@ -403,6 +412,105 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stressTrends => 'Stress trends';
 
   @override
+  String get academicReport => 'Academic Report';
+
+  @override
+  String get academicHistory => 'Academic History';
+
+  @override
+  String get requiresFocus => 'Requires focus';
+
+  @override
+  String get gradeAverage => 'Grade average';
+
+  @override
+  String get semesterTrend => 'Semester Trend';
+
+  @override
+  String get noAcademicHistory => 'No academic history yet';
+
+  @override
+  String get startLoggingContext =>
+      'Log study sessions and complete tasks to build your historical profile.';
+
+  @override
+  String get activeLabel => 'Active';
+
+  @override
+  String get switchToSemester => 'Switch to this Semester';
+
+  @override
+  String get setUpSemester => 'Set up Semester';
+
+  @override
+  String get startAcademicTracking => 'Start academic tracking';
+
+  @override
+  String get gpaPoints => 'GPA Points';
+
+  @override
+  String studyTimeDeltaMsg(String action, int percent) {
+    return 'Your weekly study time has $action by $percent%';
+  }
+
+  @override
+  String riskIncreased(int value) {
+    return 'Risk increased by $value%';
+  }
+
+  @override
+  String riskDecreased(int value) {
+    return 'Risk decreased by $value%';
+  }
+
+  @override
+  String get increased => 'increased';
+
+  @override
+  String get decreased => 'decreased';
+
+  @override
+  String get taskCompletionImproved =>
+      'You are completing more tasks than last semester';
+
+  @override
+  String get taskCompletionDecreased => 'Your task completion rate has dropped';
+
+  @override
+  String get academicRiskIncreased => 'Your academic risk has increased';
+
+  @override
+  String get academicPerformanceSummary => 'Performance Summary';
+
+  @override
+  String get performanceSummarySubtitle =>
+      'Long-term academic trends across all semesters';
+
+  @override
+  String get bestSemester => 'Best Semester';
+
+  @override
+  String get worstSemester => 'Worst Semester';
+
+  @override
+  String get mostImproved => 'Most Improved';
+
+  @override
+  String get highestGPA => 'Highest GPA';
+
+  @override
+  String get startStudySessionCTA => 'Start a study session';
+
+  @override
+  String get addFirstTaskCTA => 'Add your first task';
+
+  @override
+  String get startStudyingHint => 'Start studying to see activity here';
+
+  @override
+  String get viewHistoryMode => 'Viewing History';
+
+  @override
   String get comingSoon => 'Coming soon';
 
   @override
@@ -464,7 +572,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome back';
 
   @override
+  String get appName => 'Acadia';
+
+  @override
   String get welcomeSubtitle => 'Welcome back to your studies';
+
+  @override
+  String get signupSubtitle =>
+      'Create your account to start managing your studies';
 
   @override
   String get password => 'Password';
@@ -480,6 +595,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dontHaveAccount => 'Don\'t have an account?';
+
+  @override
+  String get orContinueWith => 'Or continue with';
+
+  @override
+  String get googleLabel => 'Google';
+
+  @override
+  String get appleLabel => 'Apple';
 
   @override
   String get signup => 'Create Account';
@@ -695,13 +819,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get academicProfileOnboarding => 'Academic Profile';
 
   @override
+  String get academicAnalyticsContext =>
+      'This information helps personalize your academic analytics and recommendations.';
+
+  @override
   String get basicIdentity => 'Basic Identity';
 
   @override
   String get academicProgram => 'Academic Program';
 
   @override
-  String get currentSemesterLoad => 'Current Semester Load';
+  String get currentSemesterLoad => 'Current Semester';
 
   @override
   String get learningPatternCalibration => 'Learning Patterns';
@@ -726,6 +854,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currentSemesterNumber => 'Current Semester';
+
+  @override
+  String get currentSemesterHint => 'Enter your current semester number.';
+
+  @override
+  String get semesterTrackingSetup => 'Semester Tracking Setup';
+
+  @override
+  String get optionalPreferencesTitle => 'Optional Preferences';
+
+  @override
+  String get optionalPreferencesDesc =>
+      'You can adjust these anytime in Study Preferences.';
+
+  @override
+  String get graduationYearHint =>
+      'Choose your expected graduation year (this year or later).';
+
+  @override
+  String get graduationYearInvalid =>
+      'Graduation year must be this year or later.';
+
+  @override
+  String get graduationYearSemesterMismatch => '';
+
+  @override
+  String get semesterNumberInvalid => 'Semester number must be at least 1.';
+
+  @override
+  String get weeklyStudyGoalInvalid =>
+      'Weekly study goal must be between 5 and 40 hours.';
+
+  @override
+  String get onboardingRiskImpactHint =>
+      'Your semester and study goal are used to calculate academic risk and progress insights.';
+
+  @override
+  String get studyGoalRecommendation => 'Recommended: 10-25 hours per week';
 
   @override
   String get coursesThisSemester => 'Expected Courses';
@@ -822,6 +988,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get courseColor => 'Course Color';
+
+  @override
+  String get academicSemester => 'Academic Semester';
 
   @override
   String get creditsLabel => 'Credits';
@@ -1056,7 +1225,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addCoursesPrompt => 'Add your courses to start tracking progress.';
 
   @override
-  String get noUpcomingDeadlines => 'No upcoming deadlines';
+  String get noUpcomingDeadlines => 'No deadlines due soon';
 
   @override
   String get caughtUp => 'You are all caught up!';
@@ -1271,7 +1440,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get overviewNoUpcomingTasks => 'No upcoming deadlines';
+  String get overviewNoUpcomingTasks => 'No deadlines due soon';
 
   @override
   String overviewCompletedToday(int count) {
@@ -1381,6 +1550,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noCoursesForSemester => 'No courses found for this semester';
+
+  @override
+  String get semesterAlreadyExists => 'This semester already exists';
+
+  @override
+  String get semesterStartBeforeEndError =>
+      'Start date must be before end date';
+
+  @override
+  String get gradeRangeError => 'Value must be between 0 and 100';
 
   @override
   String get trendAnalysis => 'Trend Analysis';
@@ -1677,6 +1856,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Log study sessions, add tasks, and record grades. Charts fill in as you use the app.';
 
   @override
+  String get startTrackingYourSemester => 'Start tracking your semester';
+
+  @override
+  String get whatYouCanTrack => 'What you can track';
+
+  @override
+  String get trackTasks => 'Tasks';
+
+  @override
+  String get trackStudySessions => 'Study sessions';
+
+  @override
+  String get trackGrades => 'Grades';
+
+  @override
+  String get whyItMatters => 'Why it matters';
+
+  @override
+  String get monitorProgress => 'Monitor your progress';
+
+  @override
+  String get reduceAcademicRisk => 'Reduce academic risk';
+
+  @override
   String get custom => 'Custom';
 
   @override
@@ -1886,6 +2089,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noDataYet => 'No data yet';
+
+  @override
+  String get noDataForSemesterYet => 'No data for this semester yet';
 
   @override
   String get statusStable => 'Stable';
@@ -2351,6 +2557,367 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String targetPrefix(String target) {
     return 'Target: $target';
+  }
+
+  @override
+  String get recommendedForYouTitle => 'Recommended for you';
+
+  @override
+  String get keepMyPreference => 'Keep my preference';
+
+  @override
+  String get followActualBehavior => 'Follow actual behavior';
+
+  @override
+  String bestStudyTimeBullet(String time) {
+    return '• Best study time: $time';
+  }
+
+  @override
+  String suggestedSessionBullet(int minutes, String pattern) {
+    return '• Suggested session: $minutes min ($pattern)';
+  }
+
+  @override
+  String dailyTargetNeededBullet(String hours) {
+    return '• You need ~$hours hours/day to stay on track';
+  }
+
+  @override
+  String burnoutInputsHumanized(String deficit, int inconsistency) {
+    return '• You are ${deficit}h behind and your study timing is inconsistent ($inconsistency%).';
+  }
+
+  @override
+  String get patternIrregularThisWeek =>
+      '• Pattern note: your study times are currently irregular this week.';
+
+  @override
+  String adaptiveHintRecentStudyTime(String time) {
+    return 'You seem to study more in $time recently.';
+  }
+
+  @override
+  String weekSessionsBreakdown(int morning, int afternoon, int night) {
+    return 'This week sessions: morning $morning, afternoon $afternoon, night $night.';
+  }
+
+  @override
+  String confidenceBreakdown(int behavior, int preference, String trendText) {
+    return 'Confidence: behavior $behavior% • preference match $preference% $trendText';
+  }
+
+  @override
+  String trendDeltaVsLastWeek(String delta) {
+    return '• trend $delta vs last week';
+  }
+
+  @override
+  String weeklyGoalBehindDetailed(String logged, String expected) {
+    return 'You are behind your weekly goal (${logged}h logged vs ${expected}h expected by now).';
+  }
+
+  @override
+  String get warningActionStartSession =>
+      'Start a 25-40 min session now to get back on track.';
+
+  @override
+  String get weeklyGoalSlightlyBehind =>
+      'You are slightly behind your weekly goal. Keep your current pace.';
+
+  @override
+  String get burnoutStatusTitle => 'Burnout Status';
+
+  @override
+  String burnoutOverallTrend(String status) {
+    return 'Overall: $status';
+  }
+
+  @override
+  String burnoutTrendLine(String status, String direction) {
+    return 'Trend: $status $direction';
+  }
+
+  @override
+  String burnoutDeficitLine(String status, String direction) {
+    return 'Deficit: $status $direction';
+  }
+
+  @override
+  String burnoutConsistencyLine(String status, String direction) {
+    return 'Consistency: $status $direction';
+  }
+
+  @override
+  String get noRecoveryTrendDetectedYet => 'No recovery trend detected yet.';
+
+  @override
+  String get notEnoughDataTrendYet => 'Not enough data to detect trend yet.';
+
+  @override
+  String get recoveryImprovingThisWeek =>
+      'Your study pattern is improving this week.';
+
+  @override
+  String studyDeficitBasedOnWeeklyGoal(String hours) {
+    return 'Study deficit is based on your weekly goal (${hours}h).';
+  }
+
+  @override
+  String get softInterventionsTitle => 'Soft interventions';
+
+  @override
+  String get burnoutLevelStable => 'Stable';
+
+  @override
+  String get burnoutLevelWarning => 'Warning';
+
+  @override
+  String get burnoutLevelHighRisk => 'High Risk';
+
+  @override
+  String get burnoutLevelBurnoutRisk => 'Burnout Risk';
+
+  @override
+  String get burnoutExplanationStable =>
+      'Your study pattern looks balanced right now.';
+
+  @override
+  String get burnoutExplanationWarning =>
+      'Your study pattern is becoming inconsistent and you are falling behind your weekly goal.';
+
+  @override
+  String get burnoutExplanationHighRisk =>
+      'You are showing signs of inconsistent study and deficit.';
+
+  @override
+  String get burnoutExplanationBurnoutRisk =>
+      'Your load is high and your routine is becoming unstable.';
+
+  @override
+  String burnoutReasonBehindGoal(String hours) {
+    return 'You are behind your weekly goal by ${hours}h.';
+  }
+
+  @override
+  String get burnoutReasonInconsistentPattern =>
+      'Your study pattern is inconsistent this week.';
+
+  @override
+  String get burnoutReasonSwitchingTimes =>
+      'You are switching study times frequently.';
+
+  @override
+  String get burnoutReasonLoadAboveGoal =>
+      'Your total study load is above your weekly goal.';
+
+  @override
+  String get burnoutReasonNoMajorSignals =>
+      'No major burnout signals detected yet.';
+
+  @override
+  String get burnoutRecommendationStable1 =>
+      'Keep your current routine steady.';
+
+  @override
+  String get burnoutRecommendationStable2 =>
+      'Continue tracking your weekly goal.';
+
+  @override
+  String get burnoutRecommendationWarning1 => 'Reduce session length a little.';
+
+  @override
+  String get burnoutRecommendationWarning2 =>
+      'Keep your study time in one consistent slot.';
+
+  @override
+  String get burnoutRecommendationHigh1 =>
+      'Shorten sessions and take breaks more often.';
+
+  @override
+  String get burnoutRecommendationHigh2 =>
+      'Focus on one study time window this week.';
+
+  @override
+  String get burnoutRecommendationHigh3 =>
+      'Take a recovery day if you feel drained.';
+
+  @override
+  String get burnoutRecommendationBurnout1 =>
+      'Reduce session length right away.';
+
+  @override
+  String get burnoutRecommendationBurnout2 =>
+      'Increase break frequency and simplify goals.';
+
+  @override
+  String get burnoutRecommendationBurnout3 =>
+      'Take a recovery day before pushing harder.';
+
+  @override
+  String get decisionNextActionTitle => 'Next Action';
+
+  @override
+  String get decisionStudyAnyCourse => 'Study your priority course';
+
+  @override
+  String decisionStudyCourse(String course) {
+    return 'Study $course';
+  }
+
+  @override
+  String decisionMinutesToday(int minutes) {
+    return '$minutes minutes today';
+  }
+
+  @override
+  String get decisionFocusRecommendationTitle => 'Focus Recommendation';
+
+  @override
+  String get decisionWhatChangedTitle => 'What Changed';
+
+  @override
+  String get decisionTaskLoadLabel => 'Task Load';
+
+  @override
+  String get decisionConfidenceLow => 'Confidence: Low';
+
+  @override
+  String get startedFromAnalyticsRecommendation =>
+      'Started from Analytics recommendation';
+
+  @override
+  String get followedPlanToday => 'Nice. You followed your plan today.';
+
+  @override
+  String sessionImpactAddedToCourse(int minutes, String course) {
+    return '+$minutes min added to $course';
+  }
+
+  @override
+  String get sessionImpactCloserToGoal =>
+      'You\'re now closer to your weekly goal';
+
+  @override
+  String get decisionReasonOverdueAttention =>
+      'Overdue tasks need immediate attention';
+
+  @override
+  String get decisionReasonLeastStudied =>
+      'You studied this course the least this week';
+
+  @override
+  String get decisionReasonNoUrgentDeadlines =>
+      'No urgent deadlines. Stay consistent.';
+
+  @override
+  String get decisionReasonBehindWeeklyTarget =>
+      'You are behind your weekly target';
+
+  @override
+  String get decisionReasonHeavyWorkload =>
+      'Heavy open workload in this course';
+
+  @override
+  String get decisionReasonHighestPriority =>
+      'This is your highest-priority course right now';
+
+  @override
+  String get decisionReasonBuildRoutine => 'Start building your routine';
+
+  @override
+  String get decisionReasonLowestStudyWeek => 'Lowest study time this week';
+
+  @override
+  String get decisionReasonNoStudyLogged => 'No study logged this week';
+
+  @override
+  String get decisionReasonFallbackConsistency =>
+      'Fallback recommendation: keep your consistency this week';
+
+  @override
+  String decisionReasonStudyProgress(String studied, String target) {
+    return 'You studied ${studied}h of your ${target}h target';
+  }
+
+  @override
+  String decisionReasonImportantCourse(int ects) {
+    return 'Important course ($ects ECTS)';
+  }
+
+  @override
+  String decisionReasonHigherPriorityThan(String course) {
+    return 'More urgent than $course';
+  }
+
+  @override
+  String get decisionReasonHigherPriorityGeneral =>
+      'More urgent than other courses this week';
+
+  @override
+  String get todayPlanTitle => 'Today Plan';
+
+  @override
+  String todayMinutesCompleted(int minutes) {
+    return 'Today: $minutes min completed';
+  }
+
+  @override
+  String get recoveryPlanTitle => 'Recovery Plan';
+
+  @override
+  String get recoveryPlanSplitFromWeeklyDeficit =>
+      'Split based on your weekly deficit';
+
+  @override
+  String get planDay3Label => 'Day 3';
+
+  @override
+  String suggestedSplitSessionsToday(int count, int minutes) {
+    return 'Suggested: $count × $minutes min sessions today';
+  }
+
+  @override
+  String get suggestedFlexibleSessionsToday =>
+      'Suggested: 2-3 focused sessions today';
+
+  @override
+  String get suggestedShorterSessionsToday =>
+      'Suggested: 3-4 shorter sessions today';
+
+  @override
+  String needHoursTodayToStayOnTrack(String hours) {
+    return 'You need ${hours}h today to stay on track';
+  }
+
+  @override
+  String minutesRemainingShort(int minutes) {
+    return '${minutes}m left';
+  }
+
+  @override
+  String decisionReasonDeadlineLowStudy(int days) {
+    return 'Deadline in $days days and you studied less than usual this week';
+  }
+
+  @override
+  String decisionReasonDeadlineInDays(int days) {
+    return 'Deadline in $days days';
+  }
+
+  @override
+  String decisionReasonLowestStudyWithDeadline(int days) {
+    return 'Lowest study time this week and deadline in $days days';
+  }
+
+  @override
+  String decisionReasonLowestStudyWithOpenTasks(int count) {
+    return 'Lowest study time this week and $count open tasks';
+  }
+
+  @override
+  String decisionReasonHighCourseWeight(int ects) {
+    return 'High course weight ($ects ECTS)';
   }
 
   @override

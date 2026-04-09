@@ -15,6 +15,7 @@ class Task {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
+
   Task({
     required this.id,
     required this.userId,
@@ -30,6 +31,7 @@ class Task {
     required this.createdAt,
     this.updatedAt,
   });
+
 
   factory Task.fromJson(Map<String, dynamic> json) {
     // Standardize status: favor 'status' column, fallback to 'is_completed' if it exists
@@ -61,6 +63,7 @@ class Task {
           ? (DateTime.tryParse(json['updated_at']) ?? DateTime.now())
           : null,
     );
+
   }
 
   bool get isCompleted => status == 'completed';
@@ -84,6 +87,7 @@ class Task {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
+
     return Task(
       id: id ?? this.id,
       userId: userId ?? this.userId,
@@ -99,6 +103,7 @@ class Task {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
+
   }
 
   Map<String, dynamic> toJson() {
@@ -117,5 +122,6 @@ class Task {
       'created_at': createdAt.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt?.toIso8601String(),
     };
+
   }
 }

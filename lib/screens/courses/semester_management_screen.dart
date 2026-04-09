@@ -20,7 +20,8 @@ class SemesterManagementScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final semestersAsync = ref.watch(semesterProvider);
+    final semestersAsync = ref.watch(orderedSemestersProvider);
+    final activeSemesterId = ref.watch(activeSemesterProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -91,18 +92,49 @@ class SemesterManagementScreen extends ConsumerWidget {
                 );
               }
 
-              final sortedSemesters = [...semesters]
-                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              final activeSemesters = semesters
+                  .where((s) => s.id == activeSemesterId)
+                  .toList();
+              final previousSemesters = semesters
+                  .where((s) => s.id != activeSemesterId)
+                  .toList();
 
-              return ListView.separated(
+              return ListView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                itemCount: sortedSemesters.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: AppSpacing.md),
-                itemBuilder: (context, index) {
-                  final semester = sortedSemesters[index];
-                  return _SemesterCard(semester: semester);
-                },
+                children: [
+                  if (activeSemesters.isNotEmpty) ...[
+                    Text(
+                      l10n.currentSemesterLabel,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    ...activeSemesters.map(
+                      (semester) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: _SemesterCard(semester: semester),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                  if (previousSemesters.isNotEmpty) ...[
+                    Text(
+                      l10n.allSemesters,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    ...previousSemesters.map(
+                      (semester) => Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: _SemesterCard(semester: semester),
+                      ),
+                    ),
+                  ],
+                ],
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -135,6 +167,8 @@ class _SemesterCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final activeSemesterId = ref.watch(activeSemesterProvider);
+    final isActive = semester.id == activeSemesterId;
 
     String dateLabel(DateTime? date) {
       if (date == null) return '-';
@@ -179,7 +213,14 @@ class _SemesterCard extends ConsumerWidget {
         await ref.read(semesterProvider.notifier).deleteSemester(semester.id);
       },
       child: AnimatedPressable(
-        onTap: () {
+        onTap: () async {
+          if (!isActive) {
+            await ref
+              .read(activeSemesterProvider.notifier)
+              .setActiveSemester(semester.id);
+            return;
+          }
+
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -208,7 +249,7 @@ class _SemesterCard extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        if (semester.isCurrent)
+                        if (isActive)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.sm,
@@ -241,19 +282,31 @@ class _SemesterCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Switch.adaptive(
-                value: semester.isCurrent,
-                onChanged: (value) async {
-                  if (value) {
-                    await ref
-                        .read(semesterProvider.notifier)
-                        .setCurrentSemester(semester.id);
-                    return;
-                  }
-
-                  await ref
-                      .read(semesterProvider.notifier)
-                      .updateSemester(semester.copyWith(isCurrent: false));
+              if (isActive)
+                AppIcon(
+                  HeroIcons.checkCircle,
+                  color: theme.colorScheme.primary,
+                )
+              else
+                Text(
+                  l10n.setAsActive,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              const SizedBox(width: AppSpacing.sm),
+              IconButton(
+                icon: const AppIcon(HeroIcons.pencilSquare),
+                tooltip: l10n.editSemester,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CreateSemesterScreen(semesterToEdit: semester),
+                    ),
+                  );
                 },
               ),
             ],
