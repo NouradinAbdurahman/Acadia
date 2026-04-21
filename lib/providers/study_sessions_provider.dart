@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
@@ -335,7 +336,7 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
 
     await _player.stop(); 
     await _player.play(AssetSource('sounds/finish.mp3'));
-    HapticFeedback.heavyImpact();
+    Haptics.vibrate(HapticsType.success);
 
     final isPomodoro = state.sessionType == StudyType.pomodoro;
 
@@ -603,7 +604,9 @@ class StudySessionsNotifier
         ref
           .read(analyticsProvider.notifier)
           .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
-        ref.read(moodActionsProvider).queueSessionMoodPrompt();
+        if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
+          ref.read(moodActionsProvider).queueSessionMoodPrompt();
+        }
       } catch (e, st) {
         if (!mounted) return;
         state = previous;
@@ -690,7 +693,9 @@ class StudySessionsNotifier
         ref
           .read(analyticsProvider.notifier)
           .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
-        ref.read(moodActionsProvider).queueSessionMoodPrompt();
+        if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
+          ref.read(moodActionsProvider).queueSessionMoodPrompt();
+        }
       } catch (e, st) {
         if (!mounted) return;
         state = previous;
@@ -706,6 +711,32 @@ class StudySessionsNotifier
       await savePomodoroSession(timerState);
     } else {
       await saveFromTimer(timerState);
+    }
+  }
+
+  Future<void> attachMoodToLastSession(double mood, double stress) async {
+    final currentList = state.value ?? [];
+    if (currentList.isEmpty) return;
+
+    // We attach to the most recent session (first in the list after sort)
+    final lastSession = currentList.first;
+    
+    // Safety: Don't override if already has mood (Requirement 6)
+    if (lastSession.mood != null) return;
+
+    final updated = lastSession.copyWith(mood: mood, stress: stress);
+    
+    // Update local state first
+    state = AsyncValue.data([
+      updated,
+      ...currentList.sublist(1),
+    ]);
+
+    try {
+      await studyRepository.updateSession(updated);
+    } catch (e) {
+      // Revert if DB update fails
+      state = AsyncValue.data(currentList);
     }
   }
 }

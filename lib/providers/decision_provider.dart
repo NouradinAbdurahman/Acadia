@@ -6,6 +6,7 @@ import 'analytics_provider.dart';
 import 'deadlines_provider.dart';
 import 'mood_provider.dart';
 import 'tasks_provider.dart';
+import 'study_sessions_provider.dart';
 
 final _lastDecisionResult = StateProvider<DecisionResult?>((ref) => null);
 
@@ -16,6 +17,7 @@ final decisionProvider = Provider<DecisionResult>((ref) {
   final moods = ref.watch(moodLogsProvider).value ?? const [];
   final tasks = ref.watch(tasksProvider).value ?? const [];
   final deadlines = ref.watch(deadlinesProvider).value ?? const [];
+  final recentSessions = ref.watch(studySessionsProvider).value ?? const [];
 
   // If analytics is still loading (e.g. during pull-to-refresh), hold the
   // previous result so cards don't disappear.
@@ -28,9 +30,14 @@ final decisionProvider = Provider<DecisionResult>((ref) {
     moods: moods,
     tasks: tasks,
     deadlines: deadlines,
+    recentSessions: recentSessions,
     burnoutScore: studyAnalytics.burnoutScore,
     consistencyScore: (100.0 - studyAnalytics.timeInconsistencyScore)
         .clamp(0.0, 100.0),
+    weeklyDeficitHours: studyAnalytics.weeklyDeficitHours,
+    baselineStress: studyAnalytics.baselineStress,
+    baselineMood: studyAnalytics.baselineMood,
+    successRate: studyAnalytics.successRate,
   );
 
   // Cache for use during next reload.

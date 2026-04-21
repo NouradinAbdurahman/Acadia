@@ -48,6 +48,7 @@ import 'providers/theme_provider.dart';
 import 'providers/onboarding_provider.dart';
 import 'providers/app_providers.dart';
 import 'providers/realtime_provider.dart';
+import 'providers/semester_goal_refresh_provider.dart';
 
 // We declare a globally accessible navigator key to handle programmatic pushes if necessary
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -498,6 +499,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.read(realtimeProvider);
+    ref.read(semesterGoalRefreshProvider);
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeProvider);

@@ -11,6 +11,7 @@ import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_back_button.dart';
 import '../../components/app_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
@@ -37,6 +38,7 @@ class TaskDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(AppLocalizations.of(context)!.taskDetail),
         backgroundColor: Colors.transparent,
         elevation: 0,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:heroicons/heroicons.dart';
 
 import '../../components/app_glass_card.dart';
@@ -135,7 +136,10 @@ class QuickMenuScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   IconButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () {
+                      Haptics.vibrate(HapticsType.selection);
+                      context.pop();
+                    },
                     style: IconButton.styleFrom(
                       backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
                       padding: const EdgeInsets.all(8),
@@ -169,10 +173,11 @@ class QuickMenuScreen extends StatelessWidget {
                   final item = items[index];
                   return _QuickMenuCard(
                     item: item,
-                    onTap: () {
-                      context.pop(); // Close sheet
-                      context.push(item.route);
-                    },
+                      onTap: () {
+                        Haptics.vibrate(HapticsType.medium);
+                        context.pop(); // Close sheet
+                        context.push(item.route);
+                      },
                     theme: theme,
                   );
                 },

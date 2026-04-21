@@ -5,10 +5,13 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 
 import '../../components/app_button.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_back_button.dart';
 import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/student_profile_provider.dart';
-import '../../providers/app_providers.dart';
+import '../../providers/analytics_provider.dart';
+import '../../providers/semester_provider.dart';
+import '../../providers/bottom_nav_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 
 class StudyPreferencesScreen extends ConsumerStatefulWidget {
@@ -22,7 +25,7 @@ class StudyPreferencesScreen extends ConsumerStatefulWidget {
 class _StudyPreferencesScreenState
     extends ConsumerState<StudyPreferencesScreen> {
   bool _isSaving = false;
-  late double _studyHours;
+  double? _studyHours;
   late String _preferredTime;
   late String _breakPattern;
 
@@ -30,39 +33,68 @@ class _StudyPreferencesScreenState
   void initState() {
     super.initState();
     final profile = ref.read(studentProfileProvider).value;
-    _studyHours = (profile?.studyHoursPerWeek ?? 20).toDouble();
+
     _preferredTime = profile?.preferredStudyTime ?? 'morning';
     _breakPattern = profile?.breakPattern ?? 'pomodoro';
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadWeeklyGoal();
+    });
+  }
+
+  Future<void> _loadWeeklyGoal() async {
+    final activeSemester = ref.read(activeSemesterFullProvider);
+    if (!mounted) return;
+
+    setState(() {
+      _studyHours =
+          (activeSemester?.weeklyStudyGoal ?? DEFAULT_WEEKLY_GOAL).toDouble();
+    });
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     final profile = ref.read(studentProfileProvider).value;
-    if (profile == null) return;
+    final activeSemester = ref.read(activeSemesterFullProvider);
+    if (activeSemester == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.startTrackingYourSemester)));
+      }
+      return;
+    }
+    final weeklyGoalHours =
+      (_studyHours ?? ref.read(weeklyStudyGoalHoursProvider).toDouble())
+        .toInt();
 
     setState(() => _isSaving = true);
     Haptics.vibrate(HapticsType.medium);
 
     try {
-      final updated = profile.copyWith(
-        studyHoursPerWeek: _studyHours.toInt(),
-        preferredStudyTime: _preferredTime,
-        breakPattern: _breakPattern,
-      );
+      if (profile != null) {
+        final updated = profile.copyWith(
+          preferredStudyTime: _preferredTime,
+          breakPattern: _breakPattern,
+        );
 
-      // Update in student_profiles table (legacy sync)
-      await ref.read(studentProfileProvider.notifier).updateProfile(updated);
+        // Save non-goal study preferences in student_profiles.
+        await ref.read(studentProfileProvider.notifier).updateProfile(updated);
+      }
 
-      // Update in users table (Single source of truth for Risk Engine)
-      final appUser = ref.read(currentAppUserProvider).value;
-      if (appUser != null) {
-        try {
-          await ref
-              .read(authRepositoryProvider)
-              .updateWeeklyStudyGoal(appUser.id, _studyHours.toInt());
-          ref.invalidate(currentAppUserProvider);
-        } catch (_) {
-          // Non-fatal: keep study preferences save working even if users schema is behind.
-        }
+      // Save weekly goal in active semester (single source of truth).
+      await ref.read(semesterProvider.notifier).updateSemester(
+        activeSemester.copyWith(weeklyStudyGoal: weeklyGoalHours),
+          );
+
+      ref.invalidate(semesterProvider);
+      ref.invalidate(weeklyStudyGoalHoursProvider);
+
+      if (mounted) {
+        setState(() {
+          _studyHours =
+              ref.read(weeklyStudyGoalHoursProvider).toDouble();
+        });
       }
 
       if (mounted) {
@@ -72,7 +104,10 @@ class _StudyPreferencesScreenState
         await Future<void>.delayed(Duration.zero);
         if (!mounted) return;
         if (context.canPop()) context.pop();
-        if (!context.canPop()) context.go('/profile');
+        if (!context.canPop()) {
+          ref.read(bottomNavProvider.notifier).state = 4;
+          context.go('/home');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -91,9 +126,13 @@ class _StudyPreferencesScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final hasActiveSemester = ref.watch(activeSemesterFullProvider) != null;
+    final fallbackGoal = ref.watch(weeklyStudyGoalHoursProvider).toDouble();
+    final goalValue = _studyHours ?? fallbackGoal;
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(l10n.studyPreferences),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -114,19 +153,26 @@ class _StudyPreferencesScreenState
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    l10n.hoursCount(_studyHours.toInt()),
+                    l10n.hoursCount(goalValue.toInt()),
                     style: theme.textTheme.displaySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Slider(
-                    value: _studyHours,
+                    value: goalValue,
                     min: 5,
                     max: 40,
                     divisions: 35,
-                    label: l10n.hoursCount(_studyHours.toInt()),
-                    onChanged: (v) => setState(() => _studyHours = v),
+                    label: l10n.hoursCount(goalValue.toInt()),
+                    onChanged: hasActiveSemester
+                        ? (v) {
+                            if (v.round() != (goalValue).toInt()) {
+                              Haptics.vibrate(HapticsType.medium);
+                            }
+                            setState(() => _studyHours = v);
+                          }
+                        : null,
                   ),
                   Text(
                     l10n.onboardingRiskImpactHint,
@@ -156,6 +202,7 @@ class _StudyPreferencesScreenState
                     ],
                     selected: {_preferredTime},
                     onSelectionChanged: (selection) {
+                      Haptics.vibrate(HapticsType.selection);
                       setState(() => _preferredTime = selection.first);
                     },
                   ),
@@ -181,6 +228,7 @@ class _StudyPreferencesScreenState
                     ],
                     selected: {_breakPattern},
                     onSelectionChanged: (selection) {
+                      Haptics.vibrate(HapticsType.selection);
                       setState(() => _breakPattern = selection.first);
                     },
                   ),
@@ -193,7 +241,7 @@ class _StudyPreferencesScreenState
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   AppButton(
-                    onPressed: _isSaving ? null : _save,
+                    onPressed: (_isSaving || !hasActiveSemester) ? null : _save,
                     isLoading: _isSaving,
                     text: l10n.saveChanges,
                   ),

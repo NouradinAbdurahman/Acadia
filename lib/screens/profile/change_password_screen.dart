@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../components/app_button.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_text_field.dart';
+import '../../components/app_back_button.dart';
 import '../../core/design/app_durations.dart';
 import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
@@ -94,6 +95,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(
           l10n?.changePasswordTitle ?? '',
           style: theme.textTheme.displayLarge?.copyWith(

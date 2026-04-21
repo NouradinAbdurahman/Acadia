@@ -5,6 +5,7 @@ import 'package:heroicons/heroicons.dart';
 
 import '../../components/app_button.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_back_button.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/design/app_spacing.dart';
@@ -30,6 +31,7 @@ class CourseResultsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(l10n.examResults),
         backgroundColor: Colors.transparent,
         elevation: 0,

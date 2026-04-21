@@ -14,6 +14,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:flutter/services.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 
 class StudyHeatmap extends ConsumerStatefulWidget {
   const StudyHeatmap({super.key});
@@ -459,7 +460,7 @@ class _HeatmapCell extends StatelessWidget {
     
     return GestureDetector(
       onTap: isFuture ? null : () {
-        HapticFeedback.lightImpact();
+        Haptics.vibrate(HapticsType.selection);
         _showDetails(context);
       },
       child: Opacity(

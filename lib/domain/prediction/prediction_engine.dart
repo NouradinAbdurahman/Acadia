@@ -24,7 +24,9 @@ class PredictionEngine {
     if (analytics.avgStress > 7) {
       stressReasons.add('predictionReasonHighStressToday');
     }
-    if (consistency < 0.6) {
+    if (analytics.avgStress >= 5 && studyAnalytics.weeklyDeficitHours > 5) {
+      stressReasons.add('predictionPressureLikelyToIncrease');
+    } else if (consistency < 0.6) {
       stressReasons.add('predictionReasonLowConsistency');
     }
 
@@ -44,16 +46,16 @@ class PredictionEngine {
 
     final explanationKeys = <String>[];
     if (analytics.avgStress > 7) {
-      explanationKeys.add('predictionExplanationStressHigh');
+      explanationKeys.add('predictionReasonStressHigh');
     }
     if (consistency < 0.6) {
-      explanationKeys.add('predictionExplanationLowConsistency');
+      explanationKeys.add('predictionReasonLowConsistencyDetail');
     }
     if (hasPendingTaskPressure) {
-      explanationKeys.add('predictionExplanationTasksPending');
+      explanationKeys.add('predictionReasonTasksPending');
     }
     if (hasDeadlinesSoon) {
-      explanationKeys.add('predictionExplanationDeadlinesSoon');
+      explanationKeys.add('predictionReasonDeadlinesSoon');
     }
 
     final lowStudy = analytics.weeklyAverageStudyHours < 1.5 ? 25.0 : 0.0;
@@ -68,7 +70,8 @@ class PredictionEngine {
 
     final plan = _buildPlan(
       now: now,
-      stress: analytics.avgStress,
+      stress: decision.avgStress,
+      mood: decision.avgMood,
       deadlineSoon: hasDeadlinesSoon,
       burnoutScore: studyAnalytics.burnoutScore,
     );
@@ -130,6 +133,7 @@ class PredictionEngine {
   List<StudyPlanItem> _buildPlan({
     required DateTime now,
     required double stress,
+    required double mood,
     required bool deadlineSoon,
     required double burnoutScore,
   }) {
@@ -143,10 +147,17 @@ class PredictionEngine {
       return minutes;
     }
 
-    if (stress > 7) {
+    if (stress >= 7) {
       return <StudyPlanItem>[
-        StudyPlanItem(scheduledAt: at(0, 21, 0), durationMinutes: cap(25), focusKey: 'predictionPlanLightFocus'),
-        StudyPlanItem(scheduledAt: at(1, 14, 0), durationMinutes: cap(30), focusKey: 'predictionPlanLightFocus'),
+        StudyPlanItem(scheduledAt: at(0, 21, 0), durationMinutes: cap(20), focusKey: 'predictionPlanLightFocus'),
+        StudyPlanItem(scheduledAt: at(1, 14, 0), durationMinutes: cap(25), focusKey: 'predictionPlanLightFocus'),
+      ];
+    }
+
+    if (mood <= 2.5) {
+      return <StudyPlanItem>[
+        StudyPlanItem(scheduledAt: at(0, 18, 0), durationMinutes: cap(20), focusKey: 'predictionPlanLightReview'),
+        StudyPlanItem(scheduledAt: at(1, 10, 0), durationMinutes: cap(20), focusKey: 'predictionPlanLightFocus'),
       ];
     }
 

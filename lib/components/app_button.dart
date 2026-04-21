@@ -66,7 +66,7 @@ class AppButtonState extends State<AppButton> with SingleTickerProviderStateMixi
   void _onTapUp(TapUpDetails details) {
     if (widget.onPressed != null && !widget.isLoading) {
       _controller.reverse();
-      Haptics.vibrate(HapticsType.light);
+      Haptics.vibrate(HapticsType.medium);
       widget.onPressed!();
     }
   }

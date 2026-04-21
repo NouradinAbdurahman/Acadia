@@ -5348,95 +5348,95 @@ abstract class AppLocalizations {
   /// **'Smart Insights'**
   String get decisionSmartInsights;
 
-  /// No description provided for @decision_high_stress.
+  /// No description provided for @decisionHighStress.
   ///
   /// In en, this message translates to:
   /// **'High stress detected'**
-  String get decision_high_stress;
+  String get decisionHighStress;
 
-  /// No description provided for @decision_short_sessions.
+  /// No description provided for @decisionShortSessions.
   ///
   /// In en, this message translates to:
   /// **'Use shorter sessions today'**
-  String get decision_short_sessions;
+  String get decisionShortSessions;
 
-  /// No description provided for @decision_deep_work.
+  /// No description provided for @decisionDeepWork.
   ///
   /// In en, this message translates to:
   /// **'You are in a strong state for deep work'**
-  String get decision_deep_work;
+  String get decisionDeepWork;
 
-  /// No description provided for @decision_burnout_warning.
+  /// No description provided for @decisionBurnoutWarning.
   ///
   /// In en, this message translates to:
   /// **'Burnout risk is increasing'**
-  String get decision_burnout_warning;
+  String get decisionBurnoutWarning;
 
-  /// No description provided for @decision_stress_rising.
+  /// No description provided for @decisionStressRising.
   ///
   /// In en, this message translates to:
   /// **'Your stress is rising this week'**
-  String get decision_stress_rising;
+  String get decisionStressRising;
 
-  /// No description provided for @decision_mood_declining.
+  /// No description provided for @decisionMoodDeclining.
   ///
   /// In en, this message translates to:
   /// **'Your mood is declining'**
-  String get decision_mood_declining;
+  String get decisionMoodDeclining;
 
-  /// No description provided for @decision_deadline_pressure.
+  /// No description provided for @decisionDeadlinePressure.
   ///
   /// In en, this message translates to:
   /// **'High pressure detected. Break tasks down'**
-  String get decision_deadline_pressure;
+  String get decisionDeadlinePressure;
 
-  /// No description provided for @decision_low_activity_high_stress.
+  /// No description provided for @decisionLowActivityHighStress.
   ///
   /// In en, this message translates to:
   /// **'Low activity but high stress detected'**
-  String get decision_low_activity_high_stress;
+  String get decisionLowActivityHighStress;
 
-  /// No description provided for @decision_light_tasks_only.
+  /// No description provided for @decisionLightTasksOnly.
   ///
   /// In en, this message translates to:
   /// **'Focus on light tasks only today'**
-  String get decision_light_tasks_only;
+  String get decisionLightTasksOnly;
 
-  /// No description provided for @decision_main_factor.
+  /// No description provided for @decisionMainFactor.
   ///
   /// In en, this message translates to:
   /// **'Main stress source: {factor}'**
-  String decision_main_factor(String factor);
+  String decisionMainFactor(String factor);
 
-  /// No description provided for @decision_worst_day.
+  /// No description provided for @decisionWorstDay.
   ///
   /// In en, this message translates to:
   /// **'You feel lowest on {day}'**
-  String decision_worst_day(String day);
+  String decisionWorstDay(String day);
 
-  /// No description provided for @decision_recommended_session.
+  /// No description provided for @decisionRecommendedSession.
   ///
   /// In en, this message translates to:
   /// **'Recommended session: {minutes} min'**
-  String decision_recommended_session(Object minutes);
+  String decisionRecommendedSession(Object minutes);
 
-  /// No description provided for @decision_morning_planning.
+  /// No description provided for @decisionMorningPlanning.
   ///
   /// In en, this message translates to:
   /// **'Morning focus: plan your key tasks'**
-  String get decision_morning_planning;
+  String get decisionMorningPlanning;
 
-  /// No description provided for @decision_afternoon_execution.
+  /// No description provided for @decisionAfternoonExecution.
   ///
   /// In en, this message translates to:
   /// **'Afternoon focus: execute your top task'**
-  String get decision_afternoon_execution;
+  String get decisionAfternoonExecution;
 
-  /// No description provided for @decision_night_light_review.
+  /// No description provided for @decisionNightLightReview.
   ///
   /// In en, this message translates to:
   /// **'Night focus: keep it light and review'**
-  String get decision_night_light_review;
+  String get decisionNightLightReview;
 
   /// No description provided for @decisionActionShortSessions.
   ///
@@ -5573,13 +5573,13 @@ abstract class AppLocalizations {
   /// No description provided for @decisionBurnoutDurationCap.
   ///
   /// In en, this message translates to:
-  /// **'High stress detected.\nShorter sessions recommended (25 min).'**
+  /// **'Strongly recommended: Cap study sessions to 25m'**
   String get decisionBurnoutDurationCap;
 
   /// No description provided for @decisionFixedSchedule.
   ///
   /// In en, this message translates to:
-  /// **'Build a fixed schedule to improve consistency'**
+  /// **'Build a fixed schedule'**
   String get decisionFixedSchedule;
 
   /// No description provided for @decisionActionFixedSchedule.
@@ -5791,6 +5791,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a quick note (optional)'**
   String get addQuickNoteOptional;
+
+  /// No description provided for @analyticsMoodPerformanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood vs Performance'**
+  String get analyticsMoodPerformanceTitle;
+
+  /// No description provided for @analyticsMoodPerformanceGoodDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your high mood positively impacts your focus duration.'**
+  String get analyticsMoodPerformanceGoodDesc;
+
+  /// No description provided for @analyticsMoodPerformanceBadDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Low mood is restricting your session efficiency.'**
+  String get analyticsMoodPerformanceBadDesc;
+
+  /// No description provided for @analyticsMoodPerformanceStableDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mood is stable, allowing for consistent focus.'**
+  String get analyticsMoodPerformanceStableDesc;
+
+  /// No description provided for @analyticsMoodBetterMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Better Mood'**
+  String get analyticsMoodBetterMood;
+
+  /// No description provided for @analyticsMoodHighStress.
+  ///
+  /// In en, this message translates to:
+  /// **'High Stress'**
+  String get analyticsMoodHighStress;
+
+  /// No description provided for @analyticsMoodFocusBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Boost'**
+  String get analyticsMoodFocusBoost;
+
+  /// No description provided for @analyticsMoodFocusDrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Drain'**
+  String get analyticsMoodFocusDrain;
+
+  /// No description provided for @analyticsMoodDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'{plusMinus}{minutes}m'**
+  String analyticsMoodDifference(Object minutes, Object plusMinus);
+
+  /// No description provided for @burnoutMessageEmotionalRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stress is rising while consistency is low. This increases burnout risk.'**
+  String get burnoutMessageEmotionalRisk;
+
+  /// No description provided for @decisionStatusModerateStress.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate stress detected'**
+  String get decisionStatusModerateStress;
+
+  /// No description provided for @decisionStatusLowStress.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stress'**
+  String get decisionStatusLowStress;
+
+  /// No description provided for @decisionStatusHighStress.
+  ///
+  /// In en, this message translates to:
+  /// **'High stress detected'**
+  String get decisionStatusHighStress;
+
+  /// No description provided for @predictionStressLikelyIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress likely to increase due to low recovery and rising pressure'**
+  String get predictionStressLikelyIncrease;
+
+  /// No description provided for @analyticsNotEnoughData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet'**
+  String get analyticsNotEnoughData;
+
+  /// No description provided for @decisionRisingStressUnstablePattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stress is rising while your routine is unstable'**
+  String get decisionRisingStressUnstablePattern;
+
+  /// No description provided for @decisionActionFixedScheduleFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Study at the same time for 3 days to stabilize focus'**
+  String get decisionActionFixedScheduleFocus;
+
+  /// No description provided for @burnoutRisingStressInconsistentPattern.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stress is increasing while your study pattern is inconsistent'**
+  String get burnoutRisingStressInconsistentPattern;
+
+  /// No description provided for @predictionPressureLikelyToIncrease.
+  ///
+  /// In en, this message translates to:
+  /// **'Rising stress and low recovery will increase pressure'**
+  String get predictionPressureLikelyToIncrease;
+
+  /// No description provided for @analyticsMoodCorrelationDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Correlation detected'**
+  String get analyticsMoodCorrelationDetected;
+
+  /// No description provided for @analyticsMoodStudyDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'Study dropped by {percent}%'**
+  String analyticsMoodStudyDropped(String percent);
+
+  /// No description provided for @analyticsMoodMoodDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood dropped by {percent}%'**
+  String analyticsMoodMoodDropped(String percent);
+
+  /// No description provided for @burnoutShortExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study pattern looks balanced right now.'**
+  String get burnoutShortExplanation;
+
+  /// No description provided for @signalStressHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High stress'**
+  String get signalStressHigh;
+
+  /// No description provided for @signalStressMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate stress'**
+  String get signalStressMedium;
+
+  /// No description provided for @signalMoodLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low mood'**
+  String get signalMoodLow;
+
+  /// No description provided for @signalConsistencyLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstable routine'**
+  String get signalConsistencyLow;
+
+  /// No description provided for @signalDeficitHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Study deficit'**
+  String get signalDeficitHigh;
+
+  /// No description provided for @consistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get consistency;
+
+  /// No description provided for @stress.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress'**
+  String get stress;
+
+  /// No description provided for @moodTrends.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Trends'**
+  String get moodTrends;
+
+  /// No description provided for @studyProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Study Profile'**
+  String get studyProfileTitle;
+
+  /// No description provided for @studyProfileOptimalDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Optimal Session: {min}-{max} min'**
+  String studyProfileOptimalDuration(int min, int max);
+
+  /// No description provided for @studyProfileStressThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus drops when stress > {value}'**
+  String studyProfileStressThreshold(String value);
+
+  /// No description provided for @studyProfilePeakWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak Productivity: {window}'**
+  String studyProfilePeakWindow(String window);
+
+  /// No description provided for @studyProfileMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get studyProfileMorning;
+
+  /// No description provided for @studyProfileAfternoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon'**
+  String get studyProfileAfternoon;
+
+  /// No description provided for @studyProfileEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'Evening'**
+  String get studyProfileEvening;
+
+  /// No description provided for @studyProfileMainFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Main factor: {factor}'**
+  String studyProfileMainFactor(String factor);
+
+  /// No description provided for @studyProfileSecondaryFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary: {factor}'**
+  String studyProfileSecondaryFactor(String factor);
+
+  /// No description provided for @completion.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion'**
+  String get completion;
 }
 
 class _AppLocalizationsDelegate

@@ -16,6 +16,7 @@ import 'create_course_screen.dart';
 import 'semester_management_screen.dart';
 import 'package:acadia/l10n/app_localizations.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_back_button.dart';
 
 enum _CourseSort { semester, alphabetical, studyTime }
 
@@ -39,6 +40,7 @@ class _CourseManagementScreenState
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(l10n.myCourses),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -184,7 +186,10 @@ class _CourseManagementScreenState
       child: ChoiceChip(
         label: Text(label),
         selected: selected,
-        onSelected: onSelected,
+        onSelected: (val) {
+          Haptics.vibrate(HapticsType.selection);
+          onSelected(val);
+        },
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
           color: selected
               ? Colors.white

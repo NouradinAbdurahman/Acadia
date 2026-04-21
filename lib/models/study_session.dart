@@ -21,6 +21,9 @@ class StudySession {
   final int? totalBreakMinutes;
   final int? cyclesCompleted;
   final int? totalCycles;
+  final double? mood;
+  final double? stress;
+
 
   StudySession({
     required this.id,
@@ -41,6 +44,8 @@ class StudySession {
     this.totalBreakMinutes,
     this.cyclesCompleted,
     this.totalCycles,
+    this.mood,
+    this.stress,
   });
 
   factory StudySession.fromJson(Map<String, dynamic> json) {
@@ -84,6 +89,8 @@ class StudySession {
       totalBreakMinutes: json['total_break_minutes'] as int?,
       cyclesCompleted: json['cycles_completed'] as int?,
       totalCycles: json['total_cycles'] as int?,
+      mood: (json['mood'] as num?)?.toDouble(),
+      stress: (json['stress'] as num?)?.toDouble(),
     );
   }
 
@@ -106,6 +113,52 @@ class StudySession {
       if (totalBreakMinutes != null) 'total_break_minutes': totalBreakMinutes,
       if (cyclesCompleted != null) 'cycles_completed': cyclesCompleted,
       if (totalCycles != null) 'total_cycles': totalCycles,
+      if (mood != null) 'mood': mood,
+      if (stress != null) 'stress': stress,
     };
+  }
+
+  StudySession copyWith({
+    String? id,
+    String? userId,
+    String? courseId,
+    String? semesterId,
+    String? sessionType,
+    int? durationMinutes,
+    DateTime? createdAt,
+    Course? course,
+    String? intent,
+    bool? completed,
+    int? completedCycles,
+    int? skippedBreaks,
+    bool? isPomodoro,
+    int? totalFocusMinutes,
+    int? totalBreakMinutes,
+    int? cyclesCompleted,
+    int? totalCycles,
+    double? mood,
+    double? stress,
+  }) {
+    return StudySession(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      courseId: courseId ?? this.courseId,
+      semesterId: semesterId ?? this.semesterId,
+      sessionType: sessionType ?? this.sessionType,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      createdAt: createdAt ?? this.createdAt,
+      course: course ?? this.course,
+      intent: intent ?? this.intent,
+      completed: completed ?? this.completed,
+      completedCycles: completedCycles ?? this.completedCycles,
+      skippedBreaks: skippedBreaks ?? this.skippedBreaks,
+      isPomodoro: isPomodoro ?? this.isPomodoro,
+      totalFocusMinutes: totalFocusMinutes ?? this.totalFocusMinutes,
+      totalBreakMinutes: totalBreakMinutes ?? this.totalBreakMinutes,
+      cyclesCompleted: cyclesCompleted ?? this.cyclesCompleted,
+      totalCycles: totalCycles ?? this.totalCycles,
+      mood: mood ?? this.mood,
+      stress: stress ?? this.stress,
+    );
   }
 }

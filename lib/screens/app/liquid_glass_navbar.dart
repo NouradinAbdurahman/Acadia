@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:heroicons/heroicons.dart';
 import '../../core/design/app_icons.dart';
@@ -90,7 +91,7 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                               .clamp(0, 4)
                               .toInt();
                           if (next != current) {
-                            HapticFeedback.selectionClick();
+                            Haptics.vibrate(HapticsType.selection);
                             widget.onSelectedIndex(next);
                           }
                         }
@@ -219,7 +220,7 @@ class _NavItemState extends State<_NavItem> {
         setState(() {
           _isPressed = false;
         });
-        HapticFeedback.selectionClick();
+        Haptics.vibrate(HapticsType.selection);
         widget.onTap();
       },
       onTapCancel: () {

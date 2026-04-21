@@ -14,6 +14,7 @@ import '../../core/design/app_spacing.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_button.dart';
 import '../../components/app_text_field.dart';
+import '../../components/app_back_button.dart';
 import 'password_validation.dart';
 import '../../providers/app_providers.dart';
 
@@ -184,6 +185,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        leading: AppBackButton(),
         title: const SizedBox.shrink(),
         elevation: 0,
         backgroundColor: Colors.transparent,

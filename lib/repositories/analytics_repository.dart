@@ -34,6 +34,7 @@ class AnalyticsRepository {
               semesterId: semesterId,
             );
       final courses = await _analyticsService.getCourses(semesterId: semesterId);
+      final hasData = sessions.isNotEmpty || tasks.isNotEmpty;
 
       // Study Hours Aggregation
       Map<String, double> hoursPerCourse = {};
@@ -131,6 +132,7 @@ class AnalyticsRepository {
         weeklyAverageStudyHours: weeklyAvg,
         totalECTS: totalEcts,
         riskScore: riskScore,
+        hasData: hasData,
       );
     } catch (_) {
       rethrow;

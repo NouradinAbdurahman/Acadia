@@ -10,6 +10,8 @@ import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
 
+import '../../l10n/app_localizations.dart';
+import '../../l10n/l10n_extension.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/design/app_radius.dart';
@@ -18,12 +20,12 @@ import '../../components/app_glass_card.dart';
 import '../../components/app_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../widgets/semester/semester_comparison_card.dart';
-import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../providers/course_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../providers/study_sessions_provider.dart';
+import '../../providers/tasks_provider.dart';
 import '../../providers/trend_provider.dart';
 import '../../providers/mood_provider.dart';
 import '../../providers/decision_provider.dart';
@@ -33,6 +35,7 @@ import '../../models/course.dart';
 import '../../models/trend_data.dart';
 import '../../models/mood_log.dart';
 import '../../domain/decision/decision_result.dart';
+import '../../domain/decision/decision_insights.dart';
 import '../../domain/prediction/prediction_result.dart';
 import '../../widgets/analytics/decision_cards.dart';
 import '../../widgets/common/weekly_activity_card.dart';
@@ -48,6 +51,7 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _trendsSectionKey = GlobalKey();
+  bool _showTrendDetails = false;
 
   int _roundPlanMinutes(double minutes) {
     if (minutes <= 0) return 0;
@@ -111,21 +115,24 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final analyticsAsync = ref.watch(analyticsProvider);
-    final decisionAsync = ref.watch(decisionEngineActiveProvider);
     final studyAnalytics = ref.watch(studyAnalyticsProvider);
     final trendDays = ref.watch(trendDaysProvider);
     final trendAsync = ref.watch(trendProvider(trendDays));
     final moodLogsAsync = ref.watch(moodLogsProvider);
+    final courses = ref.watch(courseProvider).valueOrNull ?? const <Course>[];
+    final sessions = ref.watch(studySessionsProvider).valueOrNull ?? const [];
+    final tasks = ref.watch(tasksProvider).valueOrNull ?? const [];
     final decision = ref.watch(decisionProvider);
     final prediction = ref.watch(predictionProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: AuthBackgroundContainer(
         child: SafeArea(
-          bottom: true,
+          bottom: false,
           child: analyticsAsync.when(
             data: (data) {
-              final hasData = _hasAnalyticsData(data);
+              final hasData = data.hasData;
 
               return SingleChildScrollView(
                 controller: _scrollController,
@@ -140,12 +147,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     const SizedBox(height: AppSpacing.xl),
 
                     // --- MOVED FROM HOME ---
-                    if (decision.hasContent) ...[
-                      _buildDecisionInsightsCard(context, ref, theme, l10n, decision),
+                    if (hasData && decision.hasContent) ...[
+                      _buildDecisionInsightsCard(context, ref, theme, l10n, decision, studyAnalytics),
                       const SizedBox(height: AppSpacing.sm),
                     ],
 
-                    if (decision.hasContent && prediction.hasData) ...[
+                    if (hasData && decision.hasContent && prediction.hasData) ...[
+                      _StudyProfileCard(studyAnalytics: studyAnalytics),
+                      const SizedBox(height: AppSpacing.md),
                       Divider(
                         height: AppSpacing.md,
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
@@ -153,15 +162,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       const SizedBox(height: AppSpacing.xs),
                     ],
 
-                    if (prediction.hasData) ...[
+                    if (hasData && prediction.hasData) ...[
                       _buildPredictedStressCard(context, theme, l10n, prediction),
                       const SizedBox(height: AppSpacing.md),
                       _buildRecommendedPlanCard(context, theme, l10n, prediction),
                       const SizedBox(height: AppSpacing.md),
                     ],
 
-                    const SemesterComparisonCard(),
-                    const SizedBox(height: AppSpacing.lg),
+                    if (hasData) ...[
+                      const SemesterComparisonCard(),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
                     // -------------------------
                     if (!hasData) ...[
                       AppGlassCard(
@@ -191,18 +202,41 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               ),
                             ),
                             const SizedBox(height: AppSpacing.lg),
-                             OutlinedButton.icon(
-                               onPressed: () {
-                                   Haptics.vibrate(HapticsType.selection);
-                                 ref.read(bottomNavProvider.notifier).state = 1;
-                                 context.go('/home');
-                               },
-                               icon: const HeroIcon(
-                                 HeroIcons.clipboardDocumentCheck,
-                                 size: 18,
-                               ),
-                               label: Text(l10n.startTrackingYourSemester),
-                             ),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                Haptics.vibrate(HapticsType.selection);
+                                if (courses.isEmpty) {
+                                  context.push('/courses');
+                                  return;
+                                }
+                                if (sessions.isEmpty) {
+                                  ref.read(bottomNavProvider.notifier).state = 2;
+                                  context.go('/home');
+                                  return;
+                                }
+                                ref.read(bottomNavProvider.notifier).state = 1;
+                                if (tasks.isEmpty) {
+                                  context.push('/create-task');
+                                  return;
+                                }
+                                context.go('/home');
+                              },
+                              icon: HeroIcon(
+                                courses.isEmpty
+                                    ? HeroIcons.academicCap
+                                    : (sessions.isEmpty
+                                        ? HeroIcons.play
+                                        : HeroIcons.clipboardDocumentCheck),
+                                size: 18,
+                              ),
+                              label: Text(
+                                courses.isEmpty
+                                    ? l10n.manageCourses
+                                    : (sessions.isEmpty
+                                        ? l10n.startStudySession
+                                        : l10n.createTask),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -255,57 +289,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ),
                       const SizedBox(height: AppSpacing.lg),
                     ] else ...[
-                      decisionAsync.when(
-                        data: (snapshot) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TodayPlanCard(
-                              primary: snapshot.nextAction,
-                              secondary: snapshot.todayPlanSecondaryRecommendation ??
-                                  snapshot.focusRecommendation,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            if (studyAnalytics.weeklyDeficitHours > 2) ...[
-                              Builder(
-                                builder: (context) {
-                                  final totalDeficitMinutes = _roundPlanMinutes(
-                                    studyAnalytics.weeklyDeficitHours * 60,
-                                  );
-                                  final todayMinutes = _roundPlanMinutes(totalDeficitMinutes * 0.40);
-                                  final tomorrowMinutes = _roundPlanMinutes(totalDeficitMinutes * 0.35);
-                                  final day3Minutes = _roundPlanMinutes(totalDeficitMinutes * 0.25);
-                                  return RecoveryPlanCard(
-                                    todayMinutes: todayMinutes,
-                                    tomorrowMinutes: tomorrowMinutes,
-                                    day3Minutes: day3Minutes,
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                            ],
-                            DecisionNextActionCard(
-                              action: snapshot.nextAction,
-                              onStartSession: () => _startStudyFromDecision(
-                                courseId: snapshot.nextAction.courseId,
-                                minutes: snapshot.nextAction.durationMinutes,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            if (snapshot.focusRecommendation != null) ...[
-                              DecisionFocusRecommendationCard(
-                                recommendation: snapshot.focusRecommendation!,
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                            ],
-                            DecisionWhatChangedCard(whatChanged: snapshot.whatChanged),
-                            const SizedBox(height: AppSpacing.xl),
-                          ],
-                        ),
-                        loading: () => const SizedBox.shrink(),
-                        error: (error, stackTrace) => const SizedBox.shrink(),
-                      ),
-
-                      // 0. Academic Risk Breakdown
                       _buildSectionTitle(theme, l10n.academicRisk),
                       const SizedBox(height: AppSpacing.md),
                       const RiskBreakdownCard(),
@@ -314,7 +297,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       _buildSectionTitle(theme, l10n.moodAndStressTitle),
                       const SizedBox(height: AppSpacing.md),
                       AppGlassCard(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: Column(
                           children: [
                             Row(
@@ -328,7 +311,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     icon: HeroIcons.faceSmile,
                                   ),
                                 ),
-                                const SizedBox(width: AppSpacing.md),
+                                const SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: _MoodMetricTile(
                                     title: l10n.stressAverageLabel,
@@ -340,17 +323,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.sm),
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () => context.push('/mood/log'),
-                                child: Text(l10n.logMoodTitle),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(0, 30),
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(l10n.logMoodTitle, style: const TextStyle(fontSize: 12)),
                               ),
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: AppSpacing.xs),
                             _MoodSevenDayChart(moodLogsAsync: moodLogsAsync),
-                            const SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.sm),
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
@@ -358,9 +346,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   (100 - studyAnalytics.timeInconsistencyScore).round(),
                                   studyAnalytics.consistencyTrendLabel,
                                 ),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
-                                  fontWeight: FontWeight.w600,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
@@ -371,6 +359,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
                       const BurnoutStatusCard(),
                       const SizedBox(height: AppSpacing.xl),
+
+                      if (studyAnalytics.moodDurationImpactDetails['hasEnoughData'] as bool) ...[
+                        _buildMoodVsStudyCard(theme, l10n, decision, studyAnalytics),
+                        const SizedBox(height: AppSpacing.xl),
+                      ],
 
                       // 1. Study Hours by Course
                       _buildSectionTitle(theme, l10n.studyHoursByCourse),
@@ -384,19 +377,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ),
                       const SizedBox(height: AppSpacing.xl),
 
-                      // 2. Task Completion
-                      _buildSectionTitle(theme, l10n.weeklyTaskCompletion),
-                      Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
-                      const SizedBox(height: AppSpacing.md),
-                      _TaskCompletionPieChart(data: data),
-                      const SizedBox(height: AppSpacing.xl),
 
-                      // 3. Grade Distribution
-                      _buildSectionTitle(theme, l10n.gradeDistribution),
-                      Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
-                      const SizedBox(height: AppSpacing.md),
-                      _GradeDistributionCard(data: data),
-                      const SizedBox(height: AppSpacing.xl),
+
+
 
                       // 4. Trend Analysis
                       KeyedSubtree(
@@ -410,8 +393,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           return ChoiceChip(
                             label: Text(l10n.daysFilter(days)),
                             selected: trendDays == days,
-                            onSelected: (_) =>
-                                ref.read(trendDaysProvider.notifier).state = days,
+                            onSelected: (_) {
+                              Haptics.vibrate(HapticsType.selection);
+                              ref.read(trendDaysProvider.notifier).state = days;
+                            },
                           );
                         }).toList(),
                       ),
@@ -422,6 +407,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           child: _TrendAnalysisSection(
                             key: ValueKey('trend-$trendDays'),
                             trend: trend,
+                            showDetails: _showTrendDetails,
+                            onToggleDetails: () => setState(() => _showTrendDetails = !_showTrendDetails),
                           ),
                         ),
                         loading: () => const AppGlassCard(
@@ -473,9 +460,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     ThemeData theme,
     AppLocalizations l10n,
     DecisionResult decision,
+    StudyAnalytics studyAnalytics,
   ) {
     final signature = decision.sortedItems
-        .map((item) => '${item.priority}:${item.messageKey}')
+        .map((item) => '${item.priority}:${item.titleKey}')
         .join('|');
     final primary = decision.primaryDecision;
     if (primary == null) {
@@ -502,7 +490,80 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ),
           const SizedBox(height: AppSpacing.sm),
           _buildPrimaryDecisionBlock(context, theme, l10n, primary),
-          const SizedBox(height: AppSpacing.sm),
+          
+          // WHY THIS RECOMMENDATION (RANKED)
+          if (decision.signals.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                l10n.predictionWhyTitle,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // RANKED MAIN FACTOR
+            _buildRankedFactorRow(
+              theme, 
+              l10n, 
+              l10n.studyProfileMainFactor(l10n.get(decision.signals.first)),
+              isMain: true,
+            ),
+            if (decision.signals.length > 1) ...[
+              const SizedBox(height: 6),
+              _buildRankedFactorRow(
+                theme, 
+                l10n, 
+                l10n.studyProfileSecondaryFactor(l10n.get(decision.signals[1])),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _buildStatBadge(
+                  theme, 
+                  "${l10n.consistency}: ${(100 - studyAnalytics.timeInconsistencyScore).round()}% (${studyAnalytics.consistencyTrendLabel})",
+                  isWarning: studyAnalytics.timeInconsistencyScore >= 50,
+                ),
+                _buildStatBadge(
+                  theme, 
+                  "✓ ${l10n.completion}: ${(studyAnalytics.successRate * 100).round()}%",
+                  isWarning: studyAnalytics.successRate < 0.6,
+                ),
+                _buildStatBadge(
+                  theme, 
+                  "${l10n.stress}: ${decision.avgStress.toStringAsFixed(1)}/10",
+                  isWarning: decision.avgStress >= 7,
+                ),
+              ],
+            ),
+          ],
+          
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+               _buildStatBadge(
+                  theme, 
+                  "Confidence: ${decision.confidence >= 0.7 ? 'High' : (decision.confidence >= 0.4 ? 'Medium' : 'Low')}",
+                  isWarning: decision.confidence < 0.4,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "(based on ${studyAnalytics.trackedSessionCount} sessions)",
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontSize: 9,
+                  ),
+                ),
+            ],
+          ),
+          
+          const SizedBox(height: AppSpacing.md),
           SizedBox(
             width: double.infinity,
             child: AppButton(
@@ -515,29 +576,45 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               icon: const AppIcon(HeroIcons.play, size: 16, color: Colors.white),
             ),
           ),
-          if (decision.secondaryDecisions.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            ...decision.secondaryDecisions.map<Widget>(
-              (item) => _buildPriorityDecisionItem(context, theme, l10n, item),
-            ),
-          ],
+
           if (decision.suggestedSessionMinutes != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
-              l10n.decision_recommended_session(decision.suggestedSessionMinutes!),
+              l10n.get('decisionRecommendedSession', {'minutes': decision.suggestedSessionMinutes!}),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            _confidenceLabel(l10n, decision.confidence),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+          const SizedBox(height: AppSpacing.sm),
+          if (decision.emotionalStatusKey != null) ...[
+            Text(
+              _resolveStatusKey(l10n, decision.emotionalStatusKey!),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          Row(
+            children: [
+              _buildSmallMetricBadge(
+                theme,
+                "🙂 ${l10n.moodNameGood}: ${decision.avgMood.toStringAsFixed(1)} ${DecisionInsights.isMoodTrendDecliningFromSessions(studyAnalytics.recentSessions) ? '↓' : '↑'}",
+                decision.avgMood >= 3.5 ? Colors.green : (decision.avgMood <= 2.5 ? Colors.orange : Colors.blue),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _buildSmallMetricBadge(
+                theme,
+                "⚡ ${l10n.stress}: ${decision.avgStress.toStringAsFixed(1)} ${DecisionInsights.isStressTrendIncreasingFromSessions(studyAnalytics.recentSessions) ? '↑' : '↓'}",
+                decision.avgStress >= 7.0 ? Colors.red : (decision.avgStress >= 5.0 ? Colors.orange : Colors.green),
+              ),
+            ],
           ),
+          const SizedBox(height: AppSpacing.xs),
+
         ],
       ),
     ).animate().scaleXY(begin: 0.98, end: 1.0, duration: 260.ms).fadeIn();
@@ -576,20 +653,87 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            _resolveDecisionTitle(l10n, item.messageKey),
+            l10n.get(item.titleKey, item.params),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 2),
           Text(
-            _resolveDecisionAction(l10n, item.messageKey),
+            l10n.get(item.descriptionKey, item.params),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
               fontWeight: FontWeight.w600,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRankedFactorRow(ThemeData theme, AppLocalizations l10n, String text, {bool isMain = false}) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 14,
+          decoration: BoxDecoration(
+            color: isMain ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: isMain ? FontWeight.w800 : FontWeight.w600,
+            color: isMain ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignalChip(ThemeData theme, AppLocalizations l10n, String signal) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+      ),
+      child: Text(
+        l10n.get(signal),
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatBadge(ThemeData theme, String text, {bool isWarning = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isWarning 
+            ? theme.colorScheme.error.withValues(alpha: 0.1) 
+            : theme.colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: isWarning 
+              ? theme.colorScheme.error.withValues(alpha: 0.2) 
+              : theme.colorScheme.primary.withValues(alpha: 0.2)
+        ),
+      ),
+      child: Text(
+        text,
+        style: theme.textTheme.labelSmall?.copyWith(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: isWarning ? theme.colorScheme.error : theme.colorScheme.primary,
+        ),
       ),
     );
   }
@@ -612,8 +756,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ? theme.colorScheme.error.withValues(alpha: 0.7)
             : theme.colorScheme.primary);
 
-    final title = _resolveDecisionTitle(l10n, item.messageKey);
-    final action = _resolveDecisionAction(l10n, item.messageKey);
+    final title = l10n.get(item.titleKey);
+    final action = l10n.get(item.descriptionKey);
 
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -670,42 +814,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final key = parts.first;
     final value = parts.length > 1 ? parts[1] : null;
 
-    switch (key) {
-      case 'decision_high_stress':
-        return l10n.decision_high_stress;
-      case 'decision_short_sessions':
-        return l10n.decision_short_sessions;
-      case 'decision_deep_work':
-        return l10n.decision_deep_work;
-      case 'decision_burnout_warning':
-        return l10n.decision_burnout_warning;
-      case 'decision_stress_rising':
-        return l10n.decision_stress_rising;
-      case 'decision_mood_declining':
-        return l10n.decision_mood_declining;
-      case 'decision_deadline_pressure':
-        return l10n.decision_deadline_pressure;
-      case 'decision_low_activity_high_stress':
-        return l10n.decision_low_activity_high_stress;
-      case 'decision_light_tasks_only':
-        return l10n.decision_light_tasks_only;
-      case 'decision_main_factor':
-        return l10n.decision_main_factor(_factorLabel(l10n, value ?? ''));
-      case 'decision_worst_day':
-        return l10n.decision_worst_day(_weekdayNameFromInt(value));
-      case 'decision_morning_planning':
-        return l10n.decision_morning_planning;
-      case 'decision_afternoon_execution':
-        return l10n.decision_afternoon_execution;
-      case 'decision_night_light_review':
-        return l10n.decision_night_light_review;
-      case 'decision_burnout_duration_cap':
-        return l10n.decisionBurnoutDurationCap;
-      case 'decision_fixed_schedule':
-        return l10n.decisionFixedSchedule;
-      default:
-        return message;
+    Map<String, dynamic>? params;
+    if (key == 'decision_main_factor' || key == 'decisionMainFactor') {
+      params = {'factor': _factorLabel(l10n, value ?? '')};
+    } else if (key == 'decision_worst_day' || key == 'decisionWorstDay') {
+      params = {'day': _weekdayNameFromInt(value)};
     }
+
+    return l10n.get(key, params);
   }
 
   String _resolveDecisionAction(AppLocalizations l10n, String message) {
@@ -753,11 +869,20 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final timerState = ref.read(studyTimerProvider);
     final timer = ref.read(studyTimerProvider.notifier);
 
+    // 1. Update Timer State
     timer.setDuration(Duration(minutes: minutes));
     if (timerState.courseId != null) {
       timer.start();
     }
+
+    // 2. Switch Tab first
     ref.read(bottomNavProvider.notifier).state = 2;
+
+    // 3. Navigation with Extra (Requested Audit requirement)
+    context.go('/app', extra: {
+      'duration': minutes,
+      'source': 'analytics',
+    });
   }
 
   Widget _buildPredictedStressCard(
@@ -816,11 +941,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             const SizedBox(height: AppSpacing.xs),
             ...prediction.stressReasons.map(
               (reason) => Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '• ${_resolvePredictionReason(l10n, reason)}',
+                  '• ${l10n.get(reason)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
               ),
@@ -843,112 +969,28 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              AppIcon(HeroIcons.calendar, color: theme.colorScheme.primary),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                l10n.predictionPlanTitle,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          ...prediction.recommendedPlan.map((item) {
-            final day = _relativeDayLabel(l10n, item.scheduledAt);
-            final time = timeLabel.formatTimeOfDay(
-              TimeOfDay(hour: item.scheduledAt.hour, minute: item.scheduledAt.minute),
-              alwaysUse24HourFormat: true,
-            );
-            return Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                '• ${l10n.predictionPlanLine(
-                  day,
-                  time,
-                  item.durationMinutes,
-                  _resolvePlanFocus(l10n, item.focusKey),
-                )}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            );
-          }),
-          if (prediction.explanationKeys.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              l10n.predictionWhyTitle,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            ...prediction.explanationKeys.map(
-              (key) => Padding(
+          const SizedBox(height: AppSpacing.xs),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: prediction.recommendedPlan.take(2).map((item) {
+              final day = _relativeDayLabel(l10n, item.scheduledAt);
+              return Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  '• ${_resolvePredictionExplanation(l10n, key)}',
+                  '• $day: ${item.durationMinutes} min ${l10n.get(item.focusKey)}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
-                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.sm),
-          _buildPredictionRiskSection(theme, l10n, prediction),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
   }
 
-  String _resolvePredictionReason(AppLocalizations l10n, String key) {
-    switch (key) {
-      case 'predictionReasonHighStressToday':
-        return l10n.predictionReasonHighStressToday;
-      case 'predictionReasonLowConsistency':
-        return l10n.predictionReasonLowConsistency;
-      case 'predictionReasonUpcomingWorkload':
-        return l10n.predictionReasonUpcomingWorkload;
-      default:
-        return key;
-    }
-  }
-
-  String _resolvePredictionExplanation(AppLocalizations l10n, String key) {
-    switch (key) {
-      case 'predictionExplanationStressHigh':
-        return l10n.predictionReasonStressHigh;
-      case 'predictionExplanationLowConsistency':
-        return l10n.predictionReasonLowConsistencyDetail;
-      case 'predictionExplanationTasksPending':
-        return l10n.predictionReasonTasksPending;
-      case 'predictionExplanationDeadlinesSoon':
-        return l10n.predictionReasonDeadlinesSoon;
-      default:
-        return key;
-    }
-  }
-
-  String _resolvePlanFocus(AppLocalizations l10n, String key) {
-    switch (key) {
-      case 'predictionPlanLightFocus':
-        return l10n.predictionPlanLightFocus;
-      case 'predictionPlanFocusExecution':
-        return l10n.predictionPlanFocusExecution;
-      case 'predictionPlanDeepExecution':
-        return l10n.predictionPlanDeepExecution;
-      case 'predictionPlanLightReview':
-        return l10n.predictionPlanLightReview;
-      default:
-        return key;
-    }
-  }
 
   String _relativeDayLabel(AppLocalizations l10n, DateTime date) {
     final now = DateTime.now();
@@ -1044,12 +1086,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  bool _hasAnalyticsData(AnalyticsData data) {
-    return data.totalTasks > 0 ||
-        data.studyHoursPerCourse.isNotEmpty ||
-        data.gradeDistribution.isNotEmpty;
-  }
-
   Widget _analyticsLoadingSkeleton(ThemeData theme) {
     final base = theme.colorScheme.surfaceContainerHighest;
     final highlight = theme.colorScheme.surface;
@@ -1089,6 +1125,118 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildSmallMetricBadge(ThemeData theme, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        text,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMoodVsStudyCard(ThemeData theme, AppLocalizations l10n, DecisionResult decision, StudyAnalytics studyAnalytics) {
+    final details = studyAnalytics.moodDurationImpactDetails;
+    final hasEnoughData = details['hasEnoughData'] as bool;
+    final impact = details['impact'] as int;
+    final mood = decision.avgMood;
+    final isMoodGood = mood >= 3.5;
+    final isMoodBad = mood <= 2.5;
+
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const AppIcon(HeroIcons.presentationChartLine, color: Colors.blueAccent),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                "🧠 ${l10n.analyticsMoodPerformanceTitle}",
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            !hasEnoughData 
+               ? l10n.analyticsNotEnoughData
+               : (isMoodGood
+                    ? l10n.analyticsMoodPerformanceGoodDesc
+                    : (isMoodBad
+                        ? l10n.analyticsMoodPerformanceBadDesc
+                        : l10n.analyticsMoodPerformanceStableDesc)),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(l10n.analyticsMoodBetterMood, style: theme.textTheme.labelSmall),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasEnoughData ? "🚀 +${impact}m" : l10n.analyticsNotEnoughData, 
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.greenAccent,
+                        fontSize: hasEnoughData ? 20 : 10,
+                      ),
+                    ),
+                    Text(l10n.analyticsMoodFocusBoost, style: theme.textTheme.labelSmall?.copyWith(fontSize: 8)),
+                  ],
+                ),
+              ),
+              Container(width: 1, height: 40, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(l10n.analyticsMoodHighStress, style: theme.textTheme.labelSmall),
+                    const SizedBox(height: 4),
+                    Text(
+                      hasEnoughData ? "📉 -${impact + 5}m" : l10n.analyticsNotEnoughData, 
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.redAccent,
+                        fontSize: hasEnoughData ? 20 : 10,
+                      ),
+                    ),
+                    Text(l10n.analyticsMoodFocusDrain, style: theme.textTheme.labelSmall?.copyWith(fontSize: 8)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _resolveStatusKey(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'decisionStatusHighStress':
+        return l10n.decisionStatusHighStress;
+      case 'decisionStatusModerateStress':
+        return l10n.decisionStatusModerateStress;
+      case 'decisionStatusLowStress':
+        return l10n.decisionStatusLowStress;
+      default:
+        return key;
+    }
   }
 }
 
@@ -1397,22 +1545,43 @@ class _EmptyStateBulletRow extends StatelessWidget {
 }
 
 class _TrendAnalysisSection extends StatelessWidget {
-  const _TrendAnalysisSection({super.key, required this.trend});
+  const _TrendAnalysisSection({
+    super.key,
+    required this.trend,
+    required this.showDetails,
+    required this.onToggleDetails,
+  });
 
   final TrendData trend;
+  final bool showDetails;
+  final VoidCallback onToggleDetails;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _TrendSummaryCard(trend: trend),
-        const SizedBox(height: AppSpacing.sm),
-        _OverallStatusCard(trend: trend),
-        const SizedBox(height: 20),
-        AppGlassCard(
+        const SizedBox(height: AppSpacing.md),
+        TextButton.icon(
+          onPressed: onToggleDetails,
+          icon: Icon(
+            showDetails ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+            size: 20,
+          ),
+          label: Text(
+            showDetails ? 'Hide details' : 'View full analysis',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        if (showDetails) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _OverallStatusCard(trend: trend),
+          const SizedBox(height: 20),
+          AppGlassCard(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1615,8 +1784,9 @@ class _TrendAnalysisSection extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
+    ],
+  );
+}
 
   double _latestDouble(Map<DateTime, double> values) {
     if (values.isEmpty) return 0;
@@ -1791,13 +1961,14 @@ class _TrendAnalysisSection extends StatelessWidget {
   }
 }
 
-class _TrendSummaryCard extends StatelessWidget {
+class _TrendSummaryCard extends ConsumerWidget {
   const _TrendSummaryCard({required this.trend});
 
   final TrendData trend;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final studyAnalytics = ref.watch(studyAnalyticsProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final totalStudyHours = trend.studyTrend.values.fold<double>(
@@ -1883,6 +2054,45 @@ class _TrendSummaryCard extends StatelessWidget {
             style: theme.textTheme.bodyMedium?.copyWith(
               color: performanceColor,
               fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (studyAnalytics.isMoodStudyCorrelationDetected) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  const AppIcon(HeroIcons.exclamationTriangle, size: 16, color: Colors.orange),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      "${l10n.analyticsMoodCorrelationDetected}: "
+                      "${l10n.analyticsMoodStudyDropped(studyAnalytics.weeklyChange.abs().toStringAsFixed(0))}, "
+                      "${l10n.analyticsMoodMoodDropped(studyAnalytics.moodChangePercent.abs().toStringAsFixed(0))}",
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            studyAnalytics.getBurnoutShortExplanation(l10n),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: studyAnalytics.burnoutLevel == BurnoutLevel.stable 
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                  : theme.colorScheme.primary,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],
@@ -2361,7 +2571,9 @@ class _OverallStatusCard extends StatelessWidget {
 
     final detail = isOnTrack
         ? l10n.trendStatusOnTrackDetail
-        : l10n.trendStatusNeedsFocusDetail;
+        : (isStudyLow && completionRate > 0.9)
+            ? "Your activity is low, but task completion is strong."
+            : l10n.trendStatusNeedsFocusDetail;
     final color = isOnTrack ? Colors.green : Colors.orange;
 
     return AppGlassCard(
@@ -2995,4 +3207,82 @@ String _formatCourseName(String input) {
         return word[0].toUpperCase() + word.substring(1);
       })
       .join(' ');
+}
+
+class _StudyProfileCard extends StatelessWidget {
+  final StudyAnalytics studyAnalytics;
+
+  const _StudyProfileCard({required this.studyAnalytics});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final profile = studyAnalytics.studyProfile;
+
+    String windowLabel(String window) {
+      if (window == 'Morning') return l10n.studyProfileMorning;
+      if (window == 'Afternoon') return l10n.studyProfileAfternoon;
+      return l10n.studyProfileEvening;
+    }
+
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon(HeroIcons.identification, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                l10n.studyProfileTitle,
+                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _ProfileRow(
+            icon: HeroIcons.clock,
+            text: l10n.studyProfileOptimalDuration(profile['optimalMin'], profile['optimalMax']),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _ProfileRow(
+            icon: HeroIcons.bolt,
+            text: l10n.studyProfileStressThreshold(profile['stressThreshold'].toStringAsFixed(1)),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _ProfileRow(
+            icon: HeroIcons.sun,
+            text: l10n.studyProfilePeakWindow(windowLabel(profile['peakWindow'])),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileRow extends StatelessWidget {
+  final HeroIcons icon;
+  final String text;
+
+  const _ProfileRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        AppIcon(icon, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          text,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+          ),
+        ),
+      ],
+    );
+  }
 }

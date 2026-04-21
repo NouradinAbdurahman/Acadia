@@ -41,12 +41,21 @@ class RiskCalculator {
     }
     final studyContribution = (studyDeficit * 15.0).clamp(0.0, 20.0);
 
+    // 5. Improvement Offset (Fix: Reward study increase)
+    double improvementOffset = 0.0;
+    if (input.studyHours > 0 && input.studyGoal > 0) {
+      final ratio = input.studyHours / input.studyGoal;
+      if (ratio > 1.1) improvementOffset = 5.0;
+      if (ratio > 1.3) improvementOffset = 10.0;
+    }
+
     double score =
         overdueContribution +
         upcomingContribution +
         ectsContribution +
         studyContribution +
-        input.gradeRiskAdjustment;
+        input.gradeRiskAdjustment -
+        improvementOffset;
     final totalScore = score.clamp(0.0, 100.0);
 
     return RiskResult(
@@ -60,8 +69,8 @@ class RiskCalculator {
   }
 
   static String _level(double score) {
-    if (score <= 30) return 'low';
-    if (score <= 60) return 'medium';
+    if (score < 30) return 'low';
+    if (score < 60) return 'medium';
     return 'high';
   }
 }

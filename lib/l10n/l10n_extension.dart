@@ -1,0 +1,151 @@
+import 'app_localizations.dart';
+
+extension LocalizationHelper on AppLocalizations {
+  String get(String key, [Map<String, dynamic>? params]) {
+    switch (key) {
+      case 'predictionPressureLikelyToIncrease':
+      case 'prediction_pressure_likely_to_increase':
+        return predictionPressureLikelyToIncrease;
+      case 'predictionStressLikelyIncrease':
+      case 'prediction_stress_likely_increase':
+        return predictionStressLikelyIncrease;
+      case 'decisionRisingStressUnstablePattern':
+      case 'decision_rising_stress_unstable_pattern':
+        return decisionRisingStressUnstablePattern;
+      case 'burnoutRisingStressInconsistentPattern':
+      case 'burnout_rising_stress_inconsistent_pattern':
+        return burnoutRisingStressInconsistentPattern;
+      case 'decisionActionFixedScheduleFocus':
+        return decisionActionFixedScheduleFocus;
+      case 'analyticsNotEnoughData':
+        return analyticsNotEnoughData;
+      case 'decisionHighStress':
+      case 'decisionStatusHighStress':
+        return decisionStatusHighStress;
+      case 'decisionLowMotivation':
+        return moodNameBad;
+      case 'decisionHealthyState':
+        return strongStateTitle;
+      case 'decisionStatusModerateStress':
+        return decisionStatusModerateStress;
+      case 'decisionStatusLowStress':
+        return decisionStatusLowStress;
+      case 'decisionShortSessions':
+        return decisionShortSessions;
+      case 'decisionDeepWork':
+        return decisionDeepWork;
+      case 'decisionBurnoutWarning':
+        return decisionBurnoutWarning;
+      case 'decisionStressRising':
+        return decisionStressRising;
+      case 'decisionMoodDeclining':
+        return decisionMoodDeclining;
+      case 'decisionDeadlinePressure':
+        return decisionDeadlinePressure;
+      case 'predictionReasonHighStressToday':
+        return predictionReasonHighStressToday;
+      case 'predictionReasonLowConsistency':
+        return predictionReasonLowConsistency;
+      case 'predictionReasonUpcomingWorkload':
+        return predictionReasonUpcomingWorkload;
+      case 'predictionReasonStressHigh':
+        return predictionReasonStressHigh;
+      case 'predictionReasonLowConsistencyDetail':
+        return predictionReasonLowConsistencyDetail;
+      case 'predictionReasonTasksPending':
+        return predictionReasonTasksPending;
+      case 'predictionReasonDeadlinesSoon':
+        return predictionReasonDeadlinesSoon;
+      case 'postSessionMoodImproved':
+        return postSessionMoodImproved;
+      case 'signalStressHigh':
+        return signalStressHigh;
+      case 'signalStressMedium':
+        return signalStressMedium;
+      case 'signalMoodLow':
+        return moodNameBad;
+      case 'signalConsistencyLow':
+        return signalConsistencyLow;
+      case 'signalDeficitHigh':
+        return signalDeficitHigh;
+      case 'consistency':
+        return consistency;
+      case 'stress':
+        return stress;
+      case 'decisionWorstDay':
+        return decisionWorstDay(params?['day'] ?? '');
+      case 'decisionMainFactor':
+        return decisionMainFactor(params?['factor'] ?? '');
+      case 'takeItSlowerTodayTitle':
+        return takeItSlowerTodayTitle;
+      case 'takeItSlowerTodayBody':
+        return takeItSlowerTodayBody;
+      case 'moodNameBad':
+        return moodNameBad;
+      case 'decisionLightTasksOnly':
+        return decisionLightTasksOnly;
+      case 'strongStateTitle':
+        return strongStateTitle;
+      case 'strongStateBody':
+        return strongStateBody;
+      case 'highRisk':
+        return highRisk;
+      case 'decisionBurnoutDurationCap':
+        return decisionBurnoutDurationCap;
+      case 'stressTrends':
+        return stressTrends;
+      case 'burnoutMessageEmotionalRisk':
+        return burnoutMessageEmotionalRisk;
+      case 'moodTrends':
+        return moodTrends;
+      case 'predictionLevelHigh':
+        return predictionLevelHigh;
+      case 'upcomingDeadlines':
+        return upcomingDeadlines;
+      case 'decisionLowActivityHighStress':
+        return decisionLowActivityHighStress;
+      case 'decisionActionShortSessions':
+        return decisionActionShortSessions;
+      case 'decisionFixedSchedule':
+        return decisionFixedSchedule;
+      case 'decisionActionFixedSchedule':
+        return decisionActionFixedSchedule;
+      case 'decisionMorningPlanning':
+        return decisionMorningPlanning;
+      case 'predictionPlanLightFocus':
+        return predictionPlanLightFocus;
+      case 'predictionPlanFocusExecution':
+        return predictionPlanFocusExecution;
+      case 'predictionPlanDeepExecution':
+        return predictionPlanDeepExecution;
+      case 'predictionPlanLightReview':
+        return predictionPlanLightReview;
+      case 'decisionActionPlanning':
+        return decisionActionPlanning;
+      case 'decisionAfternoonExecution':
+        return decisionAfternoonExecution;
+      case 'decisionActionExecution':
+        return decisionActionExecution;
+      case 'decisionNightLightReview':
+        return decisionNightLightReview;
+      case 'decisionActionLightReview':
+        return decisionActionLightReview;
+      case 'decisionActionBreakDown':
+        return decisionActionBreakDown;
+      case 'studyProfileMorning':
+        return studyProfileMorning;
+      case 'studyProfileAfternoon':
+        return studyProfileAfternoon;
+      case 'studyProfileEvening':
+        return studyProfileEvening;
+      case 'studyProfileMainFactor':
+        return studyProfileMainFactor(params?['factor'] ?? '');
+      case 'studyProfileSecondaryFactor':
+        return studyProfileSecondaryFactor(params?['factor'] ?? '');
+      case 'decisionRecommendedSession':
+        return decisionRecommendedSession(params?['minutes'] ?? 0);
+      default:
+        return key; 
+    }
+  }
+}

@@ -11,6 +11,7 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../components/app_bottom_sheet_picker.dart';
+import '../../components/app_back_button.dart';
 import '../../l10n/app_localizations.dart';
 import 'semester_management_screen.dart';
 
@@ -183,6 +184,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(
           widget.semesterToEdit == null ? l10n.addSemester : l10n.editSemester,
         ),

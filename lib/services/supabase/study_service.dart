@@ -30,6 +30,9 @@ class StudyService {
           total_break_minutes,
           cycles_completed,
           total_cycles,
+          mood,
+          stress,
+
           courses:course_id (
             id,
             course_name,
@@ -66,6 +69,46 @@ class StudyService {
           total_break_minutes,
           cycles_completed,
           total_cycles,
+          mood,
+          stress,
+
+          courses:course_id (
+            id,
+            course_name,
+            color,
+            semester_id
+          )
+        ''')
+        .single();
+  }
+
+  Future<Map<String, dynamic>> updateSession(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    return _supabase
+        .from('study_sessions')
+        .update(data)
+        .eq('id', id)
+        .select('''
+          id,
+          user_id,
+          course_id,
+          semester_id,
+          session_type,
+          duration_minutes,
+          created_at,
+          intent,
+          completed,
+          completed_cycles,
+          skipped_breaks,
+          is_pomodoro,
+          total_focus_minutes,
+          total_break_minutes,
+          cycles_completed,
+          total_cycles,
+          mood,
+          stress,
           courses:course_id (
             id,
             course_name,

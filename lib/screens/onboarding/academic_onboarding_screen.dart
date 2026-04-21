@@ -13,7 +13,8 @@ import '../../components/app_glass_card.dart';
 import '../../components/app_bottom_sheet_picker.dart';
 import '../../models/student_profile.dart';
 import '../../providers/student_profile_provider.dart';
-import '../../providers/app_providers.dart';
+import '../../providers/analytics_provider.dart';
+import '../../providers/semester_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/theme/app_colors.dart';
@@ -41,7 +42,7 @@ class _AcademicOnboardingScreenState
   String? _selectedDegree;
   int _selectedGradYear = DateTime.now().year + 4;
   int _selectedSemester = 1;
-  double _studyHours = 10;
+  double _studyHours = DEFAULT_WEEKLY_GOAL.toDouble();
   String _preferredTime = 'morning';
   String _breakPattern = 'pomodoro';
 
@@ -61,8 +62,8 @@ class _AcademicOnboardingScreenState
         _selectedGradYear = (profile.expectedGraduationYear ?? (DateTime.now().year + 4))
           .clamp(_currentYear, _currentYear + 10)
           .toInt();
-      _selectedSemester = profile.currentSemester ?? 1;
-        _studyHours = (profile.studyHoursPerWeek ?? 10).toDouble();
+        _selectedSemester = profile.currentSemester ?? 1;
+        _studyHours = (ref.read(weeklyStudyGoalHoursProvider)).toDouble();
       _preferredTime = profile.preferredStudyTime ?? 'morning';
       _breakPattern = profile.breakPattern ?? 'pomodoro';
     }
@@ -138,7 +139,6 @@ class _AcademicOnboardingScreenState
       academicYear: null,
       currentSemester: _selectedSemester,
       expectedGraduationYear: _selectedGradYear,
-      studyHoursPerWeek: _studyHours.toInt(),
       preferredStudyTime: _preferredTime,
       breakPattern: _breakPattern,
       timezone: DateTime.now().timeZoneName,
@@ -152,17 +152,15 @@ class _AcademicOnboardingScreenState
       await ref.read(studentProfileProvider.notifier).updateProfile(profile);
       await ref.read(studentProfileProvider.notifier).completeOnboarding();
 
-      // Update the user table directly as single source of truth for Risk engine
-      final appUser = ref.read(currentAppUserProvider).value;
-      if (appUser != null) {
-        try {
-          await ref
-              .read(authRepositoryProvider)
-              .updateWeeklyStudyGoal(appUser.id, _studyHours.toInt());
-          ref.invalidate(currentAppUserProvider);
-        } catch (_) {
-          // Non-fatal: onboarding should continue if this optional column is unavailable.
-        }
+      // Persist weekly goal to active semester.
+      final activeSemester = ref.read(activeSemesterFullProvider);
+      if (activeSemester != null) {
+        await ref.read(semesterProvider.notifier).updateSemester(
+              activeSemester.copyWith(weeklyStudyGoal: _studyHours.toInt()),
+            );
+        ref.invalidate(semesterProvider);
+        ref.invalidate(weeklyStudyGoalHoursProvider);
+        _studyHours = ref.read(weeklyStudyGoalHoursProvider).toDouble();
       }
 
       if (mounted) {
@@ -451,7 +449,12 @@ class _AcademicOnboardingScreenState
                   min: 1,
                   max: 80,
                   divisions: 79,
-                  onChanged: (val) => setState(() => _studyHours = val),
+                  onChanged: (val) {
+                    if (val.round() != _studyHours.round()) {
+                      Haptics.vibrate(HapticsType.medium);
+                    }
+                    setState(() => _studyHours = val);
+                  },
                 ),
                 Align(
                   alignment: Alignment.centerLeft,
@@ -669,7 +672,12 @@ class _AcademicOnboardingScreenState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  onPressed: value > min ? () => onChanged(value - 1) : null,
+                  onPressed: value > min
+                      ? () {
+                          Haptics.vibrate(HapticsType.selection);
+                          onChanged(value - 1);
+                        }
+                      : null,
                   icon: const AppIcon(HeroIcons.minusCircle),
                 ),
                 const SizedBox(width: AppSpacing.xs),
@@ -682,7 +690,10 @@ class _AcademicOnboardingScreenState
                 const SizedBox(width: AppSpacing.xs),
                 IconButton(
                   onPressed: max == null || value < max
-                      ? () => onChanged(value + 1)
+                      ? () {
+                          Haptics.vibrate(HapticsType.selection);
+                          onChanged(value + 1);
+                        }
                       : null,
                   icon: const AppIcon(HeroIcons.plusCircle),
                 ),
@@ -719,7 +730,7 @@ class _AcademicOnboardingScreenState
           return Expanded(
             child: GestureDetector(
               onTap: () {
-                Haptics.vibrate(HapticsType.light);
+                Haptics.vibrate(HapticsType.selection);
                 onChanged(entry.key);
               },
               child: AnimatedContainer(

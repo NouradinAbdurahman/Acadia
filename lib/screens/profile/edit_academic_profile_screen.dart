@@ -8,9 +8,11 @@ import '../../core/design/app_spacing.dart';
 import '../../core/design/app_radius.dart';
 import '../../components/app_button.dart';
 import '../../components/app_bottom_sheet_picker.dart';
+import '../../components/app_back_button.dart';
 import '../../models/student_profile.dart';
 import '../../providers/student_profile_provider.dart';
-import '../../providers/app_providers.dart';
+import '../../providers/analytics_provider.dart';
+import '../../providers/semester_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/theme/app_colors.dart';
@@ -51,9 +53,13 @@ class _EditAcademicProfileScreenState
     );
     _majorController = TextEditingController(text: profile?.major ?? '');
     _selectedDegree = profile?.degreeType ?? 'Bachelor';
-      _selectedGradYear = profile?.expectedGraduationYear ?? (DateTime.now().year + 4);
+    _selectedGradYear = profile?.expectedGraduationYear ?? (DateTime.now().year + 4);
     _selectedSemester = profile?.currentSemester ?? 1;
-    _studyHours = (profile?.studyHoursPerWeek ?? 20).toDouble();
+    
+    // Fix: Watch the centralized goal provider instead of reading from profile
+    final currentGoal = ref.read(weeklyStudyGoalHoursProvider);
+    _studyHours = currentGoal.toDouble();
+
     _preferredTime = profile?.preferredStudyTime ?? 'morning';
     _breakPattern = profile?.breakPattern ?? 'pomodoro';
   }
@@ -97,8 +103,7 @@ class _EditAcademicProfileScreenState
       major: _majorController.text,
       academicYear: currentProfile?.academicYear,
       currentSemester: _selectedSemester,
-        expectedGraduationYear: _selectedGradYear,
-      studyHoursPerWeek: _studyHours.toInt(),
+      expectedGraduationYear: _selectedGradYear,
       preferredStudyTime: _preferredTime,
       breakPattern: _breakPattern,
       timezone: currentProfile?.timezone ?? DateTime.now().timeZoneName,
@@ -115,16 +120,16 @@ class _EditAcademicProfileScreenState
           .read(studentProfileProvider.notifier)
           .updateProfile(updatedProfile);
 
-      // Keep Auth users table synced as the single source of truth for the Risk engine
-      final appUser = ref.read(currentAppUserProvider).value;
-      if (appUser != null) {
-        try {
-          await ref
-              .read(authRepositoryProvider)
-              .updateWeeklyStudyGoal(appUser.id, _studyHours.toInt());
-          ref.invalidate(currentAppUserProvider);
-        } catch (_) {
-          // Non-fatal: keep profile updates working even on older schema versions.
+      // Keep weekly goal scoped to active semester.
+      final activeSemester = ref.read(activeSemesterFullProvider);
+      if (activeSemester != null) {
+        await ref.read(semesterProvider.notifier).updateSemester(
+              activeSemester.copyWith(weeklyStudyGoal: _studyHours.toInt()),
+            );
+        ref.invalidate(semesterProvider);
+        ref.invalidate(weeklyStudyGoalHoursProvider);
+        if (mounted) {
+          _studyHours = ref.read(weeklyStudyGoalHoursProvider).toDouble();
         }
       }
 
@@ -152,6 +157,7 @@ class _EditAcademicProfileScreenState
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(l10n.editProfile),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -424,7 +430,12 @@ class _EditAcademicProfileScreenState
               IconButton(
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                onPressed: value > min ? () => onChanged(value - 1) : null,
+                onPressed: value > min
+                    ? () {
+                        Haptics.vibrate(HapticsType.selection);
+                        onChanged(value - 1);
+                      }
+                    : null,
                 icon: const AppIcon(HeroIcons.minusCircle, size: 20),
               ),
               Padding(
@@ -439,8 +450,11 @@ class _EditAcademicProfileScreenState
               IconButton(
                 visualDensity: VisualDensity.compact,
                 padding: EdgeInsets.zero,
-                  onPressed: max == null || value < max
-                    ? () => onChanged(value + 1)
+                onPressed: max == null || value < max
+                    ? () {
+                        Haptics.vibrate(HapticsType.selection);
+                        onChanged(value + 1);
+                      }
                     : null,
                 icon: const AppIcon(HeroIcons.plusCircle, size: 20),
               ),
@@ -477,7 +491,12 @@ class _EditAcademicProfileScreenState
             min: 5,
             max: 40,
             divisions: 35,
-            onChanged: (val) => setState(() => _studyHours = val),
+            onChanged: (val) {
+              if (val.round() != _studyHours.round()) {
+                Haptics.vibrate(HapticsType.medium);
+              }
+              setState(() => _studyHours = val);
+            },
           ),
         ],
       ),
@@ -500,7 +519,7 @@ class _EditAcademicProfileScreenState
           .toList(),
       selected: {value},
       onSelectionChanged: (selection) {
-        Haptics.vibrate(HapticsType.light);
+        Haptics.vibrate(HapticsType.selection);
         onChanged(selection.first);
       },
     );

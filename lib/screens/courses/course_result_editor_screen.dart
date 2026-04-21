@@ -6,6 +6,7 @@ import 'package:heroicons/heroicons.dart';
 import '../../components/app_bottom_sheet_picker.dart';
 import '../../components/app_button.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_back_button.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
@@ -122,6 +123,7 @@ class _CourseResultEditorScreenState
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(widget.resultId == null ? l10n.addResult : l10n.editResult),
         backgroundColor: Colors.transparent,
         elevation: 0,

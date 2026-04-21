@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' as services;
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -328,7 +329,7 @@ class _CoursePicker extends StatelessWidget {
 
     return PopupMenuButton<String>(
       onSelected: (id) {
-        services.HapticFeedback.lightImpact();
+        Haptics.vibrate(HapticsType.selection);
         onSelected(id);
       },
       tooltip: l10n.selectCourse,

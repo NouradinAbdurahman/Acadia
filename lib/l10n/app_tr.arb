@@ -1673,42 +1673,42 @@
   "moodReminderBody": "Ruh halini ve stresini kaydetmek için bir dakikanı ayır.",
   "moodLast7Days": "Son 7 gündeki ruh hali",
   "decisionSmartInsights": "Akıllı İçgörüler",
-  "decision_high_stress": "Yüksek stres tespit edildi",
-  "decision_short_sessions": "Bugün daha kısa çalışma yap",
-  "decision_deep_work": "Derin çalışma için iyi durumdasın",
-  "decision_burnout_warning": "Tükenmişlik riski artıyor",
-  "decision_stress_rising": "Bu hafta stresin artıyor",
-  "decision_mood_declining": "Ruh halin düşüyor",
-  "decision_deadline_pressure": "Yüksek baskı. Görevleri böl",
-  "decision_low_activity_high_stress": "Düşük aktivite ama yüksek stres",
-  "decision_light_tasks_only": "Bugün sadece hafif görevlere odaklan",
-  "decision_main_factor": "Ana stres kaynağı: {factor}",
-  "@decision_main_factor": {
+  "decisionHighStress": "Yüksek stres tespit edildi",
+  "decisionShortSessions": "Bugün daha kısa çalışma yap",
+  "decisionDeepWork": "Derin çalışma için iyi durumdasın",
+  "decisionBurnoutWarning": "Tükenmişlik riski artıyor",
+  "decisionStressRising": "Bu hafta stresin artıyor",
+  "decisionMoodDeclining": "Ruh halin düşüyor",
+  "decisionDeadlinePressure": "Yüksek baskı. Görevleri böl",
+  "decisionLowActivityHighStress": "Düşük aktivite ama yüksek stres",
+  "decisionLightTasksOnly": "Bugün sadece hafif görevlere odaklan",
+  "decisionMainFactor": "Ana stres kaynağı: {factor}",
+  "@decisionMainFactor": {
     "placeholders": {
       "factor": {
         "type": "String"
       }
     }
   },
-  "decision_worst_day": "{day} günü daha düşük hissediyorsun",
-  "@decision_worst_day": {
+  "decisionWorstDay": "{day} günü daha düşük hissediyorsun",
+  "@decisionWorstDay": {
     "placeholders": {
       "day": {
         "type": "String"
       }
     }
   },
-  "decision_recommended_session": "Önerilen çalışma: {minutes} dk",
-  "@decision_recommended_session": {
+  "decisionRecommendedSession": "Önerilen çalışma: {minutes} dk",
+  "@decisionRecommendedSession": {
     "placeholders": {
       "minutes": {
         "type": "Object"
       }
     }
   },
-  "decision_morning_planning": "Sabah odağı: ana görevlerini planla",
-  "decision_afternoon_execution": "Öğleden sonra odağı: en önemli görevi uygula",
-  "decision_night_light_review": "Gece odağı: hafif tekrar yap",
+  "decisionMorningPlanning": "Sabah odağı: ana görevlerini planla",
+  "decisionAfternoonExecution": "Öğleden sonra odağı: en önemli görevi uygula",
+  "decisionNightLightReview": "Gece odağı: hafif tekrar yap",
   "decisionActionShortSessions": "Daha kısa oturumlar kullan (25 dk)",
   "decisionActionBreakDown": "Çalışmayı şimdi küçük görevlere böl",
   "decisionActionMonitorWeekly": "Bu paterni hafta boyunca takip et",
@@ -1842,5 +1842,51 @@
       }
     }
   },
-  "addQuickNoteOptional": "Kısa bir not ekle (isteğe bağlı)"
+  "addQuickNoteOptional": "Kısa bir not ekle (isteğe bağlı)",
+  "signalStressHigh": "Yüksek stres",
+  "signalStressMedium": "Orta derece stres",
+  "signalMoodLow": "Düşük ruh hali",
+  "signalConsistencyLow": "Düzensiz rutin",
+  "signalDeficitHigh": "Çalışma açığı",
+  "consistency": "Tutarlılık",
+  "stress": "Stres",
+  "decisionBurnoutDurationCap": "Yüksek stres algılandı. Oturumları 25dk ile sınırla.",
+  "moodTrends": "Ruh Hali Eğilimleri",
+  "decisionFixedSchedule": "Sabit program oluştur",
+  "studyProfileTitle": "Çalışma Profilin",
+  "studyProfileOptimalDuration": "İdeal Oturum: {min}-{max} dk",
+  "@studyProfileOptimalDuration": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "studyProfileStressThreshold": "Stres > {value} olduğunda odak düşüyor",
+  "@studyProfileStressThreshold": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "studyProfilePeakWindow": "En Verimli Zaman: {window}",
+  "@studyProfilePeakWindow": {
+    "placeholders": {
+      "window": { "type": "String" }
+    }
+  },
+  "studyProfileMorning": "Sabah",
+  "studyProfileAfternoon": "Öğleden Sonra",
+  "studyProfileEvening": "Akşam",
+  "studyProfileMainFactor": "Ana faktör: {factor}",
+  "@studyProfileMainFactor": {
+    "placeholders": {
+      "factor": { "type": "String" }
+    }
+  },
+  "studyProfileSecondaryFactor": "İkincil: {factor}",
+  "@studyProfileSecondaryFactor": {
+    "placeholders": {
+      "factor": { "type": "String" }
+    }
+  },
+  "completion": "Tamamlama"
 }

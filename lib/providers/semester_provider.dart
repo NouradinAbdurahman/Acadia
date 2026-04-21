@@ -8,7 +8,10 @@ import 'app_providers.dart';
 final semesterStateServiceProvider = Provider((ref) => SemesterStateService());
 final isSemesterSwitchingProvider = StateProvider<bool>((ref) => false);
 
-final semesterProvider = StateNotifierProvider<SemesterNotifier, AsyncValue<List<Semester>>>((ref) {
+final semesterProvider =
+    StateNotifierProvider<SemesterNotifier, AsyncValue<List<Semester>>>((ref) {
+  // Ensure the provider resets when the user changes
+  ref.watch(currentUserProvider);
   return SemesterNotifier(ref.watch(semesterRepositoryProvider), ref);
 });
 
@@ -92,7 +95,11 @@ class SemesterNotifier extends StateNotifier<AsyncValue<List<Semester>>> {
   }
 }
 
-final activeSemesterProvider = StateNotifierProvider<ActiveSemesterNotifier, String?>((ref) {
+final activeSemesterProvider =
+    StateNotifierProvider<ActiveSemesterNotifier, String?>((ref) {
+  // Re-initialize this notifier if the user changes
+  final user = ref.watch(currentUserProvider);
+
   final notifier = ActiveSemesterNotifier(
     ref.watch(semesterStateServiceProvider),
     ref,
@@ -102,7 +109,11 @@ final activeSemesterProvider = StateNotifierProvider<ActiveSemesterNotifier, Str
     notifier.onSemesterListChanged(next.value ?? const <Semester>[]);
   });
 
-  notifier.initialize();
+  // Only attempt to initialize if a user is currently logged in
+  if (user != null) {
+    notifier.initialize();
+  }
+  
   return notifier;
 });
 
@@ -131,9 +142,10 @@ class ActiveSemesterNotifier extends StateNotifier<String?> {
   void _applyIncomingActiveSemester(String? incomingActiveSemesterId) {
     // Hard guard: never allow null to overwrite an existing active semester.
     if (incomingActiveSemesterId == null) {
-      debugPrint('Blocked null active semester overwrite');
       if (state == null) {
-        debugPrint('ERROR: Active semester became null');
+        // No active semester set yet, this is normal for new users.
+      } else {
+        debugPrint('ActiveSemester: Blocked null overwrite of existing state.');
       }
       return;
     }
@@ -146,7 +158,7 @@ class ActiveSemesterNotifier extends StateNotifier<String?> {
 
     final semesters = _ref.read(semesterProvider).value ?? const <Semester>[];
     if (semesters.isEmpty) {
-      debugPrint('ERROR: Active semester became null');
+      // Not an error if the user hasn't created any semesters yet.
       return;
     }
 

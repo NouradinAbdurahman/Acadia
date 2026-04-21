@@ -11,6 +11,7 @@ class AnalyticsData {
   final double avgMood;
   final double avgStress;
   final int moodLogCount;
+  final bool hasData;
 
   AnalyticsData({
     required this.studyHoursPerCourse,
@@ -25,6 +26,7 @@ class AnalyticsData {
     this.avgMood = 0.0,
     this.avgStress = 0.0,
     this.moodLogCount = 0,
+    this.hasData = false,
   });
 
   bool get hasValidGpa => gradeDistribution.isNotEmpty;

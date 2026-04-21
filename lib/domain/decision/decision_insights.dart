@@ -1,4 +1,5 @@
 import '../../models/mood_log.dart';
+import '../../models/study_session.dart';
 
 class DecisionInsights {
   const DecisionInsights._();
@@ -7,15 +8,12 @@ class DecisionInsights {
     if (moods.length < 4) return false;
     final sorted = [...moods]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final recent = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
-    if (recent.length < 4) return false;
+    if (recent.length < 6) return false;
+    final last3 = recent.sublist(recent.length - 3).map((e) => e.stressLevel).toList();
+    final prev3 = recent.sublist(recent.length - 6, recent.length - 3).map((e) => e.stressLevel).toList();
 
-    final mid = recent.length ~/ 2;
-    final firstHalf = recent.take(mid).map((e) => e.stressLevel).toList();
-    final secondHalf = recent.skip(mid).map((e) => e.stressLevel).toList();
-    if (firstHalf.isEmpty || secondHalf.isEmpty) return false;
-
-    final firstAvg = firstHalf.reduce((a, b) => a + b) / firstHalf.length;
-    final secondAvg = secondHalf.reduce((a, b) => a + b) / secondHalf.length;
+    final firstAvg = prev3.reduce((a, b) => a + b) / 3.0;
+    final secondAvg = last3.reduce((a, b) => a + b) / 3.0;
     return (secondAvg - firstAvg) >= 1.0;
   }
 
@@ -23,15 +21,42 @@ class DecisionInsights {
     if (moods.length < 4) return false;
     final sorted = [...moods]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final recent = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
-    if (recent.length < 4) return false;
+    if (recent.length < 6) return false;
+    final last3 = recent.sublist(recent.length - 3).map((e) => e.moodLevel).toList();
+    final prev3 = recent.sublist(recent.length - 6, recent.length - 3).map((e) => e.moodLevel).toList();
 
-    final mid = recent.length ~/ 2;
-    final firstHalf = recent.take(mid).map((e) => e.moodLevel).toList();
-    final secondHalf = recent.skip(mid).map((e) => e.moodLevel).toList();
-    if (firstHalf.isEmpty || secondHalf.isEmpty) return false;
+    final firstAvg = prev3.reduce((a, b) => a + b) / 3.0;
+    final secondAvg = last3.reduce((a, b) => a + b) / 3.0;
+    return (firstAvg - secondAvg) >= 0.6;
+  }
 
-    final firstAvg = firstHalf.reduce((a, b) => a + b) / firstHalf.length;
-    final secondAvg = secondHalf.reduce((a, b) => a + b) / secondHalf.length;
+  static bool isStressTrendIncreasingFromSessions(List<StudySession> sessions) {
+    if (sessions.length < 6) return false;
+    final sorted = [...sessions]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final recent = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
+    if (recent.length < 6) return false;
+    final last3 = recent.sublist(recent.length - 3).where((e) => e.stress != null).map((e) => e.stress!).toList();
+    final prev3 = recent.sublist(recent.length - 6, recent.length - 3).where((e) => e.stress != null).map((e) => e.stress!).toList();
+
+    if (last3.length < 3 || prev3.length < 3) return false;
+
+    final firstAvg = prev3.reduce((a, b) => a + b) / 3.0;
+    final secondAvg = last3.reduce((a, b) => a + b) / 3.0;
+    return (secondAvg - firstAvg) >= 1.0;
+  }
+
+  static bool isMoodTrendDecliningFromSessions(List<StudySession> sessions) {
+    if (sessions.length < 6) return false;
+    final sorted = [...sessions]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final recent = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
+    if (recent.length < 6) return false;
+    final last3 = recent.sublist(recent.length - 3).where((e) => e.mood != null).map((e) => e.mood!).toList();
+    final prev3 = recent.sublist(recent.length - 6, recent.length - 3).where((e) => e.mood != null).map((e) => e.mood!).toList();
+
+    if (last3.length < 3 || prev3.length < 3) return false;
+
+    final firstAvg = prev3.reduce((a, b) => a + b) / 3.0;
+    final secondAvg = last3.reduce((a, b) => a + b) / 3.0;
     return (firstAvg - secondAvg) >= 0.6;
   }
 

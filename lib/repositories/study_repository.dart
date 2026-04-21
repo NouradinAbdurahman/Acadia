@@ -18,4 +18,12 @@ class StudyRepository {
     final response = await _studyService.createSession(data);
     return StudySession.fromJson(response);
   }
+
+  Future<StudySession> updateSession(StudySession session) async {
+    final Map<String, dynamic> data = session.toJson()
+      ..remove('id');
+    
+    final response = await _studyService.updateSession(session.id, data);
+    return StudySession.fromJson(response);
+  }
 }

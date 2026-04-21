@@ -65,6 +65,7 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     Future<void> handleAvatarTap() async {
+      Haptics.vibrate(HapticsType.medium);
       try {
         final picker = ImagePicker();
         final image = await picker.pickImage(
@@ -89,7 +90,12 @@ class ProfileScreen extends ConsumerWidget {
       VoidCallback? onTap,
     }) {
       return InkWell(
-        onTap: onTap,
+        onTap: onTap != null
+            ? () {
+                Haptics.vibrate(HapticsType.medium);
+                onTap();
+              }
+            : null,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -163,9 +169,10 @@ class ProfileScreen extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: Colors.transparent,
       body: AuthBackgroundContainer(
         child: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
@@ -313,6 +320,7 @@ class ProfileScreen extends ConsumerWidget {
                       title: l10n.language,
                       trailing: GestureDetector(
                         onTap: () async {
+                          Haptics.vibrate(HapticsType.medium);
                           final selected =
                               await showAppBottomSheetPicker<String>(
                                 context: context,
@@ -383,6 +391,7 @@ class ProfileScreen extends ConsumerWidget {
                         value: themeMode == ThemeMode.dark,
                         activeThumbColor: Colors.blueAccent,
                         onChanged: (val) {
+                          Haptics.vibrate(HapticsType.medium);
                           ref
                               .read(themeProvider.notifier)
                               .setTheme(val ? ThemeMode.dark : ThemeMode.light);

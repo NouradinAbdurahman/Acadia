@@ -13,6 +13,7 @@ import '../../widgets/common/animated_pressable.dart';
 import '../../providers/semester_provider.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
+import '../../components/app_back_button.dart';
 import '../../l10n/app_localizations.dart';
 
 class CreateCourseScreen extends ConsumerStatefulWidget {
@@ -133,6 +134,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(
           widget.courseToEdit == null ? l10n.addCourse : l10n.editCourse,
         ),

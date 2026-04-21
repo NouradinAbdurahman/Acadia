@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:heroicons/heroicons.dart';
 
 import '../core/design/app_icons.dart';
@@ -60,7 +61,10 @@ class AppBottomSheetPicker<T> extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => _openPicker(context, theme),
+        onTap: () {
+          Haptics.vibrate(HapticsType.medium);
+          _openPicker(context, theme);
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
@@ -319,7 +323,10 @@ Future<T?> showAppBottomSheetPicker<T>({
                           color: Colors.transparent,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(14),
-                            onTap: () => Navigator.pop(context, option.value),
+                            onTap: () {
+                              Haptics.vibrate(HapticsType.selection);
+                              Navigator.pop(context, option.value);
+                            },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: AppSpacing.md,

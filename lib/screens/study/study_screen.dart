@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +29,7 @@ import '../../providers/student_profile_provider.dart';
 import '../../providers/decision_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../l10n/app_localizations.dart';
+import '../../l10n/l10n_extension.dart';
 import 'study_history_screen.dart';
 
 // ─── Minimum / Maximum session constraints ───────────────────────
@@ -45,6 +47,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   ProviderSubscription? _timerSub;
   ProviderSubscription<AdaptationMode>? _modeSub;
   ProviderSubscription<MoodPromptRequest?>? _moodPromptSub;
+  bool _handledAnalyticsArgs = false;
 
   @override
   void initState() {
@@ -83,20 +86,29 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     // Auto-apply suggested duration on screen load if idle
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final analytics = ref.read(studyAnalyticsProvider);
-        final adaptationMode = ref.read(studyAdaptationModeProvider);
-        final profile = ref.read(studentProfileProvider).valueOrNull;
         final timerState = ref.read(studyTimerProvider);
         final bool isIdle = !timerState.isRunning && !timerState.isPaused && !timerState.isCompleted;
         if (isIdle) {
           final notifier = ref.read(studyTimerProvider.notifier);
+          final profile = ref.read(studentProfileProvider).valueOrNull;
           final breakPattern = profile?.breakPattern ?? 'mixed';
           notifier.setStudyType(_studyTypeFromPattern(breakPattern));
-          notifier.setDuration(
-            Duration(
-              minutes: _recommendedDurationForMode(analytics, adaptationMode),
-            ),
-          );
+          
+          // Unified logic: prioritize decisionProvider minutes
+          final decision = ref.read(decisionProvider);
+          final suggested = decision.suggestedSessionMinutes;
+          
+          if (suggested != null) {
+            notifier.setDuration(Duration(minutes: suggested));
+          } else {
+            final analytics = ref.read(studyAnalyticsProvider);
+            final adaptationMode = ref.read(studyAdaptationModeProvider);
+            notifier.setDuration(
+              Duration(
+                minutes: _recommendedDurationForMode(analytics, adaptationMode),
+              ),
+            );
+          }
         }
       }
     });
@@ -199,6 +211,26 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         !timerState.isCompleted;
     final bool isActive = timerState.isRunning || timerState.isPaused;
     final bool isCompleted = timerState.isCompleted;
+
+    // ─── AUDIT FIX: Navigation Execution & Data Passing ───────────
+    if (!_handledAnalyticsArgs) {
+      try {
+        final routeState = GoRouterState.of(context);
+        final extra = routeState.extra as Map<String, dynamic>?;
+        if (extra != null && extra['source'] == 'analytics') {
+          _handledAnalyticsArgs = true; // Mark as handled
+          final suggested = (extra['duration'] as int?) ?? 45;
+          if (isIdle && timerState.targetDuration.inMinutes != suggested) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              ref.read(studyTimerProvider.notifier).setDuration(
+                Duration(minutes: suggested),
+              );
+            });
+          }
+        }
+      } catch (_) {}
+    }
 
     return Scaffold(
       body: AuthBackgroundContainer(
@@ -334,7 +366,8 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         .toList();
     final adaptationMode = ref.watch(studyAdaptationModeProvider);
     final profile = ref.watch(studentProfileProvider).valueOrNull;
-    final suggestedMinutes = _recommendedDurationForMode(analytics, adaptationMode);
+    final decision = ref.watch(decisionProvider);
+    final suggestedMinutes = decision.suggestedSessionMinutes ?? _recommendedDurationForMode(analytics, adaptationMode);
     final followBehavior = adaptationMode == AdaptationMode.followBehavior;
     final dominantSlot = analytics.dominantStudyTime;
     final hasStableSignal = analytics.hasReliableBehaviorSignal;
@@ -358,7 +391,6 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final irregularPattern = analytics.irregularStudyPattern;
     final recoveryDetected = analytics.recoveryDetected;
     final hasBurnoutTrendHistory = analytics.hasBurnoutTrendHistory;
-    final decision = ref.watch(decisionProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -782,7 +814,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
         if (decision.suggestedSessionMinutes != null) ...[
           Text(
-            l10n.decision_recommended_session(decision.suggestedSessionMinutes!),
+            l10n.get('decisionRecommendedSession', {'minutes': decision.suggestedSessionMinutes!}),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w700,
@@ -793,7 +825,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
             text: l10n.startRecommendedSession(decision.suggestedSessionMinutes!),
             onPressed: canStart
                 ? () {
-                    HapticFeedback.mediumImpact();
+                    Haptics.vibrate(HapticsType.medium);
                     ref
                         .read(studyTimerProvider.notifier)
                         .setDuration(Duration(minutes: decision.suggestedSessionMinutes!));
@@ -812,7 +844,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
           text: l10n.start,
           onPressed: canStart
               ? () {
-                  HapticFeedback.mediumImpact();
+                  Haptics.vibrate(HapticsType.medium);
                   ref.read(studyTimerProvider.notifier).start();
                 }
               : null,
@@ -1020,7 +1052,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
           children: [
             IconButton.filledTonal(
               onPressed: () {
-                HapticFeedback.lightImpact();
+                Haptics.vibrate(HapticsType.selection);
                 ref.read(studyTimerProvider.notifier).stop();
               },
               icon: const AppIcon(HeroIcons.stop, size: 28),
@@ -1558,7 +1590,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         return Expanded(
           child: GestureDetector(
             onTap: () {
-              HapticFeedback.selectionClick();
+              Haptics.vibrate(HapticsType.selection);
               ref.read(studyTimerProvider.notifier).setStudyType(type);
             },
             child: AnimatedContainer(
@@ -1686,7 +1718,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final isSelected = currentMinutes == duration;
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        Haptics.vibrate(HapticsType.selection);
         ref.read(studyTimerProvider.notifier).setDuration(Duration(minutes: duration));
       },
       child: AnimatedContainer(
@@ -1733,7 +1765,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        Haptics.vibrate(HapticsType.selection);
         _showCustomDurationSheet(context, ref, state);
       },
       child: AnimatedContainer(

@@ -13,6 +13,7 @@ import '../../core/design/app_durations.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_text_field.dart';
 import '../../components/app_button.dart';
+import '../../components/app_back_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -120,6 +121,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(
           l10n?.resetPassword ?? '',
           style: theme.textTheme.displayLarge?.copyWith(

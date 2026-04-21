@@ -4,6 +4,7 @@ class Semester {
   final String name;
   final DateTime? startDate;
   final DateTime? endDate;
+  final int? weeklyStudyGoal;
   final bool isCurrent;
   final DateTime createdAt;
 
@@ -13,6 +14,7 @@ class Semester {
     required this.name,
     this.startDate,
     this.endDate,
+    this.weeklyStudyGoal,
     this.isCurrent = false,
     required this.createdAt,
   });
@@ -24,6 +26,7 @@ class Semester {
       name: json['name'],
       startDate: json['start_date'] != null ? DateTime.parse(json['start_date']) : null,
       endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
+      weeklyStudyGoal: json['weekly_study_goal'],
       isCurrent: json['is_current'] ?? false,
       createdAt: DateTime.parse(json['created_at']),
     );
@@ -35,6 +38,7 @@ class Semester {
       'name': name,
       'start_date': startDate?.toIso8601String(),
       'end_date': endDate?.toIso8601String(),
+      'weekly_study_goal': weeklyStudyGoal,
       'is_current': isCurrent,
       'created_at': createdAt.toIso8601String(),
     };
@@ -50,6 +54,7 @@ class Semester {
     String? name,
     DateTime? startDate,
     DateTime? endDate,
+    int? weeklyStudyGoal,
     bool? isCurrent,
     DateTime? createdAt,
   }) {
@@ -59,6 +64,7 @@ class Semester {
       name: name ?? this.name,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      weeklyStudyGoal: weeklyStudyGoal ?? this.weeklyStudyGoal,
       isCurrent: isCurrent ?? this.isCurrent,
       createdAt: createdAt ?? this.createdAt,
     );

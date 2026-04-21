@@ -125,7 +125,6 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
                 ],
               ),
               const SizedBox(width: AppSpacing.sm),
-              // Trend indicator
               Flexible(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -134,7 +133,9 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerRight,
-                      child: _TrendBadge(delta: riskState.trendDelta),
+                      child: (risk.totalScore >= 30) 
+                          ? _TrendBadge(delta: riskState.trendDelta)
+                          : const SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -214,11 +215,11 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
   String _labelForLevel(AppLocalizations l10n, String level) {
     switch (level) {
       case 'high':
-        return l10n.riskHigh;
+        return "Critical";
       case 'medium':
-        return l10n.riskMedium;
+        return "Warning";
       default:
-        return l10n.riskLow;
+        return "Safe";
     }
   }
 }
@@ -358,7 +359,6 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
             maxContribution: 45.0,
             color: const Color(0xFFEF4444), // red
           ),
-          const SizedBox(height: AppSpacing.md),
           _BreakdownRow(
             label: l10n.riskUpcomingTasks,
             value: input.upcomingTasks.toString(),
@@ -366,7 +366,7 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
             maxContribution: 15.0,
             color: const Color(0xFFF97316), // orange
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           _BreakdownRow(
             label: l10n.totalEctsLabel,
             value: input.totalECTS.toString(),
@@ -499,60 +499,16 @@ class BurnoutStatusCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            localizedExplanation,
+            l10n.burnoutExplanationWarning, // Replacing with shorter version via logic
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
-          ),
+          ).animate().fade().slideX(begin: 0.1),
           const SizedBox(height: AppSpacing.sm),
-          if (analytics.hasBurnoutTrendHistory)
-            hasFullyStableTrends
-                ? Text(
-                    l10n.burnoutOverallTrend(burnoutTrendLabel),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: trendColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  )
-                : Wrap(
-                    spacing: AppSpacing.md,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      Text(
-                        l10n.burnoutTrendLine(
-                          burnoutTrendLabel,
-                          analytics.burnoutTrendDirection,
-                        ),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: trendColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        l10n.burnoutDeficitLine(
-                          deficitTrendLabel,
-                          analytics.deficitTrendDirection,
-                        ),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: deficitTrendColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        l10n.burnoutConsistencyLine(
-                          consistencyTrendLabel,
-                          analytics.consistencyTrendDirection,
-                        ),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: consistencyTrendColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  )
-          else
+
+          if (!analytics.hasBurnoutTrendHistory && analytics.burnoutLevel != BurnoutLevel.stable)
             Text(
-              l10n.notEnoughDataTrendYet,
+              "Trend is forming. Risk is driven by inconsistency and study deficit.",
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w600,
@@ -682,11 +638,9 @@ String _localizedBurnoutExplanation(AppLocalizations l10n, BurnoutLevel level) {
     case BurnoutLevel.stable:
       return l10n.burnoutExplanationStable;
     case BurnoutLevel.warning:
-      return l10n.burnoutExplanationWarning;
     case BurnoutLevel.highRisk:
-      return l10n.burnoutExplanationHighRisk;
     case BurnoutLevel.burnoutRisk:
-      return l10n.burnoutExplanationBurnoutRisk;
+      return 'You are falling behind your weekly goal.';
   }
 }
 

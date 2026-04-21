@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/design/app_spacing.dart';
@@ -12,6 +13,7 @@ import '../../providers/course_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_back_button.dart';
 import '../../core/theme/app_colors.dart';
 
 enum _NotificationGroup {
@@ -85,6 +87,7 @@ class NotificationsScreen extends ConsumerWidget {
     WidgetRef ref,
     dynamic notification,
   ) async {
+    Haptics.vibrate(HapticsType.selection);
     await ref.read(notificationsProvider.notifier).markAsRead(notification.id);
     if (!context.mounted) return;
 
@@ -122,6 +125,7 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(l10n.notifications),
         foregroundColor: theme.colorScheme.onSurface,
       ),

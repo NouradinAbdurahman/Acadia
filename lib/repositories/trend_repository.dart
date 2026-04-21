@@ -22,7 +22,11 @@ class TrendRepository {
       _service.getCompletedTasks(userId: userId, since: since, semesterId: semesterId),
       _service.getCreatedTasks(userId: userId, since: since, semesterId: semesterId),
       _service.getCreatedDeadlines(userId: userId, since: since, semesterId: semesterId),
-      _service.getCourseResults(userId: userId, since: since),
+      _service.getCourseResults(
+        userId: userId,
+        since: since,
+        semesterId: semesterId,
+      ),
     ]);
 
     final studyRows = results[0];

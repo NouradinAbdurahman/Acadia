@@ -392,7 +392,10 @@ class _ChoiceStyleChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
-      onSelected: (_) => onSelected(value),
+      onSelected: (_) {
+        Haptics.vibrate(HapticsType.selection);
+        onSelected(value);
+      },
       selectedColor: color,
       backgroundColor: isDark
           ? Colors.white.withValues(alpha: 0.05)

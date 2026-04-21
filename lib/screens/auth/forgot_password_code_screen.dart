@@ -16,6 +16,7 @@ import '../../core/design/app_radius.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_button.dart';
+import '../../components/app_back_button.dart';
 
 class ForgotPasswordCodeScreen extends ConsumerStatefulWidget {
   final String email;
@@ -177,6 +178,7 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(
           l10n?.verifyEmail ?? '',
           style: theme.textTheme.displayLarge?.copyWith(

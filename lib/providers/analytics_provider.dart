@@ -50,12 +50,41 @@ final studyAdaptationModeProvider =
   (ref) => StudyAdaptationModeNotifier(),
 );
 
+const DEFAULT_WEEKLY_GOAL = 15;
+
+final _weeklyGoalBackfillInFlightProvider = StateProvider<Set<String>>(
+  (ref) => <String>{},
+);
+
 final weeklyStudyGoalHoursProvider = Provider<int>((ref) {
-  final appUserAsync = ref.watch(currentAppUserProvider);
-  return appUserAsync.maybeWhen(
-    data: (user) => user?.weeklyStudyGoal ?? 15,
-    orElse: () => 15,
-  );
+  final activeSemester = ref.watch(activeSemesterFullProvider);
+  if (activeSemester == null) return DEFAULT_WEEKLY_GOAL;
+
+  final weeklyGoal = activeSemester.weeklyStudyGoal;
+  final isInvalid = weeklyGoal == null || weeklyGoal <= 0 || weeklyGoal > 100;
+  if (!isInvalid) return weeklyGoal;
+
+  final inFlight = ref.watch(_weeklyGoalBackfillInFlightProvider);
+  if (!inFlight.contains(activeSemester.id)) {
+    Future.microtask(() async {
+      final inFlightNotifier =
+          ref.read(_weeklyGoalBackfillInFlightProvider.notifier);
+      inFlightNotifier.state = {...inFlightNotifier.state, activeSemester.id};
+      try {
+        await ref.read(semesterProvider.notifier).updateSemester(
+              activeSemester.copyWith(weeklyStudyGoal: DEFAULT_WEEKLY_GOAL),
+            );
+        ref.invalidate(semesterProvider);
+      } finally {
+        inFlightNotifier.state =
+            inFlightNotifier.state
+                .where((id) => id != activeSemester.id)
+                .toSet();
+      }
+    });
+  }
+
+  return DEFAULT_WEEKLY_GOAL;
 });
 
 enum BurnoutLevel {
@@ -243,6 +272,7 @@ class AnalyticsNotifier extends StateNotifier<AsyncValue<AnalyticsData>> {
           avgMood: avgMood,
           avgStress: avgStress,
           moodLogCount: moodCount,
+          hasData: data.hasData,
         ),
       );
     } catch (e, st) {
@@ -300,6 +330,7 @@ class AnalyticsNotifier extends StateNotifier<AsyncValue<AnalyticsData>> {
           avgMood: avgMood,
           avgStress: avgStress,
           moodLogCount: moodCount,
+          hasData: data.hasData,
         ),
       );
     } catch (_) {
@@ -330,6 +361,7 @@ class AnalyticsNotifier extends StateNotifier<AsyncValue<AnalyticsData>> {
           avgMood: current.avgMood,
           avgStress: current.avgStress,
           moodLogCount: current.moodLogCount,
+          hasData: current.hasData,
       ),
     );
   }
@@ -743,9 +775,9 @@ class StudyAnalytics {
   }
 
   String get consistencyTrendLabel {
-    final delta = consistencyTrendDelta;
-    if (delta > 5) return 'Improving';
-    if (delta < -5) return 'Unstable';
+    final score = 100 - timeInconsistencyScore;
+    if (score < 40) return 'Unstable';
+    if (score < 70) return 'Moderate';
     return 'Stable';
   }
 
@@ -833,6 +865,34 @@ class StudyAnalytics {
     if (minutes < 60) return l10n.gettingStartedExtend;
     if (minutes < 180) return l10n.buildingConsistency;
     return l10n.strongConsistentPattern;
+  }
+
+  double get avgMoodThisWeek {
+    final current = thisWeekSessions;
+    final moods = current.where((s) => s.mood != null).map((s) => s.mood!).toList();
+    if (moods.isEmpty) return 0.0;
+    return moods.reduce((a, b) => a + b) / moods.length;
+  }
+
+  double get avgMoodLastWeek {
+    final last = lastWeekSessions;
+    final moods = last.where((s) => s.mood != null).map((s) => s.mood!).toList();
+    if (moods.isEmpty) return 0.0;
+    return moods.reduce((a, b) => a + b) / moods.length;
+  }
+
+  double get moodChangePercent {
+    final current = avgMoodThisWeek;
+    final last = avgMoodLastWeek;
+    if (last == 0 || current == 0) return 0.0;
+    return ((current - last) / last) * 100;
+  }
+
+  bool get isMoodStudyCorrelationDetected {
+    final studyChange = weeklyChange; // percent
+    final moodChange = moodChangePercent; // percent
+    // Correlation detected if both dropped by more than 5%
+    return studyChange < -5 && moodChange < -5;
   }
 
   String getPeakDay(AppLocalizations l10n) {
@@ -937,47 +997,93 @@ class StudyAnalytics {
     return (excess / weeklyGoalHours).clamp(0.0, 1.0);
   }
 
+  String getBurnoutShortExplanation(AppLocalizations l10n) {
+    if (sessions.length < 3) {
+      return l10n.analyticsNotEnoughData;
+    }
+
+    if (burnoutLevel == BurnoutLevel.stable) {
+      return l10n.burnoutShortExplanation;
+    }
+    
+    // Trend forming message fix
+    if (burnoutLevel != BurnoutLevel.stable && sessions.length < 7) {
+        return "Trend is forming. Risk is increasing due to pattern inconsistency.";
+    }
+
+    final sThisWeek = thisWeekSessions;
+    final stresses = sThisWeek.where((s) => s.stress != null).map((s) => s.stress!).toList();
+    final avgStressNow = stresses.isNotEmpty ? stresses.reduce((a, b) => a + b) / stresses.length : 0.0;
+
+    if (avgStressNow >= 5 && timeInconsistencyScore >= 50) {
+      return l10n.burnoutRisingStressInconsistentPattern;
+    }
+
+    switch (burnoutLevel) {
+      case BurnoutLevel.warning:
+        return "Risk is increasing due to low consistency and goal deficit.";
+      case BurnoutLevel.highRisk:
+        return l10n.highRisk;
+      case BurnoutLevel.burnoutRisk:
+        return l10n.burnoutLevelBurnoutRisk;
+      default:
+        return l10n.notEnoughData;
+    }
+  }
+
+  double _safeAverage(List<double> values) {
+    if (values.isEmpty) return 0.0;
+    return values.reduce((a, b) => a + b) / values.length;
+  }
+
+  Map<String, dynamic> get moodDurationImpactDetails {
+    final highMoodSessions = sessions
+        .where((s) => s.mood != null && s.mood! >= 4)
+        .map((s) => s.durationMinutes.toDouble())
+        .toList();
+    final lowMoodSessions = sessions
+        .where((s) => s.mood != null && s.mood! <= 2.5)
+        .map((s) => s.durationMinutes.toDouble())
+        .toList();
+    
+    if (highMoodSessions.length < 2 || lowMoodSessions.length < 2) {
+      return {'hasEnoughData': false, 'impact': 0};
+    }
+    
+    final highAvg = _safeAverage(highMoodSessions);
+    final lowAvg = _safeAverage(lowMoodSessions);
+    
+    return {
+      'hasEnoughData': true,
+      'impact': (highAvg - lowAvg).round(),
+    };
+  }
+
   double get burnoutScore {
-    final score =
-        (weeklyDeficitRatio * 40.0) +
-        ((timeInconsistencyScore / 100.0) * 25.0) +
-        (irregularStudyPattern ? 20.0 : 0.0) +
+    var base =
+        (weeklyDeficitRatio * 35.0) +
+        ((timeInconsistencyScore / 100.0) * 15.0) +
+        (irregularStudyPattern ? 15.0 : 0.0) +
         (overloadRatio * 15.0);
-    return score.clamp(0.0, 100.0);
+    
+    // Severity Scaling
+    final sThisWeek = thisWeekSessions;
+    final stresses = sThisWeek.where((s) => s.stress != null).map((s) => s.stress!).toList();
+    final avgStressNow = stresses.isNotEmpty ? stresses.reduce((a, b) => a + b) / stresses.length : 0.0;
+
+    if (avgStressNow >= 7) base += 15.0;
+    if (avgMoodThisWeek > 0 && avgMoodThisWeek <= 3.0) base += 10.0;
+    if (weeklyDeficitHours > 10) base += 10.0;
+
+    return base.clamp(0.0, 100.0);
   }
 
   BurnoutLevel get burnoutLevel {
     final score = burnoutScore;
-    if (score >= 80) return BurnoutLevel.burnoutRisk;
-    if (score >= 60) return BurnoutLevel.highRisk;
+    if (score >= 75) return BurnoutLevel.burnoutRisk;
+    if (score >= 55) return BurnoutLevel.highRisk;
     if (score >= 30) return BurnoutLevel.warning;
     return BurnoutLevel.stable;
-  }
-
-  String get burnoutStatusLabel {
-    switch (burnoutLevel) {
-      case BurnoutLevel.stable:
-        return 'Stable';
-      case BurnoutLevel.warning:
-        return 'Warning';
-      case BurnoutLevel.highRisk:
-        return 'High Risk';
-      case BurnoutLevel.burnoutRisk:
-        return 'Burnout Risk';
-    }
-  }
-
-  String get burnoutShortExplanation {
-    switch (burnoutLevel) {
-      case BurnoutLevel.stable:
-        return 'Your study pattern looks balanced right now.';
-      case BurnoutLevel.warning:
-        return 'Your study pattern is becoming inconsistent and you are falling behind your weekly goal.';
-      case BurnoutLevel.highRisk:
-        return 'You are showing signs of inconsistent study and deficit.';
-      case BurnoutLevel.burnoutRisk:
-        return 'Your load is high and your routine is becoming unstable.';
-    }
   }
 
   List<String> get burnoutReasons {
@@ -1055,6 +1161,118 @@ class StudyAnalytics {
       return l10n.insightStart;
     }
     return l10n.insightMomentum;
+  }
+
+  // --- INTELLIGENCE UPGRADES ---
+
+  double sessionQualityScore(StudySession s) {
+    // formula: (focusDuration * 0.6) + (mood * 10 * 0.2) - (stress * 5 * 0.2)
+    final moodValue = s.mood ?? 3.0; // neutral default
+    final stressValue = s.stress ?? 5.0; // neutral default
+    return (s.durationMinutes * 0.6) + (moodValue * 10 * 0.2) - (stressValue * 5 * 0.2);
+  }
+
+  double get averageQualityScore {
+    if (sessions.isEmpty) return 0.0;
+    return sessions.map(sessionQualityScore).reduce((a, b) => a + b) / sessions.length;
+  }
+
+  double get successRate {
+    if (sessions.isEmpty) return 1.0;
+    final completed = sessions.where((s) => s.completed).length;
+    return completed / sessions.length;
+  }
+
+  double get baselineStress {
+    final last30 = sessions.take(30).where((s) => s.stress != null).map((s) => s.stress!).toList();
+    if (last30.isEmpty) return 5.0;
+    return last30.reduce((a, b) => a + b) / last30.length;
+  }
+
+  double get baselineMood {
+    final last30 = sessions.take(30).where((s) => s.mood != null).map((s) => s.mood!).toList();
+    if (last30.isEmpty) return 3.0;
+    return last30.reduce((a, b) => a + b) / last30.length;
+  }
+
+  Map<String, dynamic> get studyProfile {
+    // 1. Optimal Duration
+    final qualityByDuration = <int, List<double>>{};
+    for (var s in sessions) {
+      final bin = (s.durationMinutes / 10).floor() * 10;
+      qualityByDuration.putIfAbsent(bin, () => []).add(sessionQualityScore(s));
+    }
+    
+    int optimalMin = 30;
+    int optimalMax = 45;
+    double maxQuality = -1.0;
+    
+    qualityByDuration.forEach((bin, scores) {
+      final avg = scores.reduce((a, b) => a + b) / scores.length;
+      if (avg > maxQuality) {
+        maxQuality = avg;
+        optimalMin = bin;
+        optimalMax = bin + 10;
+      }
+    });
+
+    // CONSTRAIN: Profile must never contradict decision engine wildly
+    if (optimalMin > 60) {
+      optimalMin = 45;
+      optimalMax = 60;
+    }
+    if (optimalMin < 20) {
+      optimalMin = 20;
+      optimalMax = 30;
+    }
+
+    // 2. Stress Threshold
+    double stressThreshold = 7.0;
+    final qualityByStress = <int, List<double>>{};
+    for (var s in sessions.where((s) => s.stress != null)) {
+      final level = s.stress!.floor();
+      qualityByStress.putIfAbsent(level, () => []).add(sessionQualityScore(s));
+    }
+    
+    for (int i = 1; i <= 10; i++) {
+        final scores = qualityByStress[i];
+        if (scores != null && scores.isNotEmpty) {
+            final avg = scores.reduce((a, b) => a + b) / scores.length;
+            if (avg < 20) { // arbitrary quality drop threshold
+                stressThreshold = i.toDouble();
+                break;
+            }
+        }
+    }
+
+    // 3. Peak Window
+    final qualityByHour = <int, List<double>>{};
+    for (var s in sessions) {
+      final hour = s.createdAt.toLocal().hour;
+      qualityByHour.putIfAbsent(hour, () => []).add(sessionQualityScore(s));
+    }
+    
+    int peakHour = 10;
+    double maxHourQuality = -1.0;
+    qualityByHour.forEach((hour, scores) {
+      final avg = scores.reduce((a, b) => a + b) / scores.length;
+      if (avg > maxHourQuality) {
+        maxHourQuality = avg;
+        peakHour = hour;
+      }
+    });
+
+    String window = 'Evening';
+    if (peakHour < 12) window = 'Morning';
+    else if (peakHour < 18) window = 'Afternoon';
+
+    return {
+      'optimalMin': optimalMin,
+      'optimalMax': optimalMax,
+      'stressThreshold': stressThreshold,
+      'peakWindow': window,
+      'peakHour': peakHour,
+    };
   }
 }
 

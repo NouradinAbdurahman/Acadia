@@ -55,93 +55,113 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
     _syncFilterFromQuery(ref, queryFilter, isDashboardFocus);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: AuthBackgroundContainer(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+          bottom: false,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    if (isDashboardFocus)
-                      IconButton(
-                        onPressed: () {
-                          if (context.canPop()) {
-                            context.pop();
-                            return;
-                          }
-                          ref.read(bottomNavProvider.notifier).state = 0;
-                          context.go('/home');
-                        },
-                        icon: const AppIcon(HeroIcons.arrowLeft),
-                        tooltip: AppLocalizations.of(context)!.backToHome,
-                      ),
-                    Expanded(
-                      child: Text(
-                        AppLocalizations.of(context)!.tasks,
-                        style: theme.textTheme.displayLarge?.copyWith(
-                          fontSize: 28,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          if (isDashboardFocus)
+                            IconButton(
+                              onPressed: () {
+                                if (context.canPop()) {
+                                  context.pop();
+                                  return;
+                                }
+                                ref.read(bottomNavProvider.notifier).state = 0;
+                                context.go('/home');
+                              },
+                              icon: const AppIcon(HeroIcons.arrowLeft),
+                              tooltip: AppLocalizations.of(context)!.backToHome,
+                            ),
+                          Expanded(
+                            child: Text(
+                              AppLocalizations.of(context)!.tasks,
+                              style: theme.textTheme.displayLarge?.copyWith(
+                                fontSize: 28,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => _showCreateOptions(context),
+                            icon: AppIcon(
+                              HeroIcons.plus,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            style: IconButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              padding: const EdgeInsets.all(AppSpacing.sm),
+                            ),
+                          ),
+                        ],
+                      ).animate().fade().slideX(begin: -0.1),
+                      const SizedBox(height: AppSpacing.lg),
+                      if (isDashboardFocus) ...[
+                        if (showCourseFilter)
+                          _CourseFilterPicker(
+                            courses: courseOptions,
+                            selectedCourse: selectedCourse,
+                            onChanged: (value) {
+                              setState(() => _selectedCourse = value);
+                            },
+                          ),
+                        if (showCourseFilter)
+                          const SizedBox(height: AppSpacing.md),
+                        _SegmentTabs(
+                          currentSegment: segment,
+                          includeAll: true,
+                          onSegmentChanged: (value) {
+                            ref.read(tasksListSegmentProvider.notifier).state =
+                                value;
+                          },
                         ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => _showCreateOptions(context),
-                      icon: AppIcon(
-                        HeroIcons.plus,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                      ),
-                    ),
-                  ],
-                ).animate().fade().slideX(begin: -0.1),
-                const SizedBox(height: AppSpacing.lg),
-                if (isDashboardFocus) ...[
-                  if (showCourseFilter)
-                    _CourseFilterPicker(
-                      courses: courseOptions,
-                      selectedCourse: selectedCourse,
-                      onChanged: (value) {
-                        setState(() => _selectedCourse = value);
-                      },
-                    ),
-                  if (showCourseFilter) const SizedBox(height: AppSpacing.md),
-                  _SegmentTabs(
-                    currentSegment: segment,
-                    includeAll: true,
-                    onSegmentChanged: (value) {
-                      ref.read(tasksListSegmentProvider.notifier).state = value;
-                    },
+                      ] else ...[
+                        _SegmentTabs(
+                          currentSegment: segment,
+                          onSegmentChanged: (value) {
+                            ref.read(tasksListSegmentProvider.notifier).state =
+                                value;
+                          },
+                        ),
+                        if (showCourseFilter) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          _CourseFilterPicker(
+                            courses: courseOptions,
+                            selectedCourse: selectedCourse,
+                            onChanged: (value) {
+                              setState(() => _selectedCourse = value);
+                            },
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.md),
+                        _StatusFilterTabs(
+                          currentFilter: filter,
+                          onFilterChanged: (value) =>
+                              ref.read(taskFilterProvider.notifier).state =
+                                  value,
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
                   ),
-                ] else ...[
-                  _SegmentTabs(
-                    currentSegment: segment,
-                    onSegmentChanged: (value) {
-                      ref.read(tasksListSegmentProvider.notifier).state = value;
-                    },
-                  ),
-                  if (showCourseFilter) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _CourseFilterPicker(
-                      courses: courseOptions,
-                      selectedCourse: selectedCourse,
-                      onChanged: (value) {
-                        setState(() => _selectedCourse = value);
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.md),
-                  _StatusFilterTabs(
-                    currentFilter: filter,
-                    onFilterChanged: (value) =>
-                        ref.read(taskFilterProvider.notifier).state = value,
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.lg),
-                Expanded(
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                   child: _buildFilteredContent(
                     context: context,
                     tasksAsync: tasksAsync,
@@ -151,6 +171,7 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                     isOverviewSource: isDashboardFocus,
                   ),
                 ),
+                const SizedBox(height: 120),
               ],
             ),
           ),
@@ -341,8 +362,8 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
         return _FilteredTasksEmptyState(message: l10n.noPendingAlerts);
       }
 
-      return ListView(
-        padding: const EdgeInsets.only(bottom: 120),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (filteredTasks.isNotEmpty) ...[
             Text(
@@ -400,15 +421,14 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
               message: AppLocalizations.of(context)!.noTasksForThisCourse,
             );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 120),
-            itemCount: filteredTasks.length,
-            itemBuilder: (context, index) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: filteredTasks.map((task) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _TaskCard(task: filteredTasks[index]),
+                child: _TaskCard(task: task),
               );
-            },
+            }).toList(),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -440,15 +460,14 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
               message: AppLocalizations.of(context)!.noDeadlinesForThisCourse,
             );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 120),
-            itemCount: filteredDeadlines.length,
-            itemBuilder: (context, index) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: filteredDeadlines.map((deadline) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _DeadlineCard(deadline: filteredDeadlines[index]),
+                child: _DeadlineCard(deadline: deadline),
               );
-            },
+            }).toList(),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -690,7 +709,10 @@ class _SegmentTabs extends StatelessWidget {
           selected: selected,
           showCheckmark: false,
           elevation: 0,
-          onSelected: (_) => onSegmentChanged(value),
+          onSelected: (_) {
+            Haptics.vibrate(HapticsType.selection);
+            onSegmentChanged(value);
+          },
           labelStyle: theme.textTheme.bodyMedium?.copyWith(
             color: selected
                 ? Colors.white
@@ -794,7 +816,10 @@ class _StatusFilterTabs extends StatelessWidget {
           selected: selected,
           showCheckmark: false,
           elevation: 0,
-          onSelected: (_) => onFilterChanged(value),
+          onSelected: (_) {
+            Haptics.vibrate(HapticsType.selection);
+            onFilterChanged(value);
+          },
           labelStyle: theme.textTheme.bodyMedium?.copyWith(
             color: selected
                 ? theme.colorScheme.primary

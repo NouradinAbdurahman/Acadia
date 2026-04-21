@@ -32,4 +32,20 @@ class MoodSettings {
       'reminder_type': reminderType,
     };
   }
+
+  MoodSettings copyWith({
+    String? userId,
+    bool? trackingEnabled,
+    bool? reminderEnabled,
+    String? reminderTime,
+    String? reminderType,
+  }) {
+    return MoodSettings(
+      userId: userId ?? this.userId,
+      trackingEnabled: trackingEnabled ?? this.trackingEnabled,
+      reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+      reminderTime: reminderTime ?? this.reminderTime,
+      reminderType: reminderType ?? this.reminderType,
+    );
+  }
 }

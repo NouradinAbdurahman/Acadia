@@ -6,6 +6,7 @@ import '../../providers/semester_provider.dart';
 import '../../providers/app_providers.dart';
 import '../../core/design/app_spacing.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_back_button.dart';
 import '../../components/app_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../models/semester.dart';
@@ -25,10 +26,7 @@ class AcademicHistoryScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.academicHistory),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        leading: AppBackButton(),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),

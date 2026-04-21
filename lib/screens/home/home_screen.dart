@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../l10n/l10n_extension.dart';
 import 'quick_menu_screen.dart';
 import 'widgets/study_heatmap.dart';
 import '../study/widgets/live_study_session_card.dart';
@@ -156,24 +157,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const SizedBox(height: AppSpacing.lg),
 
                               // --- SECTION 2.1: MOOD ENTRY CARD OR SUMMARY (CONDITIONAL) ---
-                              todayMoodAsync.when(
-                                data: (hasLoggedToday) => moodLogsAsync.when(
-                                  data: (logs) {
-                                    if (!hasLoggedToday) {
-                                      return _buildMoodEntryCard(context, theme, l10n);
-                                    }
-                                    final todayLog = logs.isNotEmpty ? logs.first : null;
-                                    return todayLog != null
-                                        ? _buildMoodSummaryCard(context, theme, l10n, todayLog)
-                                        : const SizedBox.shrink();
-                                  },
-                                  loading: () => const SizedBox.shrink(),
-                                  error: (e, st) => const SizedBox.shrink(),
-                                ),
-                                loading: () => const SizedBox.shrink(),
-                                error: (e, st) => const SizedBox.shrink(),
-                              ),
-                              if (todayMoodAsync.asData?.value != null)
+                              ref.watch(moodSettingsProvider.notifier).shouldShowDaily
+                                  ? todayMoodAsync.when(
+                                      data: (hasLoggedToday) => moodLogsAsync.when(
+                                        data: (logs) {
+                                          if (!hasLoggedToday) {
+                                            return _buildMoodEntryCard(context, theme, l10n);
+                                          }
+                                          final todayLog = logs.isNotEmpty ? logs.first : null;
+                                          return todayLog != null
+                                              ? _buildMoodSummaryCard(context, theme, l10n, todayLog)
+                                              : const SizedBox.shrink();
+                                        },
+                                        loading: () => const SizedBox.shrink(),
+                                        error: (e, st) => const SizedBox.shrink(),
+                                      ),
+                                      loading: () => const SizedBox.shrink(),
+                                      error: (e, st) => const SizedBox.shrink(),
+                                    )
+                                  : const SizedBox.shrink(),
+                              if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
+                                  todayMoodAsync.asData?.value != null)
                                 const SizedBox(height: AppSpacing.md),
 
 
@@ -970,7 +974,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     DecisionResult decision,
   ) {
     final signature = decision.sortedItems
-        .map((item) => '${item.priority}:${item.messageKey}')
+        .map((item) => '${item.priority}:${item.titleKey}')
         .join('|');
     final primary = decision.primaryDecision;
     if (primary == null) {
@@ -1019,7 +1023,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (decision.suggestedSessionMinutes != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
-              l10n.decision_recommended_session(decision.suggestedSessionMinutes!),
+              l10n.get('decisionRecommendedSession', {'minutes': decision.suggestedSessionMinutes!}),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w700,
@@ -1071,14 +1075,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            _resolveDecisionTitle(l10n, item.messageKey),
+            l10n.get(item.titleKey, item.params),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 2),
           Text(
-            _resolveDecisionAction(l10n, item.messageKey),
+            l10n.get(item.descriptionKey, item.params),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
               fontWeight: FontWeight.w600,
@@ -1107,8 +1111,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ? theme.colorScheme.error.withValues(alpha: 0.7)
             : theme.colorScheme.primary);
 
-    final title = _resolveDecisionTitle(l10n, item.messageKey);
-    final action = _resolveDecisionAction(l10n, item.messageKey);
+    final title = l10n.get(item.titleKey, item.params);
+    final action = l10n.get(item.descriptionKey, item.params);
 
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -1165,42 +1169,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final key = parts.first;
     final value = parts.length > 1 ? parts[1] : null;
 
-    switch (key) {
-      case 'decision_high_stress':
-        return l10n.decision_high_stress;
-      case 'decision_short_sessions':
-        return l10n.decision_short_sessions;
-      case 'decision_deep_work':
-        return l10n.decision_deep_work;
-      case 'decision_burnout_warning':
-        return l10n.decision_burnout_warning;
-      case 'decision_stress_rising':
-        return l10n.decision_stress_rising;
-      case 'decision_mood_declining':
-        return l10n.decision_mood_declining;
-      case 'decision_deadline_pressure':
-        return l10n.decision_deadline_pressure;
-      case 'decision_low_activity_high_stress':
-        return l10n.decision_low_activity_high_stress;
-      case 'decision_light_tasks_only':
-        return l10n.decision_light_tasks_only;
-      case 'decision_main_factor':
-        return l10n.decision_main_factor(_factorLabel(l10n, value ?? ''));
-      case 'decision_worst_day':
-        return l10n.decision_worst_day(_weekdayNameFromInt(value));
-      case 'decision_morning_planning':
-        return l10n.decision_morning_planning;
-      case 'decision_afternoon_execution':
-        return l10n.decision_afternoon_execution;
-      case 'decision_night_light_review':
-        return l10n.decision_night_light_review;
-      case 'decision_burnout_duration_cap':
-        return l10n.decisionBurnoutDurationCap;
-      case 'decision_fixed_schedule':
-        return l10n.decisionFixedSchedule;
-      default:
-        return message;
+    Map<String, dynamic>? params;
+    if (key == 'decision_main_factor' || key == 'decisionMainFactor') {
+      params = {'factor': _factorLabel(l10n, value ?? '')};
+    } else if (key == 'decision_worst_day' || key == 'decisionWorstDay') {
+      params = {'day': _weekdayNameFromInt(value)};
     }
+
+    return l10n.get(key, params);
   }
 
   String _resolveDecisionAction(AppLocalizations l10n, String message) {

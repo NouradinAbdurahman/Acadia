@@ -112,6 +112,7 @@ class TrendService {
             .from('deadlines')
             .select('created_at')
             .eq('user_id', userId)
+          .eq('semester_id', semesterId)
             .gte('created_at', since.toIso8601String())
             .order('created_at', ascending: true);
         return _asRows(fallbackResponse);
@@ -127,12 +128,16 @@ class TrendService {
   Future<List<Map<String, dynamic>>> getCourseResults({
     required String userId,
     required DateTime since,
+    String? semesterId,
   }) async {
+    if (semesterId == null) return const <Map<String, dynamic>>[];
+
     try {
       final response = await supabase
           .from('course_results')
           .select('created_at,letter_grade')
           .eq('user_id', userId)
+          .eq('semester_id', semesterId)
           .gte('created_at', since.toIso8601String())
           .order('created_at', ascending: true);
       return _asRows(response);

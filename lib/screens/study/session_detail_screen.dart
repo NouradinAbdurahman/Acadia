@@ -28,6 +28,14 @@ class SessionDetailScreen extends ConsumerWidget {
     }
   }
 
+  String _getMoodEmoji(double mood) {
+    if (mood >= 4.5) return '😄';
+    if (mood >= 3.5) return '🙂';
+    if (mood >= 2.5) return '😐';
+    if (mood >= 1.5) return '🙁';
+    return '😞';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -111,6 +119,67 @@ class SessionDetailScreen extends ConsumerWidget {
                 ),
 
                 const SizedBox(height: AppSpacing.xl),
+
+                /// MOOD & STRESS
+                if (session.mood != null || session.stress != null) ...[
+                  AppGlassCard(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Mood & Stress",
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white54,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        if (session.mood != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      _getMoodEmoji(session.mood!),
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    const Text("Mood", style: TextStyle(color: Colors.white70)),
+                                  ],
+                                ),
+                                Text(
+                                  session.mood!.toStringAsFixed(1),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (session.stress != null)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Row(
+                                children: [
+                                  Text("⚡", style: TextStyle(fontSize: 18)),
+                                  SizedBox(width: AppSpacing.sm),
+                                  Text("Stress Level", style: TextStyle(color: Colors.white70)),
+                                ],
+                              ),
+                              Text(
+                                "${session.stress!.toStringAsFixed(1)} / 10",
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                ],
 
                 /// SCORE IMPACT
                 AppGlassCard(

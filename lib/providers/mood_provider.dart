@@ -7,6 +7,7 @@ import 'app_providers.dart';
 import 'semester_provider.dart';
 import 'analytics_provider.dart';
 import 'risk_provider.dart';
+import 'study_sessions_provider.dart';
 
 class MoodPromptRequest {
   final String source;
@@ -36,12 +37,74 @@ final todayMoodProvider = FutureProvider<bool>((ref) async {
   });
 });
 
-final moodSettingsProvider = FutureProvider<MoodSettings?>((ref) async {
-  final userId = ref.watch(currentUserProvider)?.id;
-  if (userId == null) return null;
+// ─── MOOD SETTINGS NOTIFIER ───
 
-  return ref.read(moodRepositoryProvider).getMoodSettings(userId: userId);
+final moodSettingsProvider = StateNotifierProvider<MoodSettingsNotifier, MoodSettings>((ref) {
+  final user = ref.watch(currentUserProvider);
+  return MoodSettingsNotifier(ref, user?.id);
 });
+
+class MoodSettingsNotifier extends StateNotifier<MoodSettings> {
+  MoodSettingsNotifier(this.ref, this.userId)
+      : super(MoodSettings(userId: userId ?? '')) {
+    _loadSettings();
+  }
+
+  final Ref ref;
+  final String? userId;
+
+  Future<void> _loadSettings() async {
+    if (userId == null) return;
+    try {
+      final settings = await ref.read(moodRepositoryProvider).getMoodSettings(userId: userId!);
+      if (settings != null) {
+        state = settings;
+      }
+    } catch (e) {
+      // Fallback to defaults
+    }
+  }
+
+  Future<void> toggleTracking(bool enabled) async {
+    final next = state.copyWith(trackingEnabled: enabled);
+    state = next;
+    await _persist(next);
+  }
+
+  Future<void> toggleReminders(bool enabled) async {
+    final next = state.copyWith(reminderEnabled: enabled);
+    state = next;
+    await _persist(next);
+  }
+
+  Future<void> updateReminderType(String type) async {
+    final next = state.copyWith(reminderType: type);
+    state = next;
+    await _persist(next);
+  }
+
+  Future<void> updateReminderTime(String time) async {
+    final next = state.copyWith(reminderTime: time);
+    state = next;
+    await _persist(next);
+    
+    // Update notification schedule if daily
+    if (state.trackingEnabled && state.reminderEnabled && (state.reminderType == 'daily' || state.reminderType == 'both')) {
+       // Scheduling is handled via the MoodActions or NotificationService in the UI for now
+    }
+  }
+
+  Future<void> _persist(MoodSettings settings) async {
+    if (userId == null) return;
+    await ref.read(moodRepositoryProvider).upsertMoodSettings(settings);
+  }
+
+  bool get shouldShowAfterStudy => 
+      state.trackingEnabled && (state.reminderType == 'session' || state.reminderType == 'both');
+
+  bool get shouldShowDaily => 
+      state.trackingEnabled && (state.reminderType == 'daily' || state.reminderType == 'both');
+}
 
 final moodActionsProvider = Provider<MoodActions>((ref) {
   return MoodActions(ref);
@@ -83,7 +146,16 @@ class MoodActions {
       createdAt: DateTime.now(),
     );
 
+
     await ref.read(moodRepositoryProvider).insertMood(moodLog);
+
+    // If source is session, link to last study session
+    if (source == 'session') {
+      await ref.read(studySessionsProvider.notifier).attachMoodToLastSession(
+        moodLevel.toDouble(),
+        stressLevel.toDouble(),
+      );
+    }
 
     // Invalidate providers to trigger UI updates using microtask
     Future.microtask(() {

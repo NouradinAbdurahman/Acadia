@@ -380,6 +380,36 @@ class _StudyHistoryScreenState extends ConsumerState<StudyHistoryScreen> {
                             ),
                           ),
                         ],
+                        if (session.mood != null) ...[
+                          const SizedBox(width: 12),
+                          Text(
+                            _getMoodEmoji(session.mood!),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            session.mood!.toStringAsFixed(1),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                        if (session.stress != null) ...[
+                          const SizedBox(width: 12),
+                          const Text(
+                            "⚡",
+                            style: TextStyle(fontSize: 10),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            session.stress!.toStringAsFixed(1),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     if (insight.isNotEmpty) ...[
@@ -449,6 +479,14 @@ class _StudyHistoryScreenState extends ConsumerState<StudyHistoryScreen> {
       }
     }
     return formatted.join(' ');
+  }
+
+  String _getMoodEmoji(double mood) {
+    if (mood >= 4.5) return '😄';
+    if (mood >= 3.5) return '🙂';
+    if (mood >= 2.5) return '😐';
+    if (mood >= 1.5) return '🙁';
+    return '😞';
   }
 }
 

@@ -8,7 +8,6 @@ class StudentProfile {
   final int? academicYear;
   final int? currentSemester;
   final int? expectedGraduationYear;
-  final int? studyHoursPerWeek;
   final String? preferredStudyTime;
   final String? breakPattern;
   final String? timezone;
@@ -28,7 +27,6 @@ class StudentProfile {
     this.academicYear,
     this.currentSemester,
     this.expectedGraduationYear,
-    this.studyHoursPerWeek,
     this.preferredStudyTime,
     this.breakPattern,
     this.timezone,
@@ -50,7 +48,6 @@ class StudentProfile {
       academicYear: json['academic_year'],
       currentSemester: json['current_semester'],
       expectedGraduationYear: json['expected_graduation_year'],
-      studyHoursPerWeek: json['study_hours_per_week'],
       preferredStudyTime: json['preferred_study_time'],
       breakPattern: json['break_pattern'],
       timezone: json['timezone'],
@@ -71,7 +68,6 @@ class StudentProfile {
       'academic_year': academicYear,
       'current_semester': currentSemester,
       'expected_graduation_year': expectedGraduationYear,
-      'study_hours_per_week': studyHoursPerWeek,
       'preferred_study_time': preferredStudyTime,
       'break_pattern': breakPattern,
       'timezone': timezone,
@@ -89,7 +85,6 @@ class StudentProfile {
     int? academicYear,
     int? currentSemester,
     int? expectedGraduationYear,
-    int? studyHoursPerWeek,
     String? preferredStudyTime,
     String? breakPattern,
     String? timezone,
@@ -107,7 +102,6 @@ class StudentProfile {
       academicYear: academicYear ?? this.academicYear,
       currentSemester: currentSemester ?? this.currentSemester,
       expectedGraduationYear: expectedGraduationYear ?? this.expectedGraduationYear,
-      studyHoursPerWeek: studyHoursPerWeek ?? this.studyHoursPerWeek,
       preferredStudyTime: preferredStudyTime ?? this.preferredStudyTime,
       breakPattern: breakPattern ?? this.breakPattern,
       timezone: timezone ?? this.timezone,

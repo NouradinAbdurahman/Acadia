@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:intl/intl.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
+import '../../components/app_back_button.dart';
 
 import '../../components/app_glass_card.dart';
 import '../../core/design/app_icons.dart';
@@ -30,10 +32,7 @@ class MoodHistoryScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: const AppIcon(HeroIcons.arrowLeft),
-                    ),
+                    AppBackButton(),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -44,7 +43,10 @@ class MoodHistoryScreen extends ConsumerWidget {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => context.push('/mood/log'),
+                      onPressed: () {
+                        Haptics.vibrate(HapticsType.medium);
+                        context.push('/mood/log');
+                      },
                       child: Text(l10n.logMoodTitle),
                     ),
                   ],

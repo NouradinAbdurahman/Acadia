@@ -5,6 +5,7 @@ import 'course_provider.dart';
 import 'semester_provider.dart';
 import 'study_sessions_provider.dart';
 import 'student_profile_provider.dart';
+import 'analytics_provider.dart';
 import 'app_providers.dart';
 import '../models/course.dart';
 import '../models/deadline.dart';
@@ -177,10 +178,9 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final workloadAddedTodayCount =
       tasksAddedTodayCount + deadlinesAddedTodayCount;
 
-  // 4. Weekly Goal (Source of Truth: AppUser from users table)
-  final appUserAsync = ref.watch(currentAppUserProvider);
-  final weeklyStudyGoalMinutes =
-      (appUserAsync.value?.weeklyStudyGoal ?? 15) * 60;
+  // 4. Weekly Goal (Source of Truth: Centralized Provider)
+  final weeklyStudyGoalHours = ref.watch(weeklyStudyGoalHoursProvider);
+  final weeklyStudyGoalMinutes = weeklyStudyGoalHours * 60;
 
   // Weekly Completed (Approx 7 days back)
   final startOfWeek = now.subtract(Duration(days: now.weekday - 1));

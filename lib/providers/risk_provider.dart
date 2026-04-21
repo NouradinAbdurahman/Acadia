@@ -65,7 +65,7 @@ final riskProvider = FutureProvider<RiskState>((ref) async {
   ref.watch(studySessionsProvider);
 
   // Connect study goal to Database exactly as requested
-  final studyGoal = (user.weeklyStudyGoal ?? 10).toDouble();
+  final studyGoal = ref.watch(weeklyStudyGoalHoursProvider).toDouble();
 
   final semesterId = ref.watch(activeSemesterProvider);
 

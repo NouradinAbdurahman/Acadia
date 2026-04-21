@@ -3020,58 +3020,56 @@ class AppLocalizationsTr extends AppLocalizations {
   String get decisionSmartInsights => 'Akıllı İçgörüler';
 
   @override
-  String get decision_high_stress => 'Yüksek stres tespit edildi';
+  String get decisionHighStress => 'Yüksek stres tespit edildi';
 
   @override
-  String get decision_short_sessions => 'Bugün daha kısa çalışma yap';
+  String get decisionShortSessions => 'Bugün daha kısa çalışma yap';
 
   @override
-  String get decision_deep_work => 'Derin çalışma için iyi durumdasın';
+  String get decisionDeepWork => 'Derin çalışma için iyi durumdasın';
 
   @override
-  String get decision_burnout_warning => 'Tükenmişlik riski artıyor';
+  String get decisionBurnoutWarning => 'Tükenmişlik riski artıyor';
 
   @override
-  String get decision_stress_rising => 'Bu hafta stresin artıyor';
+  String get decisionStressRising => 'Bu hafta stresin artıyor';
 
   @override
-  String get decision_mood_declining => 'Ruh halin düşüyor';
+  String get decisionMoodDeclining => 'Ruh halin düşüyor';
 
   @override
-  String get decision_deadline_pressure => 'Yüksek baskı. Görevleri böl';
+  String get decisionDeadlinePressure => 'Yüksek baskı. Görevleri böl';
 
   @override
-  String get decision_low_activity_high_stress =>
-      'Düşük aktivite ama yüksek stres';
+  String get decisionLowActivityHighStress => 'Düşük aktivite ama yüksek stres';
 
   @override
-  String get decision_light_tasks_only =>
-      'Bugün sadece hafif görevlere odaklan';
+  String get decisionLightTasksOnly => 'Bugün sadece hafif görevlere odaklan';
 
   @override
-  String decision_main_factor(String factor) {
+  String decisionMainFactor(String factor) {
     return 'Ana stres kaynağı: $factor';
   }
 
   @override
-  String decision_worst_day(String day) {
+  String decisionWorstDay(String day) {
     return '$day günü daha düşük hissediyorsun';
   }
 
   @override
-  String decision_recommended_session(Object minutes) {
+  String decisionRecommendedSession(Object minutes) {
     return 'Önerilen çalışma: $minutes dk';
   }
 
   @override
-  String get decision_morning_planning => 'Sabah odağı: ana görevlerini planla';
+  String get decisionMorningPlanning => 'Sabah odağı: ana görevlerini planla';
 
   @override
-  String get decision_afternoon_execution =>
+  String get decisionAfternoonExecution =>
       'Öğleden sonra odağı: en önemli görevi uygula';
 
   @override
-  String get decision_night_light_review => 'Gece odağı: hafif tekrar yap';
+  String get decisionNightLightReview => 'Gece odağı: hafif tekrar yap';
 
   @override
   String get decisionActionShortSessions =>
@@ -3148,11 +3146,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get decisionBurnoutDurationCap =>
-      'Yüksek stres algılandı.\nDaha kısa oturumlar önerilir (25 dk).';
+      'Yüksek stres algılandı. Oturumları 25dk ile sınırla.';
 
   @override
-  String get decisionFixedSchedule =>
-      'Tutarlılığı artırmak için sabit program oluştur';
+  String get decisionFixedSchedule => 'Sabit program oluştur';
 
   @override
   String get decisionActionFixedSchedule => '3 gün aynı çalışma saatini kullan';
@@ -3281,4 +3278,153 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get addQuickNoteOptional => 'Kısa bir not ekle (isteğe bağlı)';
+
+  @override
+  String get analyticsMoodPerformanceTitle => 'Mood vs Performance';
+
+  @override
+  String get analyticsMoodPerformanceGoodDesc =>
+      'Your high mood positively impacts your focus duration.';
+
+  @override
+  String get analyticsMoodPerformanceBadDesc =>
+      'Low mood is restricting your session efficiency.';
+
+  @override
+  String get analyticsMoodPerformanceStableDesc =>
+      'Your mood is stable, allowing for consistent focus.';
+
+  @override
+  String get analyticsMoodBetterMood => 'Better Mood';
+
+  @override
+  String get analyticsMoodHighStress => 'High Stress';
+
+  @override
+  String get analyticsMoodFocusBoost => 'Focus Boost';
+
+  @override
+  String get analyticsMoodFocusDrain => 'Focus Drain';
+
+  @override
+  String analyticsMoodDifference(Object minutes, Object plusMinus) {
+    return '$plusMinus${minutes}m';
+  }
+
+  @override
+  String get burnoutMessageEmotionalRisk =>
+      'Your stress is rising while consistency is low. This increases burnout risk.';
+
+  @override
+  String get decisionStatusModerateStress => 'Moderate stress detected';
+
+  @override
+  String get decisionStatusLowStress => 'Low stress';
+
+  @override
+  String get decisionStatusHighStress => 'High stress detected';
+
+  @override
+  String get predictionStressLikelyIncrease =>
+      'Stress likely to increase due to low recovery and rising pressure';
+
+  @override
+  String get analyticsNotEnoughData => 'Not enough data yet';
+
+  @override
+  String get decisionRisingStressUnstablePattern =>
+      'Your stress is rising while your routine is unstable';
+
+  @override
+  String get decisionActionFixedScheduleFocus =>
+      'Study at the same time for 3 days to stabilize focus';
+
+  @override
+  String get burnoutRisingStressInconsistentPattern =>
+      'Your stress is increasing while your study pattern is inconsistent';
+
+  @override
+  String get predictionPressureLikelyToIncrease =>
+      'Rising stress and low recovery will increase pressure';
+
+  @override
+  String get analyticsMoodCorrelationDetected => 'Correlation detected';
+
+  @override
+  String analyticsMoodStudyDropped(String percent) {
+    return 'Study dropped by $percent%';
+  }
+
+  @override
+  String analyticsMoodMoodDropped(String percent) {
+    return 'Mood dropped by $percent%';
+  }
+
+  @override
+  String get burnoutShortExplanation =>
+      'Your study pattern looks balanced right now.';
+
+  @override
+  String get signalStressHigh => 'Yüksek stres';
+
+  @override
+  String get signalStressMedium => 'Orta derece stres';
+
+  @override
+  String get signalMoodLow => 'Düşük ruh hali';
+
+  @override
+  String get signalConsistencyLow => 'Düzensiz rutin';
+
+  @override
+  String get signalDeficitHigh => 'Çalışma açığı';
+
+  @override
+  String get consistency => 'Tutarlılık';
+
+  @override
+  String get stress => 'Stres';
+
+  @override
+  String get moodTrends => 'Ruh Hali Eğilimleri';
+
+  @override
+  String get studyProfileTitle => 'Çalışma Profilin';
+
+  @override
+  String studyProfileOptimalDuration(int min, int max) {
+    return 'İdeal Oturum: $min-$max dk';
+  }
+
+  @override
+  String studyProfileStressThreshold(String value) {
+    return 'Stres > $value olduğunda odak düşüyor';
+  }
+
+  @override
+  String studyProfilePeakWindow(String window) {
+    return 'En Verimli Zaman: $window';
+  }
+
+  @override
+  String get studyProfileMorning => 'Sabah';
+
+  @override
+  String get studyProfileAfternoon => 'Öğleden Sonra';
+
+  @override
+  String get studyProfileEvening => 'Akşam';
+
+  @override
+  String studyProfileMainFactor(String factor) {
+    return 'Ana faktör: $factor';
+  }
+
+  @override
+  String studyProfileSecondaryFactor(String factor) {
+    return 'İkincil: $factor';
+  }
+
+  @override
+  String get completion => 'Tamamlama';
 }

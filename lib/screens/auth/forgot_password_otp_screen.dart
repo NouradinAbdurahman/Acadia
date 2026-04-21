@@ -15,6 +15,7 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_text_field.dart';
 import '../../components/app_button.dart';
+import '../../components/app_back_button.dart';
 
 class ForgotPasswordOTPScreen extends ConsumerStatefulWidget {
   const ForgotPasswordOTPScreen({super.key});
@@ -115,6 +116,7 @@ class _ForgotPasswordOTPScreenState extends ConsumerState<ForgotPasswordOTPScree
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(
           l10n?.forgotPasswordTitle ?? '',
           style: theme.textTheme.displayLarge?.copyWith(

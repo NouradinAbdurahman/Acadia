@@ -14,6 +14,7 @@ import '../../components/app_glass_card.dart';
 import '../../components/app_bottom_sheet_picker.dart';
 import '../../components/app_button.dart';
 import '../../components/app_text_field.dart';
+import '../../components/app_back_button.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../providers/course_provider.dart';
@@ -188,6 +189,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: AppBackButton(),
         title: Text(AppLocalizations.of(context)!.createTask),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -444,7 +446,10 @@ class _PriorityChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
-      onSelected: (_) => onSelected(value),
+      onSelected: (_) {
+        Haptics.vibrate(HapticsType.selection);
+        onSelected(value);
+      },
       selectedColor: color,
       backgroundColor: isDark
           ? Colors.white.withValues(alpha: 0.05)
@@ -491,7 +496,10 @@ class _HourChip extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: selected,
-      onSelected: onSelected,
+      onSelected: (val) {
+        Haptics.vibrate(HapticsType.selection);
+        onSelected(val);
+      },
       selectedColor: theme.colorScheme.primary,
       backgroundColor: isDark
           ? Colors.white.withValues(alpha: 0.05)

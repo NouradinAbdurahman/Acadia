@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/notification.dart';
 import 'app_providers.dart';
+import 'analytics_provider.dart';
 import 'semester_provider.dart';
 
 class _NotificationSeed {
@@ -441,8 +442,7 @@ class NotificationsNotifier
     final startOfToday = DateTime(now.year, now.month, now.day);
 
     if (now.weekday == DateTime.sunday) {
-      final appUser = ref.read(currentAppUserProvider).valueOrNull;
-      final weeklyGoalMinutes = ((appUser?.weeklyStudyGoal ?? 15) * 60);
+      final weeklyGoalMinutes = (ref.read(weeklyStudyGoalHoursProvider) * 60);
       final startOfWeek = startOfToday.subtract(
         Duration(days: now.weekday - 1),
       );

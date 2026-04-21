@@ -1689,42 +1689,42 @@
   "moodReminderBody": "Take a minute to log your mood and stress.",
   "moodLast7Days": "Mood over last 7 days",
   "decisionSmartInsights": "Smart Insights",
-  "decision_high_stress": "High stress detected",
-  "decision_short_sessions": "Use shorter sessions today",
-  "decision_deep_work": "You are in a strong state for deep work",
-  "decision_burnout_warning": "Burnout risk is increasing",
-  "decision_stress_rising": "Your stress is rising this week",
-  "decision_mood_declining": "Your mood is declining",
-  "decision_deadline_pressure": "High pressure detected. Break tasks down",
-  "decision_low_activity_high_stress": "Low activity but high stress detected",
-  "decision_light_tasks_only": "Focus on light tasks only today",
-  "decision_main_factor": "Main stress source: {factor}",
-  "@decision_main_factor": {
+  "decisionHighStress": "High stress detected",
+  "decisionShortSessions": "Use shorter sessions today",
+  "decisionDeepWork": "You are in a strong state for deep work",
+  "decisionBurnoutWarning": "Burnout risk is increasing",
+  "decisionStressRising": "Your stress is rising this week",
+  "decisionMoodDeclining": "Your mood is declining",
+  "decisionDeadlinePressure": "High pressure detected. Break tasks down",
+  "decisionLowActivityHighStress": "Low activity but high stress detected",
+  "decisionLightTasksOnly": "Focus on light tasks only today",
+  "decisionMainFactor": "Main stress source: {factor}",
+  "@decisionMainFactor": {
     "placeholders": {
       "factor": {
         "type": "String"
       }
     }
   },
-  "decision_worst_day": "You feel lowest on {day}",
-  "@decision_worst_day": {
+  "decisionWorstDay": "You feel lowest on {day}",
+  "@decisionWorstDay": {
     "placeholders": {
       "day": {
         "type": "String"
       }
     }
   },
-  "decision_recommended_session": "Recommended session: {minutes} min",
-  "@decision_recommended_session": {
+  "decisionRecommendedSession": "Recommended session: {minutes} min",
+  "@decisionRecommendedSession": {
     "placeholders": {
       "minutes": {
         "type": "Object"
       }
     }
   },
-  "decision_morning_planning": "Morning focus: plan your key tasks",
-  "decision_afternoon_execution": "Afternoon focus: execute your top task",
-  "decision_night_light_review": "Night focus: keep it light and review",
+  "decisionMorningPlanning": "Morning focus: plan your key tasks",
+  "decisionAfternoonExecution": "Afternoon focus: execute your top task",
+  "decisionNightLightReview": "Night focus: keep it light and review",
   "decisionActionShortSessions": "Use shorter sessions (25 min)",
   "decisionActionBreakDown": "Break work into smaller tasks now",
   "decisionActionMonitorWeekly": "Monitor this pattern through the week",
@@ -1858,5 +1858,84 @@
       }
     }
   },
-  "addQuickNoteOptional": "Add a quick note (optional)"
+  "addQuickNoteOptional": "Add a quick note (optional)",
+  "analyticsMoodPerformanceTitle": "Mood vs Performance",
+  "analyticsMoodPerformanceGoodDesc": "Your high mood positively impacts your focus duration.",
+  "analyticsMoodPerformanceBadDesc": "Low mood is restricting your session efficiency.",
+  "analyticsMoodPerformanceStableDesc": "Your mood is stable, allowing for consistent focus.",
+  "analyticsMoodBetterMood": "Better Mood",
+  "analyticsMoodHighStress": "High Stress",
+  "analyticsMoodFocusBoost": "Focus Boost",
+  "analyticsMoodFocusDrain": "Focus Drain",
+  "analyticsMoodDifference": "{plusMinus}{minutes}m",
+  "burnoutMessageEmotionalRisk": "Your stress is rising while consistency is low. This increases burnout risk.",
+  "decisionStatusModerateStress": "Moderate stress detected",
+  "decisionStatusLowStress": "Low stress",
+  "decisionStatusHighStress": "High stress detected",
+  "predictionStressLikelyIncrease": "Stress likely to increase due to low recovery and rising pressure",
+  "analyticsNotEnoughData": "Not enough data yet",
+  "decisionRisingStressUnstablePattern": "Your stress is rising while your routine is unstable",
+  "decisionActionFixedScheduleFocus": "Study at the same time for 3 days to stabilize focus",
+  "burnoutRisingStressInconsistentPattern": "Your stress is increasing while your study pattern is inconsistent",
+  "predictionPressureLikelyToIncrease": "Rising stress and low recovery will increase pressure",
+  "analyticsMoodCorrelationDetected": "Correlation detected",
+  "analyticsMoodStudyDropped": "Study dropped by {percent}%",
+  "@analyticsMoodStudyDropped": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "analyticsMoodMoodDropped": "Mood dropped by {percent}%",
+  "@analyticsMoodMoodDropped": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "burnoutShortExplanation": "Your study pattern looks balanced right now.",
+  "signalStressHigh": "High stress",
+  "signalStressMedium": "Moderate stress",
+  "signalMoodLow": "Low mood",
+  "signalConsistencyLow": "Unstable routine",
+  "signalDeficitHigh": "Study deficit",
+  "consistency": "Consistency",
+  "stress": "Stress",
+  "decisionBurnoutDurationCap": "Strongly recommended: Cap study sessions to 25m",
+  "moodTrends": "Mood Trends",
+  "decisionFixedSchedule": "Build a fixed schedule",
+  "studyProfileTitle": "Your Study Profile",
+  "studyProfileOptimalDuration": "Optimal Session: {min}-{max} min",
+  "@studyProfileOptimalDuration": {
+    "placeholders": {
+      "min": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "studyProfileStressThreshold": "Focus drops when stress > {value}",
+  "@studyProfileStressThreshold": {
+    "placeholders": {
+      "value": { "type": "String" }
+    }
+  },
+  "studyProfilePeakWindow": "Peak Productivity: {window}",
+  "@studyProfilePeakWindow": {
+    "placeholders": {
+      "window": { "type": "String" }
+    }
+  },
+  "studyProfileMorning": "Morning",
+  "studyProfileAfternoon": "Afternoon",
+  "studyProfileEvening": "Evening",
+  "studyProfileMainFactor": "Main factor: {factor}",
+  "@studyProfileMainFactor": {
+    "placeholders": {
+      "factor": { "type": "String" }
+    }
+  },
+  "studyProfileSecondaryFactor": "Secondary: {factor}",
+  "@studyProfileSecondaryFactor": {
+    "placeholders": {
+      "factor": { "type": "String" }
+    }
+  },
+  "completion": "Completion"
 }

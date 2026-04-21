@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 
 import '../../components/app_button.dart';
 import '../../core/design/app_icons.dart';
@@ -11,6 +13,7 @@ import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/mood_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_back_button.dart';
 
 class LogMoodScreen extends ConsumerStatefulWidget {
   const LogMoodScreen({super.key, this.source = 'manual'});
@@ -57,7 +60,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
   }
 
   Future<void> _saveMood() async {
-    HapticFeedback.mediumImpact();
+    Haptics.vibrate(HapticsType.medium);
     
     final l10n = AppLocalizations.of(context)!;
     final previous = ref.read(moodLogsProvider).valueOrNull?.firstOrNull;
@@ -174,7 +177,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
             physics: const BouncingScrollPhysics(),
             itemCount: 5,
             onPageChanged: (index) {
-              HapticFeedback.lightImpact();
+              Haptics.vibrate(HapticsType.medium);
               setState(() => _moodLevel = index + 1);
             },
             itemBuilder: (context, index) {
@@ -345,7 +348,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                   max: 10,
                   value: value,
                   divisions: 9,
-                  onChangeEnd: (_) => HapticFeedback.lightImpact(),
+                  onChangeEnd: (_) => Haptics.vibrate(HapticsType.light),
                   onChanged: onChanged,
                 ),
               ),
@@ -421,13 +424,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
-                    IconButton(
-                      onPressed: () => context.pop(),
-                      icon: const AppIcon(HeroIcons.arrowLeft),
-                      style: IconButton.styleFrom(
-                        backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                      ),
-                    ),
+                    AppBackButton(),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
@@ -473,7 +470,12 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                       _buildSlider(
                         label: l10n.stressLevel,
                         value: _stressLevel,
-                        onChanged: (v) => setState(() => _stressLevel = v),
+                        onChanged: (val) {
+                          if (val.round() != _stressLevel.round()) {
+                            Haptics.vibrate(HapticsType.medium);
+                          }
+                          setState(() => _stressLevel = val);
+                        },
                         activeColor: Colors.deepOrangeAccent,
                         theme: theme,
                         l10n: l10n,
@@ -482,7 +484,12 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                       _buildSlider(
                         label: l10n.energyLevel,
                         value: _energyLevel,
-                        onChanged: (v) => setState(() => _energyLevel = v),
+                        onChanged: (val) {
+                          if (val.round() != _energyLevel.round()) {
+                            Haptics.vibrate(HapticsType.medium);
+                          }
+                          setState(() => _energyLevel = val);
+                        },
                         activeColor: Colors.tealAccent.shade400,
                         theme: theme,
                         l10n: l10n,
@@ -565,7 +572,7 @@ class _FactorChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.lightImpact();
+        Haptics.vibrate(HapticsType.selection);
         onTap();
       },
       child: TweenAnimationBuilder<double>(
