@@ -37,6 +37,9 @@ import 'screens/profile/edit_academic_profile_screen.dart';
 import 'screens/profile/study_preferences_screen.dart';
 import 'screens/profile/change_password_screen.dart';
 import 'screens/analytics/academic_history_screen.dart';
+import 'screens/mood/log_mood_screen.dart';
+import 'screens/mood/mood_history_screen.dart';
+import 'screens/settings/mood_settings_screen.dart';
 import 'utils/go_router_refresh_stream.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
@@ -209,6 +212,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/mood/log',
+        builder: (context, state) {
+          final source = state.uri.queryParameters['source'] ?? 'manual';
+          return LogMoodScreen(source: source);
+        },
+      ),
+      GoRoute(
+        path: '/mood/history',
+        builder: (context, state) => const MoodHistoryScreen(),
+      ),
+      GoRoute(
+        path: '/settings/mood-stress',
+        builder: (context, state) => const MoodSettingsScreen(),
       ),
       GoRoute(
         path: '/courses',

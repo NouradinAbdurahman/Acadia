@@ -59,6 +59,16 @@ class QuickMenuScreen extends StatelessWidget {
         route: '/create-deadline',
       ),
       _QuickMenuItem(
+        icon: HeroIcons.faceSmile,
+        title: l10n.logMoodTitle,
+        route: '/mood/log',
+      ),
+      _QuickMenuItem(
+        icon: HeroIcons.clock,
+        title: l10n.moodHistoryTitle,
+        route: '/mood/history',
+      ),
+      _QuickMenuItem(
         icon: HeroIcons.bell,
         title: l10n.notifications,
         route: '/notifications',
@@ -72,6 +82,11 @@ class QuickMenuScreen extends StatelessWidget {
         icon: HeroIcons.adjustmentsHorizontal,
         title: l10n.studyPreferences,
         route: '/profile/study-preferences',
+      ),
+      _QuickMenuItem(
+        icon: HeroIcons.cog6Tooth,
+        title: l10n.moodSettingsTitle,
+        route: '/settings/mood-stress',
       ),
       _QuickMenuItem(
         icon: HeroIcons.lockClosed,

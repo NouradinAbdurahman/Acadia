@@ -304,6 +304,11 @@ class ProfileScreen extends ConsumerWidget {
                       onTap: () => context.push('/profile/study-preferences'),
                     ),
                     buildItem(
+                      icon: HeroIcons.faceSmile,
+                      title: l10n.moodSettingsTitle,
+                      onTap: () => context.push('/settings/mood-stress'),
+                    ),
+                    buildItem(
                       icon: HeroIcons.language,
                       title: l10n.language,
                       trailing: GestureDetector(

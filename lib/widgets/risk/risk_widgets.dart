@@ -11,26 +11,38 @@ import '../../core/design/app_icons.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/risk_provider.dart';
+import '../../domain/risk/risk_state.dart';
 
-/// Displays the Academic Risk Score card on the Home screen.
-class RiskScoreCard extends ConsumerWidget {
+class RiskScoreCard extends ConsumerStatefulWidget {
   const RiskScoreCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RiskScoreCard> createState() => _RiskScoreCardState();
+}
+
+class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
+  RiskState? _lastRisk;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final riskStateAsync = ref.watch(riskProvider);
 
-    if (riskStateAsync.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+    if (riskStateAsync.hasValue && riskStateAsync.value != null) {
+      _lastRisk = riskStateAsync.value;
     }
 
-    if (riskStateAsync.hasError || riskStateAsync.value == null) {
-      return Center(child: Text(l10n.networkError));
+    final riskState = riskStateAsync.value ?? _lastRisk;
+
+    if (riskState == null) {
+      // Very first load fallback.
+      return const AppGlassCard(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: SizedBox(height: 150),
+      );
     }
 
-    final riskState = riskStateAsync.value!;
     final risk = riskState.result;
 
     final color = _colorForLevel(risk.riskLevel);
@@ -112,10 +124,20 @@ class RiskScoreCard extends ConsumerWidget {
                   ),
                 ],
               ),
+              const SizedBox(width: AppSpacing.sm),
               // Trend indicator
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: _TrendBadge(delta: riskState.trendDelta),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: _TrendBadge(delta: riskState.trendDelta),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -268,23 +290,35 @@ class _TrendBadge extends StatelessWidget {
 }
 
 /// Detailed risk breakdown panel used in the Analytics screen.
-class RiskBreakdownCard extends ConsumerWidget {
+class RiskBreakdownCard extends ConsumerStatefulWidget {
   const RiskBreakdownCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RiskBreakdownCard> createState() => _RiskBreakdownCardState();
+}
+
+class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
+  RiskState? _lastRisk;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final riskStateAsync = ref.watch(riskProvider);
 
-    if (!riskStateAsync.hasValue || riskStateAsync.value == null) {
-      return AppGlassCard(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Center(child: Text(l10n.networkError)),
+    if (riskStateAsync.hasValue && riskStateAsync.value != null) {
+      _lastRisk = riskStateAsync.value;
+    }
+
+    final riskState = riskStateAsync.value ?? _lastRisk;
+
+    if (riskState == null) {
+      return const AppGlassCard(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: SizedBox(height: 200),
       );
     }
 
-    final riskState = riskStateAsync.value!;
     final risk = riskState.result;
     final input = riskState.input;
 

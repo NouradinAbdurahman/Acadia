@@ -13,9 +13,9 @@ class TaskService {
 
     return await _supabase
         .from('tasks')
-      .select('*, courses!inner(semester_id)')
+        .select()
         .eq('user_id', userId)
-      .eq('courses.semester_id', semesterId)
+        .eq('semester_id', semesterId)
         .order('created_at', ascending: false);
   }
 
@@ -25,15 +25,14 @@ class TaskService {
     required String deadlineId,
     String? semesterId,
   }) async {
+    if (semesterId == null) return [];
+
     final query = _supabase
         .from('tasks')
-        .select('*, courses!inner(semester_id)')
+        .select()
         .eq('user_id', userId)
-        .eq('deadline_id', deadlineId);
-
-    if (semesterId != null) {
-      query.eq('courses.semester_id', semesterId);
-    }
+        .eq('deadline_id', deadlineId)
+        .eq('semester_id', semesterId);
 
     return await query.order('created_at', ascending: false);
   }

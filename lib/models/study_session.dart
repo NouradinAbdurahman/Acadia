@@ -46,9 +46,17 @@ class StudySession {
   factory StudySession.fromJson(Map<String, dynamic> json) {
     final isPomodoro = json['is_pomodoro'] as bool? ?? false;
     final totalFocusMinutes = json['total_focus_minutes'] as int?;
+    final dynamic courseJoinRaw = json['courses'];
+    final Map<String, dynamic>? courseJoin = courseJoinRaw is List
+        ? (courseJoinRaw.isNotEmpty && courseJoinRaw.first is Map
+            ? Map<String, dynamic>.from(courseJoinRaw.first as Map)
+            : null)
+        : (courseJoinRaw is Map
+          ? Map<String, dynamic>.from(courseJoinRaw)
+            : null);
     final semesterId = (json['semester_id'] as String?) ??
-      (json['courses'] != null
-        ? (json['courses'] as Map<String, dynamic>)['semester_id'] as String?
+      (courseJoin != null
+        ? courseJoin['semester_id'] as String?
         : null) ??
       '';
     // For Pomodoro sessions, durationMinutes mirrors totalFocusMinutes for
@@ -65,7 +73,7 @@ class StudySession {
       sessionType: json['session_type'] as String,
       durationMinutes: durationMinutes,
       createdAt: DateTime.parse(json['created_at'] as String),
-      course: json['courses'] != null ? Course.fromJson(json['courses']) : null,
+      course: courseJoin != null ? Course.fromJson(courseJoin) : null,
       intent: json['intent'] as String?,
       completed: json['completed'] as bool? ?? true,
       completedCycles: json['completed_cycles'] as int?,

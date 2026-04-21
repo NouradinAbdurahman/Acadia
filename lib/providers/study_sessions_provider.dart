@@ -11,8 +11,7 @@ import '../models/study_session.dart';
 import 'app_providers.dart' as app;
 import 'semester_provider.dart';
 import 'analytics_provider.dart';
-import 'dashboard_provider.dart';
-import 'derived_invalidation.dart';
+import 'mood_provider.dart';
 
 enum StudyType {
   pomodoro,
@@ -604,10 +603,7 @@ class StudySessionsNotifier
         ref
           .read(analyticsProvider.notifier)
           .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
-        ref.invalidateSelf();
-        ref.invalidate(studyAnalyticsProvider);
-        ref.invalidate(dashboardProvider);
-        invalidateAnalyticsAndTrend(ref);
+        ref.read(moodActionsProvider).queueSessionMoodPrompt();
       } catch (e, st) {
         if (!mounted) return;
         state = previous;
@@ -694,10 +690,7 @@ class StudySessionsNotifier
         ref
           .read(analyticsProvider.notifier)
           .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
-        ref.invalidateSelf();
-        ref.invalidate(studyAnalyticsProvider);
-        ref.invalidate(dashboardProvider);
-        invalidateAnalyticsAndTrend(ref);
+        ref.read(moodActionsProvider).queueSessionMoodPrompt();
       } catch (e, st) {
         if (!mounted) return;
         state = previous;

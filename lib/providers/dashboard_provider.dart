@@ -67,6 +67,9 @@ class CourseStats {
   });
 }
 
+/// Holds the last successfully computed dashboard so the UI never blanks during refresh.
+final _lastDashboardData = StateProvider<DashboardData?>((ref) => null);
+
 final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final profileAsync = ref.watch(studentProfileProvider);
   final coursesAsync = ref.watch(courseProvider);
@@ -75,12 +78,17 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
   final sessionsAsync = ref.watch(studySessionsProvider);
   final semestersAsync = ref.watch(semesterProvider);
 
-  if (profileAsync.isLoading ||
+  final isAnyLoading = profileAsync.isLoading ||
       coursesAsync.isLoading ||
       tasksAsync.isLoading ||
       deadlinesAsync.isLoading ||
       sessionsAsync.isLoading ||
-      semestersAsync.isLoading) {
+      semestersAsync.isLoading;
+
+  if (isAnyLoading) {
+    // If we have previous data, show it while refreshing (no blank flash).
+    final cached = ref.read(_lastDashboardData);
+    if (cached != null) return AsyncValue.data(cached);
     return const AsyncValue.loading();
   }
 
@@ -268,8 +276,7 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
     focusSuggestion = 'System Status';
   }
 
-  return AsyncValue.data(
-    DashboardData(
+  final dashboardResult = DashboardData(
       pendingTasksToday: pendingTasksToday,
       overdueTasksCount: overdueTasksCount,
       upcomingDeadlines: upcomingDeadlinesList,
@@ -291,6 +298,10 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
       sessionsTodayCount: sessionsTodayCount,
       upcomingDeadlinesCount: deadlinesSoonCount,
       workloadAddedTodayCount: workloadAddedTodayCount,
-    ),
-  );
+    );
+
+  // Cache for next refresh cycle — avoids blank flash on pull-to-refresh.
+  Future.microtask(() => ref.read(_lastDashboardData.notifier).state = dashboardResult);
+
+  return AsyncValue.data(dashboardResult);
 });

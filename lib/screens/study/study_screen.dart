@@ -23,7 +23,9 @@ import '../../providers/course_provider.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../providers/analytics_provider.dart';
+import '../../providers/mood_provider.dart';
 import '../../providers/student_profile_provider.dart';
+import '../../providers/decision_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../l10n/app_localizations.dart';
 import 'study_history_screen.dart';
@@ -42,6 +44,7 @@ class StudyScreen extends ConsumerStatefulWidget {
 class _StudyScreenState extends ConsumerState<StudyScreen> {
   ProviderSubscription? _timerSub;
   ProviderSubscription<AdaptationMode>? _modeSub;
+  ProviderSubscription<MoodPromptRequest?>? _moodPromptSub;
 
   @override
   void initState() {
@@ -65,6 +68,15 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         final analytics = ref.read(studyAnalyticsProvider);
         final minutes = _recommendedDurationForMode(analytics, next);
         ref.read(studyTimerProvider.notifier).setDuration(Duration(minutes: minutes));
+      },
+    );
+
+    _moodPromptSub = ref.listenManual<MoodPromptRequest?>(
+      moodPromptRequestProvider,
+      (previous, next) {
+        if (!mounted || next == null) return;
+        ref.read(moodActionsProvider).clearMoodPrompt();
+        context.push('/mood/log?source=${next.source}');
       },
     );
 
@@ -168,6 +180,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   void dispose() {
     _timerSub?.close();
     _modeSub?.close();
+    _moodPromptSub?.close();
     super.dispose();
   }
 
@@ -345,6 +358,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final irregularPattern = analytics.irregularStudyPattern;
     final recoveryDetected = analytics.recoveryDetected;
     final hasBurnoutTrendHistory = analytics.hasBurnoutTrendHistory;
+    final decision = ref.watch(decisionProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -765,6 +779,33 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
             ),
 
         const SizedBox(height: AppSpacing.xl),
+
+        if (decision.suggestedSessionMinutes != null) ...[
+          Text(
+            l10n.decision_recommended_session(decision.suggestedSessionMinutes!),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppButton(
+            text: l10n.startRecommendedSession(decision.suggestedSessionMinutes!),
+            onPressed: canStart
+                ? () {
+                    HapticFeedback.mediumImpact();
+                    ref
+                        .read(studyTimerProvider.notifier)
+                        .setDuration(Duration(minutes: decision.suggestedSessionMinutes!));
+                    ref.read(studyTimerProvider.notifier).start();
+                  }
+                : null,
+            isFullWidth: true,
+            variant: AppButtonVariant.secondary,
+            icon: const AppIcon(HeroIcons.sparkles, size: 18),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
         // 1.4 Start Button + helper
         AppButton(

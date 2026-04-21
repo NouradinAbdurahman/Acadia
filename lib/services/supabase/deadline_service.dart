@@ -13,9 +13,9 @@ class DeadlineService {
 
     return await _supabase
         .from('academic_deadlines')
-      .select('*, courses!inner(semester_id)')
+        .select()
         .eq('user_id', userId)
-      .eq('courses.semester_id', semesterId)
+        .eq('semester_id', semesterId)
         .order('deadline_date', ascending: true);
   }
 

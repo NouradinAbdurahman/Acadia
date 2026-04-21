@@ -4925,7 +4925,7 @@ abstract class AppLocalizations {
   /// No description provided for @decisionConfidenceLow.
   ///
   /// In en, this message translates to:
-  /// **'Confidence: Low'**
+  /// **'Confidence: Low (based on recent activity)'**
   String get decisionConfidenceLow;
 
   /// No description provided for @startedFromAnalyticsRecommendation.
@@ -5137,6 +5137,660 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Status'**
   String get status;
+
+  /// No description provided for @logMoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Mood'**
+  String get logMoodTitle;
+
+  /// No description provided for @moodAfterSessionPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you feel after this study session?'**
+  String get moodAfterSessionPrompt;
+
+  /// No description provided for @moodManualPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your current mood and stress to improve your study insights.'**
+  String get moodManualPrompt;
+
+  /// No description provided for @moodLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Level'**
+  String get moodLevel;
+
+  /// No description provided for @stressLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress Level'**
+  String get stressLevel;
+
+  /// No description provided for @energyLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy Level'**
+  String get energyLevel;
+
+  /// No description provided for @moodFactors.
+  ///
+  /// In en, this message translates to:
+  /// **'Contributing Factors'**
+  String get moodFactors;
+
+  /// No description provided for @moodFactorSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get moodFactorSleep;
+
+  /// No description provided for @moodFactorWorkload.
+  ///
+  /// In en, this message translates to:
+  /// **'Workload'**
+  String get moodFactorWorkload;
+
+  /// No description provided for @moodFactorHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get moodFactorHealth;
+
+  /// No description provided for @moodFactorMotivation.
+  ///
+  /// In en, this message translates to:
+  /// **'Motivation'**
+  String get moodFactorMotivation;
+
+  /// No description provided for @moodFactorSocial.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get moodFactorSocial;
+
+  /// No description provided for @moodFactorExams.
+  ///
+  /// In en, this message translates to:
+  /// **'Exams'**
+  String get moodFactorExams;
+
+  /// No description provided for @saveMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Mood'**
+  String get saveMood;
+
+  /// No description provided for @moodSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood log saved.'**
+  String get moodSaved;
+
+  /// No description provided for @moodSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save mood log.'**
+  String get moodSaveFailed;
+
+  /// No description provided for @moodAndStressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood & Stress'**
+  String get moodAndStressTitle;
+
+  /// No description provided for @moodAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Mood'**
+  String get moodAverageLabel;
+
+  /// No description provided for @stressAverageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Stress'**
+  String get stressAverageLabel;
+
+  /// No description provided for @moodNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get moodNoData;
+
+  /// No description provided for @moodSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood & Stress Settings'**
+  String get moodSettingsTitle;
+
+  /// No description provided for @enableMoodTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Mood Tracking'**
+  String get enableMoodTracking;
+
+  /// No description provided for @enableMoodReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Reminders'**
+  String get enableMoodReminders;
+
+  /// No description provided for @reminderTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Time'**
+  String get reminderTimeLabel;
+
+  /// No description provided for @reminderTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Type'**
+  String get reminderTypeLabel;
+
+  /// No description provided for @reminderTypeDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get reminderTypeDaily;
+
+  /// No description provided for @reminderTypeAfterStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'After Study'**
+  String get reminderTypeAfterStudy;
+
+  /// No description provided for @reminderTypeBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get reminderTypeBoth;
+
+  /// No description provided for @moodHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood History'**
+  String get moodHistoryTitle;
+
+  /// No description provided for @moodDailyPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you feeling today?'**
+  String get moodDailyPromptTitle;
+
+  /// No description provided for @moodDailyPromptSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track mood and stress to improve your study decisions.'**
+  String get moodDailyPromptSubtitle;
+
+  /// No description provided for @moodReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood check-in'**
+  String get moodReminderTitle;
+
+  /// No description provided for @moodReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a minute to log your mood and stress.'**
+  String get moodReminderBody;
+
+  /// No description provided for @moodLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood over last 7 days'**
+  String get moodLast7Days;
+
+  /// No description provided for @decisionSmartInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Insights'**
+  String get decisionSmartInsights;
+
+  /// No description provided for @decision_high_stress.
+  ///
+  /// In en, this message translates to:
+  /// **'High stress detected'**
+  String get decision_high_stress;
+
+  /// No description provided for @decision_short_sessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Use shorter sessions today'**
+  String get decision_short_sessions;
+
+  /// No description provided for @decision_deep_work.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in a strong state for deep work'**
+  String get decision_deep_work;
+
+  /// No description provided for @decision_burnout_warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Burnout risk is increasing'**
+  String get decision_burnout_warning;
+
+  /// No description provided for @decision_stress_rising.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stress is rising this week'**
+  String get decision_stress_rising;
+
+  /// No description provided for @decision_mood_declining.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mood is declining'**
+  String get decision_mood_declining;
+
+  /// No description provided for @decision_deadline_pressure.
+  ///
+  /// In en, this message translates to:
+  /// **'High pressure detected. Break tasks down'**
+  String get decision_deadline_pressure;
+
+  /// No description provided for @decision_low_activity_high_stress.
+  ///
+  /// In en, this message translates to:
+  /// **'Low activity but high stress detected'**
+  String get decision_low_activity_high_stress;
+
+  /// No description provided for @decision_light_tasks_only.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on light tasks only today'**
+  String get decision_light_tasks_only;
+
+  /// No description provided for @decision_main_factor.
+  ///
+  /// In en, this message translates to:
+  /// **'Main stress source: {factor}'**
+  String decision_main_factor(String factor);
+
+  /// No description provided for @decision_worst_day.
+  ///
+  /// In en, this message translates to:
+  /// **'You feel lowest on {day}'**
+  String decision_worst_day(String day);
+
+  /// No description provided for @decision_recommended_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended session: {minutes} min'**
+  String decision_recommended_session(Object minutes);
+
+  /// No description provided for @decision_morning_planning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning focus: plan your key tasks'**
+  String get decision_morning_planning;
+
+  /// No description provided for @decision_afternoon_execution.
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon focus: execute your top task'**
+  String get decision_afternoon_execution;
+
+  /// No description provided for @decision_night_light_review.
+  ///
+  /// In en, this message translates to:
+  /// **'Night focus: keep it light and review'**
+  String get decision_night_light_review;
+
+  /// No description provided for @decisionActionShortSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Use shorter sessions (25 min)'**
+  String get decisionActionShortSessions;
+
+  /// No description provided for @decisionActionBreakDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Break work into smaller tasks now'**
+  String get decisionActionBreakDown;
+
+  /// No description provided for @decisionActionMonitorWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor this pattern through the week'**
+  String get decisionActionMonitorWeekly;
+
+  /// No description provided for @decisionActionPlanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your top 3 tasks for today'**
+  String get decisionActionPlanning;
+
+  /// No description provided for @decisionActionExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Run one focused execution block now'**
+  String get decisionActionExecution;
+
+  /// No description provided for @decisionActionLightReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Do light review, avoid heavy workload'**
+  String get decisionActionLightReview;
+
+  /// No description provided for @startRecommendedSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Recommended Session ({minutes} min)'**
+  String startRecommendedSession(Object minutes);
+
+  /// No description provided for @smartInsightUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Insight Updated'**
+  String get smartInsightUpdated;
+
+  /// No description provided for @moodSavedPositive1.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Great consistency.'**
+  String get moodSavedPositive1;
+
+  /// No description provided for @moodSavedPositive2.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Keep going.'**
+  String get moodSavedPositive2;
+
+  /// No description provided for @moodSavedPositive3.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Nice progress.'**
+  String get moodSavedPositive3;
+
+  /// No description provided for @moodSavedPositive4.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. You are doing well.'**
+  String get moodSavedPositive4;
+
+  /// No description provided for @todaysMoodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Mood'**
+  String get todaysMoodTitle;
+
+  /// No description provided for @stressOutOfTen.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress {value}/10'**
+  String stressOutOfTen(Object value);
+
+  /// No description provided for @takeItSlowerTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it slower today'**
+  String get takeItSlowerTodayTitle;
+
+  /// No description provided for @takeItSlowerTodayBody.
+  ///
+  /// In en, this message translates to:
+  /// **'High stress detected. Use shorter sessions and protect breaks.'**
+  String get takeItSlowerTodayBody;
+
+  /// No description provided for @strongStateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in a strong state'**
+  String get strongStateTitle;
+
+  /// No description provided for @strongStateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Push deeper work while your mood is high.'**
+  String get strongStateBody;
+
+  /// No description provided for @view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get view;
+
+  /// No description provided for @focusRecommendationPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Recommendation (Primary)'**
+  String get focusRecommendationPrimary;
+
+  /// No description provided for @decisionConfidenceHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: High (based on recent activity)'**
+  String get decisionConfidenceHigh;
+
+  /// No description provided for @decisionConfidenceMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: Medium (based on recent activity)'**
+  String get decisionConfidenceMedium;
+
+  /// No description provided for @decisionBurnoutDurationCap.
+  ///
+  /// In en, this message translates to:
+  /// **'High stress detected.\nShorter sessions recommended (25 min).'**
+  String get decisionBurnoutDurationCap;
+
+  /// No description provided for @decisionFixedSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a fixed schedule to improve consistency'**
+  String get decisionFixedSchedule;
+
+  /// No description provided for @decisionActionFixedSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the same study slot for 3 days'**
+  String get decisionActionFixedSchedule;
+
+  /// No description provided for @postSessionMoodImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mood improved after studying'**
+  String get postSessionMoodImproved;
+
+  /// No description provided for @postSessionStressIncreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Long sessions may be increasing your stress'**
+  String get postSessionStressIncreased;
+
+  /// No description provided for @postSessionFeedbackLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'Post-session feedback captured'**
+  String get postSessionFeedbackLogged;
+
+  /// No description provided for @consistencyScoreLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency: {score}% ({trend})'**
+  String consistencyScoreLine(Object score, String trend);
+
+  /// No description provided for @predictionStressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Predicted Stress (Next 3 Days)'**
+  String get predictionStressTitle;
+
+  /// No description provided for @predictionPlanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended Plan'**
+  String get predictionPlanTitle;
+
+  /// No description provided for @predictionLevelLow.
+  ///
+  /// In en, this message translates to:
+  /// **'LOW'**
+  String get predictionLevelLow;
+
+  /// No description provided for @predictionLevelMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'MEDIUM'**
+  String get predictionLevelMedium;
+
+  /// No description provided for @predictionLevelHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'HIGH'**
+  String get predictionLevelHigh;
+
+  /// No description provided for @predictionReasonHighStressToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher stress in recent days'**
+  String get predictionReasonHighStressToday;
+
+  /// No description provided for @predictionReasonLowConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study consistency is low this week'**
+  String get predictionReasonLowConsistency;
+
+  /// No description provided for @predictionReasonUpcomingWorkload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming workload this week'**
+  String get predictionReasonUpcomingWorkload;
+
+  /// No description provided for @predictionMainReasonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Main reason:'**
+  String get predictionMainReasonTitle;
+
+  /// No description provided for @predictionWhyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this plan?'**
+  String get predictionWhyTitle;
+
+  /// No description provided for @predictionReasonStressHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High stress detected recently'**
+  String get predictionReasonStressHigh;
+
+  /// No description provided for @predictionReasonLowConsistencyDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study consistency dropped this week'**
+  String get predictionReasonLowConsistencyDetail;
+
+  /// No description provided for @predictionReasonTasksPending.
+  ///
+  /// In en, this message translates to:
+  /// **'You have multiple pending tasks this week'**
+  String get predictionReasonTasksPending;
+
+  /// No description provided for @predictionReasonDeadlinesSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadlines are approaching soon'**
+  String get predictionReasonDeadlinesSoon;
+
+  /// No description provided for @predictionAffectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Affected:'**
+  String get predictionAffectedTitle;
+
+  /// No description provided for @predictionPlanLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{day} at {time} • {minutes} min {focus} session'**
+  String predictionPlanLine(String day, String time, int minutes, String focus);
+
+  /// No description provided for @predictionPlanLightFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'light'**
+  String get predictionPlanLightFocus;
+
+  /// No description provided for @predictionPlanFocusExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'focus'**
+  String get predictionPlanFocusExecution;
+
+  /// No description provided for @predictionPlanDeepExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'deep'**
+  String get predictionPlanDeepExecution;
+
+  /// No description provided for @predictionPlanLightReview.
+  ///
+  /// In en, this message translates to:
+  /// **'light review'**
+  String get predictionPlanLightReview;
+
+  /// No description provided for @predictionPerformanceRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Risk: {level}'**
+  String predictionPerformanceRisk(String level);
+
+  /// No description provided for @predictionPerformanceRiskLagging.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Risk: {level} • Falling behind: {courses}'**
+  String predictionPerformanceRiskLagging(String level, String courses);
+
+  /// No description provided for @moodNameAwful.
+  ///
+  /// In en, this message translates to:
+  /// **'Awful'**
+  String get moodNameAwful;
+
+  /// No description provided for @moodNameBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Bad'**
+  String get moodNameBad;
+
+  /// No description provided for @moodNameNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get moodNameNeutral;
+
+  /// No description provided for @moodNameGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get moodNameGood;
+
+  /// No description provided for @moodNameGreat.
+  ///
+  /// In en, this message translates to:
+  /// **'Great'**
+  String get moodNameGreat;
+
+  /// No description provided for @imFeelingMood.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m feeling {mood}'**
+  String imFeelingMood(String mood);
+
+  /// No description provided for @saveMoodDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Mood • {mood} • Stress {stress}'**
+  String saveMoodDots(String mood, String stress);
+
+  /// No description provided for @addQuickNoteOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a quick note (optional)'**
+  String get addQuickNoteOptional;
 }
 
 class _AppLocalizationsDelegate

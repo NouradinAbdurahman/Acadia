@@ -4,6 +4,7 @@ class Deadline {
   final String title;
   final String course;
   final String? courseId;
+  final String? semesterId;
   final DateTime deadlineDate;
   final String deadlineType;
   final String priority;
@@ -25,6 +26,7 @@ class Deadline {
     required this.title,
     required this.course,
     this.courseId,
+    this.semesterId,
     required this.deadlineDate,
     required this.deadlineType,
     required this.priority,
@@ -42,6 +44,7 @@ class Deadline {
       title: json['title'] as String,
       course: json['course'] as String,
       courseId: json['course_id'] as String?,
+      semesterId: json['semester_id'] as String?,
       deadlineDate: DateTime.parse(json['deadline_date'] as String),
       deadlineType: json['deadline_type'] as String,
       priority: json['priority'] as String,
@@ -62,6 +65,7 @@ class Deadline {
       'title': title,
       'course': course,
       if (courseId != null) 'course_id': courseId,
+      if (semesterId != null) 'semester_id': semesterId,
       'deadline_date': deadlineDate.toIso8601String(),
       'deadline_type': deadlineType,
       'priority': priority,
@@ -79,6 +83,7 @@ class Deadline {
     String? title,
     String? course,
     String? courseId,
+    String? semesterId,
     DateTime? deadlineDate,
     String? deadlineType,
     String? priority,
@@ -95,6 +100,7 @@ class Deadline {
       title: title ?? this.title,
       course: course ?? this.course,
       courseId: courseId ?? this.courseId,
+      semesterId: semesterId ?? this.semesterId,
       deadlineDate: deadlineDate ?? this.deadlineDate,
       deadlineType: deadlineType ?? this.deadlineType,
       priority: priority ?? this.priority,

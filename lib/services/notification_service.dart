@@ -86,4 +86,44 @@ class NotificationService {
   static Future<void> cancelAll() async {
     await _plugin.cancelAll();
   }
+
+  static Future<void> scheduleDailyMoodReminder({
+    required int hour,
+    required int minute,
+    required String title,
+    required String body,
+  }) async {
+    await _plugin.cancel(1001);
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      hour,
+      minute,
+    );
+
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    await _plugin.zonedSchedule(
+      1001,
+      title,
+      body,
+      scheduledDate,
+      _notificationDetails,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'mood_daily',
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  static Future<void> cancelDailyMoodReminder() async {
+    await _plugin.cancel(1001);
+  }
 }

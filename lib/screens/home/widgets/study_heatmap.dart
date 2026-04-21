@@ -24,17 +24,18 @@ class StudyHeatmap extends ConsumerStatefulWidget {
 
 class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
   late final ScrollController _scrollController;
+  // Tracks whether the previous frame was in a loading state, so we can
+  // detect the loading→data transition and re-scroll to the current month.
+  bool _wasLoading = false;
+  HeatmapData? _lastHeatmapData;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
-    });
+
+    // Scroll to today (far right) on first render.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
   }
 
   @override
@@ -43,130 +44,149 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
     super.dispose();
   }
 
+  void _scrollToEnd() {
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final heatmapAsync = ref.watch(studyHeatmapProvider);
     final dashboardAsync = ref.watch(dashboardProvider);
+
+    // Re-scroll to current month whenever a refresh completes (loading → data).
+    final isNowLoading = heatmapAsync.isLoading;
+    if (_wasLoading && !isNowLoading && heatmapAsync.hasValue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+    }
+    _wasLoading = isNowLoading;
+
     final theme = Theme.of(context);
 
-    return heatmapAsync.when(
-      data: (data) {
-        final days = data.days;
-        if (days.isEmpty) return _buildEmptyState(context);
+    if (heatmapAsync.hasValue && heatmapAsync.value != null) {
+      _lastHeatmapData = heatmapAsync.value;
+    }
 
-        final streak = dashboardAsync.value?.streakCount ?? 0;
-        final maxScore = data.maxScore;
+    final data = heatmapAsync.value ?? _lastHeatmapData;
 
-        return AppGlassCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    if (data == null) {
+      // First load empty state, the global shimmer will wrap this.
+      return const SizedBox(height: 250);
+    }
+
+    final days = data.days;
+    if (days.isEmpty) return _buildEmptyState(context);
+
+    final streak = dashboardAsync.value?.streakCount ?? 0;
+    final maxScore = data.maxScore;
+
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(context, streak),
+          const SizedBox(height: AppSpacing.md),
+          Stack(
             children: [
-              _buildHeader(context, streak),
-              const SizedBox(height: AppSpacing.md),
-              Stack(
+               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildWeekdayLabels(context),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              height: 125,
-                              child: SingleChildScrollView(
-                                controller: _scrollController,
-                                scrollDirection: Axis.horizontal,
-                                physics: const BouncingScrollPhysics(),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildMonthLabels(context, days),
-                                    SizedBox(
-                                      height: 98,
-                                      width: ((days.length / 7).ceil() * 14.5) + 30, // Extra space for labels at the end
-                                      child: GridView.builder(
-                                        physics: const NeverScrollableScrollPhysics(),
-                                        scrollDirection: Axis.horizontal,
-                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 7,
-                                          mainAxisSpacing: 2.5,
-                                          crossAxisSpacing: 2.5,
-                                        ),
-                                        itemCount: days.length,
-                                        itemBuilder: (context, index) {
-                                          final day = days[index];
-                                            return _HeatmapCell(
-                                              day: day,
-                                              maxScore: maxScore,
-                                              index: index,
-                                            );
-                                        },
-                                      ),
+                  _buildWeekdayLabels(context),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 125,
+                          child: SingleChildScrollView(
+                            controller: _scrollController,
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildMonthLabels(context, days),
+                                SizedBox(
+                                  height: 98,
+                                  width: ((days.length / 7).ceil() * 14.5) + 30,
+                                  child: GridView.builder(
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    scrollDirection: Axis.horizontal,
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 7,
+                                      mainAxisSpacing: 2.5,
+                                      crossAxisSpacing: 2.5,
                                     ),
-                                  ],
+                                    itemCount: days.length,
+                                    itemBuilder: (context, index) {
+                                      final day = days[index];
+                                        return _HeatmapCell(
+                                          day: day,
+                                          maxScore: maxScore,
+                                          index: index,
+                                        );
+                                    },
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Fade Overlays
-                  Positioned(
-                    left: 28, // Offset for weekday labels
-                    top: 0,
-                    bottom: 0,
-                    width: 20,
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              theme.colorScheme.surface.withOpacity(0.1),
-                              theme.colorScheme.surface.withOpacity(0),
-                            ],
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: 20,
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerRight,
-                            end: Alignment.centerLeft,
-                            colors: [
-                              theme.colorScheme.surface.withOpacity(0.2),
-                              theme.colorScheme.surface.withOpacity(0),
-                            ],
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              // Fade Overlays
+              Positioned(
+                left: 28,
+                top: 0,
+                bottom: 0,
+                width: 20,
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          theme.colorScheme.surface.withOpacity(0.1),
+                          theme.colorScheme.surface.withOpacity(0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 20,
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerRight,
+                        end: Alignment.centerLeft,
+                        colors: [
+                          theme.colorScheme.surface.withOpacity(0.2),
+                          theme.colorScheme.surface.withOpacity(0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
-        ).animate().fade(duration: 400.ms).moveY(begin: 10, end: 0);
-      },
-      loading: () => _buildLoadingState(context),
-      error: (_, __) => const SizedBox.shrink(),
-    );
+          const SizedBox(height: AppSpacing.md),
+        ],
+      ),
+    ).animate().fade(duration: 400.ms).moveY(begin: 10, end: 0);
   }
 
   Widget _buildHeader(BuildContext context, int streak) {
@@ -398,31 +418,6 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
     );
   }
 
-  Widget _buildLoadingState(BuildContext context) {
-    final theme = Theme.of(context);
-    return Shimmer.fromColors(
-      baseColor: theme.colorScheme.onSurface.withOpacity(0.05),
-      highlightColor: theme.colorScheme.onSurface.withOpacity(0.1),
-      child: AppGlassCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(width: 100, height: 14, decoration: BoxDecoration(color: theme.colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(4))),
-                Row(
-                  children: List.generate(5, (i) => Container(width: 10, height: 10, margin: const EdgeInsets.only(left: 3), decoration: BoxDecoration(color: theme.colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(2)))),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Container(width: double.infinity, height: 100, decoration: BoxDecoration(color: theme.colorScheme.onSurface.withOpacity(0.2), borderRadius: BorderRadius.circular(8))),
-          ],
-        ),
-      ),
-    );
-  }
 
 }
 

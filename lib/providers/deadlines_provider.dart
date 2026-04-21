@@ -5,7 +5,6 @@ import '../models/deadline.dart';
 import 'app_providers.dart';
 import 'semester_provider.dart';
 
-import 'derived_invalidation.dart';
 import 'tasks_provider.dart';
 
 class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
@@ -23,7 +22,8 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
 
   Future<void> loadDeadlines({required String userId, String? semesterId}) async {
     try {
-      state = const AsyncValue.loading();
+      // Preserve previous data during refresh so UI doesn't blank/flicker.
+      state = const AsyncValue<List<Deadline>>.loading().copyWithPrevious(state);
       final list = await deadlineRepository.getDeadlines(userId: userId, semesterId: semesterId) as List<Deadline>;
       if (!mounted) return;
       state = AsyncValue.data(list);
@@ -42,12 +42,17 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
   }
 
   Future<void> createDeadline(Deadline deadline) async {
+    final semesterId = _ref.read(activeSemesterProvider);
+    if (semesterId == null) {
+      throw Exception('No active semester set. Cannot create deadline.');
+    }
+
+    final scopedDeadline = deadline.copyWith(semesterId: semesterId);
     final previous = state;
     try {
       final created =
-          await deadlineRepository.createDeadline(deadline) as Deadline;
+          await deadlineRepository.createDeadline(scopedDeadline) as Deadline;
       state = state.whenData((items) => [created, ...items]);
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -61,8 +66,6 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
       state = state.whenData(
         (items) => items.where((d) => d.id != id).toList(),
       );
-      _ref.invalidate(tasksProvider);
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -77,7 +80,6 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
       state = state.whenData(
         (items) => items.map((d) => d.id == id ? updated : d).toList(),
       );
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -96,7 +98,6 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
       state = state.whenData(
         (items) => items.map((d) => d.id == id ? updated : d).toList(),
       );
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -127,7 +128,6 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
       state = state.whenData(
         (items) => items.map((d) => d.id == id ? updated : d).toList(),
       );
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);

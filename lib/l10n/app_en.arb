@@ -1653,5 +1653,210 @@
   "status": "Status",
   "@status": {
     "description": "Label for the current status of a study session or item"
-  }
+  },
+  "logMoodTitle": "Log Mood",
+  "moodAfterSessionPrompt": "How do you feel after this study session?",
+  "moodManualPrompt": "Track your current mood and stress to improve your study insights.",
+  "moodLevel": "Mood Level",
+  "stressLevel": "Stress Level",
+  "energyLevel": "Energy Level",
+  "moodFactors": "Contributing Factors",
+  "moodFactorSleep": "Sleep",
+  "moodFactorWorkload": "Workload",
+  "moodFactorHealth": "Health",
+  "moodFactorMotivation": "Motivation",
+  "moodFactorSocial": "Social",
+  "moodFactorExams": "Exams",
+  "saveMood": "Save Mood",
+  "moodSaved": "Mood log saved.",
+  "moodSaveFailed": "Could not save mood log.",
+  "moodAndStressTitle": "Mood & Stress",
+  "moodAverageLabel": "Average Mood",
+  "stressAverageLabel": "Average Stress",
+  "moodNoData": "No data",
+  "moodSettingsTitle": "Mood & Stress Settings",
+  "enableMoodTracking": "Enable Mood Tracking",
+  "enableMoodReminders": "Enable Reminders",
+  "reminderTimeLabel": "Reminder Time",
+  "reminderTypeLabel": "Reminder Type",
+  "reminderTypeDaily": "Daily",
+  "reminderTypeAfterStudy": "After Study",
+  "reminderTypeBoth": "Both",
+  "moodHistoryTitle": "Mood History",
+  "moodDailyPromptTitle": "How are you feeling today?",
+  "moodDailyPromptSubtitle": "Track mood and stress to improve your study decisions.",
+  "moodReminderTitle": "Mood check-in",
+  "moodReminderBody": "Take a minute to log your mood and stress.",
+  "moodLast7Days": "Mood over last 7 days",
+  "decisionSmartInsights": "Smart Insights",
+  "decision_high_stress": "High stress detected",
+  "decision_short_sessions": "Use shorter sessions today",
+  "decision_deep_work": "You are in a strong state for deep work",
+  "decision_burnout_warning": "Burnout risk is increasing",
+  "decision_stress_rising": "Your stress is rising this week",
+  "decision_mood_declining": "Your mood is declining",
+  "decision_deadline_pressure": "High pressure detected. Break tasks down",
+  "decision_low_activity_high_stress": "Low activity but high stress detected",
+  "decision_light_tasks_only": "Focus on light tasks only today",
+  "decision_main_factor": "Main stress source: {factor}",
+  "@decision_main_factor": {
+    "placeholders": {
+      "factor": {
+        "type": "String"
+      }
+    }
+  },
+  "decision_worst_day": "You feel lowest on {day}",
+  "@decision_worst_day": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "decision_recommended_session": "Recommended session: {minutes} min",
+  "@decision_recommended_session": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "decision_morning_planning": "Morning focus: plan your key tasks",
+  "decision_afternoon_execution": "Afternoon focus: execute your top task",
+  "decision_night_light_review": "Night focus: keep it light and review",
+  "decisionActionShortSessions": "Use shorter sessions (25 min)",
+  "decisionActionBreakDown": "Break work into smaller tasks now",
+  "decisionActionMonitorWeekly": "Monitor this pattern through the week",
+  "decisionActionPlanning": "Set your top 3 tasks for today",
+  "decisionActionExecution": "Run one focused execution block now",
+  "decisionActionLightReview": "Do light review, avoid heavy workload",
+  "startRecommendedSession": "Start Recommended Session ({minutes} min)",
+  "@startRecommendedSession": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "smartInsightUpdated": "Smart Insight Updated",
+  "moodSavedPositive1": "Saved. Great consistency.",
+  "moodSavedPositive2": "Saved. Keep going.",
+  "moodSavedPositive3": "Saved. Nice progress.",
+  "moodSavedPositive4": "Saved. You are doing well.",
+  "todaysMoodTitle": "Today's Mood",
+  "stressOutOfTen": "Stress {value}/10",
+  "@stressOutOfTen": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "takeItSlowerTodayTitle": "Take it slower today",
+  "takeItSlowerTodayBody": "High stress detected. Use shorter sessions and protect breaks.",
+  "strongStateTitle": "You're in a strong state",
+  "strongStateBody": "Push deeper work while your mood is high.",
+  "view": "View",
+  "focusRecommendationPrimary": "Focus Recommendation (Primary)",
+  "decisionConfidenceHigh": "Confidence: High (based on recent activity)",
+  "decisionConfidenceMedium": "Confidence: Medium (based on recent activity)",
+  "decisionConfidenceLow": "Confidence: Low (based on recent activity)",
+  "decisionBurnoutDurationCap": "High stress detected.\nShorter sessions recommended (25 min).",
+  "decisionFixedSchedule": "Build a fixed schedule to improve consistency",
+  "decisionActionFixedSchedule": "Use the same study slot for 3 days",
+  "postSessionMoodImproved": "Your mood improved after studying",
+  "postSessionStressIncreased": "Long sessions may be increasing your stress",
+  "postSessionFeedbackLogged": "Post-session feedback captured",
+  "consistencyScoreLine": "Consistency: {score}% ({trend})",
+  "@consistencyScoreLine": {
+    "placeholders": {
+      "score": {
+        "type": "Object"
+      },
+      "trend": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionStressTitle": "Predicted Stress (Next 3 Days)",
+  "predictionPlanTitle": "Recommended Plan",
+  "predictionLevelLow": "LOW",
+  "predictionLevelMedium": "MEDIUM",
+  "predictionLevelHigh": "HIGH",
+  "predictionReasonHighStressToday": "Higher stress in recent days",
+  "predictionReasonLowConsistency": "Your study consistency is low this week",
+  "predictionReasonUpcomingWorkload": "Upcoming workload this week",
+  "predictionMainReasonTitle": "Main reason:",
+  "predictionWhyTitle": "Why this plan?",
+  "predictionReasonStressHigh": "High stress detected recently",
+  "predictionReasonLowConsistencyDetail": "Your study consistency dropped this week",
+  "predictionReasonTasksPending": "You have multiple pending tasks this week",
+  "predictionReasonDeadlinesSoon": "Deadlines are approaching soon",
+  "predictionAffectedTitle": "Affected:",
+  "predictionPlanLine": "{day} at {time} • {minutes} min {focus} session",
+  "@predictionPlanLine": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionPlanLightFocus": "light",
+  "predictionPlanFocusExecution": "focus",
+  "predictionPlanDeepExecution": "deep",
+  "predictionPlanLightReview": "light review",
+  "predictionPerformanceRisk": "Performance Risk: {level}",
+  "@predictionPerformanceRisk": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionPerformanceRiskLagging": "Performance Risk: {level} • Falling behind: {courses}",
+  "@predictionPerformanceRiskLagging": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "courses": {
+        "type": "String"
+      }
+    }
+  },
+  "moodNameAwful": "Awful",
+  "moodNameBad": "Bad",
+  "moodNameNeutral": "Neutral",
+  "moodNameGood": "Good",
+  "moodNameGreat": "Great",
+  "imFeelingMood": "I'm feeling {mood}",
+  "@imFeelingMood": {
+    "placeholders": {
+      "mood": {
+        "type": "String"
+      }
+    }
+  },
+  "saveMoodDots": "Save Mood • {mood} • Stress {stress}",
+  "@saveMoodDots": {
+    "placeholders": {
+      "mood": {
+        "type": "String"
+      },
+      "stress": {
+        "type": "String"
+      }
+    }
+  },
+  "addQuickNoteOptional": "Add a quick note (optional)"
 }

@@ -8,6 +8,9 @@ import '../models/analytics_data.dart';
 import '../repositories/analytics_repository.dart';
 import 'app_providers.dart';
 import 'study_sessions_provider.dart';
+import 'tasks_provider.dart';
+import 'deadlines_provider.dart';
+import 'mood_provider.dart';
 import 'student_profile_provider.dart';
 import 'semester_provider.dart';
 import '../models/study_session.dart';
@@ -165,6 +168,11 @@ final burnoutHistoryProvider = StateNotifierProvider<BurnoutHistoryNotifier, Lis
 
 final analyticsProvider = StateNotifierProvider<AnalyticsNotifier, AsyncValue<AnalyticsData>>(
   (ref) {
+    ref.watch(studySessionsProvider);
+    ref.watch(tasksProvider);
+    ref.watch(deadlinesProvider);
+    ref.watch(moodLogsProvider);
+
     final repository = ref.watch(analyticsRepositoryProvider);
     final supabase = ref.watch(supabaseProvider);
     final user = ref.watch(currentUserProvider);
@@ -199,10 +207,44 @@ class AnalyticsNotifier extends StateNotifier<AsyncValue<AnalyticsData>> {
 
   Future<void> loadAnalytics(String userId, {String? semesterId}) async {
     try {
-      state = const AsyncValue.loading();
+      // Preserve previous data during refresh so downstream providers (decision, prediction) don't collapse.
+      state = const AsyncValue<AnalyticsData>.loading().copyWithPrevious(state);
       final data = await repository.getAnalyticsData(userId, semesterId: semesterId);
+      final moodLogs = semesterId == null
+          ? const []
+          : await ref.read(moodRepositoryProvider).getMoodLogs(semesterId: semesterId);
+
+      final moodCount = moodLogs.length;
+      final avgMood = moodCount == 0
+          ? 0.0
+          : moodLogs
+                  .map((entry) => entry.moodLevel)
+                  .reduce((a, b) => a + b) /
+              moodCount;
+      final avgStress = moodCount == 0
+          ? 0.0
+          : moodLogs
+                  .map((entry) => entry.stressLevel)
+                  .reduce((a, b) => a + b) /
+              moodCount;
+
       if (!mounted) return;
-      state = AsyncValue.data(data);
+      state = AsyncValue.data(
+        AnalyticsData(
+          studyHoursPerCourse: data.studyHoursPerCourse,
+          gradeDistribution: data.gradeDistribution,
+          taskCompletionRate: data.taskCompletionRate,
+          completedTasks: data.completedTasks,
+          totalTasks: data.totalTasks,
+          averageGPA: data.averageGPA,
+          weeklyAverageStudyHours: data.weeklyAverageStudyHours,
+          totalECTS: data.totalECTS,
+          riskScore: data.riskScore,
+          avgMood: avgMood,
+          avgStress: avgStress,
+          moodLogCount: moodCount,
+        ),
+      );
     } catch (e, st) {
       if (!mounted) return;
       state = AsyncValue.error(e, st);
@@ -225,8 +267,41 @@ class AnalyticsNotifier extends StateNotifier<AsyncValue<AnalyticsData>> {
     final previous = state;
     try {
       final data = await repository.getAnalyticsData(userId, semesterId: semesterId);
+      final moodLogs = semesterId == null
+          ? const []
+          : await ref.read(moodRepositoryProvider).getMoodLogs(semesterId: semesterId);
+
+      final moodCount = moodLogs.length;
+      final avgMood = moodCount == 0
+          ? 0.0
+          : moodLogs
+                  .map((entry) => entry.moodLevel)
+                  .reduce((a, b) => a + b) /
+              moodCount;
+      final avgStress = moodCount == 0
+          ? 0.0
+          : moodLogs
+                  .map((entry) => entry.stressLevel)
+                  .reduce((a, b) => a + b) /
+              moodCount;
+
       if (!mounted) return;
-      state = AsyncValue.data(data);
+      state = AsyncValue.data(
+        AnalyticsData(
+          studyHoursPerCourse: data.studyHoursPerCourse,
+          gradeDistribution: data.gradeDistribution,
+          taskCompletionRate: data.taskCompletionRate,
+          completedTasks: data.completedTasks,
+          totalTasks: data.totalTasks,
+          averageGPA: data.averageGPA,
+          weeklyAverageStudyHours: data.weeklyAverageStudyHours,
+          totalECTS: data.totalECTS,
+          riskScore: data.riskScore,
+          avgMood: avgMood,
+          avgStress: avgStress,
+          moodLogCount: moodCount,
+        ),
+      );
     } catch (_) {
       if (!mounted) return;
       state = previous;
@@ -252,6 +327,9 @@ class AnalyticsNotifier extends StateNotifier<AsyncValue<AnalyticsData>> {
         weeklyAverageStudyHours: current.weeklyAverageStudyHours,
         totalECTS: current.totalECTS,
         riskScore: current.riskScore,
+          avgMood: current.avgMood,
+          avgStress: current.avgStress,
+          moodLogCount: current.moodLogCount,
       ),
     );
   }

@@ -130,6 +130,7 @@ class _EditTaskScreenState extends ConsumerState<EditTaskScreen> {
       title: _titleController.text.trim(),
       course: courseName,
       courseId: _selectedCourseId,
+      semesterId: existing.semesterId,
       deadline: _deadline,
       deadlineId: _linkedDeadlineId,
       priority: _priority,

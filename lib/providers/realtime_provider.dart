@@ -8,7 +8,6 @@ import 'app_providers.dart';
 import 'course_provider.dart';
 import 'course_results_provider.dart';
 import 'deadlines_provider.dart';
-import 'derived_invalidation.dart';
 import 'risk_provider.dart';
 import 'semester_provider.dart';
 import 'study_sessions_provider.dart';
@@ -68,7 +67,6 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
     taskDebounce = Timer(const Duration(milliseconds: 250), () {
       debugLog('Realtime: tasks changed');
       ref.invalidate(tasksProvider);
-      invalidateAnalyticsAndTrend(ref);
     });
   }
 
@@ -77,7 +75,6 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
     studyDebounce = Timer(const Duration(milliseconds: 250), () {
       debugLog('Realtime: study sessions changed');
       ref.invalidate(studySessionsProvider);
-      invalidateAnalyticsAndTrend(ref);
     });
   }
 
@@ -86,7 +83,6 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
     deadlinesDebounce = Timer(const Duration(milliseconds: 250), () {
       debugLog('Realtime: academic_deadlines changed');
       ref.invalidate(deadlinesProvider);
-      invalidateAnalyticsAndTrend(ref);
     });
   }
 
@@ -101,7 +97,6 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
             .loadForSemester(activeSemesterId, forceRefresh: true);
       }
       ref.invalidate(riskProvider);
-      invalidateAnalyticsAndTrend(ref);
     });
   }
 

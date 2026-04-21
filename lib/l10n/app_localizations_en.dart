@@ -2780,7 +2780,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get decisionTaskLoadLabel => 'Task Load';
 
   @override
-  String get decisionConfidenceLow => 'Confidence: Low';
+  String get decisionConfidenceLow =>
+      'Confidence: Low (based on recent activity)';
 
   @override
   String get startedFromAnalyticsRecommendation =>
@@ -2925,4 +2926,377 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get status => 'Status';
+
+  @override
+  String get logMoodTitle => 'Log Mood';
+
+  @override
+  String get moodAfterSessionPrompt =>
+      'How do you feel after this study session?';
+
+  @override
+  String get moodManualPrompt =>
+      'Track your current mood and stress to improve your study insights.';
+
+  @override
+  String get moodLevel => 'Mood Level';
+
+  @override
+  String get stressLevel => 'Stress Level';
+
+  @override
+  String get energyLevel => 'Energy Level';
+
+  @override
+  String get moodFactors => 'Contributing Factors';
+
+  @override
+  String get moodFactorSleep => 'Sleep';
+
+  @override
+  String get moodFactorWorkload => 'Workload';
+
+  @override
+  String get moodFactorHealth => 'Health';
+
+  @override
+  String get moodFactorMotivation => 'Motivation';
+
+  @override
+  String get moodFactorSocial => 'Social';
+
+  @override
+  String get moodFactorExams => 'Exams';
+
+  @override
+  String get saveMood => 'Save Mood';
+
+  @override
+  String get moodSaved => 'Mood log saved.';
+
+  @override
+  String get moodSaveFailed => 'Could not save mood log.';
+
+  @override
+  String get moodAndStressTitle => 'Mood & Stress';
+
+  @override
+  String get moodAverageLabel => 'Average Mood';
+
+  @override
+  String get stressAverageLabel => 'Average Stress';
+
+  @override
+  String get moodNoData => 'No data';
+
+  @override
+  String get moodSettingsTitle => 'Mood & Stress Settings';
+
+  @override
+  String get enableMoodTracking => 'Enable Mood Tracking';
+
+  @override
+  String get enableMoodReminders => 'Enable Reminders';
+
+  @override
+  String get reminderTimeLabel => 'Reminder Time';
+
+  @override
+  String get reminderTypeLabel => 'Reminder Type';
+
+  @override
+  String get reminderTypeDaily => 'Daily';
+
+  @override
+  String get reminderTypeAfterStudy => 'After Study';
+
+  @override
+  String get reminderTypeBoth => 'Both';
+
+  @override
+  String get moodHistoryTitle => 'Mood History';
+
+  @override
+  String get moodDailyPromptTitle => 'How are you feeling today?';
+
+  @override
+  String get moodDailyPromptSubtitle =>
+      'Track mood and stress to improve your study decisions.';
+
+  @override
+  String get moodReminderTitle => 'Mood check-in';
+
+  @override
+  String get moodReminderBody => 'Take a minute to log your mood and stress.';
+
+  @override
+  String get moodLast7Days => 'Mood over last 7 days';
+
+  @override
+  String get decisionSmartInsights => 'Smart Insights';
+
+  @override
+  String get decision_high_stress => 'High stress detected';
+
+  @override
+  String get decision_short_sessions => 'Use shorter sessions today';
+
+  @override
+  String get decision_deep_work => 'You are in a strong state for deep work';
+
+  @override
+  String get decision_burnout_warning => 'Burnout risk is increasing';
+
+  @override
+  String get decision_stress_rising => 'Your stress is rising this week';
+
+  @override
+  String get decision_mood_declining => 'Your mood is declining';
+
+  @override
+  String get decision_deadline_pressure =>
+      'High pressure detected. Break tasks down';
+
+  @override
+  String get decision_low_activity_high_stress =>
+      'Low activity but high stress detected';
+
+  @override
+  String get decision_light_tasks_only => 'Focus on light tasks only today';
+
+  @override
+  String decision_main_factor(String factor) {
+    return 'Main stress source: $factor';
+  }
+
+  @override
+  String decision_worst_day(String day) {
+    return 'You feel lowest on $day';
+  }
+
+  @override
+  String decision_recommended_session(Object minutes) {
+    return 'Recommended session: $minutes min';
+  }
+
+  @override
+  String get decision_morning_planning => 'Morning focus: plan your key tasks';
+
+  @override
+  String get decision_afternoon_execution =>
+      'Afternoon focus: execute your top task';
+
+  @override
+  String get decision_night_light_review =>
+      'Night focus: keep it light and review';
+
+  @override
+  String get decisionActionShortSessions => 'Use shorter sessions (25 min)';
+
+  @override
+  String get decisionActionBreakDown => 'Break work into smaller tasks now';
+
+  @override
+  String get decisionActionMonitorWeekly =>
+      'Monitor this pattern through the week';
+
+  @override
+  String get decisionActionPlanning => 'Set your top 3 tasks for today';
+
+  @override
+  String get decisionActionExecution => 'Run one focused execution block now';
+
+  @override
+  String get decisionActionLightReview =>
+      'Do light review, avoid heavy workload';
+
+  @override
+  String startRecommendedSession(Object minutes) {
+    return 'Start Recommended Session ($minutes min)';
+  }
+
+  @override
+  String get smartInsightUpdated => 'Smart Insight Updated';
+
+  @override
+  String get moodSavedPositive1 => 'Saved. Great consistency.';
+
+  @override
+  String get moodSavedPositive2 => 'Saved. Keep going.';
+
+  @override
+  String get moodSavedPositive3 => 'Saved. Nice progress.';
+
+  @override
+  String get moodSavedPositive4 => 'Saved. You are doing well.';
+
+  @override
+  String get todaysMoodTitle => 'Today\'s Mood';
+
+  @override
+  String stressOutOfTen(Object value) {
+    return 'Stress $value/10';
+  }
+
+  @override
+  String get takeItSlowerTodayTitle => 'Take it slower today';
+
+  @override
+  String get takeItSlowerTodayBody =>
+      'High stress detected. Use shorter sessions and protect breaks.';
+
+  @override
+  String get strongStateTitle => 'You\'re in a strong state';
+
+  @override
+  String get strongStateBody => 'Push deeper work while your mood is high.';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get focusRecommendationPrimary => 'Focus Recommendation (Primary)';
+
+  @override
+  String get decisionConfidenceHigh =>
+      'Confidence: High (based on recent activity)';
+
+  @override
+  String get decisionConfidenceMedium =>
+      'Confidence: Medium (based on recent activity)';
+
+  @override
+  String get decisionBurnoutDurationCap =>
+      'High stress detected.\nShorter sessions recommended (25 min).';
+
+  @override
+  String get decisionFixedSchedule =>
+      'Build a fixed schedule to improve consistency';
+
+  @override
+  String get decisionActionFixedSchedule =>
+      'Use the same study slot for 3 days';
+
+  @override
+  String get postSessionMoodImproved => 'Your mood improved after studying';
+
+  @override
+  String get postSessionStressIncreased =>
+      'Long sessions may be increasing your stress';
+
+  @override
+  String get postSessionFeedbackLogged => 'Post-session feedback captured';
+
+  @override
+  String consistencyScoreLine(Object score, String trend) {
+    return 'Consistency: $score% ($trend)';
+  }
+
+  @override
+  String get predictionStressTitle => 'Predicted Stress (Next 3 Days)';
+
+  @override
+  String get predictionPlanTitle => 'Recommended Plan';
+
+  @override
+  String get predictionLevelLow => 'LOW';
+
+  @override
+  String get predictionLevelMedium => 'MEDIUM';
+
+  @override
+  String get predictionLevelHigh => 'HIGH';
+
+  @override
+  String get predictionReasonHighStressToday => 'Higher stress in recent days';
+
+  @override
+  String get predictionReasonLowConsistency =>
+      'Your study consistency is low this week';
+
+  @override
+  String get predictionReasonUpcomingWorkload => 'Upcoming workload this week';
+
+  @override
+  String get predictionMainReasonTitle => 'Main reason:';
+
+  @override
+  String get predictionWhyTitle => 'Why this plan?';
+
+  @override
+  String get predictionReasonStressHigh => 'High stress detected recently';
+
+  @override
+  String get predictionReasonLowConsistencyDetail =>
+      'Your study consistency dropped this week';
+
+  @override
+  String get predictionReasonTasksPending =>
+      'You have multiple pending tasks this week';
+
+  @override
+  String get predictionReasonDeadlinesSoon => 'Deadlines are approaching soon';
+
+  @override
+  String get predictionAffectedTitle => 'Affected:';
+
+  @override
+  String predictionPlanLine(
+    String day,
+    String time,
+    int minutes,
+    String focus,
+  ) {
+    return '$day at $time • $minutes min $focus session';
+  }
+
+  @override
+  String get predictionPlanLightFocus => 'light';
+
+  @override
+  String get predictionPlanFocusExecution => 'focus';
+
+  @override
+  String get predictionPlanDeepExecution => 'deep';
+
+  @override
+  String get predictionPlanLightReview => 'light review';
+
+  @override
+  String predictionPerformanceRisk(String level) {
+    return 'Performance Risk: $level';
+  }
+
+  @override
+  String predictionPerformanceRiskLagging(String level, String courses) {
+    return 'Performance Risk: $level • Falling behind: $courses';
+  }
+
+  @override
+  String get moodNameAwful => 'Awful';
+
+  @override
+  String get moodNameBad => 'Bad';
+
+  @override
+  String get moodNameNeutral => 'Neutral';
+
+  @override
+  String get moodNameGood => 'Good';
+
+  @override
+  String get moodNameGreat => 'Great';
+
+  @override
+  String imFeelingMood(String mood) {
+    return 'I\'m feeling $mood';
+  }
+
+  @override
+  String saveMoodDots(String mood, String stress) {
+    return 'Save Mood • $mood • Stress $stress';
+  }
+
+  @override
+  String get addQuickNoteOptional => 'Add a quick note (optional)';
 }

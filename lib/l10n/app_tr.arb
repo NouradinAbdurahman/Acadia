@@ -1637,5 +1637,210 @@
     "placeholders": {
       "ects": { "type": "int" }
     }
-  }
+  },
+  "logMoodTitle": "Ruh Halini Kaydet",
+  "moodAfterSessionPrompt": "Bu çalışma oturumundan sonra nasıl hissediyorsun?",
+  "moodManualPrompt": "Çalışma içgörülerini geliştirmek için ruh hali ve stresini takip et.",
+  "moodLevel": "Ruh Hali Seviyesi",
+  "stressLevel": "Stres Seviyesi",
+  "energyLevel": "Enerji Seviyesi",
+  "moodFactors": "Etkileyen Faktörler",
+  "moodFactorSleep": "Uyku",
+  "moodFactorWorkload": "İş Yükü",
+  "moodFactorHealth": "Sağlık",
+  "moodFactorMotivation": "Motivasyon",
+  "moodFactorSocial": "Sosyal",
+  "moodFactorExams": "Sınavlar",
+  "saveMood": "Ruh Halini Kaydet",
+  "moodSaved": "Ruh hali kaydı oluşturuldu.",
+  "moodSaveFailed": "Ruh hali kaydı oluşturulamadı.",
+  "moodAndStressTitle": "Ruh Hali ve Stres",
+  "moodAverageLabel": "Ortalama Ruh Hali",
+  "stressAverageLabel": "Ortalama Stres",
+  "moodNoData": "Veri yok",
+  "moodSettingsTitle": "Ruh Hali ve Stres Ayarları",
+  "enableMoodTracking": "Ruh Hali Takibini Etkinleştir",
+  "enableMoodReminders": "Hatırlatıcıları Etkinleştir",
+  "reminderTimeLabel": "Hatırlatıcı Saati",
+  "reminderTypeLabel": "Hatırlatıcı Türü",
+  "reminderTypeDaily": "Günlük",
+  "reminderTypeAfterStudy": "Çalışma Sonrası",
+  "reminderTypeBoth": "İkisi",
+  "moodHistoryTitle": "Ruh Hali Geçmişi",
+  "moodDailyPromptTitle": "Bugün nasıl hissediyorsun?",
+  "moodDailyPromptSubtitle": "Çalışma kararlarını iyileştirmek için ruh halini ve stresini kaydet.",
+  "moodReminderTitle": "Ruh hali kontrolü",
+  "moodReminderBody": "Ruh halini ve stresini kaydetmek için bir dakikanı ayır.",
+  "moodLast7Days": "Son 7 gündeki ruh hali",
+  "decisionSmartInsights": "Akıllı İçgörüler",
+  "decision_high_stress": "Yüksek stres tespit edildi",
+  "decision_short_sessions": "Bugün daha kısa çalışma yap",
+  "decision_deep_work": "Derin çalışma için iyi durumdasın",
+  "decision_burnout_warning": "Tükenmişlik riski artıyor",
+  "decision_stress_rising": "Bu hafta stresin artıyor",
+  "decision_mood_declining": "Ruh halin düşüyor",
+  "decision_deadline_pressure": "Yüksek baskı. Görevleri böl",
+  "decision_low_activity_high_stress": "Düşük aktivite ama yüksek stres",
+  "decision_light_tasks_only": "Bugün sadece hafif görevlere odaklan",
+  "decision_main_factor": "Ana stres kaynağı: {factor}",
+  "@decision_main_factor": {
+    "placeholders": {
+      "factor": {
+        "type": "String"
+      }
+    }
+  },
+  "decision_worst_day": "{day} günü daha düşük hissediyorsun",
+  "@decision_worst_day": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "decision_recommended_session": "Önerilen çalışma: {minutes} dk",
+  "@decision_recommended_session": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "decision_morning_planning": "Sabah odağı: ana görevlerini planla",
+  "decision_afternoon_execution": "Öğleden sonra odağı: en önemli görevi uygula",
+  "decision_night_light_review": "Gece odağı: hafif tekrar yap",
+  "decisionActionShortSessions": "Daha kısa oturumlar kullan (25 dk)",
+  "decisionActionBreakDown": "Çalışmayı şimdi küçük görevlere böl",
+  "decisionActionMonitorWeekly": "Bu paterni hafta boyunca takip et",
+  "decisionActionPlanning": "Bugün için en önemli 3 görevi belirle",
+  "decisionActionExecution": "Şimdi tek bir odaklı uygulama bloğu yap",
+  "decisionActionLightReview": "Hafif tekrar yap, ağır yükten kaçın",
+  "startRecommendedSession": "Önerilen Oturumu Başlat ({minutes} dk)",
+  "@startRecommendedSession": {
+    "placeholders": {
+      "minutes": {
+        "type": "Object"
+      }
+    }
+  },
+  "smartInsightUpdated": "Akıllı İçgörü Güncellendi",
+  "moodSavedPositive1": "Kaydedildi. Harika tutarlılık.",
+  "moodSavedPositive2": "Kaydedildi. Devam et.",
+  "moodSavedPositive3": "Kaydedildi. Güzel ilerleme.",
+  "moodSavedPositive4": "Kaydedildi. İyi gidiyorsun.",
+  "todaysMoodTitle": "Bugünkü Ruh Hali",
+  "stressOutOfTen": "Stres {value}/10",
+  "@stressOutOfTen": {
+    "placeholders": {
+      "value": {
+        "type": "Object"
+      }
+    }
+  },
+  "takeItSlowerTodayTitle": "Bugün biraz yavaşla",
+  "takeItSlowerTodayBody": "Yüksek stres tespit edildi. Daha kısa oturumlar yap ve molaları koru.",
+  "strongStateTitle": "Güçlü bir durumdasın",
+  "strongStateBody": "Ruh halin yüksekken daha derin çalış.",
+  "view": "Gör",
+  "focusRecommendationPrimary": "Odak Önerisi (Birincil)",
+  "decisionConfidenceHigh": "Güven: Yüksek (son etkinliğe göre)",
+  "decisionConfidenceMedium": "Güven: Orta (son etkinliğe göre)",
+  "decisionConfidenceLow": "Güven: Düşük (son etkinliğe göre)",
+  "decisionBurnoutDurationCap": "Yüksek stres algılandı.\nDaha kısa oturumlar önerilir (25 dk).",
+  "decisionFixedSchedule": "Tutarlılığı artırmak için sabit program oluştur",
+  "decisionActionFixedSchedule": "3 gün aynı çalışma saatini kullan",
+  "postSessionMoodImproved": "Çalışma sonrası ruh halin iyileşti",
+  "postSessionStressIncreased": "Uzun oturumlar stresini artırıyor olabilir",
+  "postSessionFeedbackLogged": "Oturum sonrası geri bildirim kaydedildi",
+  "consistencyScoreLine": "Tutarlılık: %{score} ({trend})",
+  "@consistencyScoreLine": {
+    "placeholders": {
+      "score": {
+        "type": "Object"
+      },
+      "trend": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionStressTitle": "Tahmini Stres (Sonraki 3 Gün)",
+  "predictionPlanTitle": "Önerilen Plan",
+  "predictionLevelLow": "DÜŞÜK",
+  "predictionLevelMedium": "ORTA",
+  "predictionLevelHigh": "YÜKSEK",
+  "predictionReasonHighStressToday": "Son günlerde stres daha yüksek",
+  "predictionReasonLowConsistency": "Bu hafta çalışma düzenin düşük",
+  "predictionReasonUpcomingWorkload": "Bu hafta iş yükü artıyor",
+  "predictionMainReasonTitle": "Ana neden:",
+  "predictionWhyTitle": "Bu plan neden önerildi?",
+  "predictionReasonStressHigh": "Son zamanlarda stres yüksek",
+  "predictionReasonLowConsistencyDetail": "Bu hafta çalışma düzenin düştü",
+  "predictionReasonTasksPending": "Bu hafta birden fazla görevin bekliyor",
+  "predictionReasonDeadlinesSoon": "Yaklaşan son tarihler baskı oluşturuyor",
+  "predictionAffectedTitle": "Etkilenen:",
+  "predictionPlanLine": "{day} saat {time} • {minutes} dk {focus} oturumu",
+  "@predictionPlanLine": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "focus": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionPlanLightFocus": "hafif",
+  "predictionPlanFocusExecution": "odak",
+  "predictionPlanDeepExecution": "derin",
+  "predictionPlanLightReview": "hafif tekrar",
+  "predictionPerformanceRisk": "Performans Riski: {level}",
+  "@predictionPerformanceRisk": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionPerformanceRiskLagging": "Performans Riski: {level} • Geride olunan: {courses}",
+  "@predictionPerformanceRiskLagging": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      },
+      "courses": {
+        "type": "String"
+      }
+    }
+  },
+  "moodNameAwful": "Berbat",
+  "moodNameBad": "Kötü",
+  "moodNameNeutral": "Nötr",
+  "moodNameGood": "İyi",
+  "moodNameGreat": "Harika",
+  "imFeelingMood": "Bugün {mood} hissediyorum",
+  "@imFeelingMood": {
+    "placeholders": {
+      "mood": {
+        "type": "String"
+      }
+    }
+  },
+  "saveMoodDots": "Kaydet • {mood} • Stres {stress}",
+  "@saveMoodDots": {
+    "placeholders": {
+      "mood": {
+        "type": "String"
+      },
+      "stress": {
+        "type": "String"
+      }
+    }
+  },
+  "addQuickNoteOptional": "Kısa bir not ekle (isteğe bağlı)"
 }

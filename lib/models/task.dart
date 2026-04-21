@@ -4,6 +4,7 @@ class Task {
   final String title;
   final String? course;
   final String? courseId;
+  final String? semesterId;
   final DateTime? deadline;
 
   /// Optional link to an [academic_deadlines] row (work target).
@@ -22,6 +23,7 @@ class Task {
     required this.title,
     this.course,
     this.courseId,
+    this.semesterId,
     this.deadline,
     this.deadlineId,
     this.priority,
@@ -47,13 +49,14 @@ class Task {
       userId: json['user_id'] ?? '',
       title: json['title'] ?? 'Untitled Task',
       course: json['course'],
+        courseId: json['course_id']?.toString(),
+        semesterId: json['semester_id']?.toString(),
       deadline: json['deadline'] != null
           ? DateTime.tryParse(json['deadline'])
           : null,
       priority: json['priority'],
       estimatedTime: json['estimated_time'],
       status: standardizedStatus,
-      courseId: json['course_id']?.toString(),
       deadlineId: json['deadline_id']?.toString(),
       notes: json['notes']?.toString(),
       createdAt: json['created_at'] != null
@@ -77,6 +80,7 @@ class Task {
     String? title,
     String? course,
     String? courseId,
+    String? semesterId,
     DateTime? deadline,
     String? deadlineId,
     bool clearDeadlineId = false,
@@ -94,6 +98,7 @@ class Task {
       title: title ?? this.title,
       course: course ?? this.course,
       courseId: courseId ?? this.courseId,
+      semesterId: semesterId ?? this.semesterId,
       deadline: deadline ?? this.deadline,
       deadlineId: clearDeadlineId ? null : (deadlineId ?? this.deadlineId),
       priority: priority ?? this.priority,
@@ -112,11 +117,12 @@ class Task {
       'user_id': userId,
       'title': title,
       if (course != null) 'course': course,
+      if (courseId != null) 'course_id': courseId,
+      if (semesterId != null) 'semester_id': semesterId,
       if (deadline != null) 'deadline': deadline?.toIso8601String(),
       if (deadlineId != null) 'deadline_id': deadlineId,
       if (priority != null) 'priority': priority,
       if (estimatedTime != null) 'estimated_time': estimatedTime,
-      if (courseId != null) 'course_id': courseId,
       if (notes != null) 'notes': notes,
       'status': status,
       'created_at': createdAt.toIso8601String(),

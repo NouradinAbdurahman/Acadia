@@ -16,6 +16,11 @@ import 'deadlines_provider.dart';
 import 'study_sessions_provider.dart';
 import 'tasks_provider.dart';
 import 'semester_provider.dart';
+import 'analytics_provider.dart';
+import 'mood_provider.dart';
+import 'decision_provider.dart';
+
+final _lastRiskState = StateProvider<RiskState?>((ref) => null);
 
 final riskProvider = FutureProvider<RiskState>((ref) async {
   // 1. Get user from currentAppUserProvider (ensuring it's fully synchronized with profile)
@@ -42,6 +47,17 @@ final riskProvider = FutureProvider<RiskState>((ref) async {
       trendDelta: 0,
     );
   }
+
+  final analyticsAsync = ref.watch(analyticsProvider);
+  
+  // Guard against recomputing while dependencies are loading during a refresh.
+  if (analyticsAsync.isLoading) {
+    final cached = ref.read(_lastRiskState);
+    if (cached != null) return cached;
+  }
+
+  final moodLogs = ref.watch(moodLogsProvider).valueOrNull ?? const [];
+  final decision = ref.watch(decisionProvider);
 
   // Recompute when local lists change (mutations, pull-to-refresh, debounced realtime).
   ref.watch(tasksProvider);
@@ -163,16 +179,52 @@ final riskProvider = FutureProvider<RiskState>((ref) async {
   final currentResult = RiskCalculator.calculate(currentInput);
   final previousResult = RiskCalculator.calculate(previousInput);
 
+  final moodCount = moodLogs.length;
+  final avgStress = moodCount == 0
+      ? 0.0
+      : moodLogs.map((entry) => entry.stressLevel).reduce((a, b) => a + b) /
+          moodCount;
+
+  var extraMoodRisk = 0.0;
+  if (avgStress > 7) {
+    extraMoodRisk += 10;
+  }
+  if (decision.hasDeadlinePressure) {
+    extraMoodRisk += 10;
+  }
+
+  final adjustedCurrentScore =
+      (currentResult.totalScore + extraMoodRisk).clamp(0.0, 100.0);
+  final adjustedCurrentResult = RiskResult(
+    overdueContribution: currentResult.overdueContribution,
+    upcomingContribution: currentResult.upcomingContribution,
+    ectsContribution: currentResult.ectsContribution,
+    studyContribution: currentResult.studyContribution,
+    totalScore: adjustedCurrentScore,
+    riskLevel: _riskLevelFromScore(adjustedCurrentScore),
+  );
+
   final trendDelta = user.createdAt.isAfter(sevenDaysAgo)
       ? null
-      : (currentResult.totalScore - previousResult.totalScore).toInt();
+      : (adjustedCurrentResult.totalScore - previousResult.totalScore).toInt();
 
-  return RiskState(
+  final newState = RiskState(
     input: currentInput,
-    result: currentResult,
+    result: adjustedCurrentResult,
     trendDelta: trendDelta,
   );
+
+  // Cache for use during next reload.
+  Future.microtask(() => ref.read(_lastRiskState.notifier).state = newState);
+  
+  return newState;
 });
+
+String _riskLevelFromScore(double score) {
+  if (score <= 30) return 'low';
+  if (score <= 60) return 'medium';
+  return 'high';
+}
 
 double _gradeAdjustment(List<CourseResult> results) {
   double score = 0;

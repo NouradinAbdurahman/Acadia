@@ -14,9 +14,18 @@ class AnalyticsService {
 
     var query = supabase
         .from('study_sessions')
-      .select('*, courses!inner(semester_id)')
+        .select('''
+          id,
+          duration_minutes,
+          course_id,
+          courses:course_id (
+            id,
+            course_name,
+            color
+          )
+        ''')
         .eq('user_id', userId)
-      .eq('courses.semester_id', semesterId);
+        .eq('semester_id', semesterId);
     
     if (startDate != null) {
       query = query.gte('created_at', startDate.toIso8601String());
@@ -34,9 +43,9 @@ class AnalyticsService {
 
     return await supabase
         .from('tasks')
-      .select('*, courses!inner(semester_id)')
+        .select()
         .eq('user_id', userId)
-      .eq('courses.semester_id', semesterId);
+        .eq('semester_id', semesterId);
   }
 
   Future<List<Map<String, dynamic>>> getCourses({

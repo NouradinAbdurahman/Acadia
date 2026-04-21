@@ -6,12 +6,12 @@ import 'course_provider.dart';
 import 'course_results_provider.dart';
 import 'dashboard_provider.dart';
 import 'deadlines_provider.dart';
-import 'derived_invalidation.dart' show invalidateTrendCharts;
 import 'risk_provider.dart';
 import 'semester_provider.dart';
 import 'student_profile_provider.dart';
 import 'study_sessions_provider.dart';
 import 'tasks_provider.dart';
+import 'trend_provider.dart';
 
 final globalRefreshProvider = Provider<Future<void> Function()>((ref) {
   return () async {
@@ -38,7 +38,8 @@ final globalRefreshProvider = Provider<Future<void> Function()>((ref) {
         .read(analyticsProvider.notifier)
         .loadAnalytics(user.id, semesterId: semesterId);
 
-    invalidateTrendCharts(ref);
+    final days = ref.read(trendDaysProvider);
+    ref.invalidate(trendProvider(days));
     await ref.read(riskProvider.future);
 
     ref.invalidate(dashboardProvider);

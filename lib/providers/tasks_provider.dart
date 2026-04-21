@@ -5,7 +5,6 @@ import '../domain/tasks/task_deadline_validation.dart';
 import '../models/task.dart';
 import 'app_providers.dart';
 import 'deadlines_provider.dart';
-import 'derived_invalidation.dart';
 import 'semester_provider.dart';
 
 
@@ -115,7 +114,8 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
 
   Future<void> loadTasks({required String userId, String? semesterId}) async {
     try {
-      state = const AsyncValue.loading();
+      // Preserve previous data during refresh so UI doesn't blank/flicker.
+      state = const AsyncValue<List<Task>>.loading().copyWithPrevious(state);
       final list = await taskRepository.getTasks(userId: userId, semesterId: semesterId) as List<Task>;
       if (!mounted) return;
       state = AsyncValue.data(list);
@@ -148,6 +148,11 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) return;
 
+    final semesterId = _ref.read(activeSemesterProvider);
+    if (semesterId == null) {
+      throw Exception('No active semester set. Cannot create task.');
+    }
+
 
     final deadlinesList = _ref.read(deadlinesProvider).valueOrNull ?? const [];
     final safeDeadlineId = validatedDeadlineIdForTask(
@@ -163,6 +168,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       title: title,
       course: course?.isEmpty == true ? null : course,
       courseId: courseId,
+      semesterId: semesterId,
       deadline: deadline,
       deadlineId: safeDeadlineId,
       priority: priority,
@@ -177,7 +183,6 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     try {
       final created = await taskRepository.createTask(newTask);
       state = state.whenData((List<Task> tasks) => [created, ...tasks]);
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -207,7 +212,6 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
             .map<Task>((t) => t.id == updated.id ? updated : t)
             .toList();
       });
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -237,7 +241,6 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       state = state.whenData((List<Task> tasks) {
         return tasks.where((t) => t.id != taskId).toList();
       });
-      invalidateAnalyticsAndTrend(_ref);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);

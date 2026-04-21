@@ -2766,7 +2766,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get decisionTaskLoadLabel => 'Görev Yükü';
 
   @override
-  String get decisionConfidenceLow => 'Tahmin doğruluğu: Düşük';
+  String get decisionConfidenceLow => 'Güven: Düşük (son etkinliğe göre)';
 
   @override
   String get startedFromAnalyticsRecommendation =>
@@ -2909,4 +2909,376 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get status => 'Durum';
+
+  @override
+  String get logMoodTitle => 'Ruh Halini Kaydet';
+
+  @override
+  String get moodAfterSessionPrompt =>
+      'Bu çalışma oturumundan sonra nasıl hissediyorsun?';
+
+  @override
+  String get moodManualPrompt =>
+      'Çalışma içgörülerini geliştirmek için ruh hali ve stresini takip et.';
+
+  @override
+  String get moodLevel => 'Ruh Hali Seviyesi';
+
+  @override
+  String get stressLevel => 'Stres Seviyesi';
+
+  @override
+  String get energyLevel => 'Enerji Seviyesi';
+
+  @override
+  String get moodFactors => 'Etkileyen Faktörler';
+
+  @override
+  String get moodFactorSleep => 'Uyku';
+
+  @override
+  String get moodFactorWorkload => 'İş Yükü';
+
+  @override
+  String get moodFactorHealth => 'Sağlık';
+
+  @override
+  String get moodFactorMotivation => 'Motivasyon';
+
+  @override
+  String get moodFactorSocial => 'Sosyal';
+
+  @override
+  String get moodFactorExams => 'Sınavlar';
+
+  @override
+  String get saveMood => 'Ruh Halini Kaydet';
+
+  @override
+  String get moodSaved => 'Ruh hali kaydı oluşturuldu.';
+
+  @override
+  String get moodSaveFailed => 'Ruh hali kaydı oluşturulamadı.';
+
+  @override
+  String get moodAndStressTitle => 'Ruh Hali ve Stres';
+
+  @override
+  String get moodAverageLabel => 'Ortalama Ruh Hali';
+
+  @override
+  String get stressAverageLabel => 'Ortalama Stres';
+
+  @override
+  String get moodNoData => 'Veri yok';
+
+  @override
+  String get moodSettingsTitle => 'Ruh Hali ve Stres Ayarları';
+
+  @override
+  String get enableMoodTracking => 'Ruh Hali Takibini Etkinleştir';
+
+  @override
+  String get enableMoodReminders => 'Hatırlatıcıları Etkinleştir';
+
+  @override
+  String get reminderTimeLabel => 'Hatırlatıcı Saati';
+
+  @override
+  String get reminderTypeLabel => 'Hatırlatıcı Türü';
+
+  @override
+  String get reminderTypeDaily => 'Günlük';
+
+  @override
+  String get reminderTypeAfterStudy => 'Çalışma Sonrası';
+
+  @override
+  String get reminderTypeBoth => 'İkisi';
+
+  @override
+  String get moodHistoryTitle => 'Ruh Hali Geçmişi';
+
+  @override
+  String get moodDailyPromptTitle => 'Bugün nasıl hissediyorsun?';
+
+  @override
+  String get moodDailyPromptSubtitle =>
+      'Çalışma kararlarını iyileştirmek için ruh halini ve stresini kaydet.';
+
+  @override
+  String get moodReminderTitle => 'Ruh hali kontrolü';
+
+  @override
+  String get moodReminderBody =>
+      'Ruh halini ve stresini kaydetmek için bir dakikanı ayır.';
+
+  @override
+  String get moodLast7Days => 'Son 7 gündeki ruh hali';
+
+  @override
+  String get decisionSmartInsights => 'Akıllı İçgörüler';
+
+  @override
+  String get decision_high_stress => 'Yüksek stres tespit edildi';
+
+  @override
+  String get decision_short_sessions => 'Bugün daha kısa çalışma yap';
+
+  @override
+  String get decision_deep_work => 'Derin çalışma için iyi durumdasın';
+
+  @override
+  String get decision_burnout_warning => 'Tükenmişlik riski artıyor';
+
+  @override
+  String get decision_stress_rising => 'Bu hafta stresin artıyor';
+
+  @override
+  String get decision_mood_declining => 'Ruh halin düşüyor';
+
+  @override
+  String get decision_deadline_pressure => 'Yüksek baskı. Görevleri böl';
+
+  @override
+  String get decision_low_activity_high_stress =>
+      'Düşük aktivite ama yüksek stres';
+
+  @override
+  String get decision_light_tasks_only =>
+      'Bugün sadece hafif görevlere odaklan';
+
+  @override
+  String decision_main_factor(String factor) {
+    return 'Ana stres kaynağı: $factor';
+  }
+
+  @override
+  String decision_worst_day(String day) {
+    return '$day günü daha düşük hissediyorsun';
+  }
+
+  @override
+  String decision_recommended_session(Object minutes) {
+    return 'Önerilen çalışma: $minutes dk';
+  }
+
+  @override
+  String get decision_morning_planning => 'Sabah odağı: ana görevlerini planla';
+
+  @override
+  String get decision_afternoon_execution =>
+      'Öğleden sonra odağı: en önemli görevi uygula';
+
+  @override
+  String get decision_night_light_review => 'Gece odağı: hafif tekrar yap';
+
+  @override
+  String get decisionActionShortSessions =>
+      'Daha kısa oturumlar kullan (25 dk)';
+
+  @override
+  String get decisionActionBreakDown => 'Çalışmayı şimdi küçük görevlere böl';
+
+  @override
+  String get decisionActionMonitorWeekly => 'Bu paterni hafta boyunca takip et';
+
+  @override
+  String get decisionActionPlanning => 'Bugün için en önemli 3 görevi belirle';
+
+  @override
+  String get decisionActionExecution =>
+      'Şimdi tek bir odaklı uygulama bloğu yap';
+
+  @override
+  String get decisionActionLightReview => 'Hafif tekrar yap, ağır yükten kaçın';
+
+  @override
+  String startRecommendedSession(Object minutes) {
+    return 'Önerilen Oturumu Başlat ($minutes dk)';
+  }
+
+  @override
+  String get smartInsightUpdated => 'Akıllı İçgörü Güncellendi';
+
+  @override
+  String get moodSavedPositive1 => 'Kaydedildi. Harika tutarlılık.';
+
+  @override
+  String get moodSavedPositive2 => 'Kaydedildi. Devam et.';
+
+  @override
+  String get moodSavedPositive3 => 'Kaydedildi. Güzel ilerleme.';
+
+  @override
+  String get moodSavedPositive4 => 'Kaydedildi. İyi gidiyorsun.';
+
+  @override
+  String get todaysMoodTitle => 'Bugünkü Ruh Hali';
+
+  @override
+  String stressOutOfTen(Object value) {
+    return 'Stres $value/10';
+  }
+
+  @override
+  String get takeItSlowerTodayTitle => 'Bugün biraz yavaşla';
+
+  @override
+  String get takeItSlowerTodayBody =>
+      'Yüksek stres tespit edildi. Daha kısa oturumlar yap ve molaları koru.';
+
+  @override
+  String get strongStateTitle => 'Güçlü bir durumdasın';
+
+  @override
+  String get strongStateBody => 'Ruh halin yüksekken daha derin çalış.';
+
+  @override
+  String get view => 'Gör';
+
+  @override
+  String get focusRecommendationPrimary => 'Odak Önerisi (Birincil)';
+
+  @override
+  String get decisionConfidenceHigh => 'Güven: Yüksek (son etkinliğe göre)';
+
+  @override
+  String get decisionConfidenceMedium => 'Güven: Orta (son etkinliğe göre)';
+
+  @override
+  String get decisionBurnoutDurationCap =>
+      'Yüksek stres algılandı.\nDaha kısa oturumlar önerilir (25 dk).';
+
+  @override
+  String get decisionFixedSchedule =>
+      'Tutarlılığı artırmak için sabit program oluştur';
+
+  @override
+  String get decisionActionFixedSchedule => '3 gün aynı çalışma saatini kullan';
+
+  @override
+  String get postSessionMoodImproved => 'Çalışma sonrası ruh halin iyileşti';
+
+  @override
+  String get postSessionStressIncreased =>
+      'Uzun oturumlar stresini artırıyor olabilir';
+
+  @override
+  String get postSessionFeedbackLogged =>
+      'Oturum sonrası geri bildirim kaydedildi';
+
+  @override
+  String consistencyScoreLine(Object score, String trend) {
+    return 'Tutarlılık: %$score ($trend)';
+  }
+
+  @override
+  String get predictionStressTitle => 'Tahmini Stres (Sonraki 3 Gün)';
+
+  @override
+  String get predictionPlanTitle => 'Önerilen Plan';
+
+  @override
+  String get predictionLevelLow => 'DÜŞÜK';
+
+  @override
+  String get predictionLevelMedium => 'ORTA';
+
+  @override
+  String get predictionLevelHigh => 'YÜKSEK';
+
+  @override
+  String get predictionReasonHighStressToday =>
+      'Son günlerde stres daha yüksek';
+
+  @override
+  String get predictionReasonLowConsistency => 'Bu hafta çalışma düzenin düşük';
+
+  @override
+  String get predictionReasonUpcomingWorkload => 'Bu hafta iş yükü artıyor';
+
+  @override
+  String get predictionMainReasonTitle => 'Ana neden:';
+
+  @override
+  String get predictionWhyTitle => 'Bu plan neden önerildi?';
+
+  @override
+  String get predictionReasonStressHigh => 'Son zamanlarda stres yüksek';
+
+  @override
+  String get predictionReasonLowConsistencyDetail =>
+      'Bu hafta çalışma düzenin düştü';
+
+  @override
+  String get predictionReasonTasksPending =>
+      'Bu hafta birden fazla görevin bekliyor';
+
+  @override
+  String get predictionReasonDeadlinesSoon =>
+      'Yaklaşan son tarihler baskı oluşturuyor';
+
+  @override
+  String get predictionAffectedTitle => 'Etkilenen:';
+
+  @override
+  String predictionPlanLine(
+    String day,
+    String time,
+    int minutes,
+    String focus,
+  ) {
+    return '$day saat $time • $minutes dk $focus oturumu';
+  }
+
+  @override
+  String get predictionPlanLightFocus => 'hafif';
+
+  @override
+  String get predictionPlanFocusExecution => 'odak';
+
+  @override
+  String get predictionPlanDeepExecution => 'derin';
+
+  @override
+  String get predictionPlanLightReview => 'hafif tekrar';
+
+  @override
+  String predictionPerformanceRisk(String level) {
+    return 'Performans Riski: $level';
+  }
+
+  @override
+  String predictionPerformanceRiskLagging(String level, String courses) {
+    return 'Performans Riski: $level • Geride olunan: $courses';
+  }
+
+  @override
+  String get moodNameAwful => 'Berbat';
+
+  @override
+  String get moodNameBad => 'Kötü';
+
+  @override
+  String get moodNameNeutral => 'Nötr';
+
+  @override
+  String get moodNameGood => 'İyi';
+
+  @override
+  String get moodNameGreat => 'Harika';
+
+  @override
+  String imFeelingMood(String mood) {
+    return 'Bugün $mood hissediyorum';
+  }
+
+  @override
+  String saveMoodDots(String mood, String stress) {
+    return 'Kaydet • $mood • Stres $stress';
+  }
+
+  @override
+  String get addQuickNoteOptional => 'Kısa bir not ekle (isteğe bağlı)';
 }

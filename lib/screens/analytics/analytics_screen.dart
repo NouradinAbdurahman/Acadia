@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
@@ -9,8 +11,13 @@ import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
 
 import '../../core/design/app_spacing.dart';
+import '../../core/design/app_icons.dart';
+import '../../core/design/app_radius.dart';
+import '../../core/theme/app_colors.dart';
 import '../../components/app_glass_card.dart';
+import '../../components/app_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../widgets/semester/semester_comparison_card.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
@@ -18,9 +25,15 @@ import '../../providers/course_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../providers/study_sessions_provider.dart';
 import '../../providers/trend_provider.dart';
+import '../../providers/mood_provider.dart';
+import '../../providers/decision_provider.dart';
+import '../../providers/prediction_provider.dart';
 import '../../models/analytics_data.dart';
 import '../../models/course.dart';
 import '../../models/trend_data.dart';
+import '../../models/mood_log.dart';
+import '../../domain/decision/decision_result.dart';
+import '../../domain/prediction/prediction_result.dart';
 import '../../widgets/analytics/decision_cards.dart';
 import '../../widgets/common/weekly_activity_card.dart';
 import '../../widgets/risk/risk_widgets.dart';
@@ -102,6 +115,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final studyAnalytics = ref.watch(studyAnalyticsProvider);
     final trendDays = ref.watch(trendDaysProvider);
     final trendAsync = ref.watch(trendProvider(trendDays));
+    final moodLogsAsync = ref.watch(moodLogsProvider);
+    final decision = ref.watch(decisionProvider);
+    final prediction = ref.watch(predictionProvider);
 
     return Scaffold(
       body: AuthBackgroundContainer(
@@ -122,6 +138,31 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
                     ).animate().fade().slideX(begin: -0.1),
                     const SizedBox(height: AppSpacing.xl),
+
+                    // --- MOVED FROM HOME ---
+                    if (decision.hasContent) ...[
+                      _buildDecisionInsightsCard(context, ref, theme, l10n, decision),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+
+                    if (decision.hasContent && prediction.hasData) ...[
+                      Divider(
+                        height: AppSpacing.md,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                    ],
+
+                    if (prediction.hasData) ...[
+                      _buildPredictedStressCard(context, theme, l10n, prediction),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildRecommendedPlanCard(context, theme, l10n, prediction),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+
+                    const SemesterComparisonCard(),
+                    const SizedBox(height: AppSpacing.lg),
+                    // -------------------------
                     if (!hasData) ...[
                       AppGlassCard(
                         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -270,6 +311,64 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       const RiskBreakdownCard(),
                       const SizedBox(height: AppSpacing.xl),
 
+                      _buildSectionTitle(theme, l10n.moodAndStressTitle),
+                      const SizedBox(height: AppSpacing.md),
+                      AppGlassCard(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _MoodMetricTile(
+                                    title: l10n.moodAverageLabel,
+                                    value: data.moodLogCount == 0
+                                        ? l10n.moodNoData
+                                        : data.avgMood.toStringAsFixed(1),
+                                    icon: HeroIcons.faceSmile,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: _MoodMetricTile(
+                                    title: l10n.stressAverageLabel,
+                                    value: data.moodLogCount == 0
+                                        ? l10n.moodNoData
+                                        : data.avgStress.toStringAsFixed(1),
+                                    icon: HeroIcons.bolt,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () => context.push('/mood/log'),
+                                child: Text(l10n.logMoodTitle),
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            _MoodSevenDayChart(moodLogsAsync: moodLogsAsync),
+                            const SizedBox(height: AppSpacing.md),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                l10n.consistencyScoreLine(
+                                  (100 - studyAnalytics.timeInconsistencyScore).round(),
+                                  studyAnalytics.consistencyTrendLabel,
+                                ),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+
                       const BurnoutStatusCard(),
                       const SizedBox(height: AppSpacing.xl),
 
@@ -366,6 +465,578 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
+  // --- HELPER METHODS MOVED FROM HOME ---
+
+  Widget _buildDecisionInsightsCard(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    DecisionResult decision,
+  ) {
+    final signature = decision.sortedItems
+        .map((item) => '${item.priority}:${item.messageKey}')
+        .join('|');
+    final primary = decision.primaryDecision;
+    if (primary == null) {
+      return const SizedBox.shrink();
+    }
+
+    return AppGlassCard(
+      key: ValueKey('decision-$signature'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon(HeroIcons.sparkles, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                l10n.decisionSmartInsights,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _buildPrimaryDecisionBlock(context, theme, l10n, primary),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: AppButton(
+              text: l10n.startNow,
+              onPressed: () => _startNowFromDecision(
+                context,
+                ref,
+                decision.suggestedSessionMinutes,
+              ),
+              icon: const AppIcon(HeroIcons.play, size: 16, color: Colors.white),
+            ),
+          ),
+          if (decision.secondaryDecisions.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            ...decision.secondaryDecisions.map<Widget>(
+              (item) => _buildPriorityDecisionItem(context, theme, l10n, item),
+            ),
+          ],
+          if (decision.suggestedSessionMinutes != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.decision_recommended_session(decision.suggestedSessionMinutes!),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            _confidenceLabel(l10n, decision.confidence),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+            ),
+          ),
+        ],
+      ),
+    ).animate().scaleXY(begin: 0.98, end: 1.0, duration: 260.ms).fadeIn();
+  }
+
+  Widget _buildPrimaryDecisionBlock(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    DecisionItem item,
+  ) {
+    final isPriorityOne = item.priority == 1;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: isPriorityOne
+            ? theme.colorScheme.error.withValues(alpha: 0.1)
+            : theme.colorScheme.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: isPriorityOne
+              ? theme.colorScheme.error.withValues(alpha: 0.25)
+              : theme.colorScheme.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.focusRecommendationPrimary,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: isPriorityOne ? theme.colorScheme.error : theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            _resolveDecisionTitle(l10n, item.messageKey),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _resolveDecisionAction(l10n, item.messageKey),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriorityDecisionItem(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    DecisionItem item,
+  ) {
+    final isPriorityOne = item.priority == 1;
+    final icon = switch (item.type) {
+      DecisionType.warning => HeroIcons.exclamationTriangle,
+      DecisionType.recommendation => HeroIcons.lightBulb,
+      DecisionType.insight => HeroIcons.chartBar,
+    };
+    final color = isPriorityOne
+        ? theme.colorScheme.error
+        : (item.type == DecisionType.warning
+            ? theme.colorScheme.error.withValues(alpha: 0.7)
+            : theme.colorScheme.primary);
+
+    final title = _resolveDecisionTitle(l10n, item.messageKey);
+    final action = _resolveDecisionAction(l10n, item.messageKey);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: isPriorityOne
+              ? theme.colorScheme.error.withValues(alpha: 0.08)
+              : theme.colorScheme.primary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: isPriorityOne
+                ? theme.colorScheme.error.withValues(alpha: 0.3)
+                : theme.colorScheme.primary.withValues(alpha: 0.15),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppIcon(icon, size: 16, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.92),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (action.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      action,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _resolveDecisionTitle(AppLocalizations l10n, String message) {
+    final parts = message.split('|');
+    final key = parts.first;
+    final value = parts.length > 1 ? parts[1] : null;
+
+    switch (key) {
+      case 'decision_high_stress':
+        return l10n.decision_high_stress;
+      case 'decision_short_sessions':
+        return l10n.decision_short_sessions;
+      case 'decision_deep_work':
+        return l10n.decision_deep_work;
+      case 'decision_burnout_warning':
+        return l10n.decision_burnout_warning;
+      case 'decision_stress_rising':
+        return l10n.decision_stress_rising;
+      case 'decision_mood_declining':
+        return l10n.decision_mood_declining;
+      case 'decision_deadline_pressure':
+        return l10n.decision_deadline_pressure;
+      case 'decision_low_activity_high_stress':
+        return l10n.decision_low_activity_high_stress;
+      case 'decision_light_tasks_only':
+        return l10n.decision_light_tasks_only;
+      case 'decision_main_factor':
+        return l10n.decision_main_factor(_factorLabel(l10n, value ?? ''));
+      case 'decision_worst_day':
+        return l10n.decision_worst_day(_weekdayNameFromInt(value));
+      case 'decision_morning_planning':
+        return l10n.decision_morning_planning;
+      case 'decision_afternoon_execution':
+        return l10n.decision_afternoon_execution;
+      case 'decision_night_light_review':
+        return l10n.decision_night_light_review;
+      case 'decision_burnout_duration_cap':
+        return l10n.decisionBurnoutDurationCap;
+      case 'decision_fixed_schedule':
+        return l10n.decisionFixedSchedule;
+      default:
+        return message;
+    }
+  }
+
+  String _resolveDecisionAction(AppLocalizations l10n, String message) {
+    final key = message.split('|').first;
+    switch (key) {
+      case 'decision_high_stress':
+      case 'decision_short_sessions':
+        return l10n.decisionActionShortSessions;
+      case 'decision_deadline_pressure':
+        return l10n.decisionActionBreakDown;
+      case 'decision_stress_rising':
+      case 'decision_mood_declining':
+        return l10n.decisionActionMonitorWeekly;
+      case 'decision_morning_planning':
+        return l10n.decisionActionPlanning;
+      case 'decision_afternoon_execution':
+        return l10n.decisionActionExecution;
+      case 'decision_night_light_review':
+        return l10n.decisionActionLightReview;
+      case 'decision_burnout_duration_cap':
+        return l10n.decisionActionShortSessions;
+      case 'decision_fixed_schedule':
+        return l10n.decisionActionFixedSchedule;
+      default:
+        return '';
+    }
+  }
+
+  String _confidenceLabel(AppLocalizations l10n, double confidence) {
+    if (confidence >= 0.75) {
+      return l10n.decisionConfidenceHigh;
+    }
+    if (confidence >= 0.45) {
+      return l10n.decisionConfidenceMedium;
+    }
+    return l10n.decisionConfidenceLow;
+  }
+
+  void _startNowFromDecision(
+    BuildContext context,
+    WidgetRef ref,
+    int? suggestedMinutes,
+  ) {
+    final minutes = suggestedMinutes ?? 45;
+    final timerState = ref.read(studyTimerProvider);
+    final timer = ref.read(studyTimerProvider.notifier);
+
+    timer.setDuration(Duration(minutes: minutes));
+    if (timerState.courseId != null) {
+      timer.start();
+    }
+    ref.read(bottomNavProvider.notifier).state = 2;
+  }
+
+  Widget _buildPredictedStressCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    PredictionResult prediction,
+  ) {
+    final levelText = switch (prediction.stressLevel) {
+      PredictionLevel.low => l10n.predictionLevelLow,
+      PredictionLevel.medium => l10n.predictionLevelMedium,
+      PredictionLevel.high => l10n.predictionLevelHigh,
+    };
+
+    final levelColor = switch (prediction.stressLevel) {
+      PredictionLevel.low => Colors.green,
+      PredictionLevel.medium => Colors.orange,
+      PredictionLevel.high => theme.colorScheme.error,
+    };
+
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon(HeroIcons.chartBar, color: levelColor),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  l10n.predictionStressTitle,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Text(
+                levelText,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: levelColor,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          if (prediction.stressReasons.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.predictionMainReasonTitle,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            ...prediction.stressReasons.map(
+              (reason) => Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '• ${_resolvePredictionReason(l10n, reason)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendedPlanCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+    PredictionResult prediction,
+  ) {
+    final timeLabel = MaterialLocalizations.of(context);
+    return AppGlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              AppIcon(HeroIcons.calendar, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                l10n.predictionPlanTitle,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ...prediction.recommendedPlan.map((item) {
+            final day = _relativeDayLabel(l10n, item.scheduledAt);
+            final time = timeLabel.formatTimeOfDay(
+              TimeOfDay(hour: item.scheduledAt.hour, minute: item.scheduledAt.minute),
+              alwaysUse24HourFormat: true,
+            );
+            return Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                '• ${l10n.predictionPlanLine(
+                  day,
+                  time,
+                  item.durationMinutes,
+                  _resolvePlanFocus(l10n, item.focusKey),
+                )}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          }),
+          if (prediction.explanationKeys.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              l10n.predictionWhyTitle,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            ...prediction.explanationKeys.map(
+              (key) => Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '• ${_resolvePredictionExplanation(l10n, key)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          _buildPredictionRiskSection(theme, l10n, prediction),
+        ],
+      ),
+    );
+  }
+
+  String _resolvePredictionReason(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'predictionReasonHighStressToday':
+        return l10n.predictionReasonHighStressToday;
+      case 'predictionReasonLowConsistency':
+        return l10n.predictionReasonLowConsistency;
+      case 'predictionReasonUpcomingWorkload':
+        return l10n.predictionReasonUpcomingWorkload;
+      default:
+        return key;
+    }
+  }
+
+  String _resolvePredictionExplanation(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'predictionExplanationStressHigh':
+        return l10n.predictionReasonStressHigh;
+      case 'predictionExplanationLowConsistency':
+        return l10n.predictionReasonLowConsistencyDetail;
+      case 'predictionExplanationTasksPending':
+        return l10n.predictionReasonTasksPending;
+      case 'predictionExplanationDeadlinesSoon':
+        return l10n.predictionReasonDeadlinesSoon;
+      default:
+        return key;
+    }
+  }
+
+  String _resolvePlanFocus(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'predictionPlanLightFocus':
+        return l10n.predictionPlanLightFocus;
+      case 'predictionPlanFocusExecution':
+        return l10n.predictionPlanFocusExecution;
+      case 'predictionPlanDeepExecution':
+        return l10n.predictionPlanDeepExecution;
+      case 'predictionPlanLightReview':
+        return l10n.predictionPlanLightReview;
+      default:
+        return key;
+    }
+  }
+
+  String _relativeDayLabel(AppLocalizations l10n, DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(date.year, date.month, date.day);
+    final delta = day.difference(today).inDays;
+    if (delta == 0) return l10n.today;
+    if (delta == 1) return l10n.tomorrow;
+    return DateFormat.EEEE().format(date);
+  }
+
+  String _predictionRiskLine(AppLocalizations l10n, PredictionResult prediction) {
+    final level = switch (prediction.performanceRiskLevel) {
+      PredictionLevel.low => l10n.predictionLevelLow,
+      PredictionLevel.medium => l10n.predictionLevelMedium,
+      PredictionLevel.high => l10n.predictionLevelHigh,
+    };
+    return l10n.predictionPerformanceRisk(level);
+  }
+
+  Widget _buildPredictionRiskSection(
+    ThemeData theme,
+    AppLocalizations l10n,
+    PredictionResult prediction,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          _predictionRiskLine(l10n, prediction),
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        if (prediction.laggingCourses.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.predictionAffectedTitle,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+            ),
+          ),
+          const SizedBox(height: 2),
+          ...prediction.laggingCourses.map(
+            (course) => Text(
+              '• $course',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _factorLabel(AppLocalizations l10n, String raw) {
+    switch (raw.toLowerCase()) {
+      case 'sleep':
+        return l10n.moodFactorSleep;
+      case 'workload':
+        return l10n.moodFactorWorkload;
+      case 'health':
+        return l10n.moodFactorHealth;
+      case 'motivation':
+        return l10n.moodFactorMotivation;
+      case 'social':
+        return l10n.moodFactorSocial;
+      case 'exams':
+        return l10n.moodFactorExams;
+      default:
+        return raw.isEmpty ? '-' : '${raw[0].toUpperCase()}${raw.substring(1)}';
+    }
+  }
+
+  String _weekdayNameFromInt(String? value) {
+    final weekday = int.tryParse(value ?? '');
+    if (weekday == null || weekday < DateTime.monday || weekday > DateTime.sunday) {
+      return '-';
+    }
+
+    final now = DateTime.now();
+    final date = now.subtract(Duration(days: now.weekday - weekday));
+    return DateFormat.EEEE().format(date);
+  }
+
   Widget _buildSectionTitle(ThemeData theme, String title) {
     return Text(
       title,
@@ -418,6 +1089,280 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         ],
       ),
     );
+  }
+}
+
+class _MoodMetricTile extends StatelessWidget {
+  const _MoodMetricTile({
+    required this.title,
+    required this.value,
+    required this.icon,
+  });
+
+  final String title;
+  final String value;
+  final HeroIcons icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppIcon(icon, size: 18, color: theme.colorScheme.primary),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            title,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MoodSevenDayChart extends StatelessWidget {
+  const _MoodSevenDayChart({required this.moodLogsAsync});
+
+  final AsyncValue<List<MoodLog>> moodLogsAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return moodLogsAsync.when(
+      loading: () => const SizedBox(
+        height: 140,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stackTrace) => SizedBox(
+        height: 140,
+        child: Center(child: Text(l10n.networkError)),
+      ),
+      data: (logs) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final values = <double>[];
+
+        for (var i = 6; i >= 0; i--) {
+          final day = today.subtract(Duration(days: i));
+          final sameDay = logs.where((entry) {
+            final d = DateTime(
+              entry.createdAt.year,
+              entry.createdAt.month,
+              entry.createdAt.day,
+            );
+            return d == day;
+          }).toList();
+
+          if (sameDay.isEmpty) {
+            values.add(0.0);
+          } else {
+            final sum = sameDay
+                .map((entry) => entry.moodLevel)
+                .reduce((a, b) => a + b);
+            values.add(sum / sameDay.length);
+          }
+        }
+
+        final hasData = values.any((value) => value > 0);
+        if (!hasData) {
+          return SizedBox(
+            height: 140,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    l10n.moodNoData,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Start logging to see trends',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final dataPoints = values.where((value) => value > 0).length;
+        if (dataPoints < 2) {
+          return SizedBox(
+            height: 140,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Keep logging your mood',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'You need 2+ entries to see a trend',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final spots = values
+            .asMap()
+            .entries
+            .where((entry) => entry.value > 0)
+            .map((entry) => FlSpot(entry.key.toDouble(), entry.value))
+            .toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.moodLast7Days,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              height: 140,
+              child: LineChart(
+                LineChartData(
+                  minX: 0,
+                  maxX: 6,
+                  minY: 1,
+                  maxY: 5,
+                  gridData: FlGridData(
+                    show: true,
+                    horizontalInterval: 1,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (value) => FlLine(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                      strokeWidth: 1,
+                    ),
+                  ),
+                  borderData: FlBorderData(show: false),
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        reservedSize: 20,
+                        getTitlesWidget: (value, meta) => Text(
+                          value.toInt().toString(),
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 24,
+                        getTitlesWidget: (value, meta) {
+                          const labels = ['-6', '-5', '-4', '-3', '-2', '-1', '0'];
+                          final index = value.toInt();
+                          if (index < 0 || index >= labels.length) {
+                            return const SizedBox.shrink();
+                          }
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              labels[index],
+                              style: theme.textTheme.labelSmall,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: spots,
+                      isCurved: true,
+                      color: _getMoodChartColor(spots),
+                      barWidth: 3,
+                      dotData: FlDotData(
+                        show: true,
+                        getDotPainter: (spot, xPercentage, line, index) {
+                          return FlDotCirclePainter(
+                            radius: 4,
+                            color: _getMoodLevelColor(spot.y, theme),
+                            strokeColor: theme.colorScheme.surface,
+                            strokeWidth: 2,
+                          );
+                        },
+                      ),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            _getMoodChartColor(spots).withValues(alpha: 0.2),
+                            _getMoodChartColor(spots).withValues(alpha: 0.02),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Color _getMoodChartColor(List<FlSpot> spots) {
+    if (spots.isEmpty) return Colors.grey;
+    final avgMood = spots.map((s) => s.y).reduce((a, b) => a + b) / spots.length;
+    return _getMoodLevelColor(avgMood, null);
+  }
+
+  Color _getMoodLevelColor(double moodLevel, ThemeData? theme) {
+    if (moodLevel < 1.5) return Colors.red.shade400;
+    if (moodLevel < 2.5) return Colors.orange.shade400;
+    if (moodLevel < 3.5) return Colors.yellow.shade600;
+    if (moodLevel < 4.5) return Colors.green.shade400;
+    return Colors.green.shade600;
   }
 }
 
@@ -1467,6 +2412,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final coursesAsync = ref.watch(courseProvider);
+    final sessionsAsync = ref.watch(studySessionsProvider);
     final data = widget.data;
 
     if (data.studyHoursPerCourse.isEmpty) {
@@ -1478,32 +2424,47 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
 
     return coursesAsync.when(
       data: (courses) {
+        final fallbackCoursesById = sessionsAsync.maybeWhen(
+          data: (sessions) {
+            final map = <String, Course>{};
+            for (final session in sessions) {
+              final course = session.course;
+              if (course == null) continue;
+              map[session.courseId] = course;
+            }
+            return map;
+          },
+          orElse: () => const <String, Course>{},
+        );
+
         final List<_BarData> barData = [];
         data.studyHoursPerCourse.forEach((courseId, hours) {
           final course = courses.firstWhere(
             (c) => c.id == courseId,
-            orElse: () => Course(
-              id: courseId,
-              userId: '',
-              courseName: 'Unknown',
-              academicSemester: 1,
-              credits: 0,
-              ects: 0,
-              color: '#9E9E9E',
-              createdAt: DateTime.now(),
-            ),
+            orElse: () =>
+                fallbackCoursesById[courseId] ??
+                Course(
+                  id: courseId,
+                  userId: '',
+                  courseName: 'Unknown',
+                  academicSemester: 1,
+                  credits: 0,
+                  ects: 0,
+                  color: '#9E9E9E',
+                  createdAt: DateTime.now(),
+                ),
           );
           barData.add(
             _BarData(course, hours * 60.0, _formatCourseName(course.courseName)),
           );
         });
 
-        // Filter and sort for display
+        // Keep all courses that have recorded sessions.
         barData.sort((a, b) => b.minutes.compareTo(a.minutes));
-        final topBars = barData.take(5).toList();
-        final maxMinutes = topBars.isEmpty
+        final allBars = barData;
+        final maxMinutes = allBars.isEmpty
             ? 60.0
-            : topBars
+          : allBars
                   .map((e) => e.minutes)
                   .reduce((a, b) => a > b ? a : b)
                   .clamp(1.0, 24 * 60.0)
@@ -1528,191 +2489,207 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
               children: [
                 SizedBox(
                   height: 200,
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: maxY,
-                      barTouchData: BarTouchData(
-                        enabled: true,
-                        touchCallback: (FlTouchEvent event, barResponse) {
-                          if (event is FlTapUpEvent) {
-                            final tappedIndex = (barResponse == null ||
-                                    barResponse.spot == null)
-                                ? null
-                                : barResponse.spot!.touchedBarGroupIndex;
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final chartWidth = math.max(
+                        constraints.maxWidth,
+                        allBars.length * 56.0,
+                      );
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: chartWidth,
+                          height: 200,
+                          child: BarChart(
+                            BarChartData(
+                              alignment: BarChartAlignment.spaceAround,
+                              maxY: maxY,
+                              barTouchData: BarTouchData(
+                                enabled: true,
+                                touchCallback: (FlTouchEvent event, barResponse) {
+                                  if (event is FlTapUpEvent) {
+                                    final tappedIndex = (barResponse == null ||
+                                            barResponse.spot == null)
+                                        ? null
+                                        : barResponse.spot!.touchedBarGroupIndex;
 
-                            final newIndex =
-                                tappedIndex == _selectedIndex ? null : tappedIndex;
+                                    final newIndex =
+                                        tappedIndex == _selectedIndex ? null : tappedIndex;
 
-                            if (_selectedIndex != newIndex) {
-                              Haptics.vibrate(HapticsType.selection);
-                              setState(() {
-                                _selectedIndex = newIndex;
-                              });
-                            }
-                          }
-                        },
-                        touchTooltipData: BarTouchTooltipData(
-                          getTooltipColor: (_) => theme.colorScheme.surface,
-                          tooltipRoundedRadius: 8,
-                          tooltipPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          tooltipMargin: 12,
-                          fitInsideHorizontally: true,
-                          fitInsideVertically: true,
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            final bar = topBars[groupIndex];
-                            final courseCode =
-                                (bar.course.courseCode ?? '')
-                                    .replaceAll(RegExp(r'[\s\-]'), '')
-                                    .toUpperCase();
-                            final shortName =
-                                bar.displayName.length > 15
-                                    ? '${bar.displayName.substring(0, 15)}...'
-                                    : bar.displayName;
-                            final duration = _formatDurationFromMinutes(
-                              l10n: l10n,
-                              totalMinutes: rod.toY.round(),
-                            );
+                                    if (_selectedIndex != newIndex) {
+                                      Haptics.vibrate(HapticsType.selection);
+                                      setState(() {
+                                        _selectedIndex = newIndex;
+                                      });
+                                    }
+                                  }
+                                },
+                                touchTooltipData: BarTouchTooltipData(
+                                  getTooltipColor: (_) => theme.colorScheme.surface,
+                                  tooltipRoundedRadius: 8,
+                                  tooltipPadding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  tooltipMargin: 12,
+                                  fitInsideHorizontally: true,
+                                  fitInsideVertically: true,
+                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                    final bar = allBars[groupIndex];
+                                    final courseCode =
+                                        (bar.course.courseCode ?? '')
+                                            .replaceAll(RegExp(r'[\s\-]'), '')
+                                            .toUpperCase();
+                                    final shortName =
+                                        bar.displayName.length > 15
+                                            ? '${bar.displayName.substring(0, 15)}...'
+                                            : bar.displayName;
+                                    final duration = _formatDurationFromMinutes(
+                                      l10n: l10n,
+                                      totalMinutes: rod.toY.round(),
+                                    );
 
-                             return BarTooltipItem(
-                               '',
-                               theme.textTheme.labelMedium!,
-                               children: [
-                                 TextSpan(
-                                   text: courseCode.isEmpty
-                                       ? ''
-                                       : '$courseCode\n',
-                                   style: const TextStyle(
-                                     fontWeight: FontWeight.bold,
-                                   ),
-                                 ),
-                                 TextSpan(
-                                   text: '$shortName\n',
-                                   style: const TextStyle(
-                                     fontWeight: FontWeight.normal,
-                                     fontSize: 12,
-                                   ),
-                                 ),
-                                 TextSpan(
-                                   text: duration,
-                                   style: const TextStyle(
-                                     fontWeight: FontWeight.w600,
-                                   ),
-                                 ),
-                               ],
-                               textAlign: TextAlign.center,
-                             );
-                          },
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 32,
-                            getTitlesWidget: (value, meta) {
-                              final index = value.toInt();
-                              if (index >= 0 && index < topBars.length) {
-                                final bar = topBars[index];
-                                final rawCode = bar.course.courseCode ??
-                                    (bar.displayName.length > 8
-                                        ? bar.displayName.substring(0, 7)
-                                        : bar.displayName);
-                                final normalizedCode =
-                                    rawCode
-                                        .replaceAll(RegExp(r'[\s\-]'), '')
-                                        .toUpperCase();
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: Text(
-                                    normalizedCode,
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: index == _selectedIndex
-                                          ? FontWeight.w900
-                                          : FontWeight.bold,
-                                      color: _selectedIndex == null ||
-                                              _selectedIndex == index
-                                          ? theme.colorScheme.onSurface
-                                          : theme.colorScheme.onSurface
-                                              .withValues(alpha: 0.3),
+                                    return BarTooltipItem(
+                                      '',
+                                      theme.textTheme.labelMedium!,
+                                      children: [
+                                        TextSpan(
+                                          text: courseCode.isEmpty
+                                              ? ''
+                                              : '$courseCode\n',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: '$shortName\n',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.normal,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: duration,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                      textAlign: TextAlign.center,
+                                    );
+                                  },
+                                ),
+                              ),
+                              titlesData: FlTitlesData(
+                                show: true,
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 34,
+                                    getTitlesWidget: (value, meta) {
+                                      final index = value.toInt();
+                                      if (index >= 0 && index < allBars.length) {
+                                        final bar = allBars[index];
+                                        final rawCode = bar.course.courseCode ??
+                                            (bar.displayName.length > 8
+                                                ? bar.displayName.substring(0, 7)
+                                                : bar.displayName);
+                                        final normalizedCode = rawCode
+                                            .replaceAll(RegExp(r'[\s\-]'), '')
+                                            .toUpperCase();
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 8.0),
+                                          child: Text(
+                                            normalizedCode,
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              fontSize: 7,
+                                              fontWeight: index == _selectedIndex
+                                                  ? FontWeight.w900
+                                                  : FontWeight.bold,
+                                              color: _selectedIndex == null ||
+                                                      _selectedIndex == index
+                                                  ? theme.colorScheme.onSurface
+                                                  : theme.colorScheme.onSurface
+                                                      .withValues(alpha: 0.3),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const Text('');
+                                    },
+                                  ),
+                                ),
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 42,
+                                    interval: yInterval,
+                                    getTitlesWidget: (value, meta) => Text(
+                                      _formatDurationFromMinutes(
+                                        l10n: l10n,
+                                        totalMinutes: value.round(),
+                                      ),
+                                      style: const TextStyle(fontSize: 10),
                                     ),
                                   ),
+                                ),
+                                topTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                rightTitles: const AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                              gridData: const FlGridData(show: false),
+                              borderData: FlBorderData(show: false),
+                              barGroups: allBars.asMap().entries.map((entry) {
+                                final isSelected = _selectedIndex == entry.key;
+                                final isDimmed =
+                                    _selectedIndex != null && !isSelected;
+                                return BarChartGroupData(
+                                  x: entry.key,
+                                  showingTooltipIndicators: isSelected ? [0] : [],
+                                  barRods: [
+                                    BarChartRodData(
+                                      toY:
+                                          entry.value.minutes < 1
+                                              ? 1
+                                              : entry.value.minutes,
+                                      color: isDimmed
+                                          ? entry.value.course.uiColor
+                                              .withValues(alpha: 0.2)
+                                          : entry.value.course.uiColor,
+                                      width: isSelected ? 18 : 16,
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(4),
+                                      ),
+                                      borderSide: isSelected
+                                          ? BorderSide(
+                                              color: Colors.white.withValues(alpha: 0.6),
+                                              width: 1.5,
+                                            )
+                                          : BorderSide.none,
+                                    ),
+                                  ],
                                 );
-                              }
-                              return const Text('');
-                            },
+                              }).toList(),
+                            ),
+                            swapAnimationDuration: const Duration(milliseconds: 350),
+                            swapAnimationCurve: Curves.easeOutCubic,
                           ),
                         ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 42,
-                            interval: yInterval,
-                            getTitlesWidget: (value, meta) => Text(
-                              _formatDurationFromMinutes(
-                                l10n: l10n,
-                                totalMinutes: value.round(),
-                              ),
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          ),
-                        ),
-                        topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      gridData: const FlGridData(show: false),
-                      borderData: FlBorderData(show: false),
-                      barGroups: topBars.asMap().entries.map((entry) {
-                        final isSelected = _selectedIndex == entry.key;
-                        final isDimmed =
-                            _selectedIndex != null && !isSelected;
-                        return BarChartGroupData(
-                          x: entry.key,
-                          showingTooltipIndicators: isSelected ? [0] : [],
-                          barRods: [
-                            BarChartRodData(
-                              toY:
-                                  entry.value.minutes < 1
-                                      ? 1
-                                      : entry.value.minutes,
-                              color: isDimmed
-                                  ? entry.value.course.uiColor
-                                      .withValues(alpha: 0.2)
-                                  : entry.value.course.uiColor,
-                              width: isSelected ? 18 : 16,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4),
-                              ),
-                              borderSide: isSelected
-                                  ? BorderSide(
-                                      color: Colors.white.withValues(alpha: 0.6),
-                                      width: 1.5,
-                                    )
-                                  : BorderSide.none,
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                    swapAnimationDuration: const Duration(milliseconds: 350),
-                    swapAnimationCurve: Curves.easeOutCubic,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 // Legend Section
-                ...topBars.asMap().entries.map((entry) {
+                ...allBars.asMap().entries.map((entry) {
                   final index = entry.key;
                   final bar = entry.value;
                   final isSelected = _selectedIndex == index;
+                  const legendFontSize = 10.0;
 
                   final displayCode = (bar.course.courseCode ??
                           (bar.displayName.length > 8
@@ -1770,6 +2747,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                     TextSpan(
                                       text: displayCode,
                                       style: TextStyle(
+                                        fontSize: legendFontSize,
                                         fontWeight: isSelected
                                             ? FontWeight.w900
                                             : FontWeight.w700,
@@ -1779,7 +2757,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                     TextSpan(
                                       text: ' – ${bar.displayName}',
                                       style: TextStyle(
-                                        fontSize: 11,
+                                        fontSize: legendFontSize,
                                         color: theme.colorScheme.onSurface
                                             .withValues(alpha: isSelected ? 0.9 : 0.6),
                                       ),
@@ -1787,7 +2765,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                     TextSpan(
                                       text: ' • $durationStr',
                                       style: TextStyle(
-                                        fontSize: 11,
+                                        fontSize: legendFontSize,
                                         fontWeight: isSelected
                                             ? FontWeight.w800
                                             : FontWeight.w600,

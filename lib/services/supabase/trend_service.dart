@@ -22,16 +22,15 @@ class TrendService {
     required DateTime since,
     String? semesterId,
   }) async {
+    if (semesterId == null) return const <Map<String, dynamic>>[];
+
     try {
       var query = supabase
           .from('study_sessions')
-          .select('created_at,duration_minutes,course_id,courses!inner(semester_id)')
+          .select('created_at,duration_minutes,course_id')
           .eq('user_id', userId)
+          .eq('semester_id', semesterId)
           .gte('created_at', since.toIso8601String());
-      
-      if (semesterId != null) {
-        query = query.eq('courses.semester_id', semesterId);
-      }
       
       final response = await query.order('created_at', ascending: true);
       return _asRows(response);
@@ -46,17 +45,16 @@ class TrendService {
     required DateTime since,
     String? semesterId,
   }) async {
+    if (semesterId == null) return const <Map<String, dynamic>>[];
+
     try {
       var query = supabase
           .from('tasks')
-          .select('updated_at,status,courses!inner(semester_id)')
+          .select('updated_at,status')
           .eq('user_id', userId)
+          .eq('semester_id', semesterId)
           .eq('status', 'completed')
           .gte('updated_at', since.toIso8601String());
-
-      if (semesterId != null) {
-        query = query.eq('courses.semester_id', semesterId);
-      }
 
       final response = await query.order('updated_at', ascending: true);
       return _asRows(response);
@@ -71,16 +69,15 @@ class TrendService {
     required DateTime since,
     String? semesterId,
   }) async {
+    if (semesterId == null) return const <Map<String, dynamic>>[];
+
     try {
       var query = supabase
           .from('tasks')
-          .select('created_at,courses!inner(semester_id)')
+          .select('created_at')
           .eq('user_id', userId)
+          .eq('semester_id', semesterId)
           .gte('created_at', since.toIso8601String());
-
-      if (semesterId != null) {
-        query = query.eq('courses.semester_id', semesterId);
-      }
 
       final response = await query.order('created_at', ascending: true);
       return _asRows(response);
@@ -95,17 +92,16 @@ class TrendService {
     required DateTime since,
     String? semesterId,
   }) async {
+    if (semesterId == null) return const <Map<String, dynamic>>[];
+
     try {
       var query = supabase
           .from('academic_deadlines')
-          .select('created_at,courses!inner(semester_id)')
+          .select('created_at')
           .eq('user_id', userId)
+          .eq('semester_id', semesterId)
           .eq('is_completed', false)
           .gte('created_at', since.toIso8601String());
-
-      if (semesterId != null) {
-        query = query.eq('courses.semester_id', semesterId);
-      }
 
       final response = await query.order('created_at', ascending: true);
       return _asRows(response);

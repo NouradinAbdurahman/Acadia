@@ -21,8 +21,12 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
   CourseNotifier(this._repository, {this.ref}) : super(const AsyncValue.loading());
 
 
+  // Holds the last non-empty result so we never show a false empty state during refresh.
+  List<Course>? _lastKnownCourses;
+
   Future<void> loadCourses({String? semesterId}) async {
-    state = const AsyncValue.loading();
+    // Preserve previous data during refresh so UI doesn't blank/flicker.
+    state = const AsyncValue<List<Course>>.loading().copyWithPrevious(state);
     try {
       final courses = await _repository.getCourses(semesterId: semesterId);
 
@@ -46,7 +50,19 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
                 .map((course) => course.copyWith(semesterId: course.semesterId ?? semesterId))
                 .where((course) => course.semesterId == semesterId)
                 .toList();
+
       if (!mounted) return;
+
+      // 🛡️ Empty-result guard: if the DB momentarily returns [] during a refresh,
+      // keep showing the last known data rather than flashing an empty state.
+      // An empty result is only trusted when there is no previous data (first load).
+      if (normalized.isEmpty && _lastKnownCourses != null && _lastKnownCourses!.isNotEmpty) {
+        debugPrint('[CourseNotifier] Refresh returned empty — keeping last known courses (${_lastKnownCourses!.length})');
+        state = AsyncValue.data(_lastKnownCourses!);
+        return;
+      }
+
+      _lastKnownCourses = normalized;
       state = AsyncValue.data(normalized);
     } catch (e, st) {
       if (!mounted) return;

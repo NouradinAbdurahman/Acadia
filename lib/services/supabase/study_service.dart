@@ -14,13 +14,31 @@ class StudyService {
     return await _supabase
         .from('study_sessions')
         .select('''
-          *,
-          courses!inner (
-            *
+          id,
+          user_id,
+          course_id,
+          semester_id,
+          session_type,
+          duration_minutes,
+          created_at,
+          intent,
+          completed,
+          completed_cycles,
+          skipped_breaks,
+          is_pomodoro,
+          total_focus_minutes,
+          total_break_minutes,
+          cycles_completed,
+          total_cycles,
+          courses:course_id (
+            id,
+            course_name,
+            color,
+            semester_id
           )
         ''')
         .eq('user_id', userId)
-        .eq('courses.semester_id', semesterId)
+        .eq('semester_id', semesterId)
         .order('created_at', ascending: false)
         .limit(50);
   }
@@ -32,9 +50,27 @@ class StudyService {
         .from('study_sessions')
         .insert(data)
         .select('''
-          *,
-          courses (
-            *
+          id,
+          user_id,
+          course_id,
+          semester_id,
+          session_type,
+          duration_minutes,
+          created_at,
+          intent,
+          completed,
+          completed_cycles,
+          skipped_breaks,
+          is_pomodoro,
+          total_focus_minutes,
+          total_break_minutes,
+          cycles_completed,
+          total_cycles,
+          courses:course_id (
+            id,
+            course_name,
+            color,
+            semester_id
           )
         ''')
         .single();

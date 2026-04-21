@@ -28,20 +28,25 @@ class Course {
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
+    final createdAtRaw = json['created_at']?.toString();
+    final createdAt = createdAtRaw != null
+        ? DateTime.tryParse(createdAtRaw)
+        : null;
+
     return Course(
-      id: json['id'],
-      userId: json['user_id'],
-      courseName: json['course_name'],
-      courseCode: json['course_code'],
-        academicSemester: (json['semester'] as num?)?.toInt() ??
+      id: json['id']?.toString() ?? '',
+      userId: json['user_id']?.toString() ?? '',
+      courseName: json['course_name']?.toString() ?? 'Unknown',
+      courseCode: json['course_code']?.toString(),
+      academicSemester: (json['semester'] as num?)?.toInt() ??
           int.tryParse(json['semester']?.toString() ?? '') ??
           1,
-      semesterId: json['semester_id'],
-      credits: json['credits'] ?? 0,
-      color: json['color'],
-      ects: json['ects'] ?? 0,
-      isActive: json['is_active'] ?? true,
-      createdAt: DateTime.parse(json['created_at']),
+      semesterId: json['semester_id']?.toString(),
+      credits: (json['credits'] as num?)?.toInt() ?? 0,
+      color: json['color']?.toString(),
+      ects: (json['ects'] as num?)?.toInt() ?? 0,
+      isActive: json['is_active'] as bool? ?? true,
+      createdAt: createdAt ?? DateTime.now(),
     );
   }
 
