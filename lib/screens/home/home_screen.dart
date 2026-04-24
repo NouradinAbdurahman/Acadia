@@ -12,6 +12,7 @@ import '../../l10n/l10n_extension.dart';
 import 'quick_menu_screen.dart';
 import 'widgets/study_heatmap.dart';
 import '../study/widgets/live_study_session_card.dart';
+import '../ai/ai_chat_screen.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../providers/mood_provider.dart';
@@ -343,7 +344,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             _NotificationButton(unreadCount: unreadNotifications),
             const SizedBox(width: AppSpacing.md),
-            const _QuickMenuButton(),
+            const _AiAssistantButton(),
           ],
         ),
       ],
@@ -1947,6 +1948,34 @@ class _NotificationButton extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AiAssistantButton extends StatelessWidget {
+  const _AiAssistantButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedPressable(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const AIChatScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          shape: BoxShape.circle,
+        ),
+        child: const AppIcon(
+          HeroIcons.sparkles, 
+          size: 24, 
+          solid: true,
         ),
       ),
     );

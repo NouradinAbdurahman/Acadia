@@ -13,6 +13,7 @@ import '../services/supabase/course_result_service.dart';
 import '../services/supabase/semester_service.dart';
 import '../services/supabase/notification_service.dart';
 import '../services/supabase/trend_service.dart';
+import '../services/supabase/ai_assistant_service.dart';
 import '../services/storage/avatar_service.dart';
 
 import '../repositories/auth_repository.dart';
@@ -27,6 +28,7 @@ import '../repositories/course_result_repository.dart';
 import '../repositories/semester_repository.dart';
 import '../repositories/notification_repository.dart';
 import '../repositories/trend_repository.dart';
+import '../repositories/ai_assistant_repository.dart';
 import '../models/app_user.dart';
 
 final supabaseProvider = Provider<SupabaseClient>((ref) {
@@ -48,6 +50,7 @@ final courseResultServiceProvider =
 final semesterServiceProvider = Provider<SemesterService>((ref) => SemesterService(ref.watch(supabaseProvider)));
 final notificationServiceProvider = Provider<NotificationService>((ref) => NotificationService(ref.watch(supabaseProvider)));
 final trendServiceProvider = Provider<TrendService>((ref) => TrendService(ref.watch(supabaseProvider)));
+final aiAssistantServiceProvider = Provider<AiAssistantService>((ref) => AiAssistantService(ref.watch(supabaseProvider)));
 final avatarServiceProvider = Provider<AvatarService>((ref) => AvatarService(ref.watch(supabaseProvider)));
 
 
@@ -67,6 +70,7 @@ final courseResultRepositoryProvider = Provider<CourseResultRepository>(
 final semesterRepositoryProvider = Provider<SemesterRepository>((ref) => SemesterRepository(ref.watch(semesterServiceProvider)));
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) => NotificationRepository(ref.watch(notificationServiceProvider)));
 final trendRepositoryProvider = Provider<TrendRepository>((ref) => TrendRepository(ref.watch(trendServiceProvider)));
+final aiAssistantRepositoryProvider = Provider<AiAssistantRepository>((ref) => AiAssistantRepository(ref.watch(aiAssistantServiceProvider)));
 
 
 // --- STATE PROVIDERS ---

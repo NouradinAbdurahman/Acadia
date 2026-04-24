@@ -45,8 +45,9 @@ class AppShell extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: LiquidGlassNavbar(
                   selectedIndex: selectedIndex,
-                  onSelectedIndex: (index) =>
-                      ref.read(bottomNavProvider.notifier).state = index,
+                  onSelectedIndex: (index) {
+                    ref.read(bottomNavProvider.notifier).state = index;
+                  },
                 ),
               ),
             ),

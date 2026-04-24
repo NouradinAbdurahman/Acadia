@@ -250,25 +250,21 @@ class _NavItemState extends State<_NavItem> {
                       duration: 220.ms,
                       curve: Curves.easeOutBack,
                     ),
-                const SizedBox(height: AppSpacing.xs),
-                AnimatedDefaultTextStyle(
-                  duration: AppDurations.normal,
-                  curve: Curves.easeOut,
-                  style:
-                      (widget.theme.textTheme.bodySmall ??
-                              const TextStyle(fontSize: 10))
-                          .copyWith(
-                            color: labelColor,
-                            fontWeight: widget.isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                          ),
-                  child: AnimatedOpacity(
+                if (widget.isSelected) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  AnimatedDefaultTextStyle(
                     duration: AppDurations.normal,
-                    opacity: widget.isSelected ? 1 : 0.86,
+                    curve: Curves.easeOut,
+                    style:
+                        (widget.theme.textTheme.bodySmall ??
+                                const TextStyle(fontSize: 10))
+                            .copyWith(
+                              color: labelColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                     child: Text(widget.label),
                   ),
-                ),
+                ],
               ],
             ),
           ),

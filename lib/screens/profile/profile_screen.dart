@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/app_providers.dart';
+import '../ai/ai_chat_screen.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../l10n/app_localizations.dart';
@@ -405,6 +406,18 @@ class ProfileScreen extends ConsumerWidget {
                 buildSection(
                   title: l10n.accountSettings,
                   children: [
+                    buildItem(
+                      icon: HeroIcons.sparkles,
+                      title: 'Acadia Assistant',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AIChatScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     buildItem(
                       icon: HeroIcons.shieldCheck,
                       title: l10n.privacyPolicy,
