@@ -15,16 +15,23 @@ final trendProvider = FutureProvider.family<TrendData, int>((ref, days) async {
   ref.watch(deadlinesProvider);
 
   final user = ref.watch(currentUserProvider);
-  final activeSemesterId = ref.watch(activeSemesterProvider);
+  final activeSemesterId = ref.watch(activeSemesterProvider).value;
   
   if (user == null) {
     return const TrendData.empty();
   }
 
+  final sessionsAsync = ref.watch(studySessionsProvider);
+  final totalSessions = sessionsAsync.maybeWhen(
+    data: (sessions) => sessions.length,
+    orElse: () => 0,
+  );
+
   final repo = ref.watch(trendRepositoryProvider);
   return repo.getTrendData(
     userId: user.id, 
     days: days,
+    totalTrackedSessions: totalSessions,
     semesterId: activeSemesterId,
   );
 });

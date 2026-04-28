@@ -1,3 +1,5 @@
+import '../../l10n/app_localizations.dart';
+import '../../l10n/l10n_extension.dart';
 import '../../models/analytics_data.dart';
 import '../../models/course.dart';
 import '../../models/mood_log.dart';
@@ -11,7 +13,9 @@ import 'decision_rules.dart';
 class DecisionEngine {
   DecisionResult evaluate({
     required AnalyticsData analytics,
-    required List<MoodLog> moods,
+    required AppLocalizations l10n,
+    required List<MoodLog> dailyMoods,
+    required List<MoodLog> sessionMoodLogs,
     required List<Task> tasks,
     required List<Deadline> deadlines,
     required List<StudySession> recentSessions,
@@ -28,134 +32,143 @@ class DecisionEngine {
     final sessionMoods = last7Sessions.where((s) => s.mood != null).map((s) => s.mood!).toList();
     final sessionStresses = last7Sessions.where((s) => s.stress != null).map((s) => s.stress!).toList();
 
-    final avgMood = sessionMoods.isNotEmpty 
-        ? sessionMoods.reduce((a, b) => a + b) / sessionMoods.length 
-        : analytics.avgMood;
-    final avgStress = sessionStresses.isNotEmpty 
-        ? sessionStresses.reduce((a, b) => a + b) / sessionStresses.length 
-        : analytics.avgStress;
+    final sessionMoodValues = [
+      ...sessionMoodLogs.map((log) => log.moodLevel.toDouble()),
+      ...sessionMoods,
+    ];
+    final sessionStressValues = [
+      ...sessionMoodLogs.map((log) => log.stressLevel.toDouble()),
+      ...sessionStresses,
+    ];
 
-    final moodDataPoints = sessionMoods.length + moods.length;
+    final avgDailyStress = analytics.avgDailyStress;
+    final avgSessionStress = analytics.avgSessionStress;
+    final isStressRising = analytics.isStressRising;
+    final consistency = analytics.consistency;
+
     final now = DateTime.now();
     final hour = now.hour;
+    final moodDataPoints = dailyMoods.length;
+    final avgStress = avgDailyStress;
 
-    // --- RANKED EXPLANATION LOGIC ---
-    final reasonWeights = <Map<String, dynamic>>[];
-    
-    // Calculate deviations from baseline
-    final stressDeviation = avgStress - baselineStress;
-    final moodDeviation = baselineMood - avgMood; // positive if mood is LOWER than baseline
-
-    if (stressDeviation >= 1.5) {
-      reasonWeights.add({'key': 'signalStressHigh', 'impact': 3, 'value': avgStress});
-    } else if (stressDeviation >= 0.8) {
-      reasonWeights.add({'key': 'signalStressMedium', 'impact': 2, 'value': avgStress});
+    // Signals for explanation
+    final signals = <String>[];
+    if (avgDailyStress >= 7.0 || avgSessionStress >= 7.0) {
+      signals.add(l10n.signalStressHigh); // "High study stress"
+    } else if (avgDailyStress >= 5.0) {
+      signals.add(l10n.signalStressMedium);
     }
 
-    if (moodDeviation >= 1.0) {
-      reasonWeights.add({'key': 'signalMoodLow', 'impact': 3, 'value': avgMood});
-    }
-    
-    if (consistencyScore < 50) {
-      reasonWeights.add({'key': 'signalConsistencyLow', 'impact': 2, 'value': consistencyScore});
-    }
-    
-    if (weeklyDeficitHours > 5) {
-      reasonWeights.add({'key': 'signalDeficitHigh', 'impact': 2, 'value': weeklyDeficitHours});
+    if (analytics.studyDeficit > 15) {
+      signals.add(l10n.signalDeficitHigh); // "Study deficit"
     }
 
-    // Sort by impact desc
-    reasonWeights.sort((a, b) => (b['impact'] as int).compareTo(a['impact'] as int));
-    final signals = reasonWeights.map((r) => r['key'] as String).toList();
+    if (consistency < 0.5) {
+      signals.add(l10n.signalConsistencyLow);
+    }
 
-    int? suggestedSessionMinutes;
+    if (signals.isEmpty) signals.add(l10n.baseline);
 
-    // --- ADAPTIVE LOGIC WITH BASELINE ---
-    if (stressDeviation >= 1.5) {
-      suggestedSessionMinutes = 25;
+    // Stress deviation
+    double stressDeviation = 0;
+    if (dailyMoods.length > 1) {
+      final scores = dailyMoods.map((m) => m.stressLevel.toDouble()).toList();
+      final avg = scores.reduce((a, b) => a + b) / scores.length;
+      final sumSq = scores.map((s) => (s - avg) * (s - avg)).reduce((a, b) => a + b);
+      stressDeviation = (sumSq / scores.length);
+    }
+
+    int suggestedSessionMinutes = DecisionRules.getRecommendedSessionLength(avgSessionStress);
+    final isHighStress = DecisionRules.isHighStress(avgSessionStress);
+
+    // --- UNIFIED SMART DECISION LOGIC (STRICT PRIORITY) ---
+    if (isHighStress) {
+      // RULE 2: Stress > Deficit Override
       items.add(
-        const DecisionItem(
-          titleKey: 'takeItSlowerTodayTitle',
-          descriptionKey: 'takeItSlowerTodayBody',
+        DecisionItem(
+          title: l10n.decisionHighStressOverrideTitle,
+          description: l10n.decisionHighStressOverrideBody,
           type: DecisionType.warning,
           priority: 1,
         ),
       );
-    } else if (stressDeviation >= 0.8 && consistencyScore < 50) {
-      suggestedSessionMinutes = 30;
+    } else if (analytics.studyDeficit > 10) {
       items.add(
-        const DecisionItem(
-          titleKey: 'decisionRisingStressUnstablePattern',
-          descriptionKey: 'decisionActionFixedScheduleFocus',
+        DecisionItem(
+          title: l10n.studyDeficitTitle,
+          description: l10n.studyDeficitBody,
           type: DecisionType.warning,
-          priority: 1,
+          priority: 2,
         ),
       );
-    } else if (moodDeviation >= 1.0) {
-      suggestedSessionMinutes = 20;
+    } else if (consistency < 0.6) {
       items.add(
-        const DecisionItem(
-          titleKey: 'moodNameBad',
-          descriptionKey: 'decisionLightTasksOnly',
-          type: DecisionType.warning,
-          priority: 1,
-        ),
-      );
-    } else if (avgMood >= 3.5 && avgStress < 5) {
-      suggestedSessionMinutes = 45;
-      items.add(
-        const DecisionItem(
-          titleKey: 'strongStateTitle',
-          descriptionKey: 'strongStateBody',
+        DecisionItem(
+          title: l10n.decisionLowConsistencyTitle,
+          description: l10n.decisionLowConsistencyBody,
           type: DecisionType.recommendation,
           priority: 3,
         ),
       );
-    } else {
-      suggestedSessionMinutes = 35;
-    }
-
-    // ADAPTIVE: React to behavioral success rate
-    if (successRate < 0.6 && suggestedSessionMinutes != null) {
-      suggestedSessionMinutes = suggestedSessionMinutes! - 5;
-    } else if (successRate > 0.9 && suggestedSessionMinutes != null && suggestedSessionMinutes! < 45) {
-       suggestedSessionMinutes = suggestedSessionMinutes! + 5;
+    } else if (avgDailyStress >= 6.5 && isStressRising) {
+      suggestedSessionMinutes = DecisionRules.getRecommendedSessionLength(7.0);
+      items.add(
+        DecisionItem(
+          title: l10n.decisionRisingStressTitle,
+          description: l10n.decisionActionLightReview,
+          type: DecisionType.warning,
+          priority: 1,
+        ),
+      );
+    } else if (analytics.avgDailyMood > 7 && avgDailyStress < 4) {
+      items.add(
+        DecisionItem(
+          title: l10n.strongStateTitle,
+          description: l10n.strongStateBody,
+          type: DecisionType.recommendation,
+          priority: 3,
+        ),
+      );
     }
 
     // 2) Burnout Guard
     if (burnoutScore >= 65) {
-      suggestedSessionMinutes = (suggestedSessionMinutes ?? 25).clamp(20, 25);
       items.add(
-        const DecisionItem(
-          titleKey: 'highRisk',
-          descriptionKey: 'decisionBurnoutDurationCap',
+        DecisionItem(
+          title: l10n.highRisk,
+          description: l10n.decisionBurnoutDurationCap,
           type: DecisionType.warning,
           priority: 1,
         ),
       );
     }
 
-    // Emotional Status Key matching (Fix: Use absolute stress for final labels as requested)
-    final String statusKey = avgStress >= 7.0
+    // Emotional Status Label
+    final String statusKey = (avgSessionStress >= 7.0 || avgDailyStress >= 7.0)
         ? 'decisionStatusHighStress'
-        : (avgStress >= 5.0 ? 'decisionStatusModerateStress' : 'decisionStatusLowStress');
+        : (analytics.studyDeficit > 15)
+        ? 'decisionStatusDeficit'
+        : (consistency < 0.5)
+        ? 'decisionStatusInconsistent'
+        : 'statusStable';
 
-    // 3) Trend detection
-    if (moodDataPoints >= 5 && DecisionInsights.isStressTrendIncreasing(moods)) {
+    // 3) Trend detection (Threshold: 3 sessions)
+    final hasEnoughData = recentSessions.length >= 5;
+    if (hasEnoughData && DecisionInsights.isStressTrendIncreasing(dailyMoods)) {
       items.add(
-        const DecisionItem(
-          titleKey: 'stressTrends',
-          descriptionKey: 'burnoutMessageEmotionalRisk',
+        DecisionItem(
+          title: l10n.stressTrends,
+          description: l10n.burnoutMessageEmotionalRisk,
           type: DecisionType.insight,
           priority: 2,
         ),
       );
     }
-    if (moodDataPoints >= 5 && DecisionInsights.isMoodTrendDeclining(moods)) {
+    if (hasEnoughData && DecisionInsights.isMoodTrendDeclining(dailyMoods)) {
       items.add(
-        const DecisionItem(
-          titleKey: 'moodTrends',
-          descriptionKey: 'predictionLevelHigh', 
+        DecisionItem(
+          title: l10n.moodTrends,
+          description: l10n.predictionLevelHigh, 
           type: DecisionType.insight,
           priority: 2,
         ),
@@ -163,33 +176,24 @@ class DecisionEngine {
     }
 
     // 4) Deadline + stress combo
-    final today = DateTime(now.year, now.month, now.day);
-    final hasUpcomingDeadline = deadlines.any((d) {
-      if (d.isCompleted) return false;
-      final due = DateTime(d.deadlineDate.year, d.deadlineDate.month, d.deadlineDate.day);
-      final days = due.difference(today).inDays;
-      return days >= 0 && days <= 7;
-    });
-
-    if (stressDeviation >= 1.0 && hasUpcomingDeadline) {
+    if (deadlines.any((d) => d.dueDate.difference(now).inDays <= 3)) {
       items.add(
-        const DecisionItem(
-          titleKey: 'upcomingDeadlines',
-          descriptionKey: 'takeItSlowerTodayBody',
-          type: DecisionType.warning,
-          priority: 1,
+        DecisionItem(
+          title: l10n.upcomingDeadlines,
+          description: l10n.takeItSlowerTodayBody,
+          type: DecisionType.recommendation,
+          priority: 2,
         ),
       );
     }
 
     // 5) Weekday pattern
-    final worstDay = DecisionInsights.worstMoodWeekday(moods);
-    if (moodDataPoints >= 5 && worstDay != null) {
+    final worstDay = DecisionInsights.worstMoodWeekday(dailyMoods);
+    if (worstDay != null) {
       items.add(
         DecisionItem(
-          titleKey: 'decisionWorstDay',
-          descriptionKey: 'decisionLightTasksOnly',
-          params: {'day': worstDay},
+          title: l10n.decisionWorstDay(_weekdayName(worstDay, l10n)),
+          description: l10n.decisionLightTasksOnly,
           type: DecisionType.insight,
           priority: 3,
         ),
@@ -197,85 +201,70 @@ class DecisionEngine {
     }
 
     // 6) Factor analysis
-    final factor = DecisionInsights.mostFrequentFactor(moods);
-    if (moodDataPoints >= 5 && factor != null) {
+    final factor = DecisionInsights.mostFrequentFactor(dailyMoods);
+    if (factor != null) {
       items.add(
         DecisionItem(
-          titleKey: 'decisionMainFactor',
-          descriptionKey: 'decisionActionBreakDown',
-          params: {'factor': factor},
+          title: l10n.decisionMainFactor(factor),
+          description: l10n.decisionActionBreakDown,
           type: DecisionType.insight,
-          priority: 4,
+          priority: 3,
         ),
       );
     }
 
     // 7) Consistency check
-    final lowStudy = analytics.weeklyAverageStudyHours < 1.5;
-    if (lowStudy && stressDeviation >= 1.5) {
+    final hasLowActivity = analytics.weeklyAverageStudyHours < 1.5;
+    if (hasLowActivity && avgDailyStress > 6) {
       items.add(
-        const DecisionItem(
-          titleKey: 'decisionLowActivityHighStress',
-          descriptionKey: 'decisionActionShortSessions',
+        DecisionItem(
+          title: l10n.decisionLowActivityHighStress,
+          description: l10n.decisionActionShortSessions,
           type: DecisionType.warning,
-          priority: 2,
+          priority: 1,
         ),
       );
     }
 
-    if (consistencyScore < 40) {
+    // Consistency check - only add if no higher priority warning exists
+    final hasPriorityWarning = items.any((item) => item.priority <= 2);
+    if (!hasPriorityWarning && consistency < 0.4 && moodDataPoints >= 3) {
       items.add(
-        const DecisionItem(
-          titleKey: 'decisionFixedSchedule',
-          descriptionKey: 'decisionActionFixedSchedule',
+        DecisionItem(
+          title: l10n.decisionFixedSchedule,
+          description: l10n.decisionActionFixedSchedule,
           type: DecisionType.recommendation,
-          priority: 2,
+          priority: 3,
         ),
       );
     }
 
-    final explanationKeys = <String>[];
-    if (avgStress > 7) {
-      explanationKeys.add('predictionReasonStressHigh');
-    }
-    if (consistencyScore < 0.6) {
-      explanationKeys.add('predictionReasonLowConsistencyDetail');
-    }
-    if (tasks.isNotEmpty) {
-      explanationKeys.add('predictionReasonTasksPending');
-    }
-    if (hasUpcomingDeadline) {
-      explanationKeys.add('predictionReasonDeadlinesSoon');
-    }
 
-    if (avgStress >= 6 && analytics.weeklyAverageStudyHours < 2.0) {
-      explanationKeys.add('predictionStressLikelyIncrease');
-    }
 
     // 8) Time-based context
-    if (hour >= 6 && hour < 12) {
+    if (hour < 11) {
       items.add(
-        const DecisionItem(
-          titleKey: 'decisionMorningPlanning',
-          descriptionKey: 'decisionActionPlanning',
+        DecisionItem(
+          title: l10n.decisionMorningPlanning,
+          description: l10n.decisionActionPlanning,
           type: DecisionType.recommendation,
-          priority: 3,
+          priority: 2,
         ),
       );
-    } else if (hour >= 12 && hour < 18) {
+    } else if (hour >= 11 && hour < 17) {
       items.add(
-        const DecisionItem(
-          titleKey: 'decisionAfternoonExecution',
-          descriptionKey: 'decisionActionExecution',
+        DecisionItem(
+          title: l10n.decisionAfternoonExecution,
+          description: l10n.decisionActionExecution,
           type: DecisionType.recommendation,
-          priority: 3,
+          priority: 2,
         ),
       );
-    } else if (hour >= 20) {
+    } else if (hour >= 17) {
       items.add(
-        const DecisionItem(
-          titleKey: 'decisionNightLightReview',
-          descriptionKey: 'decisionActionLightReview',
+        DecisionItem(
+          title: l10n.decisionNightLightReview,
+          description: l10n.decisionActionLightReview,
           type: DecisionType.recommendation,
           priority: 2,
         ),
@@ -283,23 +272,38 @@ class DecisionEngine {
     }
 
     final uniqueItems = _unique(items);
+    final sessionsCount = recentSessions.length;
     final confidence = _confidence(
       moodDataPoints: moodDataPoints,
-      tasksCount: tasks.length,
-      deadlinesCount: deadlines.length,
-      consistencyScore: consistencyScore,
+      sessionsCount: sessionsCount,
+      consistency: consistency,
     );
 
-    final filteredItems = confidence < 0.45
-        ? uniqueItems.where((item) => item.priority <= 2).toList()
+    final filteredItems = sessionsCount < 5
+        ? uniqueItems.where((item) => item.priority == 1).toList()
         : uniqueItems;
+
+    // Truth-consistency: if low data, add a "Collecting data" item
+    if (sessionsCount < 5) {
+      filteredItems.insert(
+        0,
+        DecisionItem(
+          title: l10n.predictionCollectingData,
+          description: l10n.predictionCollectingDataDetail,
+          type: DecisionType.insight,
+          priority: 1,
+        ),
+      );
+    }
 
     return DecisionResult(
       items: filteredItems,
       suggestedSessionMinutes: suggestedSessionMinutes,
       confidence: confidence,
-      avgMood: avgMood,
-      avgStress: avgStress,
+      avgMood: analytics.avgDailyMood,
+      avgStress: analytics.avgDailyStress,
+      avgDailyStress: analytics.avgDailyStress,
+      avgSessionStress: analytics.avgSessionStress,
       emotionalStatusKey: statusKey,
       signals: signals,
     );
@@ -309,22 +313,32 @@ class DecisionEngine {
     final seen = <String>{};
     final output = <DecisionItem>[];
     for (final value in values) {
-      if (seen.add(value.titleKey)) output.add(value);
+      if (seen.add(value.title)) output.add(value);
     }
     return output;
   }
 
   double _confidence({
     required int moodDataPoints,
-    required int tasksCount,
-    required int deadlinesCount,
-    required double consistencyScore,
+    required int sessionsCount,
+    required double consistency,
   }) {
-    double score = 0;
-    if (moodDataPoints >= 4) score += 0.3;
-    if (tasksCount >= 2) score += 0.2;
-    if (deadlinesCount >= 1) score += 0.2;
-    score += (consistencyScore / 100.0) * 0.3;
-    return score.clamp(0.0, 1.0);
+    // Truth-Consistency Calibration
+    if (sessionsCount >= 10 && consistency > 0.7) return 0.9; // High
+    if (sessionsCount >= 5) return 0.6; // Medium
+    return 0.3; // Low
+  }
+
+  String _weekdayName(int day, AppLocalizations l10n) {
+    switch (day) {
+      case 1: return l10n.monday;
+      case 2: return l10n.tuesday;
+      case 3: return l10n.wednesday;
+      case 4: return l10n.thursday;
+      case 5: return l10n.friday;
+      case 6: return l10n.saturday;
+      case 7: return l10n.sunday;
+      default: return '';
+    }
   }
 }

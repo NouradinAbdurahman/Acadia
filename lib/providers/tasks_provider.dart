@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +7,8 @@ import '../models/task.dart';
 import 'app_providers.dart';
 import 'deadlines_provider.dart';
 import 'semester_provider.dart';
+
+import '../services/smart_notification_engine.dart';
 
 
 final taskFilterProvider = StateProvider<String>((ref) => 'all');
@@ -16,16 +19,25 @@ final tasksListSegmentProvider = StateProvider<String>((ref) => 'tasks');
 final tasksProvider = StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>>>((ref) {
   final repo = ref.watch(taskRepositoryProvider);
   final userId = ref.watch(currentUserProvider)?.id;
-  final semesterId = ref.watch(activeSemesterProvider);
+  final semesterIdAsync = ref.watch(activeSemesterProvider);
   final supabase = Supabase.instance.client;
+  
   final notifier = TasksNotifier(
     ref: ref,
     taskRepository: repo,
     supabaseClient: supabase,
   );
-  if (userId != null) {
-    notifier.loadTasks(userId: userId, semesterId: semesterId);
-  }
+  
+  semesterIdAsync.when(
+    data: (id) {
+      if (userId != null && id != null) {
+        notifier.loadTasks(userId: userId, semesterId: id);
+      }
+    },
+    loading: () => {},
+    error: (_, __) => {},
+  );
+  
   return notifier;
 });
 
@@ -114,9 +126,11 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
 
   Future<void> loadTasks({required String userId, String? semesterId}) async {
     try {
-      // Preserve previous data during refresh so UI doesn't blank/flicker.
-      state = const AsyncValue<List<Task>>.loading().copyWithPrevious(state);
+      // Strict reset on semester load to prevent cross-semester leaks.
+      state = const AsyncValue<List<Task>>.loading();
       final list = await taskRepository.getTasks(userId: userId, semesterId: semesterId) as List<Task>;
+      
+      debugPrint('[TaskProvider] Loading for Semester: $semesterId | Data Count: ${list.length}');
       if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
@@ -127,7 +141,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
 
   Future<void> refresh() async {
     final userId = supabaseClient.auth.currentUser?.id;
-    final semesterId = _ref.read(activeSemesterProvider);
+    final semesterId = _ref.read(activeSemesterProvider).value;
     if (userId != null) {
       await loadTasks(userId: userId, semesterId: semesterId);
     }
@@ -148,7 +162,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) return;
 
-    final semesterId = _ref.read(activeSemesterProvider);
+    final semesterId = _ref.read(activeSemesterProvider).value;
     if (semesterId == null) {
       throw Exception('No active semester set. Cannot create task.');
     }
@@ -183,6 +197,8 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     try {
       final created = await taskRepository.createTask(newTask);
       state = state.whenData((List<Task> tasks) => [created, ...tasks]);
+      // Trigger smart notifications after successful create without blocking UX.
+      _runSmartNotifications(state.valueOrNull ?? const <Task>[]);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -212,6 +228,8 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
             .map<Task>((t) => t.id == updated.id ? updated : t)
             .toList();
       });
+      // Trigger smart notifications after successful update without blocking UX.
+      _runSmartNotifications(state.valueOrNull ?? const <Task>[]);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -241,9 +259,21 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       state = state.whenData((List<Task> tasks) {
         return tasks.where((t) => t.id != taskId).toList();
       });
+      // Trigger smart notifications after successful delete without blocking UX.
+      _runSmartNotifications(state.valueOrNull ?? const <Task>[]);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
+    }
+  }
+
+  Future<void> _runSmartNotifications(List<Task> tasks) async {
+    if (!mounted) return;
+
+    try {
+      await SmartNotificationEngine.evaluateTaskChanges(tasks);
+    } catch (_) {
+      // Non-critical: don't let notification failures break task flows
     }
   }
 }

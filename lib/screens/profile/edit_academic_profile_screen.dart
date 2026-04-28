@@ -121,7 +121,7 @@ class _EditAcademicProfileScreenState
           .updateProfile(updatedProfile);
 
       // Keep weekly goal scoped to active semester.
-      final activeSemester = ref.read(activeSemesterFullProvider);
+      final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
       if (activeSemester != null) {
         await ref.read(semesterProvider.notifier).updateSemester(
               activeSemester.copyWith(weeklyStudyGoal: _studyHours.toInt()),

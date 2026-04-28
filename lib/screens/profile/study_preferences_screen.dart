@@ -43,7 +43,7 @@ class _StudyPreferencesScreenState
   }
 
   Future<void> _loadWeeklyGoal() async {
-    final activeSemester = ref.read(activeSemesterFullProvider);
+    final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
     if (!mounted) return;
 
     setState(() {
@@ -55,7 +55,7 @@ class _StudyPreferencesScreenState
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     final profile = ref.read(studentProfileProvider).value;
-    final activeSemester = ref.read(activeSemesterFullProvider);
+    final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
     if (activeSemester == null) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -126,7 +126,7 @@ class _StudyPreferencesScreenState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final hasActiveSemester = ref.watch(activeSemesterFullProvider) != null;
+    final hasActiveSemester = ref.watch(activeSemesterFullProvider).valueOrNull != null;
     final fallbackGoal = ref.watch(weeklyStudyGoalHoursProvider).toDouble();
     final goalValue = _studyHours ?? fallbackGoal;
 

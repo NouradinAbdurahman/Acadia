@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../l10n/l10n_extension.dart';
@@ -24,6 +25,9 @@ import '../../widgets/semester/semester_comparison_card.dart';
 import '../../widgets/semester/smart_insights_card.dart';
 import '../../providers/student_profile_provider.dart';
 import '../../providers/notifications_provider.dart';
+import '../../services/smart_notification_engine.dart';
+import '../../providers/tasks_provider.dart';
+import '../../models/task.dart';
 import '../../widgets/common/animated_pressable.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/global_refresh_provider.dart';
@@ -34,13 +38,16 @@ import '../../providers/study_sessions_provider.dart';
 import '../../providers/prediction_provider.dart';
 import '../../domain/decision/decision_result.dart';
 import '../../domain/prediction/prediction_result.dart';
+import '../../domain/decision/decision_rules.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../models/mood_log.dart';
 import '../../models/trend_data.dart';
 import '../../widgets/risk/risk_widgets.dart';
+import '../../providers/risk_provider.dart';
 import '../../providers/semester_provider.dart';
 import 'widgets/home_skeleton_screen.dart';
+import '../../widgets/mood/mood_daily_list.dart';
 import '../../providers/course_provider.dart';
 import '../../widgets/semester/semester_switcher_bottom_sheet.dart';
 
@@ -78,6 +85,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     
+    // Watch semester to force rebuild on change
+    final semesterIdAsync = ref.watch(activeSemesterProvider);
+    final semesterId = semesterIdAsync.value;
+    
+    // Evaluate Smart Notifications dynamically
+    ref.listen(analyticsProvider, (prev, next) {
+      next.whenData((data) {
+        // Provide a direct repository fetcher to ensure notifications use
+        // fresh task data (avoid relying on UI provider cache/state).
+        Future<List<Task>> fetcher() async {
+          final userId = ref.read(currentUserProvider)?.id;
+          final semesterIdValue = ref.read(activeSemesterProvider).value;
+          if (userId == null) return <Task>[];
+          try {
+            final repo = ref.read(taskRepositoryProvider);
+            return await repo.getTasks(userId: userId, semesterId: semesterIdValue);
+          } catch (_) {
+            return <Task>[];
+          }
+        }
+        if (semesterId != null && next.hasValue) {
+          SmartNotificationEngine.evaluate(
+            analytics: next.value!,
+            fetchTasks: fetcher,
+          );
+        }
+      });
+    });
+
     // Select ONLY values to prevent rebuild spam during refreshing states
     final appUser = ref.watch(currentAppUserProvider.select((v) => v.asData?.value));
     final data = ref.watch(dashboardProvider.select((v) => v.value));
@@ -85,7 +121,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final studentProfile = ref.watch(studentProfileProvider).value;
     final unreadNotifications = ref.watch(unreadNotificationsCountProvider);
     final todayMoodAsync = ref.watch(todayMoodProvider);
-    final moodLogsAsync = ref.watch(moodLogsProvider);
+    final moodLogsAsync = ref.watch(dailyMoodLogsProvider);
     final analytics = ref.watch(analyticsProvider.select((v) => v.value));
     final decision = ref.watch(decisionProvider);
     final prediction = ref.watch(predictionProvider);
@@ -93,6 +129,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isFirstLoad = data == null;
 
     return Scaffold(
+      key: Key('home_screen_${semesterId ?? 'none'}'),
       body: AuthBackgroundContainer(
         child: SafeArea(
           bottom: false,
@@ -153,33 +190,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ],
 
                               // --- SECTION 2: RISK SCORE CARD ---
-                              const RiskScoreCard(),
-
-                              const SizedBox(height: AppSpacing.lg),
+                              if (ref.watch(riskProvider).hasData) ...[
+                                const RiskScoreCard(),
+                                const SizedBox(height: AppSpacing.lg),
+                              ],
 
                               // --- SECTION 2.1: MOOD ENTRY CARD OR SUMMARY (CONDITIONAL) ---
                               ref.watch(moodSettingsProvider.notifier).shouldShowDaily
                                   ? todayMoodAsync.when(
-                                      data: (hasLoggedToday) => moodLogsAsync.when(
-                                        data: (logs) {
-                                          if (!hasLoggedToday) {
-                                            return _buildMoodEntryCard(context, theme, l10n);
-                                          }
-                                          final todayLog = logs.isNotEmpty ? logs.first : null;
-                                          return todayLog != null
-                                              ? _buildMoodSummaryCard(context, theme, l10n, todayLog)
-                                              : const SizedBox.shrink();
-                                        },
-                                        loading: () => const SizedBox.shrink(),
-                                        error: (e, st) => const SizedBox.shrink(),
-                                      ),
+                                      data: (hasLoggedToday) {
+                                        if (!hasLoggedToday) {
+                                          return _buildMoodEntryCard(context, theme, l10n);
+                                        }
+                                        return const SizedBox.shrink();
+                                      },
                                       loading: () => const SizedBox.shrink(),
                                       error: (e, st) => const SizedBox.shrink(),
                                     )
                                   : const SizedBox.shrink(),
-                              if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
-                                  todayMoodAsync.asData?.value != null)
+                               if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
+                                  todayMoodAsync.asData?.value != null) ...[
                                 const SizedBox(height: AppSpacing.md),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      l10n.dailyMoodHistory,
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Haptics.vibrate(HapticsType.selection);
+                                        context.push('/mood/history');
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                        child: Text(
+                                          l10n.view,
+                                          style: theme.textTheme.labelMedium?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                AppGlassCard(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  child: MoodDailyList(
+                                    moodLogsAsync: moodLogsAsync,
+                                    days: 7,
+                                    showDate: false,
+                                    isFixed: true,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                              ],
 
 
 
@@ -293,7 +365,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     DashboardData data,
     int unreadNotifications,
   ) {
-    final greetingName = appUser?.name?.split(' ').first ?? l10n.student;
 
     return Row(
       children: [
@@ -310,32 +381,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      l10n.helloUser(greetingName),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                l10n.welcome,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
               ),
-                  Text(
-                    studentProfile?.major ?? l10n.student,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
+              Text(
+                appUser?.name ?? l10n.student,
+                softWrap: true,
+                overflow: TextOverflow.visible,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: theme.colorScheme.onSurface,
+                  height: 1.2,
+                  decoration: TextDecoration.underline,
+                  decorationThickness: 2,
+                  decorationColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              if (studentProfile?.universityName != null)
+                Text(
+                  studentProfile!.universityName!,
+                  softWrap: true,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
+                ),
+              Text(
+                studentProfile?.major ?? l10n.student,
+                softWrap: true,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
             ],
           ),
         ),
@@ -397,12 +483,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final todayWeekday = DateTime.now().weekday;
     final bool isUrgent = todayWeekday >= 4 && progressVal < 0.4;
     
-    String motivationText = analytics.isStable 
-        ? l10n.justGettingStarted 
-        : l10n.justGettingStarted;
-    if (analytics.trend == 'improving') {
-      motivationText = l10n.statusImproving; // Improving as a placeholder for positive progress
+    String motivationText = l10n.justGettingStarted;
+    if (analytics.trackedSessionCount >= 5) {
+      if (analytics.trend == 'improving') {
+        motivationText = l10n.statusImproving;
+      } else if (analytics.trend == 'declining') {
+        motivationText = l10n.statusDeclining;
+      } else {
+        motivationText = l10n.statusStable;
+      }
     }
+    
     if (isUrgent) {
       motivationText = l10n.behindThisWeek;
     }
@@ -541,15 +632,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildAnalysisTag(theme, l10n.statusStable),
+                      // 1. Trend tag
                       _buildAnalysisTag(
                         theme, 
-                        analytics.trend == 'improving' ? l10n.statusImproving : l10n.statusDeclining,
-                        color: analytics.trend == 'improving' ? Colors.green : Colors.orange,
-                        icon: analytics.trend == 'improving' ? HeroIcons.arrowTrendingUp : HeroIcons.arrowTrendingDown,
+                        analytics.trend == 'improving' 
+                            ? l10n.statusImproving 
+                            : (analytics.trend == 'declining' 
+                                ? l10n.statusDeclining 
+                                : l10n.statusStable),
+                        color: analytics.trend == 'improving' 
+                            ? Colors.green 
+                            : (analytics.trend == 'declining' ? Colors.orange : theme.colorScheme.primary),
+                        icon: analytics.trend == 'improving' 
+                            ? HeroIcons.arrowTrendingUp 
+                            : (analytics.trend == 'declining' ? HeroIcons.arrowTrendingDown : HeroIcons.checkCircle),
                       ),
-                      _buildAnalysisTag(theme, analytics.isStable ? l10n.patternConsistent : l10n.patternIrregular),
-                      _buildAnalysisTag(theme, analytics.isStable ? l10n.confidenceHigh : l10n.confidenceMedium),
+                      // 2. Pattern tag
+                      _buildAnalysisTag(
+                        theme, 
+                        analytics.consistency >= 0.6 ? l10n.patternConsistent : l10n.patternIrregular,
+                        icon: analytics.consistency >= 0.6 ? HeroIcons.checkCircle : HeroIcons.exclamationTriangle,
+                        color: analytics.consistency >= 0.6 ? Colors.green : Colors.orange,
+                      ),
+                      // 3. Confidence tag
+                      _buildAnalysisTag(
+                        theme, 
+                        analytics.trackedSessionCount >= 10 
+                            ? l10n.confidenceHigh 
+                            : (analytics.trackedSessionCount >= 5 
+                                ? l10n.confidenceMedium 
+                                : l10n.confidenceLow),
+                      ),
                     ],
                   ),
               ],
@@ -841,7 +954,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Row(
                   children: [
                     Text(
-                      _getMoodLabel(todayLog.moodLevel),
+                      _getMoodLabel(l10n, todayLog.moodLevel),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -956,14 +1069,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  String _getMoodLabel(int level) {
+  String _getMoodLabel(AppLocalizations l10n, int level) {
     switch (level) {
-      case 1: return 'Terrible';
-      case 2: return 'Bad';
-      case 3: return 'Neutral';
-      case 4: return 'Good';
-      case 5: return 'Amazing';
-      default: return 'Unknown';
+      case 1: return l10n.moodTerrible;
+      case 2: return l10n.moodBad;
+      case 3: return l10n.moodNeutral;
+      case 4: return l10n.moodGood;
+      case 5: return l10n.moodAmazing;
+      default: return l10n.moodUnknown;
     }
   }
 
@@ -975,7 +1088,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     DecisionResult decision,
   ) {
     final signature = decision.sortedItems
-        .map((item) => '${item.priority}:${item.titleKey}')
+        .map((item) => '${item.priority}:${item.title}')
         .join('|');
     final primary = decision.primaryDecision;
     if (primary == null) {
@@ -1024,7 +1137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (decision.suggestedSessionMinutes != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
-              l10n.get('decisionRecommendedSession', {'minutes': decision.suggestedSessionMinutes!}),
+              l10n.decisionRecommendedSession(decision.suggestedSessionMinutes!),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w700,
@@ -1076,14 +1189,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            l10n.get(item.titleKey, item.params),
+            item.title,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 2),
           Text(
-            l10n.get(item.descriptionKey, item.params),
+            item.description,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
               fontWeight: FontWeight.w600,
@@ -1112,8 +1225,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ? theme.colorScheme.error.withValues(alpha: 0.7)
             : theme.colorScheme.primary);
 
-    final title = l10n.get(item.titleKey, item.params);
-    final action = l10n.get(item.descriptionKey, item.params);
+    final title = item.title;
+    final action = item.description;
 
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -1166,18 +1279,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   String _resolveDecisionTitle(AppLocalizations l10n, String message) {
-    final parts = message.split('|');
-    final key = parts.first;
-    final value = parts.length > 1 ? parts[1] : null;
-
-    Map<String, dynamic>? params;
-    if (key == 'decision_main_factor' || key == 'decisionMainFactor') {
-      params = {'factor': _factorLabel(l10n, value ?? '')};
-    } else if (key == 'decision_worst_day' || key == 'decisionWorstDay') {
-      params = {'day': _weekdayNameFromInt(value)};
-    }
-
-    return l10n.get(key, params);
+    return message;
   }
 
   String _resolveDecisionAction(AppLocalizations l10n, String message) {
@@ -1221,7 +1323,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetRef ref,
     int? suggestedMinutes,
   ) {
-    final minutes = suggestedMinutes ?? 45;
+    final analytics = ref.read(analyticsProvider).value;
+    final minutes = suggestedMinutes ?? DecisionRules.getRecommendedSessionLength(analytics?.avgSessionStress ?? 0.0);
     final timerState = ref.read(studyTimerProvider);
     final timer = ref.read(studyTimerProvider.notifier);
 
@@ -1290,7 +1393,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               (reason) => Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  '• ${_resolvePredictionReason(l10n, reason)}',
+                  '• $reason',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
@@ -1341,7 +1444,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   day,
                   time,
                   item.durationMinutes,
-                  _resolvePlanFocus(l10n, item.focusKey),
+                  item.focusKey,
                 )}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
@@ -1360,10 +1463,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: AppSpacing.xs),
             ...prediction.explanationKeys.map(
-              (key) => Padding(
+              (reason) => Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  '• ${_resolvePredictionExplanation(l10n, key)}',
+                  '• $reason',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.82),
                     fontWeight: FontWeight.w600,
@@ -1379,48 +1482,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  String _resolvePredictionReason(AppLocalizations l10n, String key) {
-    switch (key) {
-      case 'predictionReasonHighStressToday':
-        return l10n.predictionReasonHighStressToday;
-      case 'predictionReasonLowConsistency':
-        return l10n.predictionReasonLowConsistency;
-      case 'predictionReasonUpcomingWorkload':
-        return l10n.predictionReasonUpcomingWorkload;
-      default:
-        return key;
-    }
-  }
 
-  String _resolvePredictionExplanation(AppLocalizations l10n, String key) {
-    switch (key) {
-      case 'predictionExplanationStressHigh':
-        return l10n.predictionReasonStressHigh;
-      case 'predictionExplanationLowConsistency':
-        return l10n.predictionReasonLowConsistencyDetail;
-      case 'predictionExplanationTasksPending':
-        return l10n.predictionReasonTasksPending;
-      case 'predictionExplanationDeadlinesSoon':
-        return l10n.predictionReasonDeadlinesSoon;
-      default:
-        return key;
-    }
-  }
 
-  String _resolvePlanFocus(AppLocalizations l10n, String key) {
-    switch (key) {
-      case 'predictionPlanLightFocus':
-        return l10n.predictionPlanLightFocus;
-      case 'predictionPlanFocusExecution':
-        return l10n.predictionPlanFocusExecution;
-      case 'predictionPlanDeepExecution':
-        return l10n.predictionPlanDeepExecution;
-      case 'predictionPlanLightReview':
-        return l10n.predictionPlanLightReview;
-      default:
-        return key;
-    }
-  }
+
 
   String _relativeDayLabel(AppLocalizations l10n, DateTime date) {
     final now = DateTime.now();
@@ -1817,18 +1881,21 @@ class _ProgressOverviewCard extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.sm),
                 _progressLine(
                   context: context,
+                  l10n: l10n,
                   label: l10n.study,
                   value: studyStatus,
                   color: studyColor,
                 ),
                 _progressLine(
                   context: context,
+                  l10n: l10n,
                   label: l10n.tasks,
                   value: l10n.trendPercentCompleted(taskPercent),
                   color: taskColor,
                 ),
                 _progressLine(
                   context: context,
+                  l10n: l10n,
                   label: l10n.workloadTrend,
                   value: workloadStatus,
                   color: workloadColor,
@@ -1850,6 +1917,7 @@ class _ProgressOverviewCard extends ConsumerWidget {
 
   Widget _progressLine({
     required BuildContext context,
+    required AppLocalizations l10n,
     required String label,
     required String value,
     required Color color,
@@ -1863,7 +1931,7 @@ class _ProgressOverviewCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$label:', style: theme.textTheme.bodyMedium),
+            Text(l10n.labelWithColon(label), style: theme.textTheme.bodyMedium),
             const SizedBox(height: 2),
             Padding(
               padding: const EdgeInsets.only(left: 12),
@@ -1885,7 +1953,7 @@ class _ProgressOverviewCard extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Text('$label: ', style: theme.textTheme.bodyMedium),
+          Text(l10n.labelWithColonAndSpace(label), style: theme.textTheme.bodyMedium),
           Expanded(
             child: Text(
               value,
@@ -2340,81 +2408,88 @@ class _SemesterBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeSemester = ref.watch(activeSemesterFullProvider);
+    final activeSemesterAsync = ref.watch(activeSemesterFullProvider);
     final isSwitching = ref.watch(isSemesterSwitchingProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    if (activeSemester == null) return const SizedBox.shrink();
+    return activeSemesterAsync.when(
+      data: (activeSemester) {
+        if (activeSemester == null) return const SizedBox.shrink();
 
-    return AnimatedPressable(
-      onTap: isSwitching ? null : () {
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => const SemesterSwitcherBottomSheet(),
+        return AnimatedPressable(
+          onTap: isSwitching ? null : () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const SemesterSwitcherBottomSheet(),
+            );
+          },
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: isSwitching ? 0.6 : 1.0,
+            child: AppGlassCard(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: HeroIcon(
+                       HeroIcons.calendarDays,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.selectedSemester,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          activeSemester.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isSwitching)
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                      ),
+                    )
+                  else
+                    HeroIcon(
+                      HeroIcons.chevronUpDown,
+                      size: 20,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+                    ),
+                ],
+              ),
+            ),
+          ),
         );
       },
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: isSwitching ? 0.6 : 1.0,
-        child: AppGlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: HeroIcon(
-                   HeroIcons.calendarDays,
-                  size: 20,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Selected Semester',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      activeSemester.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isSwitching)
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
-                  ),
-                )
-              else
-                HeroIcon(
-                  HeroIcons.chevronUpDown,
-                  size: 20,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                ),
-            ],
-          ),
-        ),
-      ),
+      loading: () => const SizedBox.shrink(), // Silent during initial load
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

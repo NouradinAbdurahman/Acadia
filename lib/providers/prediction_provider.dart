@@ -5,9 +5,8 @@ import '../domain/prediction/prediction_result.dart';
 import 'analytics_provider.dart';
 import 'deadlines_provider.dart';
 import 'decision_provider.dart';
+import 'locale_provider.dart';
 import 'tasks_provider.dart';
-
-final _lastPredictionResult = StateProvider<PredictionResult?>((ref) => null);
 
 final predictionProvider = Provider<PredictionResult>((ref) {
   final analyticsAsync = ref.watch(analyticsProvider);
@@ -17,13 +16,16 @@ final predictionProvider = Provider<PredictionResult>((ref) {
   final tasks = ref.watch(tasksProvider).value ?? const [];
   final deadlines = ref.watch(deadlinesProvider).value ?? const [];
 
-  // If analytics is still loading (e.g. during pull-to-refresh), hold the
-  // previous result so prediction cards don't disappear.
+  final appLocalizations = ref.watch(appLocalizationsProvider);
+
+  // If analytics is still loading and has no value yet, return empty.
+  // Note: AsyncValue.value preserves the previous data during refreshes.
   if (analytics == null) {
-    return ref.read(_lastPredictionResult) ?? const PredictionResult.empty();
+    return const PredictionResult.empty();
   }
 
   final result = PredictionEngine().evaluate(
+    l10n: appLocalizations,
     analytics: analytics,
     decision: decision,
     studyAnalytics: studyAnalytics,
@@ -31,7 +33,5 @@ final predictionProvider = Provider<PredictionResult>((ref) {
     deadlines: deadlines,
   );
 
-  // Cache for use during next reload.
-  Future.microtask(() => ref.read(_lastPredictionResult.notifier).state = result);
   return result;
 });

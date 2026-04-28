@@ -548,6 +548,27 @@
   state and provides a clear audit trail of all schema evolution.
 
 
+────────────────────────────────────────────────────────────────────────────────
+  RULE 19 — RIVERPOD ASYNC CONTEXT: ASYNC_NOTIFIER USAGE
+────────────────────────────────────────────────────────────────────────────────
+
+  When interacting with AsyncNotifierProvider or any AsyncValue source:
+
+  - ALWAYS use `.value` or `watch(provider.future)` to get the underlying data.
+  - NEVER compare an `AsyncValue` directly to its internal data type (e.g., comparing 
+    AsyncValue<String> to a String). This will always fail or return false.
+  - Be careful when using `.value` as it can be null during loading or error states 
+    if no previous data exists. Use `.when()` for UI rendering (Rule 13).
+
+  Example of CORRECT usage in a Provider:
+      final activeId = ref.watch(activeSemesterProvider).value;
+      if (activeId == null) return null;
+
+  Example of INCORRECT usage (will not work):
+      final activeId = ref.watch(activeSemesterProvider); // returns AsyncValue
+      if (activeId == 'some_id') ... // ❌ Always false
+
+
 ================================================================================
-  END OF RULES — Last updated: 2026-04-05
+  END OF RULES — Last updated: 2026-04-28
 ================================================================================

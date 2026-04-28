@@ -70,8 +70,12 @@
   "deadlineLinkedTasksProgress": "{completed} / {total} tasks completed",
   "@deadlineLinkedTasksProgress": {
     "placeholders": {
-      "completed": {"type": "int"},
-      "total": {"type": "int"}
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "deadlineNoLinkedTasks": "No tasks linked to this deadline yet.",
@@ -178,7 +182,7 @@
   "duration": "Duration",
   "pomodoro": "Pomodoro",
   "review": "Review",
-  "deepFocus": "Deep Focus",
+  "deepFocus": "Deep focus",
   "analytics": "Analytics",
   "studyHours": "Study hours",
   "taskCompletionRate": "Task completion rate",
@@ -198,20 +202,28 @@
   "studyTimeDeltaMsg": "Your weekly study time has {action} by {percent}%",
   "@studyTimeDeltaMsg": {
     "placeholders": {
-      "action": { "type": "String" },
-      "percent": { "type": "int" }
+      "action": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "riskIncreased": "Risk increased by {value}%",
   "@riskIncreased": {
     "placeholders": {
-      "value": { "type": "int" }
+      "value": {
+        "type": "int"
+      }
     }
   },
   "riskDecreased": "Risk decreased by {value}%",
   "@riskDecreased": {
     "placeholders": {
-      "value": { "type": "int" }
+      "value": {
+        "type": "int"
+      }
     }
   },
   "increased": "increased",
@@ -229,8 +241,6 @@
   "addFirstTaskCTA": "Add your first task",
   "startStudyingHint": "Start studying to see activity here",
   "viewHistoryMode": "Viewing History",
-  "increased": "increased",
-  "decreased": "decreased",
   "comingSoon": "Coming soon",
   "taskDetail": "Task Detail",
   "deadlineDetail": "Deadline Detail",
@@ -342,6 +352,9 @@
   "avatarUploadFailed": "Failed to upload avatar",
   "mediumRisk": "Medium Risk",
   "highRisk": "High Risk",
+  "riskLevelCritical": "Critical",
+  "riskLevelWarning": "Warning",
+  "riskLevelSafe": "Safe",
   "riskScore": "Risk Score",
   "remaining": "remaining",
   "studyLogged": "Study logged",
@@ -515,7 +528,7 @@
   "galleryPermissionMessage": "Please allow gallery access in settings to change your profile picture.",
   "chooseACourse": "Choose a course",
   "backToHome": "Back to Home",
-  "notEnoughData": "Not enough data yet",
+  "notEnoughData": "Start tracking to see trends",
   "addCoursesPrompt": "Add your courses to start tracking progress.",
   "noUpcomingDeadlines": "No deadlines due soon",
   "caughtUp": "You are all caught up!",
@@ -598,13 +611,35 @@
   "riskOverdueTasks": "Overdue tasks",
   "riskUpcomingTasks": "Tasks due soon",
   "riskStudyDeficit": "Study deficit",
+  "riskSessionStress": "Session stress",
+  "riskConsistencyImpact": "Consistency impact",
   "riskStatusMessage": "{count} overdue {count, plural, =1{task} other{tasks}}",
   "riskInterpretationOnTrack": "You are on track. Keep your current study pace.",
   "riskInterpretationHigh": "You are at high risk due to missed deadlines and insufficient study hours.",
   "riskInterpretationMedium": "Your risk is moderate. Focus on completing tasks and increasing study time.",
   "riskInterpretationLow": "You are in a safe range. Keep your current progress.",
+  "riskInterpretationStudyDeficit": "Increase study time immediately",
+  "studyDeficitTitle": "High Study Deficit",
+  "studyDeficitBody": "Increase study time immediately to stay on track.",
+  "decisionHighSessionStressTitle": "High Study Stress",
+  "decisionHighSessionStressBody": "Reduce session length to 30-40 min to prevent burnout.",
+  "decisionLowConsistencyTitle": "Build Study Consistency",
+  "decisionLowConsistencyBody": "Fix your schedule before increasing workload.",
+  "burnoutExplanationNew": "Burnout risk is driven by sustained high stress and severe study deficit.",
+  "startTrackingToSeeTrends": "Start tracking to see trends",
+  "noGpaDataAvailable": "No GPA data available",
+  "riskInterpretationFocusTasks": "Focus on completing tasks",
   "riskHoursRemaining": "{hours}h remaining",
   "riskGoalReached": "Goal reached!",
+  "historicalConsistency": "Historical consistency",
+  "historicalConsistencyScoreLine": "Historical consistency: {score}% ({trend})",
+  "weeklyConsistency": "This week consistency",
+  "decisionHighStressOverrideTitle": "Reduce workload",
+  "decisionHighStressOverrideBody": "Focus on shorter sessions to prevent burnout.",
+  "riskExplanationLowStudyHighStress": "High Risk due to low study activity and high stress",
+  "riskExplanationDeficitOnly": "High Risk due to severe study deficit",
+  "riskExplanationStressOnly": "High Risk due to critical stress levels",
+  "riskExplanationGeneric": "High Risk due to combined academic signals",
   "@riskStatusMessage": {
     "placeholders": {
       "count": {
@@ -724,7 +759,6 @@
   "component": "Component",
   "componentTitle": "Title",
   "componentTitleHint": "e.g. Midterm, Project, Final, Quiz",
-  "score": "Score",
   "scoreHint": "e.g. 85",
   "percentage": "Percentage",
   "percentageHint": "e.g. 40",
@@ -788,7 +822,7 @@
   "trendPerformanceNeedThreeResults": "Add at least 3 course results to see performance trends.",
   "trendSummaryTitle": "Trend Summary",
   "trendOverallStatusTitle": "Overall Status",
-  "trendNotEnoughData": "Not enough data",
+  "trendNotEnoughData": "Insufficient data",
   "trendStable": "Stable",
   "trendImproving": "Improving",
   "trendDeclining": "Declining",
@@ -843,6 +877,10 @@
   "trendStatusStableProgress": "Stable progress",
   "trendStatusOnTrackDetail": "Your recent activity looks balanced. Keep this pace.",
   "trendStatusNeedsFocusDetail": "Your activity is low and task progress is incomplete. Focus on completing tasks and increasing study time.",
+  "trendStatusLowActivityHighCompletion": "Your activity is low, but task completion is strong.",
+  "trendStatusNeedsAttention": "Needs attention",
+  "trendStatusNeedsImprovement": "Needs improvement",
+  "trendStatusCriticalRiskDetail": "Risk factors identified. Review your study habits.",
   "trendInsightBuildConsistencyTitle": "Build study consistency",
   "trendInsightStudyIncreasedSignificantlyTitle": "Study increased significantly",
   "trendInsightStudyImprovedTitle": "Study improved",
@@ -854,6 +892,7 @@
   "trendInsightWorkloadRisingTitle": "Workload is rising",
   "trendInsightPerformanceDecliningTitle": "Performance declining",
   "trendInsightPerformanceImprovingTitle": "Performance improving",
+  "trendInsightPerformanceStableTitle": "Performance stable",
   "trendInsightStableTitle": "Stable trends",
   "trendInsightBuildConsistencyMessage": "Start building a daily study habit.",
   "trendInsightStudyIncreasedMessage": "Study increased by {percent}%. Keep this pace to stay ahead.",
@@ -896,7 +935,18 @@
   },
   "trendInsightPerformanceDecliningMessage": "Performance trend is decreasing. Review weak courses this week.",
   "trendInsightPerformanceImprovingMessage": "Performance trend is improving. Keep the same study consistency.",
+  "trendInsightPerformanceStableMessage": "Performance trend is stable. Keep up the consistent effort.",
   "trendInsightStableMessage": "No significant change yet. Keep logging consistently.",
+  "trendInsightLimitedDataTitle": "Limited data for period",
+  "trendInsightLimitedDataMessage": "Not enough sessions tracked in this specific time range to calculate reliable trends.",
+  "trendWorsening": "Worsening",
+  "trendImproving": "Improving",
+  "trendStable": "Stable",
+  "trendUnstable": "Unstable",
+  "trendModerate": "Moderate",
+  "recoveryMessage": "You are recovering. Keep this pattern.",
+  "burnoutTrendNoHistory": "Not enough data to detect trend yet.",
+  "burnoutTrendNoRecovery": "No recovery trend detected yet.",
   "dashboardRiskLevelTitle": "Risk Level",
   "dashboardRiskLevelValue": "Risk Level: {level}",
   "@dashboardRiskLevelValue": {
@@ -977,21 +1027,31 @@
   "todayProgress": "Today: {completed} / {goal}",
   "@todayProgress": {
     "placeholders": {
-      "completed": { "type": "String" },
-      "goal": { "type": "String" }
+      "completed": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
     }
   },
   "weeklyProgress": "This week: {completed} / {goal}",
   "@weeklyProgress": {
     "placeholders": {
-      "completed": { "type": "String" },
-      "goal": { "type": "String" }
+      "completed": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
     }
   },
-  "streakDays": "{count} day streak",
+  "streakDays": "{count} day{count, plural, =1{} other{s}}",
   "@streakDays": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "noStreak": "Start a streak today",
@@ -1001,12 +1061,16 @@
   "lowFocus": "Low Focus",
   "mediumFocus": "Medium Focus",
   "highFocus": "High Focus",
-  "goodFocus": "Good Focus",
+  "goodFocus": "Good focus",
   "todayFocusedContext": "{minutes}m focused tonight • {sessions} sessions",
   "@todayFocusedContext": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "sessions": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      },
+      "sessions": {
+        "type": "int"
+      }
     }
   },
   "studyIntent": "Study Intent",
@@ -1015,13 +1079,17 @@
   "endsAt": "Ends at {time}",
   "@endsAt": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "endsAround": "Ends around {time}",
   "@endsAround": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "structuredSession": "Structured session",
@@ -1029,14 +1097,15 @@
     "description": "Label for structure-based sessions like Pomodoro"
   },
   "remainingTime": "Remaining time",
-  "highFocus": "High Focus",
-  "deepFocus": "Deep Focus",
-  "goodFocus": "Good Focus",
   "sessionProgress": "Session {current} of {total}",
   "@sessionProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "stayFocusedMsg": "Stay focused. You're doing well.",
@@ -1045,7 +1114,9 @@
   "youStayedFocused": "You stayed focused for {minutes} minutes",
   "@youStayedFocused": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "recommended": "Recommended",
@@ -1053,13 +1124,17 @@
   "weeklyGoalTag": "Goal: {goal}m",
   "@weeklyGoalTag": {
     "placeholders": {
-      "goal": { "type": "int" }
+      "goal": {
+        "type": "int"
+      }
     }
   },
   "minutesDone": "{minutes}m done",
   "@minutesDone": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "sessionTooShort": "Session Too Short",
@@ -1071,43 +1146,53 @@
   "remainingHours": "{hours}h remaining",
   "@remainingHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "catchUpMessage": "{hours}h remaining • You need to catch up",
   "@catchUpMessage": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "focusScore": "Focus Score",
   "moderateFocus": "Moderate Focus",
-  "lowFocus": "Low Focus",
-  "highFocus": "High Focus",
   "patternConsistent": "Pattern: Consistent",
   "patternIrregular": "Pattern: Irregular",
   "confidenceHigh": "Confidence: High",
   "confidenceMedium": "Confidence: Medium",
+  "confidenceLow": "Confidence: Low",
+  "basedOnSessions": "(based on {count} sessions)",
+  "@basedOnSessions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "gettingStarted": "Getting started",
   "noDataYet": "No data yet",
   "noDataForSemesterYet": "No data for this semester yet",
-  "statusStable": "Stable",
+  "statusStable": "Stable state",
   "statusImproving": "Improving",
   "statusDeclining": "Declining",
+  "statusModerate": "Moderate",
   "trySessionNow": "Try a {duration}-minute session now",
   "@trySessionNow": {
     "placeholders": {
-      "duration": { "type": "int" }
+      "duration": {
+        "type": "int"
+      }
     }
   },
   "startNow": "Start now",
-  "studyIntentHint": "What is your main focus for this session?",
   "sessionTooShortTitle": "Session Too Short",
   "sessionTooShortMessage": "Minimum session duration is 10 minutes. This session was not recorded.",
   "focusRemaining": "Remaining time",
-  "focusLevel": "Focus Level",
-  "sessionCompleted": "Session completed",
-  "focusedTime": "Focused time",
   "shortSessionInsight": "Short session. Try longer focus next time.",
   "goodSessionInsight": "Good session. Stay consistent.",
   "strongSessionInsight": "Strong focus session.",
@@ -1117,30 +1202,65 @@
   "next15m": "Start a 15-minute session to rebuild focus",
   "next25m": "Continue with a 25-minute focus session",
   "next45m": "You’re in deep focus mode. Try a 45-minute session",
-  "sessionsCount": "{count} sessions",
+  "sessionsCount": "{count, plural, =0{No sessions} =1{1 session} other{{count} sessions}}",
   "@sessionsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "num"
+      }
     }
   },
   "minutesFocused": "{minutes}m focused",
   "patternLabel": "Pattern",
   "statusVariable": "Variable",
+  "burnoutTrendForming": "Burnout risk is driven by sustained high study stress and severe study deficit.",
+  "burnoutRiskIncreasing": "Risk is increasing due to low consistency and goal deficit.",
+  "burnoutReasonBehindGoal": "You are behind your weekly goal by {hours}h.",
+  "@burnoutReasonBehindGoal": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "burnoutReasonInconsistent": "Your study pattern is inconsistent this week.",
+  "burnoutReasonFrequentSwitching": "You are switching study times frequently.",
+  "burnoutReasonLoadAboveGoal": "Your total study load is above your weekly goal.",
+  "burnoutReasonNoSignals": "No major burnout signals detected yet.",
+  "burnoutReasonDeficit": "You are falling behind your weekly study goal.",
+  "burnoutReasonStress": "High stress detected during study sessions.",
+  "burnoutReasonConsistency": "Low study consistency over the last 7 days.",
+  "burnoutReasonMood": "A declining mood trend has been detected.",
+  "burnoutRecStable1": "Keep your current routine steady.",
+  "burnoutRecStable2": "Continue tracking your weekly goal.",
+  "burnoutRecWarning1": "Reduce session length a little.",
+  "burnoutRecWarning2": "Keep your study time in one consistent slot.",
+  "burnoutRecHighRisk1": "Shorten sessions and take breaks more often.",
+  "burnoutRecHighRisk2": "Focus on one study time window this week.",
+  "burnoutRecHighRisk3": "Take a recovery day if you feel drained.",
+  "burnoutRecRisk1": "Reduce session length right away.",
+  "burnoutRecRisk2": "Increase break frequency and simplify goals.",
+  "burnoutRecRisk3": "Take a recovery day before pushing harder.",
   "overloadWarning": "You're pushing too hard. Take a proper break.",
   "focusTrendMessage": "{trend} focus pattern this week",
   "@focusTrendMessage": {
     "placeholders": {
-      "trend": { "type": "String" }
+      "trend": {
+        "type": "String"
+      }
     }
   },
   "focusAnalysisBasis": "Based on recent sessions, consistency, and stability.",
-  "breakLabel": "Break",
   "longBreakLabel": "Long Break",
   "focusSessionCount": "Focus {current}/{total}",
   "@focusSessionCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "improving": "Improving",
@@ -1159,16 +1279,8 @@
   "completedNo": "No",
   "cycles": "Cycles",
   "breaksSkipped": "Breaks skipped",
-  "studyIntent": "Study Intent",
   "weeklyActivity": "Weekly Activity",
-  "streakDays": "{count} day{count, plural, =1{} other{s}}",
-  "@streakDays": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
   "streakWarningMessage": "🔥 Don't break your streak. Study today to keep it alive!",
-  "thisWeekLabel": "This week",
   "preivousWeekLabel": "Last week",
   "newWeekStart": "New week start",
   "noStudyActivityYet": "No study activity yet",
@@ -1189,20 +1301,28 @@
   "weeklyGoalProgressHours": "{current} / {goal}",
   "@weeklyGoalProgressHours": {
     "placeholders": {
-      "current": { "type": "String" },
-      "goal": { "type": "String" }
+      "current": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
     }
   },
   "activeDaysCount": "{count} active day{count, plural, =1{} other{s}}",
   "@activeDaysCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "peakDayLabel": "Peak: {day}",
   "@peakDayLabel": {
     "placeholders": {
-      "day": { "type": "String" }
+      "day": {
+        "type": "String"
+      }
     }
   },
   "streakAtRisk": "Streak at Risk!",
@@ -1212,15 +1332,15 @@
   "strongHabitForming": "Strong habit forming",
   "excellentDiscipline": "Excellent discipline",
   "lightFocus": "Light focus",
-  "goodFocus": "Good focus",
-  "deepFocus": "Deep focus",
   "insightCycle": "High-quality focus pattern. Keep this cycle.",
   "insightStart": "Strong start. Extend beyond 30m for deeper focus.",
   "insightMomentum": "Building momentum toward deep work.",
   "focusPoints": "{points} points",
   "@focusPoints": {
     "placeholders": {
-      "points": { "type": "String" }
+      "points": {
+        "type": "String"
+      }
     }
   },
   "pomodoroFocusStep": "Focus • 25 min",
@@ -1229,125 +1349,152 @@
   "pomodoroTotalFocusSummary": "Total focus: {minutes} min",
   "@pomodoroTotalFocusSummary": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "pomodoroCompleted": "Pomodoro completed",
   "cyclesCompleted": "{count} cycles completed",
   "@cyclesCompleted": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "focusTimeBreakdown": "Focus time: {minutes} min",
   "@focusTimeBreakdown": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "breakTimeBreakdown": "Break time: {minutes} min",
   "@breakTimeBreakdown": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "excellentConsistency": "Excellent consistency",
   "totalFocusTime": "Total focus time",
-  "statusStable": "Stable",
   "streakDaysInARow": "{count} day{count, plural, =1{} other{s}} in a row",
   "@streakDaysInARow": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "pomodoroMetrics": "Metrics",
   "pomodoroPerformance": "Performance",
   "pomodoroTimeline": "Cycle Timeline",
-
   "pomodoroSubtitle": "Pomodoro • {done}/{total} cycles",
   "@pomodoroSubtitle": {
     "placeholders": {
-      "done": { "type": "int" },
-      "total": { "type": "int" }
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "focusCycleDone": "Focus {index}  •  {minutes} min",
   "@focusCycleDone": {
     "placeholders": {
-      "index": { "type": "int" },
-      "minutes": { "type": "int" }
+      "index": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "focusCycleInProgress": "Focus {index}  •  in progress",
   "@focusCycleInProgress": {
     "placeholders": {
-      "index": { "type": "int" }
+      "index": {
+        "type": "int"
+      }
     }
   },
-
   "focusCycleNotReached": "Focus {index}  •  not reached",
   "@focusCycleNotReached": {
     "placeholders": {
-      "index": { "type": "int" }
+      "index": {
+        "type": "int"
+      }
     }
   },
-
   "breakDone": "Break  •  {minutes} min",
   "@breakDone": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "breakPending": "Break",
   "focusTimeLabel": "Focus Time",
   "breakTimeLabel": "Break Time",
-
   "completionOfCycles": "{percent}% of planned cycles",
   "@completionOfCycles": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
-
   "minutesFocusedLabel": "{minutes} min focused",
   "@minutesFocusedLabel": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "pomodoroHistorySubtitle": "{done} of {total} cycles • {time}",
   "@pomodoroHistorySubtitle": {
     "placeholders": {
-      "done": { "type": "int" },
-      "total": { "type": "int" },
-      "time": { "type": "String" }
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
-
   "sessionHistorySubtitle": "{type} • {minutes}m • {time}",
   "@sessionHistorySubtitle": {
     "placeholders": {
-      "type": { "type": "String" },
-      "minutes": { "type": "int" },
-      "time": { "type": "String" }
+      "type": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
-
   "statusBadgeCompleted": "✔ Completed",
   "statusBadgeStopped": "⏸ Stopped early",
-
   "errorLoading": "Error: {error}",
   "@errorLoading": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
-
   "pomodoroInsightConsistent": "You consistently complete full Pomodoro cycles",
   "pomodoroInsightPartial": "You often stop mid-cycle. Try shorter sessions",
   "pomodoroInsightNeedsWork": "You rarely complete Pomodoro cycles. Consider reducing duration",
@@ -1355,27 +1502,29 @@
   "heatmapTooltip": "{date}: {minutes}m • {sessions} sessions • Score: {score}",
   "@heatmapTooltip": {
     "placeholders": {
-      "date": { "type": "String" },
-      "minutes": { "type": "int" },
-      "sessions": { "type": "int" },
-      "score": { "type": "int" }
+      "date": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "sessions": {
+        "type": "int"
+      },
+      "score": {
+        "type": "int"
+      }
     }
   },
   "heatmapLegendLess": "Less",
   "heatmapLegendMore": "More",
   "heatmapDayDetails": "Day Details",
-  "duration": "Duration",
-  "sessionsCount": "{count, plural, =0{No sessions} =1{1 session} other{{count} sessions}}",
-  "@sessionsCount": {
-    "placeholders": {
-      "count": { "type": "num" }
-    }
-  },
-  "score": "Score",
   "streakCount": "{count, plural, =1{1 day streak} other{{count} day streak}}",
   "@streakCount": {
     "placeholders": {
-      "count": { "type": "num" }
+      "count": {
+        "type": "num"
+      }
     }
   },
   "studyIntensitySubtitle": "Your daily study intensity over time",
@@ -1391,7 +1540,9 @@
   "targetPrefix": "Target: {target}",
   "@targetPrefix": {
     "placeholders": {
-      "target": { "type": "String" }
+      "target": {
+        "type": "String"
+      }
     }
   },
   "recommendedForYouTitle": "Recommended for you",
@@ -1400,63 +1551,95 @@
   "bestStudyTimeBullet": "• Best study time: {time}",
   "@bestStudyTimeBullet": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "suggestedSessionBullet": "• Suggested session: {minutes} min ({pattern})",
   "@suggestedSessionBullet": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "pattern": { "type": "String" }
+      "minutes": {
+        "type": "int"
+      },
+      "pattern": {
+        "type": "String"
+      }
     }
   },
   "dailyTargetNeededBullet": "• You need ~{hours} hours/day to stay on track",
   "@dailyTargetNeededBullet": {
     "placeholders": {
-      "hours": { "type": "String" }
+      "hours": {
+        "type": "String"
+      }
     }
   },
-  "burnoutInputsHumanized": "• You are {deficit}h behind and your study timing is inconsistent ({inconsistency}%).",
+  "burnoutInputsHumanized": "• Study deficit: {deficit}h\n• Consistency: {inconsistency}%",
   "@burnoutInputsHumanized": {
     "placeholders": {
-      "deficit": { "type": "String" },
-      "inconsistency": { "type": "int" }
+      "deficit": {
+        "type": "String"
+      },
+      "inconsistency": {
+        "type": "int"
+      }
     }
   },
   "patternIrregularThisWeek": "• Pattern note: your study times are currently irregular this week.",
   "adaptiveHintRecentStudyTime": "You seem to study more in {time} recently.",
   "@adaptiveHintRecentStudyTime": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "weekSessionsBreakdown": "This week sessions: morning {morning}, afternoon {afternoon}, night {night}.",
   "@weekSessionsBreakdown": {
     "placeholders": {
-      "morning": { "type": "int" },
-      "afternoon": { "type": "int" },
-      "night": { "type": "int" }
+      "morning": {
+        "type": "int"
+      },
+      "afternoon": {
+        "type": "int"
+      },
+      "night": {
+        "type": "int"
+      }
     }
   },
   "confidenceBreakdown": "Confidence: behavior {behavior}% • preference match {preference}% {trendText}",
   "@confidenceBreakdown": {
     "placeholders": {
-      "behavior": { "type": "int" },
-      "preference": { "type": "int" },
-      "trendText": { "type": "String" }
+      "behavior": {
+        "type": "int"
+      },
+      "preference": {
+        "type": "int"
+      },
+      "trendText": {
+        "type": "String"
+      }
     }
   },
   "trendDeltaVsLastWeek": "• trend {delta} vs last week",
   "@trendDeltaVsLastWeek": {
     "placeholders": {
-      "delta": { "type": "String" }
+      "delta": {
+        "type": "String"
+      }
     }
   },
   "weeklyGoalBehindDetailed": "You are behind your weekly goal ({logged}h logged vs {expected}h expected by now).",
   "@weeklyGoalBehindDetailed": {
     "placeholders": {
-      "logged": { "type": "String" },
-      "expected": { "type": "String" }
+      "logged": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "String"
+      }
     }
   },
   "warningActionStartSession": "Start a 25-40 min session now to get back on track.",
@@ -1465,28 +1648,42 @@
   "burnoutOverallTrend": "Overall: {status}",
   "@burnoutOverallTrend": {
     "placeholders": {
-      "status": { "type": "String" }
+      "status": {
+        "type": "String"
+      }
     }
   },
   "burnoutTrendLine": "Trend: {status} {direction}",
   "@burnoutTrendLine": {
     "placeholders": {
-      "status": { "type": "String" },
-      "direction": { "type": "String" }
+      "status": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
     }
   },
   "burnoutDeficitLine": "Deficit: {status} {direction}",
   "@burnoutDeficitLine": {
     "placeholders": {
-      "status": { "type": "String" },
-      "direction": { "type": "String" }
+      "status": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
     }
   },
   "burnoutConsistencyLine": "Consistency: {status} {direction}",
   "@burnoutConsistencyLine": {
     "placeholders": {
-      "status": { "type": "String" },
-      "direction": { "type": "String" }
+      "status": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
     }
   },
   "noRecoveryTrendDetectedYet": "No recovery trend detected yet.",
@@ -1495,7 +1692,9 @@
   "studyDeficitBasedOnWeeklyGoal": "Study deficit is based on your weekly goal ({hours}h).",
   "@studyDeficitBasedOnWeeklyGoal": {
     "placeholders": {
-      "hours": { "type": "String" }
+      "hours": {
+        "type": "String"
+      }
     }
   },
   "softInterventionsTitle": "Soft interventions",
@@ -1507,15 +1706,8 @@
   "burnoutExplanationWarning": "Your study pattern is becoming inconsistent and you are falling behind your weekly goal.",
   "burnoutExplanationHighRisk": "You are showing signs of inconsistent study and deficit.",
   "burnoutExplanationBurnoutRisk": "Your load is high and your routine is becoming unstable.",
-  "burnoutReasonBehindGoal": "You are behind your weekly goal by {hours}h.",
-  "@burnoutReasonBehindGoal": {
-    "placeholders": {
-      "hours": { "type": "String" }
-    }
-  },
   "burnoutReasonInconsistentPattern": "Your study pattern is inconsistent this week.",
   "burnoutReasonSwitchingTimes": "You are switching study times frequently.",
-  "burnoutReasonLoadAboveGoal": "Your total study load is above your weekly goal.",
   "burnoutReasonNoMajorSignals": "No major burnout signals detected yet.",
   "burnoutRecommendationStable1": "Keep your current routine steady.",
   "burnoutRecommendationStable2": "Continue tracking your weekly goal.",
@@ -1532,26 +1724,34 @@
   "decisionStudyCourse": "Study {course}",
   "@decisionStudyCourse": {
     "placeholders": {
-      "course": { "type": "String" }
+      "course": {
+        "type": "String"
+      }
     }
   },
   "decisionMinutesToday": "{minutes} minutes today",
   "@decisionMinutesToday": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "decisionFocusRecommendationTitle": "Focus Recommendation",
   "decisionWhatChangedTitle": "What Changed",
   "decisionTaskLoadLabel": "Task Load",
-  "decisionConfidenceLow": "Confidence: Low",
+  "decisionConfidenceLow": "Confidence: Low (based on recent activity)",
   "startedFromAnalyticsRecommendation": "Started from Analytics recommendation",
   "followedPlanToday": "Nice. You followed your plan today.",
   "sessionImpactAddedToCourse": "+{minutes} min added to {course}",
   "@sessionImpactAddedToCourse": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "course": { "type": "String" }
+      "minutes": {
+        "type": "int"
+      },
+      "course": {
+        "type": "String"
+      }
     }
   },
   "sessionImpactCloserToGoal": "You're now closer to your weekly goal",
@@ -1568,20 +1768,28 @@
   "decisionReasonStudyProgress": "You studied {studied}h of your {target}h target",
   "@decisionReasonStudyProgress": {
     "placeholders": {
-      "studied": { "type": "String" },
-      "target": { "type": "String" }
+      "studied": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
     }
   },
   "decisionReasonImportantCourse": "Important course ({ects} ECTS)",
   "@decisionReasonImportantCourse": {
     "placeholders": {
-      "ects": { "type": "int" }
+      "ects": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonHigherPriorityThan": "More urgent than {course}",
   "@decisionReasonHigherPriorityThan": {
     "placeholders": {
-      "course": { "type": "String" }
+      "course": {
+        "type": "String"
+      }
     }
   },
   "decisionReasonHigherPriorityGeneral": "More urgent than other courses this week",
@@ -1589,7 +1797,9 @@
   "todayMinutesCompleted": "Today: {minutes} min completed",
   "@todayMinutesCompleted": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "recoveryPlanTitle": "Recovery Plan",
@@ -1598,52 +1808,71 @@
   "suggestedSplitSessionsToday": "Suggested: {count} × {minutes} min sessions today",
   "@suggestedSplitSessionsToday": {
     "placeholders": {
-      "count": { "type": "int" },
-      "minutes": { "type": "int" }
+      "count": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "suggestedFlexibleSessionsToday": "Suggested: 2-3 focused sessions today",
   "suggestedShorterSessionsToday": "Suggested: 3-4 shorter sessions today",
+  "recoveryMessageStressHigh": "Focus on shorter sessions today to avoid burnout",
   "needHoursTodayToStayOnTrack": "You need {hours}h today to stay on track",
   "@needHoursTodayToStayOnTrack": {
     "placeholders": {
-      "hours": { "type": "String" }
+      "hours": {
+        "type": "String"
+      }
     }
   },
   "minutesRemainingShort": "{minutes}m left",
   "@minutesRemainingShort": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonDeadlineLowStudy": "Deadline in {days} days and you studied less than usual this week",
   "@decisionReasonDeadlineLowStudy": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonDeadlineInDays": "Deadline in {days} days",
   "@decisionReasonDeadlineInDays": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonLowestStudyWithDeadline": "Lowest study time this week and deadline in {days} days",
   "@decisionReasonLowestStudyWithDeadline": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonLowestStudyWithOpenTasks": "Lowest study time this week and {count} open tasks",
   "@decisionReasonLowestStudyWithOpenTasks": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonHighCourseWeight": "High course weight ({ects} ECTS)",
   "@decisionReasonHighCourseWeight": {
     "placeholders": {
-      "ects": { "type": "int" }
+      "ects": {
+        "type": "int"
+      }
     }
   },
   "reset": "Reset",
@@ -1660,7 +1889,7 @@
   "moodLevel": "Mood Level",
   "stressLevel": "Stress Level",
   "energyLevel": "Energy Level",
-  "moodFactors": "Contributing Factors",
+  "moodFactors": "Factors",
   "moodFactorSleep": "Sleep",
   "moodFactorWorkload": "Workload",
   "moodFactorHealth": "Health",
@@ -1688,6 +1917,18 @@
   "moodReminderTitle": "Mood check-in",
   "moodReminderBody": "Take a minute to log your mood and stress.",
   "moodLast7Days": "Mood over last 7 days",
+  "moodOverLastDays": "Mood over last {count} days",
+  "@moodOverLastDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "moodKeepLogging": "Keep logging your mood",
+  "moodTrendNeedsData": "Keep logging your mood to see your personal emotional trend chart.",
+  "dailyMoodHistory": "Daily Mood History",
+  "olderLabel": "Older",
   "decisionSmartInsights": "Smart Insights",
   "decisionHighStress": "High stress detected",
   "decisionShortSessions": "Use shorter sessions today",
@@ -1696,9 +1937,9 @@
   "decisionStressRising": "Your stress is rising this week",
   "decisionMoodDeclining": "Your mood is declining",
   "decisionDeadlinePressure": "High pressure detected. Break tasks down",
-  "decisionLowActivityHighStress": "Low activity but high stress detected",
-  "decisionLightTasksOnly": "Focus on light tasks only today",
-  "decisionMainFactor": "Main stress source: {factor}",
+  "decisionLowActivityHighStress": "Low Activity, High Stress",
+  "decisionLightTasksOnly": "Mood is low today. Stick to lighter tasks.",
+  "decisionMainFactor": "Main Factor: {factor}",
   "@decisionMainFactor": {
     "placeholders": {
       "factor": {
@@ -1706,7 +1947,7 @@
       }
     }
   },
-  "decisionWorstDay": "You feel lowest on {day}",
+  "decisionWorstDay": "Difficult {day} ahead",
   "@decisionWorstDay": {
     "placeholders": {
       "day": {
@@ -1714,28 +1955,20 @@
       }
     }
   },
-  "decisionRecommendedSession": "Recommended session: {minutes} min",
-  "@decisionRecommendedSession": {
-    "placeholders": {
-      "minutes": {
-        "type": "Object"
-      }
-    }
-  },
-  "decisionMorningPlanning": "Morning focus: plan your key tasks",
-  "decisionAfternoonExecution": "Afternoon focus: execute your top task",
-  "decisionNightLightReview": "Night focus: keep it light and review",
-  "decisionActionShortSessions": "Use shorter sessions (25 min)",
-  "decisionActionBreakDown": "Break work into smaller tasks now",
+  "decisionMorningPlanning": "Morning Strategy",
+  "decisionAfternoonExecution": "Afternoon Peak",
+  "decisionNightLightReview": "Night Review",
+  "decisionActionShortSessions": "High stress with low activity detected. Try 15-min sessions.",
+  "decisionActionBreakDown": "Break down large tasks to reduce session stress.",
   "decisionActionMonitorWeekly": "Monitor this pattern through the week",
-  "decisionActionPlanning": "Set your top 3 tasks for today",
-  "decisionActionExecution": "Run one focused execution block now",
-  "decisionActionLightReview": "Do light review, avoid heavy workload",
+  "decisionActionPlanning": "Start with planning. Clear goals reduce session anxiety.",
+  "decisionActionExecution": "Execute difficult tasks now while energy is high.",
+  "decisionActionLightReview": "Stress is trending up. Consider a lighter study session.",
   "startRecommendedSession": "Start Recommended Session ({minutes} min)",
   "@startRecommendedSession": {
     "placeholders": {
       "minutes": {
-        "type": "Object"
+        "type": "int"
       }
     }
   },
@@ -1749,22 +1982,21 @@
   "@stressOutOfTen": {
     "placeholders": {
       "value": {
-        "type": "Object"
+        "type": "int"
       }
     }
   },
   "takeItSlowerTodayTitle": "Take it slower today",
-  "takeItSlowerTodayBody": "High stress detected. Use shorter sessions and protect breaks.",
-  "strongStateTitle": "You're in a strong state",
-  "strongStateBody": "Push deeper work while your mood is high.",
+  "takeItSlowerTodayBody": "You have multiple deadlines soon. Pace yourself.",
+  "strongStateTitle": "Peak Focus State",
+  "strongStateBody": "You are in a great mood with low stress. Tackle a difficult task!",
   "view": "View",
   "focusRecommendationPrimary": "Focus Recommendation (Primary)",
   "decisionConfidenceHigh": "Confidence: High (based on recent activity)",
   "decisionConfidenceMedium": "Confidence: Medium (based on recent activity)",
-  "decisionConfidenceLow": "Confidence: Low (based on recent activity)",
-  "decisionBurnoutDurationCap": "High stress detected.\nShorter sessions recommended (25 min).",
-  "decisionFixedSchedule": "Build a fixed schedule to improve consistency",
-  "decisionActionFixedSchedule": "Use the same study slot for 3 days",
+  "decisionBurnoutDurationCap": "Shorter sessions recommended to prevent burnout.",
+  "decisionFixedSchedule": "Build a fixed schedule",
+  "decisionActionFixedSchedule": "Establishing a routine can lower daily session stress.",
   "postSessionMoodImproved": "Your mood improved after studying",
   "postSessionStressIncreased": "Long sessions may be increasing your stress",
   "postSessionFeedbackLogged": "Post-session feedback captured",
@@ -1772,7 +2004,7 @@
   "@consistencyScoreLine": {
     "placeholders": {
       "score": {
-        "type": "Object"
+        "type": "int"
       },
       "trend": {
         "type": "String"
@@ -1783,38 +2015,87 @@
   "predictionPlanTitle": "Recommended Plan",
   "predictionLevelLow": "LOW",
   "predictionLevelMedium": "MEDIUM",
-  "predictionLevelHigh": "HIGH",
-  "predictionReasonHighStressToday": "Higher stress in recent days",
-  "predictionReasonLowConsistency": "Your study consistency is low this week",
-  "predictionReasonUpcomingWorkload": "Upcoming workload this week",
-  "predictionMainReasonTitle": "Main reason:",
-  "predictionWhyTitle": "Why this plan?",
-  "predictionReasonStressHigh": "High stress detected recently",
-  "predictionReasonLowConsistencyDetail": "Your study consistency dropped this week",
-  "predictionReasonTasksPending": "You have multiple pending tasks this week",
-  "predictionReasonDeadlinesSoon": "Deadlines are approaching soon",
-  "predictionAffectedTitle": "Affected:",
-  "predictionPlanLine": "{day} at {time} • {minutes} min {focus} session",
-  "@predictionPlanLine": {
+  "predictionLevelHigh": "Stress trend: Increasing",
+  "predictionReasonHighStressToday": "Stress: {stress}/10",
+  "@predictionReasonHighStressToday": {
     "placeholders": {
-      "day": {
-        "type": "String"
-      },
-      "time": {
-        "type": "String"
-      },
-      "minutes": {
-        "type": "int"
-      },
-      "focus": {
+      "stress": {
         "type": "String"
       }
     }
   },
-  "predictionPlanLightFocus": "light",
-  "predictionPlanFocusExecution": "focus",
-  "predictionPlanDeepExecution": "deep",
-  "predictionPlanLightReview": "light review",
+  "predictionReasonLowConsistency": "Consistency: {percent}%",
+  "@predictionReasonLowConsistency": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionReasonUpcomingWorkload": "Deadlines: {count}",
+  "@predictionReasonUpcomingWorkload": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionMainReasonTitle": "Main reason:",
+  "predictionWhyTitle": "Why this plan?",
+  "predictionReasonStressHigh": "Stress: {stress}/10",
+  "@predictionReasonStressHigh": {
+    "placeholders": {
+      "stress": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionReasonLowConsistencyDetail": "Consistency: {delta}%",
+  "@predictionReasonLowConsistencyDetail": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "predictionReasonTasksPending": "Pending tasks: {count}",
+  "@predictionReasonTasksPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionReasonDeadlinesSoon": "Deadlines: {count}",
+  "@predictionReasonDeadlinesSoon": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionAffectedTitle": "Affected:",
+  "predictionPlanLine": "{day} at {time} • {minutes} min {focus} session",
+  "@predictionPlanLine": {
+    "placeholders": {
+      "day": { "type": "String" },
+      "time": { "type": "String" },
+      "minutes": { "type": "int" },
+      "focus": { "type": "String" }
+    }
+  },
+  "predictionPlanLineSimple": "• {day}: {minutes} min {focus}",
+  "@predictionPlanLineSimple": {
+    "placeholders": {
+      "day": { "type": "String" },
+      "minutes": { "type": "int" },
+      "focus": { "type": "String" }
+    }
+  },
+  "predictionPlanLightFocus": "Light Focus Session",
+  "predictionPlanFocusExecution": "Focus Execution Session",
+  "predictionPlanDeepExecution": "Deep Execution Session",
+  "predictionPlanLightReview": "Light Review Session",
   "predictionPerformanceRisk": "Performance Risk: {level}",
   "@predictionPerformanceRisk": {
     "placeholders": {
@@ -1859,8 +2140,52 @@
     }
   },
   "addQuickNoteOptional": "Add a quick note (optional)",
-  "analyticsMoodPerformanceTitle": "Mood vs Performance",
+  "analyticsMoodPerformanceTitle": "🧠 Mood vs Performance",
   "analyticsMoodPerformanceGoodDesc": "Your high mood positively impacts your focus duration.",
+  "analyticsMoodLabel": "🙂 {label}: {value} {trend}",
+  "@analyticsMoodLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "trend": {
+        "type": "String"
+      }
+    }
+  },
+  "analyticsStressLabel": "⚡ {label}: {value} {trend}",
+  "@analyticsStressLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "trend": {
+        "type": "String"
+      }
+    }
+  },
+  "analyticsImpactPositive": "🚀 +{minutes}m",
+  "@analyticsImpactPositive": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "analyticsImpactNegative": "📉 -{minutes}m",
+  "@analyticsImpactNegative": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "analyticsMoodPerformanceBadDesc": "Low mood is restricting your session efficiency.",
   "analyticsMoodPerformanceStableDesc": "Your mood is stable, allowing for consistent focus.",
   "analyticsMoodBetterMood": "Better Mood",
@@ -1868,7 +2193,7 @@
   "analyticsMoodFocusBoost": "Focus Boost",
   "analyticsMoodFocusDrain": "Focus Drain",
   "analyticsMoodDifference": "{plusMinus}{minutes}m",
-  "burnoutMessageEmotionalRisk": "Your stress is rising while consistency is low. This increases burnout risk.",
+  "burnoutMessageEmotionalRisk": "Emotional volatility detected in recent sessions. Prioritize mental health.",
   "decisionStatusModerateStress": "Moderate stress detected",
   "decisionStatusLowStress": "Low stress",
   "decisionStatusHighStress": "High stress detected",
@@ -1877,18 +2202,29 @@
   "decisionRisingStressUnstablePattern": "Your stress is rising while your routine is unstable",
   "decisionActionFixedScheduleFocus": "Study at the same time for 3 days to stabilize focus",
   "burnoutRisingStressInconsistentPattern": "Your stress is increasing while your study pattern is inconsistent",
-  "predictionPressureLikelyToIncrease": "Rising stress and low recovery will increase pressure",
+  "predictionPressureLikelyToIncrease": "Study deficit: {hours}h",
+  "@predictionPressureLikelyToIncrease": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
   "analyticsMoodCorrelationDetected": "Correlation detected",
   "analyticsMoodStudyDropped": "Study dropped by {percent}%",
   "@analyticsMoodStudyDropped": {
     "placeholders": {
-      "percent": { "type": "String" }
+      "percent": {
+        "type": "String"
+      }
     }
   },
   "analyticsMoodMoodDropped": "Mood dropped by {percent}%",
   "@analyticsMoodMoodDropped": {
     "placeholders": {
-      "percent": { "type": "String" }
+      "percent": {
+        "type": "String"
+      }
     }
   },
   "burnoutShortExplanation": "Your study pattern looks balanced right now.",
@@ -1899,27 +2235,33 @@
   "signalDeficitHigh": "Study deficit",
   "consistency": "Consistency",
   "stress": "Stress",
-  "decisionBurnoutDurationCap": "Strongly recommended: Cap study sessions to 25m",
   "moodTrends": "Mood Trends",
-  "decisionFixedSchedule": "Build a fixed schedule",
   "studyProfileTitle": "Your Study Profile",
   "studyProfileOptimalDuration": "Optimal Session: {min}-{max} min",
   "@studyProfileOptimalDuration": {
     "placeholders": {
-      "min": { "type": "int" },
-      "max": { "type": "int" }
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "studyProfileStressThreshold": "Focus drops when stress > {value}",
   "@studyProfileStressThreshold": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "studyProfilePeakWindow": "Peak Productivity: {window}",
   "@studyProfilePeakWindow": {
     "placeholders": {
-      "window": { "type": "String" }
+      "window": {
+        "type": "String"
+      }
     }
   },
   "studyProfileMorning": "Morning",
@@ -1928,14 +2270,87 @@
   "studyProfileMainFactor": "Main factor: {factor}",
   "@studyProfileMainFactor": {
     "placeholders": {
-      "factor": { "type": "String" }
+      "factor": {
+        "type": "String"
+      }
     }
   },
   "studyProfileSecondaryFactor": "Secondary: {factor}",
   "@studyProfileSecondaryFactor": {
     "placeholders": {
-      "factor": { "type": "String" }
+      "factor": {
+        "type": "String"
+      }
     }
   },
-  "completion": "Completion"
+  "completion": "Completion",
+  "moodEnergyLevel": "Energy Level",
+  "moodLoggedSession": "Logged after study session",
+  "moodLoggedManual": "Logged manually",
+  "markAllAsRead": "Mark all as read",
+  "mood": "Mood",
+  "academic": "Academic",
+  "dailyBaseline": "Daily Baseline",
+  "studySessions": "Study Sessions",
+  "notificationOverdue": "is overdue",
+  "notificationDueToday": "is due today",
+  "notificationDueTomorrow": "is due tomorrow",
+  "notificationDueSoon": "is due soon",
+  "weeklyStudyGoalMissed": "Weekly study goal missed",
+  "weeklyStudyGoalMissedMessage": "You studied {actual}h of {goal}h this week.",
+  "decisionRisingStressTitle": "Rising Stress Levels",
+  "decisionStatusDeficit": "Large study deficit",
+  "decisionStatusInconsistent": "Inconsistency detected",
+  "baseline": "Baseline",
+  "predictionCollectingData": "Collecting Data",
+  "predictionCollectingDataDetail": "Studying 5 or more sessions will activate full AI insights.",
+  "decisionRecommendedSession": "Recommended: {minutes} min",
+  "@decisionRecommendedSession": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "moodTerrible": "Terrible",
+  "moodBad": "Bad",
+  "moodNeutral": "Neutral",
+  "moodGood": "Good",
+  "moodAmazing": "Amazing",
+  "moodUnknown": "Unknown",
+  "hideDetails": "Hide details",
+  "viewFullAnalysis": "View full analysis",
+  "unknown": "Unknown",
+  "selectedSemester": "Selected Semester",
+  "statusStable": "Stable",
+  "minutesValue": "{minutes} min",
+  "@minutesValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesCourseValue": "{minutes} min {course}",
+  "@minutesCourseValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "course": {
+        "type": "String"
+      }
+    }
+  },
+  "smartAiInsights": "Smart AI Insights",
+  "burnoutExplanationFallingBehind": "You are showing signs of mental fatigue and irregular study habits.",
+  "burnoutBehaviorHighFatigue": "Elevated mental fatigue levels detected.",
+  "burnoutBehaviorMoodInstability": "Increasing mood variability impacting focus.",
+  "burnoutBehaviorIrregularRest": "Inconsistent rest periods between sessions.",
+  "burnoutBehaviorUnpredictableRhythm": "Unpredictable study rhythm and timing.",
+  "burnoutBehaviorSwitchingContext": "Frequent context switching affecting deep focus.",
+  "burnoutBehaviorMentalOverload": "Cognitive load exceeding typical recovery rates.",
+  "consistencyPercentage": "Consistency: {score}%",
+  "labelWithColon": "{label}:",
+  "labelWithColonAndSpace": "{label}: "
 }

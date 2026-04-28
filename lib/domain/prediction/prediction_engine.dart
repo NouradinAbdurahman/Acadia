@@ -1,3 +1,6 @@
+import '../../core/services/risk_engine.dart';
+import '../../domain/decision/decision_rules.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/analytics_data.dart';
 import '../../models/deadline.dart';
 import '../../models/task.dart';
@@ -7,6 +10,7 @@ import 'prediction_result.dart';
 
 class PredictionEngine {
   PredictionResult evaluate({
+    required AppLocalizations l10n,
     required AnalyticsData analytics,
     required DecisionResult decision,
     required StudyAnalytics studyAnalytics,
@@ -14,61 +18,84 @@ class PredictionEngine {
     required List<Deadline> deadlines,
   }) {
     final pendingTasks = (analytics.totalTasks - analytics.completedTasks).clamp(0, 9999);
-    final normalizedInconsistency = (studyAnalytics.timeInconsistencyScore / 100.0).clamp(0.0, 1.0);
-    final consistency = (1.0 - normalizedInconsistency).clamp(0.0, 1.0);
+    final consistency = studyAnalytics.consistency;
 
-    final predictedStress = analytics.avgStress + (pendingTasks * 0.5) + (normalizedInconsistency * 2.0);
+    final dailyStress = analytics.avgDailyStress;
+    final sessionStress = analytics.avgSessionStress;
+    final stressTrend = analytics.stressTrend;
+    final studyDeficit = analytics.studyDeficit;
+
+    final workloadImpact = studyDeficit > 10 ? 1.5 : 0.0;
+    final predictedStress = (dailyStress + (stressTrend * 2) + workloadImpact).clamp(1.0, 10.0);
+    final blendedStress = (dailyStress + sessionStress) / 2.0;
     final stressLevel = _levelFromScore(predictedStress);
 
     final stressReasons = <String>[];
-    if (analytics.avgStress > 7) {
-      stressReasons.add('predictionReasonHighStressToday');
+    if (dailyStress >= 7 || sessionStress >= 7) {
+      final val = (dailyStress >= 7 ? dailyStress : sessionStress).toStringAsFixed(1);
+      stressReasons.add(l10n.predictionReasonHighStressToday(val));
     }
-    if (analytics.avgStress >= 5 && studyAnalytics.weeklyDeficitHours > 5) {
-      stressReasons.add('predictionPressureLikelyToIncrease');
-    } else if (consistency < 0.6) {
-      stressReasons.add('predictionReasonLowConsistency');
+    if (blendedStress >= 5 && studyAnalytics.weeklyDeficitHours > 5) {
+      stressReasons.add(l10n.predictionPressureLikelyToIncrease(studyAnalytics.weeklyDeficitHours.toStringAsFixed(1)));
+    }
+    if (consistency < 0.6) {
+      stressReasons.add(l10n.predictionReasonLowConsistency((consistency * 100).toStringAsFixed(0)));
     }
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final hasDeadlinesSoon = deadlines.any((d) {
+    final upcomingDeadlinesCount = deadlines.where((d) {
       if (d.isCompleted) return false;
       final due = DateTime(d.deadlineDate.year, d.deadlineDate.month, d.deadlineDate.day);
       final diff = due.difference(today).inDays;
       return diff >= 0 && diff <= 3;
-    });
-    final hasPendingTaskPressure = pendingTasks > 2;
-    final hasUpcomingWorkload = hasDeadlinesSoon || pendingTasks >= 5;
+    }).length;
+
+    final hasDeadlinesSoon = upcomingDeadlinesCount > 0;
+    final hasPendingTaskPressure = pendingTasks >= 5;
+    
+    // Threshold-based workload reason (as requested)
+    final hasUpcomingWorkload = upcomingDeadlinesCount >= 2 || pendingTasks >= 5;
     if (hasUpcomingWorkload) {
-      stressReasons.add('predictionReasonUpcomingWorkload');
+      if (upcomingDeadlinesCount >= 2) {
+        stressReasons.add(l10n.predictionReasonUpcomingWorkload(upcomingDeadlinesCount));
+      } else {
+        stressReasons.add(l10n.predictionReasonTasksPending(pendingTasks));
+      }
     }
 
     final explanationKeys = <String>[];
-    if (analytics.avgStress > 7) {
-      explanationKeys.add('predictionReasonStressHigh');
+    if (dailyStress >= 7 || sessionStress >= 7) {
+      final val = (dailyStress >= 7 ? dailyStress : sessionStress).toStringAsFixed(1);
+      explanationKeys.add(l10n.predictionReasonStressHigh(val));
     }
     if (consistency < 0.6) {
-      explanationKeys.add('predictionReasonLowConsistencyDetail');
+      // Show consistency delta if possible, or current consistency
+      explanationKeys.add(l10n.predictionReasonLowConsistencyDetail((consistency * 100).toStringAsFixed(0)));
     }
     if (hasPendingTaskPressure) {
-      explanationKeys.add('predictionReasonTasksPending');
+      explanationKeys.add(l10n.predictionReasonTasksPending(pendingTasks));
     }
     if (hasDeadlinesSoon) {
-      explanationKeys.add('predictionReasonDeadlinesSoon');
+      explanationKeys.add(l10n.predictionReasonDeadlinesSoon(upcomingDeadlinesCount));
     }
 
-    final lowStudy = analytics.weeklyAverageStudyHours < 1.5 ? 25.0 : 0.0;
-    final highStress = (analytics.avgStress / 10.0 * 40.0).clamp(0.0, 40.0);
-    final incompleteTasks = analytics.totalTasks == 0
-        ? 0.0
-        : ((pendingTasks / analytics.totalTasks) * 35.0).clamp(0.0, 35.0);
-    final performanceRiskScore = (lowStudy + highStress + incompleteTasks).clamp(0.0, 100.0);
+    final riskResult = RiskEngine.calculate(
+      overdueTasks: analytics.overdueTasks,
+      dueSoonTasks: analytics.dueSoonTasks,
+      studyDeficitHours: analytics.studyDeficit,
+      stressLevel: blendedStress,
+      consistency: consistency,
+      hasStressData: analytics.hasStressData,
+    );
+    
+    final performanceRiskScore = riskResult.score;
     final performanceRiskLevel = _levelFromScore(performanceRiskScore / 10.0);
 
     final laggingCourses = _laggingCourses(tasks, deadlines);
 
     final plan = _buildPlan(
+      l10n: l10n,
       now: now,
       stress: decision.avgStress,
       mood: decision.avgMood,
@@ -102,8 +129,8 @@ class PredictionEngine {
   }
 
   PredictionLevel _levelFromScore(double score) {
-    if (score > 8) return PredictionLevel.high;
-    if (score > 5) return PredictionLevel.medium;
+    if (score >= 7.5) return PredictionLevel.high;
+    if (score >= 4.5) return PredictionLevel.medium;
     return PredictionLevel.low;
   }
 
@@ -131,6 +158,7 @@ class PredictionEngine {
   }
 
   List<StudyPlanItem> _buildPlan({
+    required AppLocalizations l10n,
     required DateTime now,
     required double stress,
     required double mood,
@@ -147,30 +175,36 @@ class PredictionEngine {
       return minutes;
     }
 
+    final recommended = DecisionRules.getRecommendedSessionLength(stress);
+
     if (stress >= 7) {
       return <StudyPlanItem>[
-        StudyPlanItem(scheduledAt: at(0, 21, 0), durationMinutes: cap(20), focusKey: 'predictionPlanLightFocus'),
-        StudyPlanItem(scheduledAt: at(1, 14, 0), durationMinutes: cap(25), focusKey: 'predictionPlanLightFocus'),
+        StudyPlanItem(scheduledAt: at(0, 21, 0), durationMinutes: cap(20), focusKey: l10n.predictionPlanLightFocus),
+        StudyPlanItem(scheduledAt: at(1, 14, 0), durationMinutes: cap(25), focusKey: l10n.predictionPlanLightFocus),
+        StudyPlanItem(scheduledAt: at(2, 21, 0), durationMinutes: cap(20), focusKey: l10n.predictionPlanLightReview),
       ];
     }
 
     if (mood <= 2.5) {
       return <StudyPlanItem>[
-        StudyPlanItem(scheduledAt: at(0, 18, 0), durationMinutes: cap(20), focusKey: 'predictionPlanLightReview'),
-        StudyPlanItem(scheduledAt: at(1, 10, 0), durationMinutes: cap(20), focusKey: 'predictionPlanLightFocus'),
+        StudyPlanItem(scheduledAt: at(0, 18, 0), durationMinutes: cap(20), focusKey: l10n.predictionPlanLightReview),
+        StudyPlanItem(scheduledAt: at(1, 10, 0), durationMinutes: cap(20), focusKey: l10n.predictionPlanLightFocus),
+        StudyPlanItem(scheduledAt: at(2, 14, 0), durationMinutes: cap(20), focusKey: l10n.predictionPlanLightFocus),
       ];
     }
 
     if (deadlineSoon) {
       return <StudyPlanItem>[
-        StudyPlanItem(scheduledAt: at(0, 14, 0), durationMinutes: cap(45), focusKey: 'predictionPlanFocusExecution'),
-        StudyPlanItem(scheduledAt: at(1, 14, 0), durationMinutes: cap(60), focusKey: 'predictionPlanDeepExecution'),
+        StudyPlanItem(scheduledAt: at(0, 14, 0), durationMinutes: cap(recommended), focusKey: l10n.predictionPlanFocusExecution),
+        StudyPlanItem(scheduledAt: at(1, 14, 0), durationMinutes: cap(60), focusKey: l10n.predictionPlanDeepExecution),
+        StudyPlanItem(scheduledAt: at(2, 16, 0), durationMinutes: cap(recommended), focusKey: l10n.predictionPlanFocusExecution),
       ];
     }
 
     return <StudyPlanItem>[
-      StudyPlanItem(scheduledAt: at(0, 14, 0), durationMinutes: cap(45), focusKey: 'predictionPlanFocusExecution'),
-      StudyPlanItem(scheduledAt: at(1, 21, 0), durationMinutes: cap(30), focusKey: 'predictionPlanLightReview'),
+      StudyPlanItem(scheduledAt: at(0, 14, 0), durationMinutes: cap(recommended), focusKey: l10n.predictionPlanFocusExecution),
+      StudyPlanItem(scheduledAt: at(1, 21, 0), durationMinutes: cap(30), focusKey: l10n.predictionPlanLightReview),
+      StudyPlanItem(scheduledAt: at(2, 14, 0), durationMinutes: cap(recommended), focusKey: l10n.predictionPlanFocusExecution),
     ];
   }
 

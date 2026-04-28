@@ -43,7 +43,7 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
   }
 
   bool shouldRefreshSelectedSemesterResults(PostgresChangePayload payload) {
-    final activeSemesterId = ref.read(activeSemesterProvider);
+    final activeSemesterId = ref.read(activeSemesterProvider).value;
     if (activeSemesterId == null) return false;
 
     final newSemesterId = payload.newRecord['semester_id']?.toString();
@@ -89,7 +89,7 @@ final realtimeProvider = Provider.autoDispose<void>((ref) {
   void scheduleCourseResultsRefresh(String eventSemesterId) {
     courseResultsDebounce?.cancel();
     courseResultsDebounce = Timer(const Duration(milliseconds: 250), () async {
-      final activeSemesterId = ref.read(activeSemesterProvider);
+      final activeSemesterId = ref.read(activeSemesterProvider).value;
       if (activeSemesterId != null && activeSemesterId == eventSemesterId) {
         debugLog('Realtime: course results changed (selected semester)');
         await ref

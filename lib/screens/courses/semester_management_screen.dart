@@ -22,7 +22,7 @@ class SemesterManagementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final semestersAsync = ref.watch(orderedSemestersProvider);
-    final activeSemesterId = ref.watch(activeSemesterProvider);
+    final activeSemesterId = ref.watch(activeSemesterProvider).value;
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -169,7 +169,7 @@ class _SemesterCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final activeSemesterId = ref.watch(activeSemesterProvider);
+    final activeSemesterId = ref.watch(activeSemesterProvider).value;
     final isActive = semester.id == activeSemesterId;
 
     String dateLabel(DateTime? date) {

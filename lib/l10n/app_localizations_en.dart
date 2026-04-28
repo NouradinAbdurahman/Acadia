@@ -801,6 +801,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get highRisk => 'High Risk';
 
   @override
+  String get riskLevelCritical => 'Critical';
+
+  @override
+  String get riskLevelWarning => 'Warning';
+
+  @override
+  String get riskLevelSafe => 'Safe';
+
+  @override
   String get riskScore => 'Risk Score';
 
   @override
@@ -1219,7 +1228,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backToHome => 'Back to Home';
 
   @override
-  String get notEnoughData => 'Not enough data yet';
+  String get notEnoughData => 'Start tracking to see trends';
 
   @override
   String get addCoursesPrompt => 'Add your courses to start tracking progress.';
@@ -1277,7 +1286,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get focusOnStudies => 'Focus on your studies today.';
 
   @override
-  String get thisWeekLabel => 'This week';
+  String get thisWeekLabel => 'This Week';
 
   @override
   String get noCourseSelected => 'No Course Selected';
@@ -1355,6 +1364,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get riskStudyDeficit => 'Study deficit';
 
   @override
+  String get riskSessionStress => 'Session stress';
+
+  @override
+  String get riskConsistencyImpact => 'Consistency impact';
+
+  @override
   String riskStatusMessage(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -1382,12 +1397,84 @@ class AppLocalizationsEn extends AppLocalizations {
       'You are in a safe range. Keep your current progress.';
 
   @override
+  String get riskInterpretationStudyDeficit =>
+      'Increase study time immediately';
+
+  @override
+  String get studyDeficitTitle => 'High Study Deficit';
+
+  @override
+  String get studyDeficitBody =>
+      'Increase study time immediately to stay on track.';
+
+  @override
+  String get decisionHighSessionStressTitle => 'High Study Stress';
+
+  @override
+  String get decisionHighSessionStressBody =>
+      'Reduce session length to 30-40 min to prevent burnout.';
+
+  @override
+  String get decisionLowConsistencyTitle => 'Build Study Consistency';
+
+  @override
+  String get decisionLowConsistencyBody =>
+      'Fix your schedule before increasing workload.';
+
+  @override
+  String get burnoutExplanationNew =>
+      'Burnout risk is driven by sustained high stress and severe study deficit.';
+
+  @override
+  String get startTrackingToSeeTrends => 'Start tracking to see trends';
+
+  @override
+  String get noGpaDataAvailable => 'No GPA data available';
+
+  @override
+  String get riskInterpretationFocusTasks => 'Focus on completing tasks';
+
+  @override
   String riskHoursRemaining(Object hours) {
     return '${hours}h remaining';
   }
 
   @override
   String get riskGoalReached => 'Goal reached!';
+
+  @override
+  String get historicalConsistency => 'Historical consistency';
+
+  @override
+  String historicalConsistencyScoreLine(Object score, Object trend) {
+    return 'Historical consistency: $score% ($trend)';
+  }
+
+  @override
+  String get weeklyConsistency => 'This week consistency';
+
+  @override
+  String get decisionHighStressOverrideTitle => 'Reduce workload';
+
+  @override
+  String get decisionHighStressOverrideBody =>
+      'Focus on shorter sessions to prevent burnout.';
+
+  @override
+  String get riskExplanationLowStudyHighStress =>
+      'High Risk due to low study activity and high stress';
+
+  @override
+  String get riskExplanationDeficitOnly =>
+      'High Risk due to severe study deficit';
+
+  @override
+  String get riskExplanationStressOnly =>
+      'High Risk due to critical stress levels';
+
+  @override
+  String get riskExplanationGeneric =>
+      'High Risk due to combined academic signals';
 
   @override
   String riskReasonOverdue(int count) {
@@ -1640,7 +1727,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trendOverallStatusTitle => 'Overall Status';
 
   @override
-  String get trendNotEnoughData => 'Not enough data';
+  String get trendNotEnoughData => 'Insufficient data';
 
   @override
   String get trendStable => 'Stable';
@@ -1724,6 +1811,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your activity is low and task progress is incomplete. Focus on completing tasks and increasing study time.';
 
   @override
+  String get trendStatusLowActivityHighCompletion =>
+      'Your activity is low, but task completion is strong.';
+
+  @override
+  String get trendStatusNeedsAttention => 'Needs attention';
+
+  @override
+  String get trendStatusNeedsImprovement => 'Needs improvement';
+
+  @override
+  String get trendStatusCriticalRiskDetail =>
+      'Risk factors identified. Review your study habits.';
+
+  @override
   String get trendInsightBuildConsistencyTitle => 'Build study consistency';
 
   @override
@@ -1756,6 +1857,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trendInsightPerformanceImprovingTitle => 'Performance improving';
+
+  @override
+  String get trendInsightPerformanceStableTitle => 'Performance stable';
 
   @override
   String get trendInsightStableTitle => 'Stable trends';
@@ -1804,8 +1908,37 @@ class AppLocalizationsEn extends AppLocalizations {
       'Performance trend is improving. Keep the same study consistency.';
 
   @override
+  String get trendInsightPerformanceStableMessage =>
+      'Performance trend is stable. Keep up the consistent effort.';
+
+  @override
   String get trendInsightStableMessage =>
       'No significant change yet. Keep logging consistently.';
+
+  @override
+  String get trendInsightLimitedDataTitle => 'Limited data for period';
+
+  @override
+  String get trendInsightLimitedDataMessage =>
+      'Not enough sessions tracked in this specific time range to calculate reliable trends.';
+
+  @override
+  String get trendWorsening => 'Worsening';
+
+  @override
+  String get trendUnstable => 'Unstable';
+
+  @override
+  String get trendModerate => 'Moderate';
+
+  @override
+  String get recoveryMessage => 'You are recovering. Keep this pattern.';
+
+  @override
+  String get burnoutTrendNoHistory => 'Not enough data to detect trend yet.';
+
+  @override
+  String get burnoutTrendNoRecovery => 'No recovery trend detected yet.';
 
   @override
   String get dashboardRiskLevelTitle => 'Risk Level';
@@ -2085,6 +2218,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confidenceMedium => 'Confidence: Medium';
 
   @override
+  String get confidenceLow => 'Confidence: Low';
+
+  @override
+  String basedOnSessions(int count) {
+    return '(based on $count sessions)';
+  }
+
+  @override
   String get gettingStarted => 'Getting started';
 
   @override
@@ -2101,6 +2242,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusDeclining => 'Declining';
+
+  @override
+  String get statusModerate => 'Moderate';
 
   @override
   String trySessionNow(int duration) {
@@ -2171,6 +2315,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusVariable => 'Variable';
+
+  @override
+  String get burnoutTrendForming =>
+      'Burnout risk is driven by sustained high study stress and severe study deficit.';
+
+  @override
+  String get burnoutRiskIncreasing =>
+      'Risk is increasing due to low consistency and goal deficit.';
+
+  @override
+  String burnoutReasonBehindGoal(String hours) {
+    return 'You are behind your weekly goal by ${hours}h.';
+  }
+
+  @override
+  String get burnoutReasonInconsistent =>
+      'Your study pattern is inconsistent this week.';
+
+  @override
+  String get burnoutReasonFrequentSwitching =>
+      'You are switching study times frequently.';
+
+  @override
+  String get burnoutReasonLoadAboveGoal =>
+      'Your total study load is above your weekly goal.';
+
+  @override
+  String get burnoutReasonNoSignals => 'No major burnout signals detected yet.';
+
+  @override
+  String get burnoutReasonDeficit =>
+      'You are falling behind your weekly study goal.';
+
+  @override
+  String get burnoutReasonStress =>
+      'High stress detected during study sessions.';
+
+  @override
+  String get burnoutReasonConsistency =>
+      'Low study consistency over the last 7 days.';
+
+  @override
+  String get burnoutReasonMood => 'A declining mood trend has been detected.';
+
+  @override
+  String get burnoutRecStable1 => 'Keep your current routine steady.';
+
+  @override
+  String get burnoutRecStable2 => 'Continue tracking your weekly goal.';
+
+  @override
+  String get burnoutRecWarning1 => 'Reduce session length a little.';
+
+  @override
+  String get burnoutRecWarning2 =>
+      'Keep your study time in one consistent slot.';
+
+  @override
+  String get burnoutRecHighRisk1 =>
+      'Shorten sessions and take breaks more often.';
+
+  @override
+  String get burnoutRecHighRisk2 => 'Focus on one study time window this week.';
+
+  @override
+  String get burnoutRecHighRisk3 => 'Take a recovery day if you feel drained.';
+
+  @override
+  String get burnoutRecRisk1 => 'Reduce session length right away.';
+
+  @override
+  String get burnoutRecRisk2 => 'Increase break frequency and simplify goals.';
+
+  @override
+  String get burnoutRecRisk3 => 'Take a recovery day before pushing harder.';
 
   @override
   String get overloadWarning =>
@@ -2585,7 +2804,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String burnoutInputsHumanized(String deficit, int inconsistency) {
-    return '• You are ${deficit}h behind and your study timing is inconsistent ($inconsistency%).';
+    return '• Study deficit: ${deficit}h\n• Consistency: $inconsistency%';
   }
 
   @override
@@ -2695,21 +2914,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your load is high and your routine is becoming unstable.';
 
   @override
-  String burnoutReasonBehindGoal(String hours) {
-    return 'You are behind your weekly goal by ${hours}h.';
-  }
-
-  @override
   String get burnoutReasonInconsistentPattern =>
       'Your study pattern is inconsistent this week.';
 
   @override
   String get burnoutReasonSwitchingTimes =>
       'You are switching study times frequently.';
-
-  @override
-  String get burnoutReasonLoadAboveGoal =>
-      'Your total study load is above your weekly goal.';
 
   @override
   String get burnoutReasonNoMajorSignals =>
@@ -2887,6 +3097,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Suggested: 3-4 shorter sessions today';
 
   @override
+  String get recoveryMessageStressHigh =>
+      'Focus on shorter sessions today to avoid burnout';
+
+  @override
   String needHoursTodayToStayOnTrack(String hours) {
     return 'You need ${hours}h today to stay on track';
   }
@@ -2948,7 +3162,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get energyLevel => 'Energy Level';
 
   @override
-  String get moodFactors => 'Contributing Factors';
+  String get moodFactors => 'Factors';
 
   @override
   String get moodFactorSleep => 'Sleep';
@@ -3033,6 +3247,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moodLast7Days => 'Mood over last 7 days';
 
   @override
+  String moodOverLastDays(int count) {
+    return 'Mood over last $count days';
+  }
+
+  @override
+  String get moodKeepLogging => 'Keep logging your mood';
+
+  @override
+  String get moodTrendNeedsData =>
+      'Keep logging your mood to see your personal emotional trend chart.';
+
+  @override
+  String get dailyMoodHistory => 'Daily Mood History';
+
+  @override
+  String get olderLabel => 'Older';
+
+  @override
   String get decisionSmartInsights => 'Smart Insights';
 
   @override
@@ -3058,60 +3290,57 @@ class AppLocalizationsEn extends AppLocalizations {
       'High pressure detected. Break tasks down';
 
   @override
-  String get decisionLowActivityHighStress =>
-      'Low activity but high stress detected';
+  String get decisionLowActivityHighStress => 'Low Activity, High Stress';
 
   @override
-  String get decisionLightTasksOnly => 'Focus on light tasks only today';
+  String get decisionLightTasksOnly =>
+      'Mood is low today. Stick to lighter tasks.';
 
   @override
   String decisionMainFactor(String factor) {
-    return 'Main stress source: $factor';
+    return 'Main Factor: $factor';
   }
 
   @override
   String decisionWorstDay(String day) {
-    return 'You feel lowest on $day';
+    return 'Difficult $day ahead';
   }
 
   @override
-  String decisionRecommendedSession(Object minutes) {
-    return 'Recommended session: $minutes min';
-  }
+  String get decisionMorningPlanning => 'Morning Strategy';
 
   @override
-  String get decisionMorningPlanning => 'Morning focus: plan your key tasks';
+  String get decisionAfternoonExecution => 'Afternoon Peak';
 
   @override
-  String get decisionAfternoonExecution =>
-      'Afternoon focus: execute your top task';
+  String get decisionNightLightReview => 'Night Review';
 
   @override
-  String get decisionNightLightReview =>
-      'Night focus: keep it light and review';
+  String get decisionActionShortSessions =>
+      'High stress with low activity detected. Try 15-min sessions.';
 
   @override
-  String get decisionActionShortSessions => 'Use shorter sessions (25 min)';
-
-  @override
-  String get decisionActionBreakDown => 'Break work into smaller tasks now';
+  String get decisionActionBreakDown =>
+      'Break down large tasks to reduce session stress.';
 
   @override
   String get decisionActionMonitorWeekly =>
       'Monitor this pattern through the week';
 
   @override
-  String get decisionActionPlanning => 'Set your top 3 tasks for today';
+  String get decisionActionPlanning =>
+      'Start with planning. Clear goals reduce session anxiety.';
 
   @override
-  String get decisionActionExecution => 'Run one focused execution block now';
+  String get decisionActionExecution =>
+      'Execute difficult tasks now while energy is high.';
 
   @override
   String get decisionActionLightReview =>
-      'Do light review, avoid heavy workload';
+      'Stress is trending up. Consider a lighter study session.';
 
   @override
-  String startRecommendedSession(Object minutes) {
+  String startRecommendedSession(int minutes) {
     return 'Start Recommended Session ($minutes min)';
   }
 
@@ -3134,7 +3363,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todaysMoodTitle => 'Today\'s Mood';
 
   @override
-  String stressOutOfTen(Object value) {
+  String stressOutOfTen(int value) {
     return 'Stress $value/10';
   }
 
@@ -3143,13 +3372,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get takeItSlowerTodayBody =>
-      'High stress detected. Use shorter sessions and protect breaks.';
+      'You have multiple deadlines soon. Pace yourself.';
 
   @override
-  String get strongStateTitle => 'You\'re in a strong state';
+  String get strongStateTitle => 'Peak Focus State';
 
   @override
-  String get strongStateBody => 'Push deeper work while your mood is high.';
+  String get strongStateBody =>
+      'You are in a great mood with low stress. Tackle a difficult task!';
 
   @override
   String get view => 'View';
@@ -3167,14 +3397,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get decisionBurnoutDurationCap =>
-      'Strongly recommended: Cap study sessions to 25m';
+      'Shorter sessions recommended to prevent burnout.';
 
   @override
   String get decisionFixedSchedule => 'Build a fixed schedule';
 
   @override
   String get decisionActionFixedSchedule =>
-      'Use the same study slot for 3 days';
+      'Establishing a routine can lower daily session stress.';
 
   @override
   String get postSessionMoodImproved => 'Your mood improved after studying';
@@ -3187,7 +3417,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postSessionFeedbackLogged => 'Post-session feedback captured';
 
   @override
-  String consistencyScoreLine(Object score, String trend) {
+  String consistencyScoreLine(int score, String trend) {
     return 'Consistency: $score% ($trend)';
   }
 
@@ -3204,17 +3434,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get predictionLevelMedium => 'MEDIUM';
 
   @override
-  String get predictionLevelHigh => 'HIGH';
+  String get predictionLevelHigh => 'Stress trend: Increasing';
 
   @override
-  String get predictionReasonHighStressToday => 'Higher stress in recent days';
+  String predictionReasonHighStressToday(String stress) {
+    return 'Stress: $stress/10';
+  }
 
   @override
-  String get predictionReasonLowConsistency =>
-      'Your study consistency is low this week';
+  String predictionReasonLowConsistency(String percent) {
+    return 'Consistency: $percent%';
+  }
 
   @override
-  String get predictionReasonUpcomingWorkload => 'Upcoming workload this week';
+  String predictionReasonUpcomingWorkload(int count) {
+    return 'Deadlines: $count';
+  }
 
   @override
   String get predictionMainReasonTitle => 'Main reason:';
@@ -3223,18 +3458,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get predictionWhyTitle => 'Why this plan?';
 
   @override
-  String get predictionReasonStressHigh => 'High stress detected recently';
+  String predictionReasonStressHigh(String stress) {
+    return 'Stress: $stress/10';
+  }
 
   @override
-  String get predictionReasonLowConsistencyDetail =>
-      'Your study consistency dropped this week';
+  String predictionReasonLowConsistencyDetail(String delta) {
+    return 'Consistency: $delta%';
+  }
 
   @override
-  String get predictionReasonTasksPending =>
-      'You have multiple pending tasks this week';
+  String predictionReasonTasksPending(int count) {
+    return 'Pending tasks: $count';
+  }
 
   @override
-  String get predictionReasonDeadlinesSoon => 'Deadlines are approaching soon';
+  String predictionReasonDeadlinesSoon(int count) {
+    return 'Deadlines: $count';
+  }
 
   @override
   String get predictionAffectedTitle => 'Affected:';
@@ -3250,16 +3491,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get predictionPlanLightFocus => 'light';
+  String predictionPlanLineSimple(String day, int minutes, String focus) {
+    return '• $day: $minutes min $focus';
+  }
 
   @override
-  String get predictionPlanFocusExecution => 'focus';
+  String get predictionPlanLightFocus => 'Light Focus Session';
 
   @override
-  String get predictionPlanDeepExecution => 'deep';
+  String get predictionPlanFocusExecution => 'Focus Execution Session';
 
   @override
-  String get predictionPlanLightReview => 'light review';
+  String get predictionPlanDeepExecution => 'Deep Execution Session';
+
+  @override
+  String get predictionPlanLightReview => 'Light Review Session';
 
   @override
   String predictionPerformanceRisk(String level) {
@@ -3300,11 +3546,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addQuickNoteOptional => 'Add a quick note (optional)';
 
   @override
-  String get analyticsMoodPerformanceTitle => 'Mood vs Performance';
+  String get analyticsMoodPerformanceTitle => '🧠 Mood vs Performance';
 
   @override
   String get analyticsMoodPerformanceGoodDesc =>
       'Your high mood positively impacts your focus duration.';
+
+  @override
+  String analyticsMoodLabel(String label, String value, String trend) {
+    return '🙂 $label: $value $trend';
+  }
+
+  @override
+  String analyticsStressLabel(String label, String value, String trend) {
+    return '⚡ $label: $value $trend';
+  }
+
+  @override
+  String analyticsImpactPositive(int minutes) {
+    return '🚀 +${minutes}m';
+  }
+
+  @override
+  String analyticsImpactNegative(int minutes) {
+    return '📉 -${minutes}m';
+  }
 
   @override
   String get analyticsMoodPerformanceBadDesc =>
@@ -3333,7 +3599,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get burnoutMessageEmotionalRisk =>
-      'Your stress is rising while consistency is low. This increases burnout risk.';
+      'Emotional volatility detected in recent sessions. Prioritize mental health.';
 
   @override
   String get decisionStatusModerateStress => 'Moderate stress detected';
@@ -3364,8 +3630,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your stress is increasing while your study pattern is inconsistent';
 
   @override
-  String get predictionPressureLikelyToIncrease =>
-      'Rising stress and low recovery will increase pressure';
+  String predictionPressureLikelyToIncrease(String hours) {
+    return 'Study deficit: ${hours}h';
+  }
 
   @override
   String get analyticsMoodCorrelationDetected => 'Correlation detected';
@@ -3447,4 +3714,158 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get completion => 'Completion';
+
+  @override
+  String get moodEnergyLevel => 'Energy Level';
+
+  @override
+  String get moodLoggedSession => 'Logged after study session';
+
+  @override
+  String get moodLoggedManual => 'Logged manually';
+
+  @override
+  String get markAllAsRead => 'Mark all as read';
+
+  @override
+  String get mood => 'Mood';
+
+  @override
+  String get academic => 'Academic';
+
+  @override
+  String get dailyBaseline => 'Daily Baseline';
+
+  @override
+  String get studySessions => 'Study Sessions';
+
+  @override
+  String get notificationOverdue => 'is overdue';
+
+  @override
+  String get notificationDueToday => 'is due today';
+
+  @override
+  String get notificationDueTomorrow => 'is due tomorrow';
+
+  @override
+  String get notificationDueSoon => 'is due soon';
+
+  @override
+  String get weeklyStudyGoalMissed => 'Weekly study goal missed';
+
+  @override
+  String weeklyStudyGoalMissedMessage(Object actual, Object goal) {
+    return 'You studied ${actual}h of ${goal}h this week.';
+  }
+
+  @override
+  String get decisionRisingStressTitle => 'Rising Stress Levels';
+
+  @override
+  String get decisionStatusDeficit => 'Large study deficit';
+
+  @override
+  String get decisionStatusInconsistent => 'Inconsistency detected';
+
+  @override
+  String get baseline => 'Baseline';
+
+  @override
+  String get predictionCollectingData => 'Collecting Data';
+
+  @override
+  String get predictionCollectingDataDetail =>
+      'Studying 5 or more sessions will activate full AI insights.';
+
+  @override
+  String decisionRecommendedSession(int minutes) {
+    return 'Recommended: $minutes min';
+  }
+
+  @override
+  String get moodTerrible => 'Terrible';
+
+  @override
+  String get moodBad => 'Bad';
+
+  @override
+  String get moodNeutral => 'Neutral';
+
+  @override
+  String get moodGood => 'Good';
+
+  @override
+  String get moodAmazing => 'Amazing';
+
+  @override
+  String get moodUnknown => 'Unknown';
+
+  @override
+  String get hideDetails => 'Hide details';
+
+  @override
+  String get viewFullAnalysis => 'View full analysis';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get selectedSemester => 'Selected Semester';
+
+  @override
+  String minutesValue(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String minutesCourseValue(int minutes, String course) {
+    return '$minutes min $course';
+  }
+
+  @override
+  String get smartAiInsights => 'Smart AI Insights';
+
+  @override
+  String get burnoutExplanationFallingBehind =>
+      'You are showing signs of mental fatigue and irregular study habits.';
+
+  @override
+  String get burnoutBehaviorHighFatigue =>
+      'Elevated mental fatigue levels detected.';
+
+  @override
+  String get burnoutBehaviorMoodInstability =>
+      'Increasing mood variability impacting focus.';
+
+  @override
+  String get burnoutBehaviorIrregularRest =>
+      'Inconsistent rest periods between sessions.';
+
+  @override
+  String get burnoutBehaviorUnpredictableRhythm =>
+      'Unpredictable study rhythm and timing.';
+
+  @override
+  String get burnoutBehaviorSwitchingContext =>
+      'Frequent context switching affecting deep focus.';
+
+  @override
+  String get burnoutBehaviorMentalOverload =>
+      'Cognitive load exceeding typical recovery rates.';
+
+  @override
+  String consistencyPercentage(Object score) {
+    return 'Consistency: $score%';
+  }
+
+  @override
+  String labelWithColon(Object label) {
+    return '$label:';
+  }
+
+  @override
+  String labelWithColonAndSpace(Object label) {
+    return '$label: ';
+  }
 }

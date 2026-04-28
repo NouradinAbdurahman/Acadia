@@ -103,8 +103,8 @@ class WeeklyActivityCard extends StatelessWidget {
                       return spots.map((spot) {
                         final minutes = spot.y.toInt();
                         final label = minutes >= 60
-                            ? '${(minutes / 60).toStringAsFixed(1)}h'
-                            : '$minutes min';
+                            ? '${(minutes / 60).toStringAsFixed(1)}${l10n.hoursAbbreviation}'
+                            : '$minutes${l10n.minutesAbbreviation}';
                         return LineTooltipItem(
                           label,
                           const TextStyle(
@@ -121,7 +121,7 @@ class WeeklyActivityCard extends StatelessWidget {
                   drawVerticalLine: false,
                   horizontalInterval: 30,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
                     strokeWidth: 1,
                   ),
                 ),
@@ -135,16 +135,16 @@ class WeeklyActivityCard extends StatelessWidget {
                         if (value == 0) return const SizedBox();
                         if (value % 60 == 0) {
                           return Text(
-                            '${(value / 60).toInt()}h',
+                            '${(value / 60).toInt()}${l10n.hoursAbbreviation}',
                             style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.white38,
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                             ),
                           );
                         }
                         return Text(
-                          '${value.toInt()}m',
+                          '${value.toInt()}${l10n.minutesAbbreviation}',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.white12,
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
                             fontSize: 8,
                           ),
                         );
@@ -162,7 +162,15 @@ class WeeklyActivityCard extends StatelessWidget {
                       showTitles: true,
                       interval: 1.0,
                       getTitlesWidget: (value, _) {
-                        const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                        final days = [
+                          l10n.monday.substring(0, 1).toUpperCase(),
+                          l10n.tuesday.substring(0, 1).toUpperCase(),
+                          l10n.wednesday.substring(0, 1).toUpperCase(),
+                          l10n.thursday.substring(0, 1).toUpperCase(),
+                          l10n.friday.substring(0, 1).toUpperCase(),
+                          l10n.saturday.substring(0, 1).toUpperCase(),
+                          l10n.sunday.substring(0, 1).toUpperCase(),
+                        ];
                         final int val = value.toInt();
                         if (val < 1 || val > 7) return const SizedBox();
                         final isToday = DateTime.now().weekday == val;
@@ -173,7 +181,7 @@ class WeeklyActivityCard extends StatelessWidget {
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: isToday
                                   ? theme.colorScheme.primary
-                                  : Colors.white38,
+                                  : theme.colorScheme.onSurface.withValues(alpha: 0.38),
                               fontWeight: isToday
                                   ? FontWeight.bold
                                   : FontWeight.normal,
@@ -209,9 +217,9 @@ class WeeklyActivityCard extends StatelessWidget {
                           radius: isPeak ? 5 : 3,
                           color: isPeak
                               ? theme.colorScheme.primary
-                              : Colors.white24,
+                              : theme.colorScheme.onSurface.withValues(alpha: 0.24),
                           strokeWidth: isPeak ? 2 : 1,
-                          strokeColor: isPeak ? Colors.white : Colors.transparent,
+                          strokeColor: isPeak ? theme.colorScheme.surface : Colors.transparent,
                         );
                       },
                     ),
@@ -232,7 +240,7 @@ class WeeklyActivityCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const Divider(color: Colors.white10),
+          Divider(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
           const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -243,12 +251,12 @@ class WeeklyActivityCard extends StatelessWidget {
                   Text(
                     l10n.thisWeekLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white38,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    analytics.formatDuration(totals['thisWeek']!),
+                    analytics.formatDuration(totals['thisWeek']!, l10n),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -261,12 +269,12 @@ class WeeklyActivityCard extends StatelessWidget {
                   Text(
                     l10n.preivousWeekLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white38,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    analytics.formatDuration(totals['lastWeek']!),
+                    analytics.formatDuration(totals['lastWeek']!, l10n),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -335,7 +343,7 @@ class WeeklyActivityCard extends StatelessWidget {
                   Text(
                     l10n.weeklyProgressLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white70,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   Opacity(
@@ -356,7 +364,7 @@ class WeeklyActivityCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: analytics.weeklyGoalProgress.clamp(0.0, 1.0),
-                  backgroundColor: Colors.white10,
+                  backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                   minHeight: 6,
                 ),
               ),
@@ -365,28 +373,31 @@ class WeeklyActivityCard extends StatelessWidget {
                 children: [
                   Text(
                     l10n.weeklyGoalProgressHours(
-                      analytics.formatDuration(analytics.weeklyTotals['thisWeek']!),
-                      '${(analytics.weeklyGoalMinutes / 60).toInt()}h',
+                      analytics.formatDuration(
+                        analytics.weeklyTotals['thisWeek']!,
+                        l10n,
+                      ),
+                      '${(analytics.weeklyGoalMinutes / 60).toInt()}${l10n.hoursAbbreviation}',
                     ),
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white38,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
                   const Spacer(),
                   Text(
                     l10n.activeDaysCount(data.values.where((v) => v > 0).length),
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white38,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6),
-                    child: Text('•', style: TextStyle(color: Colors.white24)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text('•', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.24))),
                   ),
                   Text(
                     l10n.peakDayLabel(analytics.getPeakDay(l10n)),
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white38,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.38),
                     ),
                   ),
                 ],
@@ -394,7 +405,7 @@ class WeeklyActivityCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          const Divider(color: Colors.white10),
+          Divider(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
@@ -431,7 +442,7 @@ class WeeklyActivityCard extends StatelessWidget {
                     Text(
                       analytics.getStreakMessage(l10n),
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white54,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.54),
                       ),
                     ),
                   ],

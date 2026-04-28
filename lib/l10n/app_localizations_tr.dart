@@ -802,6 +802,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get highRisk => 'Yüksek Risk';
 
   @override
+  String get riskLevelCritical => 'Kritik';
+
+  @override
+  String get riskLevelWarning => 'Uyarı';
+
+  @override
+  String get riskLevelSafe => 'Güvenli';
+
+  @override
   String get riskScore => 'Risk Skoru';
 
   @override
@@ -1280,7 +1289,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get focusOnStudies => 'Focus on your studies today.';
 
   @override
-  String get thisWeekLabel => 'Bu hafta';
+  String get thisWeekLabel => 'Bu Hafta';
 
   @override
   String get noCourseSelected => 'No Course Selected';
@@ -1358,6 +1367,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get riskStudyDeficit => 'Çalışma açığı';
 
   @override
+  String get riskSessionStress => 'Oturum stresi';
+
+  @override
+  String get riskConsistencyImpact => 'Süreklilik etkisi';
+
+  @override
   String riskStatusMessage(int count) {
     return '$count gecikmiş görev';
   }
@@ -1379,12 +1394,83 @@ class AppLocalizationsTr extends AppLocalizations {
       'Güvenli bir aralıktasınız. Mevcut ilerlemenizi sürdürün.';
 
   @override
+  String get riskInterpretationStudyDeficit => 'Çalışma süresini hemen artırın';
+
+  @override
+  String get studyDeficitTitle => 'Yüksek Çalışma Açığı';
+
+  @override
+  String get studyDeficitBody =>
+      'Yolunuzda kalmak için çalışma süresini hemen artırın.';
+
+  @override
+  String get decisionHighSessionStressTitle => 'Yüksek Çalışma Stresi';
+
+  @override
+  String get decisionHighSessionStressBody =>
+      'Tükenmişliği önlemek için oturum süresini 30-40 dakikaya indirin.';
+
+  @override
+  String get decisionLowConsistencyTitle => 'Çalışma Sürekliliğini Artırın';
+
+  @override
+  String get decisionLowConsistencyBody =>
+      'İş yükünü artırmadan önce programınızı düzeltin.';
+
+  @override
+  String get burnoutExplanationNew =>
+      'Burnout risk is driven by sustained high stress and severe study deficit.';
+
+  @override
+  String get startTrackingToSeeTrends => 'Start tracking to see trends';
+
+  @override
+  String get noGpaDataAvailable => 'GPA verisi bulunamadı';
+
+  @override
+  String get riskInterpretationFocusTasks => 'Görevleri tamamlamaya odaklanın';
+
+  @override
   String riskHoursRemaining(Object hours) {
     return '$hours saat kaldı';
   }
 
   @override
   String get riskGoalReached => 'Hedefe ulaşıldı!';
+
+  @override
+  String get historicalConsistency => 'Geçmiş süreklilik';
+
+  @override
+  String historicalConsistencyScoreLine(Object score, Object trend) {
+    return 'Geçmiş süreklilik: %$score ($trend)';
+  }
+
+  @override
+  String get weeklyConsistency => 'Bu haftaki süreklilik';
+
+  @override
+  String get decisionHighStressOverrideTitle => 'İş yükünü azaltın';
+
+  @override
+  String get decisionHighStressOverrideBody =>
+      'Tükenmişliği önlemek için daha kısa seanslara odaklanın.';
+
+  @override
+  String get riskExplanationLowStudyHighStress =>
+      'Düşük çalışma aktivitesi ve yüksek stres nedeniyle Yüksek Risk';
+
+  @override
+  String get riskExplanationDeficitOnly =>
+      'Ciddi çalışma eksiği nedeniyle Yüksek Risk';
+
+  @override
+  String get riskExplanationStressOnly =>
+      'Kritik stres seviyeleri nedeniyle Yüksek Risk';
+
+  @override
+  String get riskExplanationGeneric =>
+      'Birleşik akademik sinyaller nedeniyle Yüksek Risk';
 
   @override
   String riskReasonOverdue(int count) {
@@ -1639,7 +1725,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get trendOverallStatusTitle => 'Genel Durum';
 
   @override
-  String get trendNotEnoughData => 'Yeterli veri yok';
+  String get trendNotEnoughData => 'Yetersiz veri';
 
   @override
   String get trendStable => 'Stabil';
@@ -1722,6 +1808,20 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aktiviten düşük ve görev ilerlemen yetersiz. Görevleri tamamlamaya ve çalışma süreni artırmaya odaklan.';
 
   @override
+  String get trendStatusLowActivityHighCompletion =>
+      'Etkinliğiniz düşük ancak görev tamamlama oranınız güçlü.';
+
+  @override
+  String get trendStatusNeedsAttention => 'Needs attention';
+
+  @override
+  String get trendStatusNeedsImprovement => 'Needs improvement';
+
+  @override
+  String get trendStatusCriticalRiskDetail =>
+      'Risk factors identified. Review your study habits.';
+
+  @override
   String get trendInsightBuildConsistencyTitle => 'Çalışma düzeni oluştur';
 
   @override
@@ -1754,6 +1854,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get trendInsightPerformanceImprovingTitle => 'Performans iyileşiyor';
+
+  @override
+  String get trendInsightPerformanceStableTitle => 'Performans stabil';
 
   @override
   String get trendInsightStableTitle => 'Trendler stabil';
@@ -1803,8 +1906,39 @@ class AppLocalizationsTr extends AppLocalizations {
       'Performans trendi iyileşiyor. Aynı çalışma düzenini sürdür.';
 
   @override
+  String get trendInsightPerformanceStableMessage =>
+      'Performans trendi stabil. Düzenli çalışmaya devam et.';
+
+  @override
   String get trendInsightStableMessage =>
-      'Henüz belirgin bir değişim yok. Düzenli kayıt tutmaya devam et.';
+      'Henüz önemli bir değişiklik yok. Düzenli günlük tutmaya devam edin.';
+
+  @override
+  String get trendInsightLimitedDataTitle => 'Dönem için sınırlı veri';
+
+  @override
+  String get trendInsightLimitedDataMessage =>
+      'Bu zaman aralığında güvenilir trendleri hesaplamak için yeterli oturum izlenmedi.';
+
+  @override
+  String get trendWorsening => 'Kötüleşiyor';
+
+  @override
+  String get trendUnstable => 'Kararsız';
+
+  @override
+  String get trendModerate => 'Orta';
+
+  @override
+  String get recoveryMessage => 'İyileşiyorsunuz. Bu düzeni koruyun.';
+
+  @override
+  String get burnoutTrendNoHistory =>
+      'Henüz trendi tespit etmek için yeterli veri yok.';
+
+  @override
+  String get burnoutTrendNoRecovery =>
+      'Henüz bir iyileşme trendi tespit edilmedi.';
 
   @override
   String get dashboardRiskLevelTitle => 'Risk Seviyesi';
@@ -2079,6 +2213,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get confidenceMedium => 'Tahmin doğruluğu: Orta';
 
   @override
+  String get confidenceLow => 'Tahmin doğruluğu: Düşük';
+
+  @override
+  String basedOnSessions(int count) {
+    return '($count oturuma göre)';
+  }
+
+  @override
   String get gettingStarted => 'Yeni başlıyor';
 
   @override
@@ -2095,6 +2237,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get statusDeclining => 'Düşüşte';
+
+  @override
+  String get statusModerate => 'Orta';
 
   @override
   String trySessionNow(int duration) {
@@ -2167,6 +2312,87 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get statusVariable => 'Değişken';
+
+  @override
+  String get burnoutTrendForming =>
+      'Trend oluşuyor. Desen tutarsızlığı nedeniyle risk artıyor.';
+
+  @override
+  String get burnoutRiskIncreasing =>
+      'Düşük tutarlılık ve hedef açığı nedeniyle risk artıyor.';
+
+  @override
+  String burnoutReasonBehindGoal(String hours) {
+    return 'Haftalık hedefinin ${hours}sa gerisindesin.';
+  }
+
+  @override
+  String get burnoutReasonInconsistent =>
+      'Çalışma düzeniniz bu hafta tutarsız.';
+
+  @override
+  String get burnoutReasonFrequentSwitching =>
+      'Çalışma saatlerini sık sık değiştiriyorsunuz.';
+
+  @override
+  String get burnoutReasonLoadAboveGoal =>
+      'Toplam çalışma yükün haftalık hedefinin üzerinde.';
+
+  @override
+  String get burnoutReasonNoSignals =>
+      'Henüz önemli bir tükenmişlik sinyali saptanmadı.';
+
+  @override
+  String get burnoutReasonDeficit =>
+      'You are falling behind your weekly study goal.';
+
+  @override
+  String get burnoutReasonStress =>
+      'High stress detected during study sessions.';
+
+  @override
+  String get burnoutReasonConsistency =>
+      'Low study consistency over the last 7 days.';
+
+  @override
+  String get burnoutReasonMood => 'A declining mood trend has been detected.';
+
+  @override
+  String get burnoutRecStable1 => 'Mevcut rutininizi sabit tutun.';
+
+  @override
+  String get burnoutRecStable2 =>
+      'Haftalık hedefinizi takip etmeye devam edin.';
+
+  @override
+  String get burnoutRecWarning1 => 'Oturum süresini biraz azaltın.';
+
+  @override
+  String get burnoutRecWarning2 =>
+      'Çalışma saatinizi tutarlı bir aralıkta tutun.';
+
+  @override
+  String get burnoutRecHighRisk1 =>
+      'Oturumları kısaltın ve daha sık mola verin.';
+
+  @override
+  String get burnoutRecHighRisk2 =>
+      'Bu hafta tek bir çalışma zaman aralığına odaklanın.';
+
+  @override
+  String get burnoutRecHighRisk3 =>
+      'Kendinizi tükenmiş hissediyorsanız bir dinlenme günü ayırın.';
+
+  @override
+  String get burnoutRecRisk1 => 'Oturum süresini hemen azaltın.';
+
+  @override
+  String get burnoutRecRisk2 =>
+      'Mola sıklığını artırın ve hedefleri basitleştirin.';
+
+  @override
+  String get burnoutRecRisk3 =>
+      'Daha fazla zorlamadan önce bir dinlenme günü ayırın.';
 
   @override
   String get overloadWarning =>
@@ -2572,7 +2798,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String burnoutInputsHumanized(String deficit, int inconsistency) {
-    return '• $deficit saat geridesin ve çalışma zamanlaman tutarsız (%$inconsistency).';
+    return '• Çalışma açığı: ${deficit}s\n• Tutarlılık: %$inconsistency';
   }
 
   @override
@@ -2684,21 +2910,12 @@ class AppLocalizationsTr extends AppLocalizations {
       'Yükün yüksek ve düzenin dengesizleşiyor.';
 
   @override
-  String burnoutReasonBehindGoal(String hours) {
-    return 'Haftalık hedefinin ${hours}sa gerisindesin.';
-  }
-
-  @override
   String get burnoutReasonInconsistentPattern =>
       'Bu hafta çalışma düzenin tutarsız.';
 
   @override
   String get burnoutReasonSwitchingTimes =>
       'Çalışma saatlerini sık sık değiştiriyorsun.';
-
-  @override
-  String get burnoutReasonLoadAboveGoal =>
-      'Toplam çalışma yükün haftalık hedefinin üzerinde.';
 
   @override
   String get burnoutReasonNoMajorSignals =>
@@ -2867,7 +3084,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get suggestedShorterSessionsToday =>
-      'Oneri: Bugun 3-4 daha kisa oturum';
+      'Öneri: Bugün 3-4 kısa çalışma seansı yapın';
+
+  @override
+  String get recoveryMessageStressHigh =>
+      'Tükenmişliği önlemek için bugün daha kısa seanslara odaklanın';
 
   @override
   String needHoursTodayToStayOnTrack(String hours) {
@@ -2931,7 +3152,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get energyLevel => 'Enerji Seviyesi';
 
   @override
-  String get moodFactors => 'Etkileyen Faktörler';
+  String get moodFactors => 'Faktörler';
 
   @override
   String get moodFactorSleep => 'Uyku';
@@ -3017,6 +3238,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get moodLast7Days => 'Son 7 gündeki ruh hali';
 
   @override
+  String moodOverLastDays(int count) {
+    return 'Son $count gündeki ruh hali';
+  }
+
+  @override
+  String get moodKeepLogging => 'Ruh halinizi kaydetmeye devam edin';
+
+  @override
+  String get moodTrendNeedsData =>
+      'Kişisel duygusal eğilim grafiğinizi görmek için ruh halinizi kaydetmeye devam edin.';
+
+  @override
+  String get dailyMoodHistory => 'Günlük Ruh Hali Geçmişi';
+
+  @override
+  String get olderLabel => 'Daha Eski';
+
+  @override
   String get decisionSmartInsights => 'Akıllı İçgörüler';
 
   @override
@@ -3057,11 +3296,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String decisionRecommendedSession(Object minutes) {
-    return 'Önerilen çalışma: $minutes dk';
-  }
-
-  @override
   String get decisionMorningPlanning => 'Sabah odağı: ana görevlerini planla';
 
   @override
@@ -3092,7 +3326,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get decisionActionLightReview => 'Hafif tekrar yap, ağır yükten kaçın';
 
   @override
-  String startRecommendedSession(Object minutes) {
+  String startRecommendedSession(int minutes) {
     return 'Önerilen Oturumu Başlat ($minutes dk)';
   }
 
@@ -3115,7 +3349,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get todaysMoodTitle => 'Bugünkü Ruh Hali';
 
   @override
-  String stressOutOfTen(Object value) {
+  String stressOutOfTen(int value) {
     return 'Stres $value/10';
   }
 
@@ -3166,7 +3400,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Oturum sonrası geri bildirim kaydedildi';
 
   @override
-  String consistencyScoreLine(Object score, String trend) {
+  String consistencyScoreLine(int score, String trend) {
     return 'Tutarlılık: %$score ($trend)';
   }
 
@@ -3183,17 +3417,22 @@ class AppLocalizationsTr extends AppLocalizations {
   String get predictionLevelMedium => 'ORTA';
 
   @override
-  String get predictionLevelHigh => 'YÜKSEK';
+  String get predictionLevelHigh => 'Stres eğilimi: Artıyor';
 
   @override
-  String get predictionReasonHighStressToday =>
-      'Son günlerde stres daha yüksek';
+  String predictionReasonHighStressToday(String stress) {
+    return 'Stres: $stress/10';
+  }
 
   @override
-  String get predictionReasonLowConsistency => 'Bu hafta çalışma düzenin düşük';
+  String predictionReasonLowConsistency(String percent) {
+    return 'Tutarlılık: %$percent';
+  }
 
   @override
-  String get predictionReasonUpcomingWorkload => 'Bu hafta iş yükü artıyor';
+  String predictionReasonUpcomingWorkload(int count) {
+    return 'Teslim tarihleri: $count';
+  }
 
   @override
   String get predictionMainReasonTitle => 'Ana neden:';
@@ -3202,19 +3441,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get predictionWhyTitle => 'Bu plan neden önerildi?';
 
   @override
-  String get predictionReasonStressHigh => 'Son zamanlarda stres yüksek';
+  String predictionReasonStressHigh(String stress) {
+    return 'Stres: $stress/10';
+  }
 
   @override
-  String get predictionReasonLowConsistencyDetail =>
-      'Bu hafta çalışma düzenin düştü';
+  String predictionReasonLowConsistencyDetail(String delta) {
+    return 'Tutarlılık: %$delta';
+  }
 
   @override
-  String get predictionReasonTasksPending =>
-      'Bu hafta birden fazla görevin bekliyor';
+  String predictionReasonTasksPending(int count) {
+    return 'Bekleyen görevler: $count';
+  }
 
   @override
-  String get predictionReasonDeadlinesSoon =>
-      'Yaklaşan son tarihler baskı oluşturuyor';
+  String predictionReasonDeadlinesSoon(int count) {
+    return 'Teslim tarihleri: $count';
+  }
 
   @override
   String get predictionAffectedTitle => 'Etkilenen:';
@@ -3227,6 +3471,11 @@ class AppLocalizationsTr extends AppLocalizations {
     String focus,
   ) {
     return '$day saat $time • $minutes dk $focus oturumu';
+  }
+
+  @override
+  String predictionPlanLineSimple(String day, int minutes, String focus) {
+    return '• $day: $minutes dk $focus';
   }
 
   @override
@@ -3280,31 +3529,51 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addQuickNoteOptional => 'Kısa bir not ekle (isteğe bağlı)';
 
   @override
-  String get analyticsMoodPerformanceTitle => 'Mood vs Performance';
+  String get analyticsMoodPerformanceTitle => '🧠 Ruh Hali vs Performans';
 
   @override
   String get analyticsMoodPerformanceGoodDesc =>
-      'Your high mood positively impacts your focus duration.';
+      'Yüksek modunuz odaklanma sürenizi olumlu etkiliyor.';
+
+  @override
+  String analyticsMoodLabel(String label, String value, String trend) {
+    return '🙂 $label: $value $trend';
+  }
+
+  @override
+  String analyticsStressLabel(String label, String value, String trend) {
+    return '⚡ $label: $value $trend';
+  }
+
+  @override
+  String analyticsImpactPositive(int minutes) {
+    return '🚀 +${minutes}dk';
+  }
+
+  @override
+  String analyticsImpactNegative(int minutes) {
+    return '📉 -${minutes}dk';
+  }
 
   @override
   String get analyticsMoodPerformanceBadDesc =>
-      'Low mood is restricting your session efficiency.';
+      'Düşük modunuz oturum verimliliğinizi kısıtlıyor.';
 
   @override
   String get analyticsMoodPerformanceStableDesc =>
-      'Your mood is stable, allowing for consistent focus.';
+      'Modunuz dengeli, bu da tutarlı bir odaklanma sağlıyor.';
 
   @override
-  String get analyticsMoodBetterMood => 'Better Mood';
+  String get analyticsMoodBetterMood => 'Daha İyi Ruh Hali';
 
   @override
-  String get analyticsMoodHighStress => 'High Stress';
+  String get analyticsMoodHighStress => 'Yüksek Stres';
 
   @override
-  String get analyticsMoodFocusBoost => 'Focus Boost';
+  String get analyticsMoodFocusBoost => 'Odaklanma Artışı';
 
   @override
-  String get analyticsMoodFocusDrain => 'Focus Drain';
+  String get analyticsMoodFocusDrain => 'Odaklanma Kaybı';
 
   @override
   String analyticsMoodDifference(Object minutes, Object plusMinus) {
@@ -3313,16 +3582,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get burnoutMessageEmotionalRisk =>
-      'Your stress is rising while consistency is low. This increases burnout risk.';
+      'Emotional volatility detected in recent sessions. Prioritize mental health.';
 
   @override
-  String get decisionStatusModerateStress => 'Moderate stress detected';
+  String get decisionStatusModerateStress => 'Orta düzey stres tespit edildi';
 
   @override
-  String get decisionStatusLowStress => 'Low stress';
+  String get decisionStatusLowStress => 'Düşük stres';
 
   @override
-  String get decisionStatusHighStress => 'High stress detected';
+  String get decisionStatusHighStress => 'Yüksek stres tespit edildi';
 
   @override
   String get predictionStressLikelyIncrease =>
@@ -3344,8 +3613,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Your stress is increasing while your study pattern is inconsistent';
 
   @override
-  String get predictionPressureLikelyToIncrease =>
-      'Rising stress and low recovery will increase pressure';
+  String predictionPressureLikelyToIncrease(String hours) {
+    return 'Çalışma eksiği: $hours sa';
+  }
 
   @override
   String get analyticsMoodCorrelationDetected => 'Correlation detected';
@@ -3368,25 +3638,25 @@ class AppLocalizationsTr extends AppLocalizations {
   String get signalStressHigh => 'Yüksek stres';
 
   @override
-  String get signalStressMedium => 'Orta derece stres';
+  String get signalStressMedium => 'Orta stres';
 
   @override
   String get signalMoodLow => 'Düşük ruh hali';
 
   @override
-  String get signalConsistencyLow => 'Düzensiz rutin';
+  String get signalConsistencyLow => 'Tutarsız rutin';
 
   @override
-  String get signalDeficitHigh => 'Çalışma açığı';
+  String get signalDeficitHigh => 'Çalışma eksiği';
 
   @override
-  String get consistency => 'Tutarlılık';
+  String get consistency => 'Süreklilik';
 
   @override
   String get stress => 'Stres';
 
   @override
-  String get moodTrends => 'Ruh Hali Eğilimleri';
+  String get moodTrends => 'Ruh Hali Trendleri';
 
   @override
   String get studyProfileTitle => 'Çalışma Profilin';
@@ -3427,4 +3697,158 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get completion => 'Tamamlama';
+
+  @override
+  String get moodEnergyLevel => 'Enerji Seviyesi';
+
+  @override
+  String get moodLoggedSession => 'Çalışma oturumundan sonra kaydedildi';
+
+  @override
+  String get moodLoggedManual => 'Manuel olarak kaydedildi';
+
+  @override
+  String get markAllAsRead => 'Tümünü okundu olarak işaretle';
+
+  @override
+  String get mood => 'Ruh Hali';
+
+  @override
+  String get academic => 'Akademik';
+
+  @override
+  String get dailyBaseline => 'Günlük Temel';
+
+  @override
+  String get studySessions => 'Çalışma Oturumları';
+
+  @override
+  String get notificationOverdue => 'gecikmiş';
+
+  @override
+  String get notificationDueToday => 'bugün teslim edilecek';
+
+  @override
+  String get notificationDueTomorrow => 'yarın teslim edilecek';
+
+  @override
+  String get notificationDueSoon => 'yakında teslim edilecek';
+
+  @override
+  String get weeklyStudyGoalMissed => 'Haftalık çalışma hedefi kaçırıldı';
+
+  @override
+  String weeklyStudyGoalMissedMessage(Object actual, Object goal) {
+    return 'Bu hafta $goal saatlik hedefinizin $actual saatini çalıştınız.';
+  }
+
+  @override
+  String get decisionRisingStressTitle => 'Rising Stress Levels';
+
+  @override
+  String get decisionStatusDeficit => 'Büyük çalışma eksiği';
+
+  @override
+  String get decisionStatusInconsistent => 'Tutarsızlık tespit edildi';
+
+  @override
+  String get baseline => 'Temel';
+
+  @override
+  String get predictionCollectingData => 'Veri Toplanıyor';
+
+  @override
+  String get predictionCollectingDataDetail =>
+      '5 veya daha fazla oturum çalışıldığında tam yapay zeka içgörüleri aktif olacaktır.';
+
+  @override
+  String decisionRecommendedSession(int minutes) {
+    return 'Önerilen: $minutes dk';
+  }
+
+  @override
+  String get moodTerrible => 'Berbat';
+
+  @override
+  String get moodBad => 'Kötü';
+
+  @override
+  String get moodNeutral => 'Nötr';
+
+  @override
+  String get moodGood => 'İyi';
+
+  @override
+  String get moodAmazing => 'Harika';
+
+  @override
+  String get moodUnknown => 'Bilinmiyor';
+
+  @override
+  String get hideDetails => 'Detayları gizle';
+
+  @override
+  String get viewFullAnalysis => 'Tam analizi görüntüle';
+
+  @override
+  String get unknown => 'Bilinmiyor';
+
+  @override
+  String get selectedSemester => 'Seçili Dönem';
+
+  @override
+  String minutesValue(int minutes) {
+    return '$minutes dk';
+  }
+
+  @override
+  String minutesCourseValue(int minutes, String course) {
+    return '$minutes dk $course';
+  }
+
+  @override
+  String get smartAiInsights => 'Yapay Zeka İçgörüleri';
+
+  @override
+  String get burnoutExplanationFallingBehind =>
+      'Haftalık hedefinizin gerisinde kalıyorsunuz.';
+
+  @override
+  String get burnoutBehaviorHighFatigue =>
+      'Elevated mental fatigue levels detected.';
+
+  @override
+  String get burnoutBehaviorMoodInstability =>
+      'Increasing mood variability impacting focus.';
+
+  @override
+  String get burnoutBehaviorIrregularRest =>
+      'Inconsistent rest periods between sessions.';
+
+  @override
+  String get burnoutBehaviorUnpredictableRhythm =>
+      'Unpredictable study rhythm and timing.';
+
+  @override
+  String get burnoutBehaviorSwitchingContext =>
+      'Frequent context switching affecting deep focus.';
+
+  @override
+  String get burnoutBehaviorMentalOverload =>
+      'Cognitive load exceeding typical recovery rates.';
+
+  @override
+  String consistencyPercentage(Object score) {
+    return 'Süreklilik: %$score';
+  }
+
+  @override
+  String labelWithColon(Object label) {
+    return '$label:';
+  }
+
+  @override
+  String labelWithColonAndSpace(Object label) {
+    return '$label: ';
+  }
 }

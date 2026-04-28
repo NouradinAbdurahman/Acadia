@@ -9,6 +9,7 @@ class TrendRepository {
   Future<TrendData> getTrendData({
     required String userId,
     required int days,
+    required int totalTrackedSessions,
     String? semesterId,
   }) async {
     if (userId.trim().isEmpty || days <= 0) return const TrendData.empty();
@@ -103,6 +104,8 @@ class TrendRepository {
       gradeTrend: gradeTrend,
       completedTasksInRange: completedTaskRows.length,
       totalTasksInRange: createdTaskRows.length,
+      totalSessionsInRange: studyRows.length,
+      totalTrackedSessions: totalTrackedSessions,
     );
 
     final studyValues = studyTrend.values.toList();
@@ -152,6 +155,13 @@ class TrendRepository {
       }
     }
 
+    // New stricter rule: Performance cannot be improving if study effort dropped significantly
+    if (studyChangePercent < -15 && performanceChange > 0) {
+      performanceChange = -0.01; // Force a non-improving status
+    } else if (studyChangePercent < -30) {
+      performanceChange = -0.1; // Force declining if study dropped heavily
+    }
+
     return TrendData(
       studyTrend: studyTrend,
       taskTrend: taskTrend,
@@ -185,6 +195,8 @@ class TrendRepository {
     required List<GradePoint> gradeTrend,
     required int completedTasksInRange,
     required int totalTasksInRange,
+    required int totalSessionsInRange,
+    required int totalTrackedSessions,
   }) {
     final insights = <TrendInsight>[];
     final studyValues = studyTrend.values.toList();
@@ -204,7 +216,7 @@ class TrendRepository {
     final studyChange = _normalizePercent(
       _safePercentChange(oldValue: studyPrev, newValue: studyLast),
     );
-    if (totalStudyHours < 1) {
+    if (totalTrackedSessions < 5) {
       insights.add(
         const TrendInsight(
           type: InsightType.warning,
@@ -214,17 +226,25 @@ class TrendRepository {
           key: 'study_build_consistency',
         ),
       );
+    } else if (totalSessionsInRange < 3) {
+      insights.add(
+        const TrendInsight(
+          type: InsightType.warning,
+          title: 'Limited data for period',
+          message:
+              'Not enough sessions tracked in this specific time range to calculate reliable trends.',
+          key: 'limited_data_period',
+        ),
+      );
     } else if (studyChange > 10) {
-      final title = studyChange > 50
-          ? 'Study increased significantly'
-          : 'Study improved';
+      final isSignificant = studyChange > 50;
       insights.add(
         TrendInsight(
           type: InsightType.good,
-          title: title,
+          title: isSignificant ? 'Study increased significantly' : 'Study improved',
           message:
               'Study increased by ${studyChange.round()}%. Keep this pace to stay ahead.',
-          key: 'study_increased',
+          key: isSignificant ? 'study_increased' : 'study_improved',
           params: {'percent': studyChange.round()},
         ),
       );
@@ -302,16 +322,13 @@ class TrendRepository {
       );
     } else if (workloadChange > 10) {
       final isSharp = workloadChange > 50 && totalWorkload > 5;
-      final title = isSharp
-          ? 'Workload increased sharply'
-          : 'Workload is rising';
       insights.add(
         TrendInsight(
           type: isSharp ? InsightType.critical : InsightType.warning,
-          title: title,
+          title: isSharp ? 'Workload increased sharply' : 'Workload is rising',
           message:
               'You added $totalWorkload tasks/deadlines in this period. Plan ahead to avoid overload.',
-          key: 'workload_increased',
+          key: isSharp ? 'workload_increased' : 'workload_rising',
           params: {'count': totalWorkload},
         ),
       );
@@ -329,7 +346,8 @@ class TrendRepository {
         final secondAvg =
             secondPart.fold<double>(0, (sum, point) => sum + point.value) /
             secondPart.length;
-        if (secondAvg < firstAvg) {
+        final diff = secondAvg - firstAvg;
+        if (diff < -0.1) {
           insights.add(
             const TrendInsight(
               type: InsightType.warning,
@@ -339,7 +357,7 @@ class TrendRepository {
               key: 'performance_declining',
             ),
           );
-        } else if (secondAvg > firstAvg) {
+        } else if (diff > 0.1) {
           insights.add(
             const TrendInsight(
               type: InsightType.good,
@@ -347,6 +365,16 @@ class TrendRepository {
               message:
                   'Performance trend is improving. Keep the same study consistency.',
               key: 'performance_improving',
+            ),
+          );
+        } else {
+          insights.add(
+            const TrendInsight(
+              type: InsightType.good,
+              title: 'Performance stable',
+              message:
+                  'Performance trend is stable. Keep up the consistent effort.',
+              key: 'performance_stable',
             ),
           );
         }
@@ -363,6 +391,7 @@ class TrendRepository {
         ),
       );
     }
+
     return insights;
   }
 

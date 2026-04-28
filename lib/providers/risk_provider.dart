@@ -18,206 +18,204 @@ import 'tasks_provider.dart';
 import 'semester_provider.dart';
 import 'analytics_provider.dart';
 import 'mood_provider.dart';
+import 'course_provider.dart';
+import 'course_results_provider.dart';
 import 'decision_provider.dart';
 
-final _lastRiskState = StateProvider<RiskState?>((ref) => null);
+// --- DATA AGGREGATION & READINESS ---
 
-final riskProvider = FutureProvider<RiskState>((ref) async {
-  // 1. Get user from currentAppUserProvider (ensuring it's fully synchronized with profile)
-  final user = await ref.watch(currentAppUserProvider.future);
+bool _isSessionMoodSource(String source) => source.trim().toLowerCase() == 'session';
 
-  if (user == null) {
-    // Return empty state if user is somehow logged out
-    return RiskState(
-      input: const RiskInput(
-        overdueTasks: 0,
-        upcomingTasks: 0,
-        totalECTS: 0,
-        studyHours: 0,
-        studyGoal: 10.0,
-      ),
-      result: const RiskResult(
-        totalScore: 0,
-        riskLevel: 'low',
-        overdueContribution: 0,
-        upcomingContribution: 0,
-        ectsContribution: 0,
-        studyContribution: 0,
-      ),
-      trendDelta: 0,
-    );
+double _avgStress(List<dynamic> logs) {
+  if (logs.isEmpty) return 0.0;
+  final total = logs
+      .map((entry) => (entry.stressLevel as num).toDouble())
+      .fold<double>(0.0, (sum, value) => sum + value);
+  return total / logs.length;
+}
+
+bool _isDailyMoodTrendDown(List<dynamic> dailyLogs) {
+  if (dailyLogs.length < 4) return false;
+  final sorted = [...dailyLogs]
+    ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+  final sample = sorted.length > 8 ? sorted.sublist(sorted.length - 8) : sorted;
+  final mid = sample.length ~/ 2;
+  if (mid == 0 || mid == sample.length) return false;
+
+  double avgMood(List<dynamic> values) {
+    final total = values
+        .map((entry) => (entry.moodLevel as num).toDouble())
+        .fold<double>(0.0, (sum, value) => sum + value);
+    return total / values.length;
   }
 
-  final analyticsAsync = ref.watch(analyticsProvider);
-  
-  // Guard against recomputing while dependencies are loading during a refresh.
-  if (analyticsAsync.isLoading) {
-    final cached = ref.read(_lastRiskState);
-    if (cached != null) return cached;
+  return (avgMood(sample.sublist(mid)) - avgMood(sample.sublist(0, mid))) < -0.35;
+}
+
+final riskInputProvider = Provider<RiskInput?>((ref) {
+  final semesterAsync = ref.watch(activeSemesterProvider);
+  final tasksAsync = ref.watch(tasksProvider);
+  final sessionsAsync = ref.watch(studySessionsProvider);
+  final moodsAsync = ref.watch(moodLogsProvider);
+  final deadlinesAsync = ref.watch(deadlinesProvider);
+  final coursesAsync = ref.watch(courseProvider);
+  final resultsAsync = ref.watch(courseResultsProvider);
+  final studyGoalAsync = ref.watch(weeklyStudyGoalHoursProvider);
+
+  if (semesterAsync.isLoading) return null;
+  final semester = semesterAsync.value;
+  if (semester == null) return null;
+
+  // 🚨 CRITICAL: Block calculation until ALL asynchronous data sources are ready
+  if (tasksAsync.isLoading ||
+      sessionsAsync.isLoading ||
+      moodsAsync.isLoading ||
+      deadlinesAsync.isLoading ||
+      coursesAsync.isLoading ||
+      resultsAsync.isLoading) {
+    return null;
   }
 
-  final moodLogs = ref.watch(moodLogsProvider).valueOrNull ?? const [];
-  final decision = ref.watch(decisionProvider);
+  // Extract values (fallback to empty list if data is null but finished loading)
+  final tasks = tasksAsync.value ?? [];
+  final sessions = sessionsAsync.value ?? [];
+  final moods = moodsAsync.value ?? [];
+  final deadlines = deadlinesAsync.value ?? [];
+  final courses = coursesAsync.value ?? [];
+  final results = resultsAsync.value ?? [];
+  final studyGoal = studyGoalAsync.toDouble();
 
-  // Recompute when local lists change (mutations, pull-to-refresh, debounced realtime).
-  ref.watch(tasksProvider);
-  ref.watch(deadlinesProvider);
-  ref.watch(studySessionsProvider);
+  // Filter by Semester
+  final filteredTasks = tasks.where((t) => t.semesterId == semester).toList();
+  final filteredSessions = sessions.where((s) => s.semesterId == semester).toList();
+  final filteredMoods = moods.where((m) => m.semesterId == semester).toList();
+  final filteredDeadlines = deadlines.where((d) => d.semesterId == semester).toList();
+  final filteredCourses = courses.where((c) => c.semesterId == semester).toList();
 
-  // Connect study goal to Database exactly as requested
-  final studyGoal = ref.watch(weeklyStudyGoalHoursProvider).toDouble();
-
-  final semesterId = ref.watch(activeSemesterProvider);
-
-  // 2. Load dependencies via repos (sole source of truth reading DB)
-  final courseRepo = ref.watch(courseRepositoryProvider);
-  final taskRepo = ref.watch(taskRepositoryProvider);
-  final studyRepo = ref.watch(studyRepositoryProvider);
-  final courseResultRepo = ref.watch(courseResultRepositoryProvider);
-  final deadlineRepo = ref.watch(deadlineRepositoryProvider);
-
-  // Fetch from Database
-  final coursesFut = courseRepo.getCourses(semesterId: semesterId);
-  final tasksFut = taskRepo.getTasks(userId: user.id, semesterId: semesterId);
-  final sessionsFut = studyRepo.getSessions(userId: user.id, semesterId: semesterId);
-  final deadlinesFut = deadlineRepo.getDeadlines(
-    userId: user.id,
-    semesterId: semesterId,
-  );
-
-  final results = await Future.wait([
-    coursesFut,
-    tasksFut,
-    sessionsFut,
-    deadlinesFut,
-  ]);
-
-  final courses = results[0] as List<Course>;
-  final tasks = results[1] as List<Task>;
-  final sessions = results[2] as List<StudySession>;
-  final deadlines = results[3] as List<Deadline>;
-
-  final courseResults = semesterId == null
-      ? const <CourseResult>[]
-      : await courseResultRepo.getResultsBySemester(
-          userId: user.id,
-          semesterId: semesterId,
-        );
-
+  // Metric Calculations (Original logic moved into snapshot builder)
   final now = DateTime.now();
   final startOfToday = DateTime(now.year, now.month, now.day);
   final in3Days = startOfToday.add(const Duration(days: 3));
-
   final sevenDaysAgo = now.subtract(const Duration(days: 7));
-  final fourteenDaysAgo = sevenDaysAgo.subtract(const Duration(days: 7));
 
-  // 3. ECTS Source Calculation
-  final totalEcts = courses.fold<int>(0, (sum, c) => sum + c.ects);
+  // Task metrics
+  final overdue = filteredTasks.where((t) => 
+    t.status != 'completed' && t.deadline != null && t.deadline!.isBefore(startOfToday)
+  ).length;
 
-  // 4. Overdue & Upcoming tasks mapping
-  int currentOverdue = 0;
-  int currentUpcoming = 0;
+  final upcoming = filteredTasks.where((t) => 
+    t.status != 'completed' && 
+    t.deadline != null &&
+    t.deadline!.isAfter(startOfToday) && 
+    t.deadline!.isBefore(in3Days)
+  ).length;
 
-  for (final t in tasks) {
-    if (t.status == 'completed') continue;
+  // Study metrics
+  final thisWeekSessions = filteredSessions.where((s) => s.createdAt.isAfter(sevenDaysAgo)).toList();
+  final currentHours = thisWeekSessions.fold<double>(0.0, (sum, s) => sum + s.durationMinutes / 60.0);
+  final deficit = (studyGoal - currentHours).clamp(0.0, studyGoal);
 
-    // overdue = due_date < now && not completed
-    final pastDeadline =
-        t.deadline != null && t.deadline!.isBefore(startOfToday);
-    if (t.status == 'overdue' || pastDeadline) {
-      currentOverdue++;
-    }
-    // upcoming = due_date within next 3 days
-    else if (t.deadline != null &&
-        t.deadline!.isAfter(now) &&
-        t.deadline!.isBefore(in3Days)) {
-      currentUpcoming++;
-    }
-  }
+  // ECTS & Stress
+  final totalEcts = filteredCourses.fold<int>(0, (sum, c) => sum + c.ects);
+  final consistency = filteredTasks.isEmpty ? 1.0 : (filteredTasks.where((t) => t.status == 'completed').length / filteredTasks.length).clamp(0.0, 1.0);
+  final sessionMoods = filteredMoods.where((m) => _isSessionMoodSource(m.source ?? '')).toList();
+  final avgSessionStress = _avgStress(sessionMoods);
 
-  // 5. Study Hours Calculation via Study Sessions Table (SQL logic implementation)
-  int currentDbMinutes = 0;
-  int previousDbMinutes = 0;
+  // Risk Adjustments
+  final gradeRisk = _gradeAdjustment(results);
+  final overduePenalty = _overdueDeadlinesPenalty(filteredDeadlines, startOfToday);
+  final completionRelief = _linkedTaskCompletionRelief(filteredTasks, filteredDeadlines);
+  final recentCompletionRelief = _completedDeadlineAdjustment(filteredDeadlines);
 
-  for (final s in sessions) {
-    if (s.createdAt.isAfter(sevenDaysAgo)) {
-      currentDbMinutes += s.durationMinutes;
-    } else if (s.createdAt.isAfter(fourteenDaysAgo) &&
-        s.createdAt.isBefore(sevenDaysAgo)) {
-      previousDbMinutes += s.durationMinutes;
-    }
-  }
-
-  final currentStudyHours = currentDbMinutes / 60.0;
-  final previousStudyHours = previousDbMinutes / 60.0;
-  final gradeRiskAdjustment = _normalizeGradeRiskAdjustment(
-    _gradeAdjustment(courseResults) +
-        _completedDeadlineAdjustment(deadlines) +
-        _overdueDeadlinesPenalty(deadlines, startOfToday) +
-        _linkedTaskCompletionRelief(tasks, deadlines),
+  final adjustment = _normalizeGradeRiskAdjustment(
+    gradeRisk + overduePenalty + completionRelief + recentCompletionRelief
   );
 
-  // 6. Provide Data to Core Engine
-  final currentInput = RiskInput(
-    overdueTasks: currentOverdue,
-    upcomingTasks: currentUpcoming,
+  // hasData check (now centralized in Input)
+  final hasAcademicContent = filteredCourses.isNotEmpty || filteredTasks.isNotEmpty || filteredDeadlines.isNotEmpty;
+  
+  // Strict validation: Do we have ANY core data to calculate for?
+  final hasCoreData = filteredTasks.isNotEmpty || filteredSessions.isNotEmpty || filteredMoods.isNotEmpty;
+
+  if (!hasCoreData) {
+    return RiskInput.empty();
+  }
+
+  return RiskInput(
+    overdueTasks: overdue,
+    upcomingTasks: upcoming,
     totalECTS: totalEcts,
-    studyHours: currentStudyHours,
-    studyGoal: studyGoal, // Sourced precisely from DB
-    gradeRiskAdjustment: gradeRiskAdjustment,
+    studyHours: currentHours,
+    studyGoal: studyGoal,
+    studyDeficit: deficit,
+    gradeRiskAdjustment: adjustment,
+    avgDailyStress: _avgStress(filteredMoods),
+    avgSessionStress: avgSessionStress,
+    isStressRising: _isDailyMoodTrendDown(filteredMoods),
+    consistency: consistency,
+    hasStressData: sessionMoods.isNotEmpty,
+    hasAcademicContent: hasAcademicContent,
   );
+});
+
+final riskProvider = Provider<RiskState>((ref) {
+  final input = ref.watch(riskInputProvider);
+  final userAsync = ref.watch(currentAppUserProvider);
+
+  if (input == null || userAsync.isLoading) {
+    return RiskState.loading();
+  }
+
+  final user = userAsync.value;
+  // If input is empty OR lacks behavioral data (sessions/moods), show zero risk
+  if (user == null || input.isEmpty || input.hasInsufficientData) {
+    return RiskState.empty();
+  }
+
+  // 1. Calculate Primary Result
+  final currentResult = RiskCalculator.calculate(input);
+
+  // 2. Calculate Trend — use all sessions (already semester-scoped by riskInputProvider)
+  final sessionsAsync = ref.watch(studySessionsProvider);
+  final sessions = sessionsAsync.value ?? [];
+
+  final now = DateTime.now();
+  final sevenDaysAgo = now.subtract(const Duration(days: 7));
+  final lastWeekStart = sevenDaysAgo.subtract(const Duration(days: 7));
+
+  final lastWeekSessions = sessions.where((s) =>
+    s.createdAt.isAfter(lastWeekStart) && s.createdAt.isBefore(sevenDaysAgo)
+  ).toList();
+  final previousHours = lastWeekSessions.fold<double>(0.0, (sum, s) => sum + s.durationMinutes / 60.0);
+  final previousDeficit = (input.studyGoal - previousHours).clamp(0.0, input.studyGoal);
 
   final previousInput = RiskInput(
-    overdueTasks: currentOverdue, // Fallback for pure trend tracking
-    upcomingTasks: currentUpcoming, // Fallback for pure trend tracking
-    totalECTS: totalEcts,
-    studyHours: previousStudyHours,
-    studyGoal: studyGoal,
-    gradeRiskAdjustment: gradeRiskAdjustment,
+    overdueTasks: input.overdueTasks,
+    upcomingTasks: input.upcomingTasks,
+    totalECTS: input.totalECTS,
+    studyHours: previousHours,
+    studyGoal: input.studyGoal,
+    studyDeficit: previousDeficit,
+    gradeRiskAdjustment: input.gradeRiskAdjustment,
+    avgDailyStress: input.avgDailyStress,
+    avgSessionStress: input.avgSessionStress,
+    isStressRising: input.isStressRising,
+    consistency: input.consistency,
+    hasStressData: input.hasStressData,
+    hasAcademicContent: input.hasAcademicContent,
   );
 
-  final currentResult = RiskCalculator.calculate(currentInput);
   final previousResult = RiskCalculator.calculate(previousInput);
-
-  final moodCount = moodLogs.length;
-  final avgStress = moodCount == 0
-      ? 0.0
-      : moodLogs.map((entry) => entry.stressLevel).reduce((a, b) => a + b) /
-          moodCount;
-
-  var extraMoodRisk = 0.0;
-  if (avgStress > 7) {
-    extraMoodRisk += 10;
-  }
-  if (decision.hasDeadlinePressure) {
-    extraMoodRisk += 10;
-  }
-
-  final adjustedCurrentScore =
-      (currentResult.totalScore + extraMoodRisk).clamp(0.0, 100.0);
-  final adjustedCurrentResult = RiskResult(
-    overdueContribution: currentResult.overdueContribution,
-    upcomingContribution: currentResult.upcomingContribution,
-    ectsContribution: currentResult.ectsContribution,
-    studyContribution: currentResult.studyContribution,
-    totalScore: adjustedCurrentScore,
-    riskLevel: _riskLevelFromScore(adjustedCurrentScore),
-  );
-
   final trendDelta = user.createdAt.isAfter(sevenDaysAgo)
       ? null
-      : (adjustedCurrentResult.totalScore - previousResult.totalScore).toInt();
+      : (currentResult.totalScore - previousResult.totalScore).toInt();
 
-  final newState = RiskState(
-    input: currentInput,
-    result: adjustedCurrentResult,
+  return RiskState(
+    input: input,
+    result: currentResult,
+    hasData: input.hasAcademicContent,
     trendDelta: trendDelta,
   );
-
-  // Cache for use during next reload.
-  Future.microtask(() => ref.read(_lastRiskState.notifier).state = newState);
-  
-  return newState;
 });
 
 String _riskLevelFromScore(double score) {

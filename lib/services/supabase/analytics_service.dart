@@ -73,4 +73,23 @@ class AnalyticsService {
         .eq('id', semesterId)
         .maybeSingle();
   }
+
+  Future<List<Map<String, dynamic>>> getMoodLogs({
+    required String userId,
+    required DateTime startDate,
+  }) async {
+    return await supabase
+        .from('mood_logs')
+        .select()
+        .eq('user_id', userId)
+        .gte('created_at', startDate.toIso8601String());
+  }
+
+  Future<Map<String, dynamic>?> getUserSettings(String userId) async {
+    return await supabase
+        .from('users')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+  }
 }

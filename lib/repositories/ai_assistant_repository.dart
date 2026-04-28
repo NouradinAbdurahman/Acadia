@@ -9,8 +9,13 @@ class AiAssistantRepository {
   Future<AiMessage> sendMessage({
     required List<AiMessage> history,
     required String? semesterId,
+    Map<String, dynamic>? moodContext,
   }) async {
-    final result = await _service.sendMessage(history, semesterId);
+    final result = await _service.sendMessage(
+      history,
+      semesterId,
+      moodContext: moodContext,
+    );
     return AiMessage(
       text: result['reply'] as String? ?? '',
       isUser: false,

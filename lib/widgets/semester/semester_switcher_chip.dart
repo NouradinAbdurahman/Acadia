@@ -9,7 +9,8 @@ class SemesterSwitcherChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeSemester = ref.watch(activeSemesterFullProvider);
+    final activeSemesterAsync = ref.watch(activeSemesterFullProvider);
+    final activeSemester = activeSemesterAsync.valueOrNull;
     final isSwitching = ref.watch(isSemesterSwitchingProvider);
     final theme = Theme.of(context);
 

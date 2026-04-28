@@ -26,4 +26,8 @@ class NotificationRepository {
     final data = await _service.createNotification(notification.toJson());
     return NotificationModel.fromJson(data);
   }
+
+  Future<void> markAllAsRead(List<String> ids) async {
+    await _service.markAllAsRead(ids);
+  }
 }

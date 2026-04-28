@@ -70,8 +70,12 @@
   "deadlineLinkedTasksProgress": "{completed}/{total} görev tamamlandı",
   "@deadlineLinkedTasksProgress": {
     "placeholders": {
-      "completed": {"type": "int"},
-      "total": {"type": "int"}
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "deadlineNoLinkedTasks": "Bu son tarihe henüz görev bağlanmadı.",
@@ -99,7 +103,7 @@
   "resume": "Devam Et",
   "stop": "Durdur",
   "focusLabel": "Odaklanma",
-  "breakLabel": "Mola",
+  "breakLabel": "Ara",
   "reviewLabel": "Tekrar",
   "remainingLabel": "Kalan Süre",
   "stopSessionTitle": "Oturumu Durdur",
@@ -178,7 +182,7 @@
   "duration": "Süre",
   "pomodoro": "Pomodoro",
   "review": "Tekrar",
-  "deepFocus": "Derin Odak",
+  "deepFocus": "Derin odak",
   "analytics": "Analiz",
   "studyHours": "Çalışma saatleri",
   "taskCompletionRate": "Görev tamamlama oranı",
@@ -198,20 +202,28 @@
   "studyTimeDeltaMsg": "Haftalık çalışma süreniz %{percent} {action}",
   "@studyTimeDeltaMsg": {
     "placeholders": {
-      "action": { "type": "String" },
-      "percent": { "type": "int" }
+      "action": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "riskIncreased": "Risk %{value} arttı",
   "@riskIncreased": {
     "placeholders": {
-      "value": { "type": "int" }
+      "value": {
+        "type": "int"
+      }
     }
   },
   "riskDecreased": "Risk %{value} azaldı",
   "@riskDecreased": {
     "placeholders": {
-      "value": { "type": "int" }
+      "value": {
+        "type": "int"
+      }
     }
   },
   "increased": "arttı",
@@ -229,8 +241,6 @@
   "addFirstTaskCTA": "İlk görevinizi ekleyin",
   "startStudyingHint": "Burada etkinlik görmek için çalışmaya başlayın",
   "viewHistoryMode": "Gecmiş Görüntüleniyor",
-  "increased": "arttı",
-  "decreased": "azaldı",
   "comingSoon": "Çok yakında",
   "taskDetail": "Görev Detayı",
   "deadlineDetail": "Son Tarih Detayı",
@@ -342,6 +352,9 @@
   "avatarUploadFailed": "Profil resmi yüklenemedi",
   "mediumRisk": "Orta Risk",
   "highRisk": "Yüksek Risk",
+  "riskLevelCritical": "Kritik",
+  "riskLevelWarning": "Uyarı",
+  "riskLevelSafe": "Güvenli",
   "riskScore": "Risk Skoru",
   "remaining": "kaldı",
   "studyLogged": "Çalışma kaydedildi",
@@ -589,6 +602,8 @@
   "riskOverdueTasks": "Gecikmiş görevler",
   "riskUpcomingTasks": "Yaklaşan görevler",
   "riskStudyDeficit": "Çalışma açığı",
+  "riskSessionStress": "Oturum stresi",
+  "riskConsistencyImpact": "Süreklilik etkisi",
   "riskStatusMessage": "{count} gecikmiş görev",
   "riskInterpretationOnTrack": "Yolundasınız. Mevcut çalışma hızınızı koruyun.",
   "riskInterpretationHigh": "Kaçırılan teslim tarihleri ve yetersiz çalışma saatleri nedeniyle yüksek risk altındasınız.",
@@ -596,6 +611,15 @@
   "riskInterpretationLow": "Güvenli bir aralıktasınız. Mevcut ilerlemenizi sürdürün.",
   "riskHoursRemaining": "{hours} saat kaldı",
   "riskGoalReached": "Hedefe ulaşıldı!",
+  "historicalConsistency": "Geçmiş süreklilik",
+  "historicalConsistencyScoreLine": "Geçmiş süreklilik: %{score} ({trend})",
+  "weeklyConsistency": "Bu haftaki süreklilik",
+  "decisionHighStressOverrideTitle": "İş yükünü azaltın",
+  "decisionHighStressOverrideBody": "Tükenmişliği önlemek için daha kısa seanslara odaklanın.",
+  "riskExplanationLowStudyHighStress": "Düşük çalışma aktivitesi ve yüksek stres nedeniyle Yüksek Risk",
+  "riskExplanationDeficitOnly": "Ciddi çalışma eksiği nedeniyle Yüksek Risk",
+  "riskExplanationStressOnly": "Kritik stres seviyeleri nedeniyle Yüksek Risk",
+  "riskExplanationGeneric": "Birleşik akademik sinyaller nedeniyle Yüksek Risk",
   "@riskStatusMessage": {
     "placeholders": {
       "count": {
@@ -612,6 +636,15 @@
     }
   },
   "riskReasonStudyLow": "Haftalık hedefinizden daha az çalıştınız",
+  "riskInterpretationStudyDeficit": "Çalışma süresini hemen artırın",
+  "studyDeficitTitle": "Yüksek Çalışma Açığı",
+  "studyDeficitBody": "Yolunuzda kalmak için çalışma süresini hemen artırın.",
+  "decisionHighSessionStressTitle": "Yüksek Çalışma Stresi",
+  "decisionHighSessionStressBody": "Tükenmişliği önlemek için oturum süresini 30-40 dakikaya indirin.",
+  "decisionLowConsistencyTitle": "Çalışma Sürekliliğini Artırın",
+  "decisionLowConsistencyBody": "İş yükünü artırmadan önce programınızı düzeltin.",
+  "noGpaDataAvailable": "GPA verisi bulunamadı",
+  "riskInterpretationFocusTasks": "Görevleri tamamlamaya odaklanın",
   "riskReasonUpcoming": "Yakında bitecek {count} görev",
   "@riskReasonUpcoming": {
     "placeholders": {
@@ -715,7 +748,6 @@
   "component": "Bileşen",
   "componentTitle": "Başlık",
   "componentTitleHint": "örn. Vize, Proje, Final, Kısa Sınav",
-  "score": "Puan",
   "scoreHint": "örn. 85",
   "percentage": "Yüzde",
   "percentageHint": "örn. 40",
@@ -779,7 +811,7 @@
   "trendPerformanceNeedThreeResults": "Performans trendini görmek için en az 3 ders sonucu ekleyin.",
   "trendSummaryTitle": "Trend Özeti",
   "trendOverallStatusTitle": "Genel Durum",
-  "trendNotEnoughData": "Yeterli veri yok",
+  "trendNotEnoughData": "Yetersiz veri",
   "trendStable": "Stabil",
   "trendImproving": "İyileşiyor",
   "trendDeclining": "Düşüyor",
@@ -834,6 +866,7 @@
   "trendStatusStableProgress": "İlerleme stabil",
   "trendStatusOnTrackDetail": "Son dönemdeki aktiviten dengeli görünüyor. Bu tempoyu koru.",
   "trendStatusNeedsFocusDetail": "Aktiviten düşük ve görev ilerlemen yetersiz. Görevleri tamamlamaya ve çalışma süreni artırmaya odaklan.",
+  "trendStatusLowActivityHighCompletion": "Etkinliğiniz düşük ancak görev tamamlama oranınız güçlü.",
   "trendInsightBuildConsistencyTitle": "Çalışma düzeni oluştur",
   "trendInsightStudyIncreasedSignificantlyTitle": "Çalışma süresi belirgin arttı",
   "trendInsightStudyImprovedTitle": "Çalışma süresi iyileşti",
@@ -845,6 +878,7 @@
   "trendInsightWorkloadRisingTitle": "İş yükü artıyor",
   "trendInsightPerformanceDecliningTitle": "Performans düşüyor",
   "trendInsightPerformanceImprovingTitle": "Performans iyileşiyor",
+  "trendInsightPerformanceStableTitle": "Performans stabil",
   "trendInsightStableTitle": "Trendler stabil",
   "trendInsightBuildConsistencyMessage": "Günlük çalışma alışkanlığı oluşturmaya başla.",
   "trendInsightStudyIncreasedMessage": "Çalışma süresi %{percent} arttı. Bu tempoyu koru.",
@@ -887,7 +921,18 @@
   },
   "trendInsightPerformanceDecliningMessage": "Performans trendi düşüyor. Bu hafta zayıf derslerini gözden geçir.",
   "trendInsightPerformanceImprovingMessage": "Performans trendi iyileşiyor. Aynı çalışma düzenini sürdür.",
-  "trendInsightStableMessage": "Henüz belirgin bir değişim yok. Düzenli kayıt tutmaya devam et.",
+  "trendInsightPerformanceStableMessage": "Performans trendi stabil. Düzenli çalışmaya devam et.",
+  "trendInsightStableMessage": "Henüz önemli bir değişiklik yok. Düzenli günlük tutmaya devam edin.",
+  "trendInsightLimitedDataTitle": "Dönem için sınırlı veri",
+  "trendInsightLimitedDataMessage": "Bu zaman aralığında güvenilir trendleri hesaplamak için yeterli oturum izlenmedi.",
+  "trendWorsening": "Kötüleşiyor",
+  "trendImproving": "İyileşiyor",
+  "trendStable": "Stabil",
+  "trendUnstable": "Kararsız",
+  "trendModerate": "Orta",
+  "recoveryMessage": "İyileşiyorsunuz. Bu düzeni koruyun.",
+  "burnoutTrendNoHistory": "Henüz trendi tespit etmek için yeterli veri yok.",
+  "burnoutTrendNoRecovery": "Henüz bir iyileşme trendi tespit edilmedi.",
   "dashboardRiskLevelTitle": "Risk Seviyesi",
   "dashboardRiskLevelValue": "Risk Seviyesi: {level}",
   "@dashboardRiskLevelValue": {
@@ -949,7 +994,7 @@
   "enterMinutes": "Dakika girin",
   "quickPresets": "Hızlı Seçenekler",
   "setDuration": "Süreyi Ayarla",
-  "focusedTime": "Odaklanma süresi",
+  "focusedTime": "Odaklanılan süre",
   "startAnotherSession": "Yeni oturum başlat",
   "sessionInsightShort": "Kısa oturum. Bir sonraki sefere daha uzun odaklanmayı dene.",
   "sessionInsightMedium": "İyi oturum. Devamlılığı koru.",
@@ -968,21 +1013,31 @@
   "todayProgress": "Bugün: {completed} / {goal}",
   "@todayProgress": {
     "placeholders": {
-      "completed": { "type": "String" },
-      "goal": { "type": "String" }
+      "completed": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
     }
   },
   "weeklyProgress": "Bu hafta: {completed} / {goal}",
   "@weeklyProgress": {
     "placeholders": {
-      "completed": { "type": "String" },
-      "goal": { "type": "String" }
+      "completed": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
     }
   },
-  "streakDays": "{count} günlük seri",
+  "streakDays": "{count} gün",
   "@streakDays": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "noStreak": "Bugün bir seri başlat",
@@ -992,27 +1047,35 @@
   "lowFocus": "Düşük Odak",
   "mediumFocus": "Orta Odak",
   "highFocus": "Yüksek Odak",
-  "goodFocus": "İyi Odak",
+  "goodFocus": "İyi odak",
   "todayFocusedContext": "bu gece {minutes}dk odaklanıldı • {sessions} oturum",
   "@todayFocusedContext": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "sessions": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      },
+      "sessions": {
+        "type": "int"
+      }
     }
   },
-  "studyIntent": "Çalışma Amacı",
+  "studyIntent": "Çalışma Niyeti",
   "studyIntentHint": "Bu oturumdaki ana odağınız nedir?",
   "studyIntentPlaceholder": "örn. 4. Bölümü oku, Kalkülüs sorularını çöz...",
   "endsAt": "{time} vaktinde biter",
   "@endsAt": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "endsAround": "{time} civarında biter",
   "@endsAround": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "structuredSession": "Yapılandırılmış oturum",
@@ -1020,14 +1083,15 @@
     "description": "Pomodoro gibi yapı tabanlı oturumlar için etiket"
   },
   "remainingTime": "Kalan süre",
-  "highFocus": "Yüksek Odak",
-  "deepFocus": "Derin Odak",
-  "goodFocus": "İyi Odak",
   "sessionProgress": "Oturum {current} / {total}",
   "@sessionProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "stayFocusedMsg": "Odaklanmaya devam et. Harika gidiyorsun.",
@@ -1036,7 +1100,9 @@
   "youStayedFocused": "{minutes} dakika boyunca odaklandın",
   "@youStayedFocused": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "recommended": "Önerilen",
@@ -1044,13 +1110,17 @@
   "weeklyGoalTag": "Hedef: {goal}dk",
   "@weeklyGoalTag": {
     "placeholders": {
-      "goal": { "type": "int" }
+      "goal": {
+        "type": "int"
+      }
     }
   },
   "minutesDone": "{minutes}dk tamamlandı",
   "@minutesDone": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "sessionTooShort": "Oturum Çok Kısa",
@@ -1062,43 +1132,54 @@
   "remainingHours": "{hours}sa kaldı",
   "@remainingHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "catchUpMessage": "{hours}sa kaldı • Yetişmen gerekiyor",
   "@catchUpMessage": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "focusScore": "Odak Puanı",
   "moderateFocus": "Orta Düzey Odak",
-  "lowFocus": "Düşük Odak",
-  "highFocus": "Yüksek Odak",
   "patternConsistent": "Çalışma düzeni: Tutarlı",
   "patternIrregular": "Çalışma düzeni: Değişken",
   "confidenceHigh": "Tahmin doğruluğu: Yüksek",
   "confidenceMedium": "Tahmin doğruluğu: Orta",
+  "confidenceLow": "Tahmin doğruluğu: Düşük",
+  "basedOnSessions": "({count} oturuma göre)",
+  "@basedOnSessions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "gettingStarted": "Yeni başlıyor",
   "noDataYet": "Henüz veri yok",
   "noDataForSemesterYet": "Bu dönem için henüz veri yok",
-  "statusStable": "Dengeli",
+  "statusStable": "Stabil",
   "statusImproving": "Gelişiyor",
   "statusDeclining": "Düşüşte",
+  "statusModerate": "Orta",
   "trySessionNow": "{duration} dakikalık bir çalışma dene",
   "@trySessionNow": {
     "placeholders": {
-      "duration": { "type": "int" }
+      "duration": {
+        "type": "int"
+      }
     }
   },
   "startNow": "Şimdi başla",
-  "studyIntentHint": "Bu oturumdaki ana odağınız nedir?",
   "sessionTooShortTitle": "Oturum Çok Kısa",
   "sessionTooShortMessage": "Minimum oturum süresi 10 dakikadır. Bu oturum kaydedilmedi.",
   "focusRemaining": "Kalan süre",
   "focusLevel": "Odak Seviyesi",
-  "sessionCompleted": "Oturum tamamlandı",
-  "focusedTime": "Odaklanılan süre",
   "shortSessionInsight": "Kısa oturum. Bir dahaki sefere daha uzun odaklanmaya çalış.",
   "goodSessionInsight": "İyi oturum. Devamlılığı koru.",
   "strongSessionInsight": "Güçlü odak oturumu.",
@@ -1108,30 +1189,61 @@
   "next15m": "Odağı yeniden kazanmak için 15 dakikalık bir oturumla başla",
   "next25m": "25 dakikalı bir odaklanma seansıyla devam et",
   "next45m": "Derin odaklanma modundasın. 45 dakikalık bir seans dene",
-  "sessionsCount": "{count} oturum",
+  "sessionsCount": "{count, plural, =0{Oturum yok} =1{1 oturum} other{{count} oturum}}",
   "@sessionsCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "num"
+      }
     }
   },
   "minutesFocused": "{minutes}dk odaklanıldı",
   "patternLabel": "Çalışma düzeni",
   "statusVariable": "Değişken",
+  "burnoutTrendForming": "Trend oluşuyor. Desen tutarsızlığı nedeniyle risk artıyor.",
+  "burnoutRiskIncreasing": "Düşük tutarlılık ve hedef açığı nedeniyle risk artıyor.",
+  "burnoutReasonBehindGoal": "Haftalık hedefinin {hours}sa gerisindesin.",
+  "@burnoutReasonBehindGoal": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "burnoutReasonInconsistent": "Çalışma düzeniniz bu hafta tutarsız.",
+  "burnoutReasonFrequentSwitching": "Çalışma saatlerini sık sık değiştiriyorsunuz.",
+  "burnoutReasonLoadAboveGoal": "Toplam çalışma yükün haftalık hedefinin üzerinde.",
+  "burnoutReasonNoSignals": "Henüz önemli bir tükenmişlik sinyali saptanmadı.",
+  "burnoutRecStable1": "Mevcut rutininizi sabit tutun.",
+  "burnoutRecStable2": "Haftalık hedefinizi takip etmeye devam edin.",
+  "burnoutRecWarning1": "Oturum süresini biraz azaltın.",
+  "burnoutRecWarning2": "Çalışma saatinizi tutarlı bir aralıkta tutun.",
+  "burnoutRecHighRisk1": "Oturumları kısaltın ve daha sık mola verin.",
+  "burnoutRecHighRisk2": "Bu hafta tek bir çalışma zaman aralığına odaklanın.",
+  "burnoutRecHighRisk3": "Kendinizi tükenmiş hissediyorsanız bir dinlenme günü ayırın.",
+  "burnoutRecRisk1": "Oturum süresini hemen azaltın.",
+  "burnoutRecRisk2": "Mola sıklığını artırın ve hedefleri basitleştirin.",
+  "burnoutRecRisk3": "Daha fazla zorlamadan önce bir dinlenme günü ayırın.",
   "overloadWarning": "Kendini çok fazla zorluyorsun. Düzgün bir ara ver.",
   "focusTrendMessage": "Haftalık odaklanma düzenin {trend}.",
   "@focusTrendMessage": {
     "placeholders": {
-      "trend": { "type": "String" }
+      "trend": {
+        "type": "String"
+      }
     }
   },
   "focusAnalysisBasis": "Son seanslara, tutarlılığa ve istikrara dayalıdır.",
-  "breakLabel": "Ara",
   "longBreakLabel": "Uzun Ara",
   "focusSessionCount": "Odaklanma {current}/{total}",
   "@focusSessionCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "improving": "İyileşen",
@@ -1150,16 +1262,9 @@
   "completedNo": "Hayır",
   "cycles": "Döngüler",
   "breaksSkipped": "Atlanan molalar",
-  "studyIntent": "Çalışma Niyeti",
   "weeklyActivity": "Haftalık Aktivite",
-  "streakDays": "{count} gün",
-  "@streakDays": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
   "streakWarningMessage": "🔥 Serini bozma. Devam etmek için bugün çalış!",
-  "thisWeekLabel": "Bu hafta",
+  "thisWeekLabel": "Bu Hafta",
   "preivousWeekLabel": "Geçen hafta",
   "newWeekStart": "Yeni hafta başlangıcı",
   "noStudyActivityYet": "Henüz çalışma aktivitesi yok",
@@ -1180,20 +1285,28 @@
   "weeklyGoalProgressHours": "{current} / {goal}",
   "@weeklyGoalProgressHours": {
     "placeholders": {
-      "current": { "type": "String" },
-      "goal": { "type": "String" }
+      "current": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
     }
   },
   "activeDaysCount": "{count} aktif gün",
   "@activeDaysCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "peakDayLabel": "Zirve: {day}",
   "@peakDayLabel": {
     "placeholders": {
-      "day": { "type": "String" }
+      "day": {
+        "type": "String"
+      }
     }
   },
   "streakAtRisk": "Seri Tehlikede!",
@@ -1203,15 +1316,15 @@
   "strongHabitForming": "Güçlü alışkanlık oluşuyor",
   "excellentDiscipline": "Mükemmel disiplin",
   "lightFocus": "Hafif odak",
-  "goodFocus": "İyi odak",
-  "deepFocus": "Derin odak",
   "insightCycle": "Yüksek kaliteli odak düzeni. Bu döngüyü koru.",
   "insightStart": "Güçlü başlangıç. Daha derin odak için 30 dakikayı aşın.",
   "insightMomentum": "Derin çalışmaya doğru ivme kazanılıyor.",
   "focusPoints": "{points} puan",
   "@focusPoints": {
     "placeholders": {
-      "points": { "type": "String" }
+      "points": {
+        "type": "String"
+      }
     }
   },
   "pomodoroFocusStep": "Odak • 25 dk",
@@ -1220,125 +1333,152 @@
   "pomodoroTotalFocusSummary": "Toplam odak: {minutes} dk",
   "@pomodoroTotalFocusSummary": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "pomodoroCompleted": "Pomodoro tamamlandı",
   "cyclesCompleted": "{count} döngü tamamlandı",
   "@cyclesCompleted": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "focusTimeBreakdown": "Odak süresi: {minutes} dk",
   "@focusTimeBreakdown": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "breakTimeBreakdown": "Mola süresi: {minutes} dk",
   "@breakTimeBreakdown": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "excellentConsistency": "Mükemmel tutarlılık",
   "totalFocusTime": "Toplam odak süresi",
-  "statusStable": "Stabil",
   "streakDaysInARow": "Üst üste {count} gün",
   "@streakDaysInARow": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "pomodoroMetrics": "Metrikler",
   "pomodoroPerformance": "Performans",
   "pomodoroTimeline": "Döngü Zaman Çizelgesi",
-
   "pomodoroSubtitle": "Pomodoro • {done}/{total} döngü",
   "@pomodoroSubtitle": {
     "placeholders": {
-      "done": { "type": "int" },
-      "total": { "type": "int" }
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "focusCycleDone": "Odak {index}  •  {minutes} dk",
   "@focusCycleDone": {
     "placeholders": {
-      "index": { "type": "int" },
-      "minutes": { "type": "int" }
+      "index": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "focusCycleInProgress": "Odak {index}  •  devam ediyor",
   "@focusCycleInProgress": {
     "placeholders": {
-      "index": { "type": "int" }
+      "index": {
+        "type": "int"
+      }
     }
   },
-
   "focusCycleNotReached": "Odak {index}  •  ulaşılmadı",
   "@focusCycleNotReached": {
     "placeholders": {
-      "index": { "type": "int" }
+      "index": {
+        "type": "int"
+      }
     }
   },
-
   "breakDone": "Mola  •  {minutes} dk",
   "@breakDone": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "breakPending": "Mola",
   "focusTimeLabel": "Odak Süresi",
   "breakTimeLabel": "Mola Süresi",
-
   "completionOfCycles": "Planlanan döngülerin %{percent}'i",
   "@completionOfCycles": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
-
   "minutesFocusedLabel": "{minutes} dk odaklandı",
   "@minutesFocusedLabel": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "pomodoroHistorySubtitle": "{total} döngüden {done}'i • {time}",
   "@pomodoroHistorySubtitle": {
     "placeholders": {
-      "done": { "type": "int" },
-      "total": { "type": "int" },
-      "time": { "type": "String" }
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
-
   "sessionHistorySubtitle": "{type} • {minutes}dk • {time}",
   "@sessionHistorySubtitle": {
     "placeholders": {
-      "type": { "type": "String" },
-      "minutes": { "type": "int" },
-      "time": { "type": "String" }
+      "type": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
     }
   },
-
   "statusBadgeCompleted": "✔ Tamamlandı",
   "statusBadgeStopped": "⏸ Erken durduruldu",
-
   "errorLoading": "Hata: {error}",
   "@errorLoading": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
-
   "pomodoroInsightConsistent": "Pomodoro döngülerini tutarlı şekilde tamamlıyorsunuz",
   "pomodoroInsightPartial": "Sık sık döngü ortasında duruyorsunuz. Daha kısa oturumlar deneyin",
   "pomodoroInsightNeedsWork": "Pomodoro döngülerini nadiren tamamlıyorsunuz. Süreyi kısaltmayı düşünün",
@@ -1346,27 +1486,29 @@
   "heatmapTooltip": "{date}: {minutes}dk • {sessions} oturum • Skor: {score}",
   "@heatmapTooltip": {
     "placeholders": {
-      "date": { "type": "String" },
-      "minutes": { "type": "int" },
-      "sessions": { "type": "int" },
-      "score": { "type": "int" }
+      "date": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "sessions": {
+        "type": "int"
+      },
+      "score": {
+        "type": "int"
+      }
     }
   },
   "heatmapLegendLess": "Az",
   "heatmapLegendMore": "Çok",
   "heatmapDayDetails": "Gün Detayları",
-  "duration": "Süre",
-  "sessionsCount": "{count, plural, =0{Oturum yok} =1{1 oturum} other{{count} oturum}}",
-  "@sessionsCount": {
-    "placeholders": {
-      "count": { "type": "num" }
-    }
-  },
-  "score": "Skor",
   "streakCount": "{count, plural, =1{1 günlük seri} other{{count} günlük seri}}",
   "@streakCount": {
     "placeholders": {
-      "count": { "type": "num" }
+      "count": {
+        "type": "num"
+      }
     }
   },
   "studyIntensitySubtitle": "Zaman içindeki günlük çalışma yoğunluğunuz",
@@ -1383,7 +1525,9 @@
   "targetPrefix": "Hedef: {target}",
   "@targetPrefix": {
     "placeholders": {
-      "target": { "type": "String" }
+      "target": {
+        "type": "String"
+      }
     }
   },
   "recommendedForYouTitle": "Sizin için önerildi",
@@ -1392,63 +1536,95 @@
   "bestStudyTimeBullet": "• En iyi çalışma zamanı: {time}",
   "@bestStudyTimeBullet": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "suggestedSessionBullet": "• Önerilen oturum: {minutes} dk ({pattern})",
   "@suggestedSessionBullet": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "pattern": { "type": "String" }
+      "minutes": {
+        "type": "int"
+      },
+      "pattern": {
+        "type": "String"
+      }
     }
   },
   "dailyTargetNeededBullet": "• Yolda kalmak için günde ~{hours} saat çalışman gerekiyor",
   "@dailyTargetNeededBullet": {
     "placeholders": {
-      "hours": { "type": "String" }
+      "hours": {
+        "type": "String"
+      }
     }
   },
-  "burnoutInputsHumanized": "• {deficit} saat geridesin ve çalışma zamanlaman tutarsız (%{inconsistency}).",
+  "burnoutInputsHumanized": "• Çalışma açığı: {deficit}s\n• Tutarlılık: %{inconsistency}",
   "@burnoutInputsHumanized": {
     "placeholders": {
-      "deficit": { "type": "String" },
-      "inconsistency": { "type": "int" }
+      "deficit": {
+        "type": "String"
+      },
+      "inconsistency": {
+        "type": "int"
+      }
     }
   },
   "patternIrregularThisWeek": "• Düzen notu: Bu hafta çalışma zamanların düzensiz.",
   "adaptiveHintRecentStudyTime": "Son zamanlarda daha çok {time} çalışıyor görünüyorsun.",
   "@adaptiveHintRecentStudyTime": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "weekSessionsBreakdown": "Bu hafta oturumlar: sabah {morning}, öğleden sonra {afternoon}, gece {night}.",
   "@weekSessionsBreakdown": {
     "placeholders": {
-      "morning": { "type": "int" },
-      "afternoon": { "type": "int" },
-      "night": { "type": "int" }
+      "morning": {
+        "type": "int"
+      },
+      "afternoon": {
+        "type": "int"
+      },
+      "night": {
+        "type": "int"
+      }
     }
   },
   "confidenceBreakdown": "Güven: davranış %{behavior} • tercih uyumu {preference}% {trendText}",
   "@confidenceBreakdown": {
     "placeholders": {
-      "behavior": { "type": "int" },
-      "preference": { "type": "int" },
-      "trendText": { "type": "String" }
+      "behavior": {
+        "type": "int"
+      },
+      "preference": {
+        "type": "int"
+      },
+      "trendText": {
+        "type": "String"
+      }
     }
   },
   "trendDeltaVsLastWeek": "• trend geçen haftaya göre {delta}",
   "@trendDeltaVsLastWeek": {
     "placeholders": {
-      "delta": { "type": "String" }
+      "delta": {
+        "type": "String"
+      }
     }
   },
   "weeklyGoalBehindDetailed": "Haftalık hedefinin gerisindesin (şu ana kadar {logged}sa kaydedildi, beklenen {expected}sa).",
   "@weeklyGoalBehindDetailed": {
     "placeholders": {
-      "logged": { "type": "String" },
-      "expected": { "type": "String" }
+      "logged": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "String"
+      }
     }
   },
   "warningActionStartSession": "Yeniden yola girmek için şimdi 25-40 dakikalık bir oturum başlat.",
@@ -1457,28 +1633,42 @@
   "burnoutOverallTrend": "Genel: {status}",
   "@burnoutOverallTrend": {
     "placeholders": {
-      "status": { "type": "String" }
+      "status": {
+        "type": "String"
+      }
     }
   },
   "burnoutTrendLine": "Trend: {status} {direction}",
   "@burnoutTrendLine": {
     "placeholders": {
-      "status": { "type": "String" },
-      "direction": { "type": "String" }
+      "status": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
     }
   },
   "burnoutDeficitLine": "Açık: {status} {direction}",
   "@burnoutDeficitLine": {
     "placeholders": {
-      "status": { "type": "String" },
-      "direction": { "type": "String" }
+      "status": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
     }
   },
   "burnoutConsistencyLine": "Tutarlılık: {status} {direction}",
   "@burnoutConsistencyLine": {
     "placeholders": {
-      "status": { "type": "String" },
-      "direction": { "type": "String" }
+      "status": {
+        "type": "String"
+      },
+      "direction": {
+        "type": "String"
+      }
     }
   },
   "noRecoveryTrendDetectedYet": "Henüz toparlanma trendi tespit edilmedi.",
@@ -1487,7 +1677,9 @@
   "studyDeficitBasedOnWeeklyGoal": "Çalışma açığı haftalık hedefine göre hesaplanır ({hours}sa).",
   "@studyDeficitBasedOnWeeklyGoal": {
     "placeholders": {
-      "hours": { "type": "String" }
+      "hours": {
+        "type": "String"
+      }
     }
   },
   "softInterventionsTitle": "Nazik müdahaleler",
@@ -1499,15 +1691,8 @@
   "burnoutExplanationWarning": "Çalışma düzenin tutarsızlaşıyor ve haftalık hedefinin gerisinde kalıyorsun.",
   "burnoutExplanationHighRisk": "Tutarsız çalışma ve açık belirtileri görünmeye başladı.",
   "burnoutExplanationBurnoutRisk": "Yükün yüksek ve düzenin dengesizleşiyor.",
-  "burnoutReasonBehindGoal": "Haftalık hedefinin {hours}sa gerisindesin.",
-  "@burnoutReasonBehindGoal": {
-    "placeholders": {
-      "hours": { "type": "String" }
-    }
-  },
   "burnoutReasonInconsistentPattern": "Bu hafta çalışma düzenin tutarsız.",
   "burnoutReasonSwitchingTimes": "Çalışma saatlerini sık sık değiştiriyorsun.",
-  "burnoutReasonLoadAboveGoal": "Toplam çalışma yükün haftalık hedefinin üzerinde.",
   "burnoutReasonNoMajorSignals": "Henüz büyük bir tükenmişlik sinyali yok.",
   "burnoutRecommendationStable1": "Mevcut düzenini koru.",
   "burnoutRecommendationStable2": "Haftalık hedef takibini sürdür.",
@@ -1524,26 +1709,34 @@
   "decisionStudyCourse": "{course} dersine çalış",
   "@decisionStudyCourse": {
     "placeholders": {
-      "course": { "type": "String" }
+      "course": {
+        "type": "String"
+      }
     }
   },
   "decisionMinutesToday": "Bugün {minutes} dakika",
   "@decisionMinutesToday": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "decisionFocusRecommendationTitle": "Odak Önerisi",
   "decisionWhatChangedTitle": "Neler Değişti",
   "decisionTaskLoadLabel": "Görev Yükü",
-  "decisionConfidenceLow": "Tahmin doğruluğu: Düşük",
+  "decisionConfidenceLow": "Güven: Düşük (son etkinliğe göre)",
   "startedFromAnalyticsRecommendation": "Analitik önerisinden başlatıldı",
   "followedPlanToday": "Harika. Bugün planını uyguladın.",
   "sessionImpactAddedToCourse": "+{minutes} dk {course} dersine eklendi",
   "@sessionImpactAddedToCourse": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "course": { "type": "String" }
+      "minutes": {
+        "type": "int"
+      },
+      "course": {
+        "type": "String"
+      }
     }
   },
   "sessionImpactCloserToGoal": "Artık haftalık hedefine daha yakınsın",
@@ -1560,20 +1753,28 @@
   "decisionReasonStudyProgress": "{target}sa hedefinin {studied}sa kadarını çalıştın",
   "@decisionReasonStudyProgress": {
     "placeholders": {
-      "studied": { "type": "String" },
-      "target": { "type": "String" }
+      "studied": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
     }
   },
   "decisionReasonImportantCourse": "Önemli ders ({ects} AKTS)",
   "@decisionReasonImportantCourse": {
     "placeholders": {
-      "ects": { "type": "int" }
+      "ects": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonHigherPriorityThan": "{course} dersinden daha acil",
   "@decisionReasonHigherPriorityThan": {
     "placeholders": {
-      "course": { "type": "String" }
+      "course": {
+        "type": "String"
+      }
     }
   },
   "decisionReasonHigherPriorityGeneral": "Bu hafta diger derslerden daha acil",
@@ -1581,7 +1782,9 @@
   "todayMinutesCompleted": "Bugun: {minutes} dk tamamlandi",
   "@todayMinutesCompleted": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "recoveryPlanTitle": "Toparlanma Plani",
@@ -1590,52 +1793,71 @@
   "suggestedSplitSessionsToday": "Oneri: Bugun {count} × {minutes} dk oturum",
   "@suggestedSplitSessionsToday": {
     "placeholders": {
-      "count": { "type": "int" },
-      "minutes": { "type": "int" }
+      "count": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "suggestedFlexibleSessionsToday": "Oneri: Bugun 2-3 odakli oturum",
-  "suggestedShorterSessionsToday": "Oneri: Bugun 3-4 daha kisa oturum",
+  "suggestedShorterSessionsToday": "Öneri: Bugün 3-4 kısa çalışma seansı yapın",
+  "recoveryMessageStressHigh": "Tükenmişliği önlemek için bugün daha kısa seanslara odaklanın",
   "needHoursTodayToStayOnTrack": "Yolda kalmak icin bugun {hours}sa ihtiyacin var",
   "@needHoursTodayToStayOnTrack": {
     "placeholders": {
-      "hours": { "type": "String" }
+      "hours": {
+        "type": "String"
+      }
     }
   },
   "minutesRemainingShort": "{minutes}dk kaldi",
   "@minutesRemainingShort": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonDeadlineLowStudy": "Son teslime {days} gün var ve bu hafta normalden az çalıştın",
   "@decisionReasonDeadlineLowStudy": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonDeadlineInDays": "Son teslime {days} gün kaldı",
   "@decisionReasonDeadlineInDays": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonLowestStudyWithDeadline": "Bu hafta en düşük çalışma süresi ve son teslime {days} gün kaldı",
   "@decisionReasonLowestStudyWithDeadline": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonLowestStudyWithOpenTasks": "Bu hafta en düşük çalışma süresi ve {count} açık görev var",
   "@decisionReasonLowestStudyWithOpenTasks": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "decisionReasonHighCourseWeight": "Yüksek ders ağırlığı ({ects} AKTS)",
   "@decisionReasonHighCourseWeight": {
     "placeholders": {
-      "ects": { "type": "int" }
+      "ects": {
+        "type": "int"
+      }
     }
   },
   "logMoodTitle": "Ruh Halini Kaydet",
@@ -1644,7 +1866,7 @@
   "moodLevel": "Ruh Hali Seviyesi",
   "stressLevel": "Stres Seviyesi",
   "energyLevel": "Enerji Seviyesi",
-  "moodFactors": "Etkileyen Faktörler",
+  "moodFactors": "Faktörler",
   "moodFactorSleep": "Uyku",
   "moodFactorWorkload": "İş Yükü",
   "moodFactorHealth": "Sağlık",
@@ -1672,6 +1894,18 @@
   "moodReminderTitle": "Ruh hali kontrolü",
   "moodReminderBody": "Ruh halini ve stresini kaydetmek için bir dakikanı ayır.",
   "moodLast7Days": "Son 7 gündeki ruh hali",
+  "moodOverLastDays": "Son {count} gündeki ruh hali",
+  "@moodOverLastDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "moodKeepLogging": "Ruh halinizi kaydetmeye devam edin",
+  "moodTrendNeedsData": "Kişisel duygusal eğilim grafiğinizi görmek için ruh halinizi kaydetmeye devam edin.",
+  "dailyMoodHistory": "Günlük Ruh Hali Geçmişi",
+  "olderLabel": "Daha Eski",
   "decisionSmartInsights": "Akıllı İçgörüler",
   "decisionHighStress": "Yüksek stres tespit edildi",
   "decisionShortSessions": "Bugün daha kısa çalışma yap",
@@ -1702,7 +1936,7 @@
   "@decisionRecommendedSession": {
     "placeholders": {
       "minutes": {
-        "type": "Object"
+        "type": "int"
       }
     }
   },
@@ -1719,7 +1953,7 @@
   "@startRecommendedSession": {
     "placeholders": {
       "minutes": {
-        "type": "Object"
+        "type": "int"
       }
     }
   },
@@ -1733,7 +1967,7 @@
   "@stressOutOfTen": {
     "placeholders": {
       "value": {
-        "type": "Object"
+        "type": "int"
       }
     }
   },
@@ -1745,9 +1979,8 @@
   "focusRecommendationPrimary": "Odak Önerisi (Birincil)",
   "decisionConfidenceHigh": "Güven: Yüksek (son etkinliğe göre)",
   "decisionConfidenceMedium": "Güven: Orta (son etkinliğe göre)",
-  "decisionConfidenceLow": "Güven: Düşük (son etkinliğe göre)",
-  "decisionBurnoutDurationCap": "Yüksek stres algılandı.\nDaha kısa oturumlar önerilir (25 dk).",
-  "decisionFixedSchedule": "Tutarlılığı artırmak için sabit program oluştur",
+  "decisionBurnoutDurationCap": "Yüksek stres algılandı. Oturumları 25dk ile sınırla.",
+  "decisionFixedSchedule": "Sabit program oluştur",
   "decisionActionFixedSchedule": "3 gün aynı çalışma saatini kullan",
   "postSessionMoodImproved": "Çalışma sonrası ruh halin iyileşti",
   "postSessionStressIncreased": "Uzun oturumlar stresini artırıyor olabilir",
@@ -1756,7 +1989,7 @@
   "@consistencyScoreLine": {
     "placeholders": {
       "score": {
-        "type": "Object"
+        "type": "int"
       },
       "trend": {
         "type": "String"
@@ -1767,32 +2000,73 @@
   "predictionPlanTitle": "Önerilen Plan",
   "predictionLevelLow": "DÜŞÜK",
   "predictionLevelMedium": "ORTA",
-  "predictionLevelHigh": "YÜKSEK",
-  "predictionReasonHighStressToday": "Son günlerde stres daha yüksek",
-  "predictionReasonLowConsistency": "Bu hafta çalışma düzenin düşük",
-  "predictionReasonUpcomingWorkload": "Bu hafta iş yükü artıyor",
+  "predictionLevelHigh": "Stres eğilimi: Artıyor",
+  "predictionReasonHighStressToday": "Stres: {stress}/10",
+  "@predictionReasonHighStressToday": {
+    "placeholders": {
+      "stress": { "type": "String" }
+    }
+  },
+  "predictionReasonLowConsistency": "Tutarlılık: %{percent}",
+  "@predictionReasonLowConsistency": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "predictionReasonUpcomingWorkload": "Teslim tarihleri: {count}",
+  "@predictionReasonUpcomingWorkload": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "predictionMainReasonTitle": "Ana neden:",
   "predictionWhyTitle": "Bu plan neden önerildi?",
-  "predictionReasonStressHigh": "Son zamanlarda stres yüksek",
-  "predictionReasonLowConsistencyDetail": "Bu hafta çalışma düzenin düştü",
-  "predictionReasonTasksPending": "Bu hafta birden fazla görevin bekliyor",
-  "predictionReasonDeadlinesSoon": "Yaklaşan son tarihler baskı oluşturuyor",
+  "predictionReasonStressHigh": "Stres: {stress}/10",
+  "@predictionReasonStressHigh": {
+    "placeholders": {
+      "stress": { "type": "String" }
+    }
+  },
+  "predictionReasonLowConsistencyDetail": "Tutarlılık: %{delta}",
+  "@predictionReasonLowConsistencyDetail": {
+    "placeholders": {
+      "delta": { "type": "String" }
+    }
+  },
+  "predictionReasonTasksPending": "Bekleyen görevler: {count}",
+  "@predictionReasonTasksPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "predictionReasonDeadlinesSoon": "Teslim tarihleri: {count}",
+  "@predictionReasonDeadlinesSoon": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "predictionAffectedTitle": "Etkilenen:",
   "predictionPlanLine": "{day} saat {time} • {minutes} dk {focus} oturumu",
   "@predictionPlanLine": {
     "placeholders": {
-      "day": {
-        "type": "String"
-      },
-      "time": {
-        "type": "String"
-      },
-      "minutes": {
-        "type": "int"
-      },
-      "focus": {
-        "type": "String"
-      }
+      "day": { "type": "String" },
+      "time": { "type": "String" },
+      "minutes": { "type": "int" },
+      "focus": { "type": "String" }
+    }
+  },
+  "predictionPlanLineSimple": "• {day}: {minutes} dk {focus}",
+  "@predictionPlanLineSimple": {
+    "placeholders": {
+      "day": { "type": "String" },
+      "minutes": { "type": "int" },
+      "focus": { "type": "String" }
     }
   },
   "predictionPlanLightFocus": "hafif",
@@ -1850,27 +2124,85 @@
   "signalDeficitHigh": "Çalışma açığı",
   "consistency": "Tutarlılık",
   "stress": "Stres",
-  "decisionBurnoutDurationCap": "Yüksek stres algılandı. Oturumları 25dk ile sınırla.",
   "moodTrends": "Ruh Hali Eğilimleri",
-  "decisionFixedSchedule": "Sabit program oluştur",
+  "analyticsMoodPerformanceTitle": "🧠 Ruh Hali vs Performans",
+  "analyticsMoodPerformanceGoodDesc": "Yüksek modunuz odaklanma sürenizi olumlu etkiliyor.",
+  "analyticsMoodLabel": "🙂 {label}: {value} {trend}",
+  "@analyticsMoodLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "trend": {
+        "type": "String"
+      }
+    }
+  },
+  "analyticsStressLabel": "⚡ {label}: {value} {trend}",
+  "@analyticsStressLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "trend": {
+        "type": "String"
+      }
+    }
+  },
+  "analyticsMoodPerformanceBadDesc": "Düşük modunuz oturum verimliliğinizi kısıtlıyor.",
+  "analyticsMoodPerformanceStableDesc": "Modunuz dengeli, bu da tutarlı bir odaklanma sağlıyor.",
+  "analyticsMoodBetterMood": "Daha İyi Ruh Hali",
+  "analyticsMoodFocusBoost": "Odaklanma Artışı",
+  "analyticsMoodHighStress": "Yüksek Stres",
+  "analyticsMoodFocusDrain": "Odaklanma Kaybı",
+  "analyticsImpactPositive": "🚀 +{minutes}dk",
+  "@analyticsImpactPositive": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "analyticsImpactNegative": "📉 -{minutes}dk",
+  "@analyticsImpactNegative": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "studyProfileTitle": "Çalışma Profilin",
   "studyProfileOptimalDuration": "İdeal Oturum: {min}-{max} dk",
   "@studyProfileOptimalDuration": {
     "placeholders": {
-      "min": { "type": "int" },
-      "max": { "type": "int" }
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
     }
   },
   "studyProfileStressThreshold": "Stres > {value} olduğunda odak düşüyor",
   "@studyProfileStressThreshold": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "studyProfilePeakWindow": "En Verimli Zaman: {window}",
   "@studyProfilePeakWindow": {
     "placeholders": {
-      "window": { "type": "String" }
+      "window": {
+        "type": "String"
+      }
     }
   },
   "studyProfileMorning": "Sabah",
@@ -1879,14 +2211,99 @@
   "studyProfileMainFactor": "Ana faktör: {factor}",
   "@studyProfileMainFactor": {
     "placeholders": {
-      "factor": { "type": "String" }
+      "factor": {
+        "type": "String"
+      }
     }
   },
   "studyProfileSecondaryFactor": "İkincil: {factor}",
   "@studyProfileSecondaryFactor": {
     "placeholders": {
-      "factor": { "type": "String" }
+      "factor": {
+        "type": "String"
+      }
     }
   },
-  "completion": "Tamamlama"
+  "completion": "Tamamlama",
+  "moodEnergyLevel": "Enerji Seviyesi",
+  "moodLoggedSession": "Çalışma oturumundan sonra kaydedildi",
+  "moodLoggedManual": "Manuel olarak kaydedildi",
+  "markAllAsRead": "Tümünü okundu olarak işaretle",
+  "mood": "Ruh Hali",
+  "academic": "Akademik",
+  "dailyBaseline": "Günlük Temel",
+  "baseline": "Temel",
+  "predictionPressureLikelyToIncrease": "Çalışma eksiği: {hours} sa",
+  "@predictionPressureLikelyToIncrease": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "studySessions": "Çalışma Oturumları",
+  "notificationOverdue": "gecikmiş",
+  "notificationDueToday": "bugün teslim edilecek",
+  "notificationDueTomorrow": "yarın teslim edilecek",
+  "notificationDueSoon": "yakında teslim edilecek",
+  "weeklyStudyGoalMissed": "Haftalık çalışma hedefi kaçırıldı",
+  "weeklyStudyGoalMissedMessage": "Bu hafta {goal} saatlik hedefinizin {actual} saatini çalıştınız.",
+  "moodTerrible": "Berbat",
+  "moodBad": "Kötü",
+  "moodNeutral": "Nötr",
+  "moodGood": "İyi",
+  "moodAmazing": "Harika",
+  "moodUnknown": "Bilinmiyor",
+  "burnoutExplanationFallingBehind": "Haftalık hedefinizin gerisinde kalıyorsunuz.",
+  "consistencyPercentage": "Süreklilik: %{score}",
+  "labelWithColon": "{label}:",
+  "labelWithColonAndSpace": "{label}: ",
+  "hideDetails": "Detayları gizle",
+  "viewFullAnalysis": "Tam analizi görüntüle",
+  "unknown": "Bilinmiyor",
+  "selectedSemester": "Seçili Dönem",
+  "statusStable": "Stabil",
+  "minutesValue": "{minutes} dk",
+  "@minutesValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesCourseValue": "{minutes} dk {course}",
+  "@minutesCourseValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "course": {
+        "type": "String"
+      }
+    }
+  },
+  "decisionStatusModerateStress": "Orta düzey stres tespit edildi",
+  "decisionStatusLowStress": "Düşük stres",
+  "decisionStatusHighStress": "Yüksek stres tespit edildi",
+  "decisionStatusDeficit": "Büyük çalışma eksiği",
+  "decisionStatusInconsistent": "Tutarsızlık tespit edildi",
+  "signalStressHigh": "Yüksek stres",
+  "signalStressMedium": "Orta stres",
+  "signalMoodLow": "Düşük ruh hali",
+  "signalConsistencyLow": "Tutarsız rutin",
+  "signalDeficitHigh": "Çalışma eksiği",
+  "consistency": "Süreklilik",
+  "stress": "Stres",
+  "moodTrends": "Ruh Hali Trendleri",
+  "predictionCollectingData": "Veri Toplanıyor",
+  "predictionCollectingDataDetail": "5 veya daha fazla oturum çalışıldığında tam yapay zeka içgörüleri aktif olacaktır.",
+  "decisionRecommendedSession": "Önerilen: {minutes} dk",
+  "@decisionRecommendedSession": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "smartAiInsights": "Yapay Zeka İçgörüleri"
 }

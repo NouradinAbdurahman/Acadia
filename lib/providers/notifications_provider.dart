@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,6 +9,8 @@ import '../models/notification.dart';
 import 'app_providers.dart';
 import 'analytics_provider.dart';
 import 'semester_provider.dart';
+import 'locale_provider.dart';
+import '../l10n/app_localizations.dart';
 
 class _NotificationSeed {
   const _NotificationSeed({
@@ -50,7 +54,7 @@ class NotificationsNotifier
   void _scheduleReload({required bool withSync}) {
     _reloadDebounce?.cancel();
     _reloadDebounce = Timer(const Duration(milliseconds: 350), () {
-      final semesterId = ref.read(activeSemesterProvider);
+      final semesterId = ref.read(activeSemesterProvider).value;
       if (semesterId == null) {
         state = const AsyncValue.data([]);
         return;
@@ -231,23 +235,8 @@ class NotificationsNotifier
     }
   }
 
-  String _formatMonthDay(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final month = months[date.month - 1];
-    return '$month ${date.day}';
+  String _formatMonthDay(DateTime date, Locale locale) {
+    return DateFormat.MMMd(locale.toString()).format(date);
   }
 
   String _normalizeKeyPart(String? value) {
@@ -282,22 +271,24 @@ class NotificationsNotifier
     return null;
   }
 
-  String _contextForType(String type, DateTime dueDate) {
+  String _contextForType(String type, DateTime dueDate, AppLocalizations l10n) {
     switch (type) {
       case 'overdue':
-        return 'is overdue';
+        return l10n.notificationOverdue;
       case 'due_today':
-        return 'is due today';
+        return l10n.notificationDueToday;
       case 'due_tomorrow':
-        return 'is due tomorrow';
+        return l10n.notificationDueTomorrow;
       default:
-        return 'is due soon';
+        return l10n.notificationDueSoon;
     }
   }
 
   Future<List<_NotificationSeed>> _buildTaskAndDeadlineSeeds({
     required String userId,
     required String semesterId,
+    required AppLocalizations l10n,
+    required Locale locale,
   }) async {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
@@ -362,8 +353,8 @@ class NotificationsNotifier
         _NotificationSeed(
           referenceId: 'task:$taskId',
           type: type,
-          title: '$taskTitle ${_contextForType(type, dueDate)}',
-          message: '$courseName • ${_formatMonthDay(dueDate)}',
+          title: '$taskTitle ${_contextForType(type, dueDate, l10n)}',
+          message: '$courseName • ${_formatMonthDay(dueDate, locale)}',
         ),
       );
     }
@@ -407,8 +398,8 @@ class NotificationsNotifier
         _NotificationSeed(
           referenceId: 'deadline:$deadlineId',
           type: type,
-          title: '$deadlineTitle ${_contextForType(type, dueDate)}',
-          message: '$courseName • ${_formatMonthDay(dueDate)}',
+          title: '$deadlineTitle ${_contextForType(type, dueDate, l10n)}',
+          message: '$courseName • ${_formatMonthDay(dueDate, locale)}',
         ),
       );
     }
@@ -419,6 +410,8 @@ class NotificationsNotifier
   Future<void> _syncTriggeredNotifications({
     required String userId,
     required String semesterId,
+    required AppLocalizations l10n,
+    required Locale locale,
   }) async {
     await _removeLegacyStaticNotifications(userId);
     await _cleanupExistingDuplicates(userId);
@@ -426,6 +419,8 @@ class NotificationsNotifier
     final seeds = await _buildTaskAndDeadlineSeeds(
       userId: userId,
       semesterId: semesterId,
+      l10n: l10n,
+      locale: locale,
     );
     for (final seed in seeds) {
       await _ensureDailyNotification(
@@ -470,9 +465,11 @@ class NotificationsNotifier
           semesterId: semesterId,
           referenceId: 'study_goal:$weekKey',
           type: 'study_goal',
-          title: 'Weekly study goal missed',
-          message:
-              'You studied ${(weekMinutes / 60).toStringAsFixed(1)}h of ${(weeklyGoalMinutes / 60).toStringAsFixed(1)}h this week.',
+          title: l10n.weeklyStudyGoalMissed,
+          message: l10n.weeklyStudyGoalMissedMessage(
+            (weekMinutes / 60).toStringAsFixed(1),
+            (weeklyGoalMinutes / 60).toStringAsFixed(1),
+          ),
         );
       }
     }
@@ -482,7 +479,7 @@ class NotificationsNotifier
     if (_isLoading) return;
 
     final userId = supabaseClient.auth.currentUser?.id;
-    final semesterId = ref.read(activeSemesterProvider);
+    final semesterId = ref.read(activeSemesterProvider).value;
     if (userId == null) {
       _subscribedUserId = null;
       if (_realtimeChannel != null) {
@@ -500,11 +497,16 @@ class NotificationsNotifier
 
     try {
       _isLoading = true;
+      final l10n = ref.read(appLocalizationsProvider);
+      final locale = ref.read(localeProvider);
+      
       await _ensureRealtimeSubscription(userId);
       try {
         await _syncTriggeredNotifications(
           userId: userId,
           semesterId: semesterId,
+          l10n: l10n,
+          locale: locale,
         );
       } catch (_) {
         // Non-critical: fetch existing notifications even if sync step fails.
@@ -533,6 +535,29 @@ class NotificationsNotifier
       );
     } catch (_) {
       // Keep current state unchanged on mark-as-read transient failures.
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    final currentNotifications = state.valueOrNull;
+    if (currentNotifications == null || currentNotifications.isEmpty) return;
+
+    final unreadIds = currentNotifications
+        .where((n) => !n.isRead)
+        .map((n) => n.id)
+        .toList();
+    if (unreadIds.isEmpty) return;
+
+    try {
+      // Optimistic update
+      state = AsyncValue.data(
+        currentNotifications.map((NotificationModel n) => n.copyWith(isRead: true)).toList(),
+      );
+
+      await notificationRepository.markAllAsRead(unreadIds);
+    } catch (_) {
+      // Rollback or reload on error
+      loadNotifications();
     }
   }
 

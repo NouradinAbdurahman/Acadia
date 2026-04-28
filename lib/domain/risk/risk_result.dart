@@ -5,6 +5,8 @@ class RiskResult {
   final double upcomingContribution;
   final double ectsContribution;
   final double studyContribution;
+  final double sessionStressContribution;
+  final double consistencyContribution;
   final double totalScore;
   final String riskLevel;
 
@@ -13,6 +15,8 @@ class RiskResult {
     required this.upcomingContribution,
     required this.ectsContribution,
     required this.studyContribution,
+    required this.sessionStressContribution,
+    required this.consistencyContribution,
     required this.totalScore,
     required this.riskLevel,
   });

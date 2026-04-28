@@ -425,7 +425,7 @@ String _changeLabel(double delta) {
 }
 
 String _performanceLabel(double change) {
-  if (change > 0.05) return 'Improving';
-  if (change < -0.05) return 'Declining';
-  return 'Stable';
+  if (change.abs() < 0.1) return 'Stable';
+  if (change > 0) return 'Improving';
+  return 'Declining';
 }

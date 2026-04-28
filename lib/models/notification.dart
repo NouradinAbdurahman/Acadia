@@ -47,4 +47,28 @@ class NotificationModel {
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  NotificationModel copyWith({
+    String? id,
+    String? userId,
+    String? referenceId,
+    String? title,
+    String? message,
+    String? type,
+    String? semesterId,
+    bool? isRead,
+    DateTime? createdAt,
+  }) {
+    return NotificationModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      referenceId: referenceId ?? this.referenceId,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      type: type ?? this.type,
+      semesterId: semesterId ?? this.semesterId,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }

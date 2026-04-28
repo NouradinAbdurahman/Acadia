@@ -1,17 +1,16 @@
 class DecisionRules {
   const DecisionRules._();
 
-  static int suggestedSessionMinutes(double avgStress) {
-    if (avgStress >= 7) return 25;
-    if (avgStress >= 5) return 35;
+  static int getRecommendedSessionLength(double stress) {
+    if (stress >= 7) return 35;
     return 45;
   }
 
-  static bool highStress(double avgStress) => avgStress > 7;
+  static bool isHighStress(double avgStress) => avgStress >= 7;
 
-  static bool mediumStress(double avgStress) => avgStress >= 4 && avgStress <= 7;
+  static bool isMediumStress(double avgStress) => avgStress >= 5 && avgStress < 7;
 
-  static bool lowStress(double avgStress) => avgStress < 4;
+  static bool isLowStress(double avgStress) => avgStress < 5;
 
   static bool lowMood(double avgMood) => avgMood > 0 && avgMood < 2.5;
 

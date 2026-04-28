@@ -19,14 +19,14 @@ class SemesterComparisonCard extends ConsumerWidget {
       data: (comp) {
         if (comp == null || comp.previous == null) return const SizedBox.shrink();
 
-        final studyDelta = comp.studyTimeDelta ?? 0.0;
+        final focusDelta = comp.focusDelta ?? 0.0;
         final compDelta = comp.completionRateDelta ?? 0.0;
         final riskDelta = comp.riskDelta ?? 0.0;
 
-        final studyDeltaText = (studyDelta * 100).toStringAsFixed(0);
+        final focusDeltaText = (focusDelta * 100).toStringAsFixed(0);
         final compDeltaText = (compDelta * 100).toStringAsFixed(0);
 
-        final studyDeltaColor = studyDelta >= 0 ? Colors.green : Colors.orange;
+        final focusDeltaColor = focusDelta >= 0 ? Colors.green : Colors.orange;
         final compDeltaColor = compDelta >= 0 ? Colors.green : Colors.orange;
         
         // Negative risk delta is GOOD (reduction in risk)
@@ -69,9 +69,9 @@ class SemesterComparisonCard extends ConsumerWidget {
                 children: [
                   _ComparisonMetric(
                     label: l10n.focusLabel,
-                    delta: studyDelta,
-                    deltaText: '$studyDeltaText%',
-                    color: studyDeltaColor,
+                    delta: focusDelta,
+                    deltaText: '$focusDeltaText%',
+                    color: focusDeltaColor,
                     icon: PhosphorIcons.target,
                     iconStyle: PhosphorIconsStyle.regular,
                     subtitle: l10n.studyHours,
@@ -99,7 +99,7 @@ class SemesterComparisonCard extends ConsumerWidget {
                     label: l10n.academicRisk,
                     delta: -riskDelta, // Invert for icon arrow (positive delta = more risk = bad)
                     deltaText: riskLabel,
-                    color: riskDelta > 0 ? Colors.red : Colors.orange,
+                    color: riskDelta > 0 ? Colors.red : Colors.green,
                     icon: PhosphorIcons.warning,
                     iconStyle: PhosphorIconsStyle.regular,
                     subtitle: l10n.score,

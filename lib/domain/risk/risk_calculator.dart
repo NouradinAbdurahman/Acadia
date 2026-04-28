@@ -1,4 +1,4 @@
-import 'dart:math';
+import '../../core/services/risk_engine.dart' as core;
 import 'risk_input.dart';
 import 'risk_result.dart';
 
@@ -6,65 +6,26 @@ import 'risk_result.dart';
 class RiskCalculator {
   /// Calculates the risk score and level from a [RiskInput].
   static RiskResult calculate(RiskInput input) {
-    // Edge Case: No courses, no tasks, no study sessions
-    if (input.totalECTS == 0 &&
-        input.overdueTasks == 0 &&
-        input.upcomingTasks == 0 &&
-        input.studyHours == 0.0) {
-      return const RiskResult(
-        overdueContribution: 0.0,
-        upcomingContribution: 0.0,
-        ectsContribution: 0.0,
-        studyContribution: 0.0,
-        totalScore: 0.0,
-        riskLevel: 'low',
-      );
-    }
+    final coreResult = core.RiskEngine.calculate(
+      overdueTasks: input.overdueTasks,
+      dueSoonTasks: input.upcomingTasks,
+      studyDeficitHours: input.studyDeficit,
+      stressLevel: input.avgSessionStress,
+      consistency: input.consistency,
+      hasStressData: input.hasStressData,
+    );
 
-    // Normal calculation (Balanced model as requested by professor)
-    // 1. Overdue: max ~3 tasks * 15 = 45 points
-    final overdueContribution = (min(input.overdueTasks, 3) * 15.0);
-
-    // 2. Upcoming: max ~3 tasks * 5 = 15 points
-    final upcomingContribution = (min(input.upcomingTasks, 3) * 5.0);
-
-    // 3. ECTS: 30 ECTS = 20 points (Full load normalization)
-    final ectsContribution = min((input.totalECTS / 30.0) * 15.0, 15.0);
-
-    // 4. Study Deficit: max 20 points
-    double studyDeficit = 0.0;
-    if (input.studyGoal > 0) {
-      studyDeficit = max(
-        0.0,
-        (input.studyGoal - input.studyHours) / input.studyGoal,
-      );
-    }
-    final studyContribution = (studyDeficit * 15.0).clamp(0.0, 20.0);
-
-    // 5. Improvement Offset (Fix: Reward study increase)
-    double improvementOffset = 0.0;
-    if (input.studyHours > 0 && input.studyGoal > 0) {
-      final ratio = input.studyHours / input.studyGoal;
-      if (ratio > 1.1) improvementOffset = 5.0;
-      if (ratio > 1.3) improvementOffset = 10.0;
-    }
-
-    double score =
-        overdueContribution +
-        upcomingContribution +
-        ectsContribution +
-        studyContribution +
-        input.gradeRiskAdjustment -
-        improvementOffset;
-    final totalScore = score.clamp(0.0, 100.0);
+    final finalScore = coreResult.score;
 
     return RiskResult(
-      overdueContribution: overdueContribution,
-      upcomingContribution: upcomingContribution,
-      ectsContribution: ectsContribution,
-      studyContribution: studyContribution,
-      totalScore: totalScore,
-      riskLevel: _level(totalScore),
+      overdueContribution: coreResult.breakdown['overdue'] ?? 0.0,
+      upcomingContribution: coreResult.breakdown['dueSoon'] ?? 0.0,
+      ectsContribution: 0.0, 
+      studyContribution: coreResult.breakdown['deficit'] ?? 0.0,
+      sessionStressContribution: coreResult.breakdown['stress'] ?? 0.0,
+      consistencyContribution: coreResult.breakdown['consistency'] ?? 0.0,
+      totalScore: finalScore,
+      riskLevel: _level(finalScore),
     );
   }
 

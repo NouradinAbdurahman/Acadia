@@ -10,18 +10,24 @@ final courseResultsProvider =
       (ref) {
         final repository = ref.watch(courseResultRepositoryProvider);
         final supabase = ref.watch(supabaseProvider);
-        final semesterId = ref.watch(activeSemesterProvider);
+        final semesterIdAsync = ref.watch(activeSemesterProvider);
 
         final notifier = CourseResultsNotifier(
           repository: repository,
           supabaseClient: supabase,
         );
 
-        if (semesterId != null) {
-          notifier.loadForSemester(semesterId, forceRefresh: true);
-        } else {
-          notifier.clear();
-        }
+        semesterIdAsync.when(
+          data: (id) {
+            if (id != null) {
+              notifier.loadForSemester(id, forceRefresh: true);
+            } else {
+              notifier.clear();
+            }
+          },
+          loading: () => {},
+          error: (_, __) => notifier.clear(),
+        );
 
         return notifier;
       },

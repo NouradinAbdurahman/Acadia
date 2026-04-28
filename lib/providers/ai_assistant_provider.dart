@@ -2,7 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../repositories/ai_assistant_repository.dart';
 import '../models/ai_message.dart';
+import '../models/ai_intent.dart';
+import '../services/ai/intent_parser.dart';
+import '../services/ai/data_resolver.dart';
 import 'app_providers.dart';
+import 'analytics_provider.dart';
+import 'decision_provider.dart';
+import 'risk_provider.dart';
 import 'semester_provider.dart';
 
 enum AiAssistantError {
@@ -47,13 +53,21 @@ class AiAssistantState {
 }
 
 class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
-  AiAssistantNotifier({required Ref ref, required AiAssistantRepository repository})
-      : _ref = ref,
+  AiAssistantNotifier({
+    required Ref ref,
+    required AiAssistantRepository repository,
+    required AiIntentParser parser,
+    required AiDataResolver resolver,
+  })  : _ref = ref,
         _repository = repository,
+        _parser = parser,
+        _resolver = resolver,
         super(const AiAssistantState());
 
   final Ref _ref;
   final AiAssistantRepository _repository;
+  final AiIntentParser _parser;
+  final AiDataResolver _resolver;
   bool _isCancelled = false;
 
   void stopResponse() {
@@ -69,7 +83,7 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
     }
 
     final user = _ref.read(currentUserProvider);
-    final semesterId = _ref.read(activeSemesterProvider);
+    final semesterId = _ref.read(activeSemesterProvider).value;
 
     if (user == null) {
       state = state.copyWith(error: AiAssistantError.unauthenticated);
@@ -83,7 +97,7 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
 
     final userMessage = AiMessage(text: trimmed, isUser: true, semesterId: semesterId);
     
-    // Add user message to the correct semester's list
+    // Add user message to state immediately
     final currentMessages = state.messagesFor(semesterId);
     final updatedMessages = [...currentMessages, userMessage];
     
@@ -99,20 +113,48 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
     _isCancelled = false;
 
     try {
-      final aiMessage = await _repository.sendMessage(
-        history: updatedMessages,
-        semesterId: semesterId,
-      );
+      // 1. Parse Intent
+      final intent = _parser.parse(trimmed);
+      
+      AiMessage aiMessage;
+
+      // 2. Resolve or Fallback
+      if (intent.type != AiIntentType.unknown) {
+        // REAL DATA RESOLUTION
+        aiMessage = await _resolver.resolve(intent, user.id, semesterId);
+      } else {
+        // FALLBACK TO LLM (Edge Function)
+        final analytics = _ref.read(analyticsProvider).valueOrNull;
+        final decision = _ref.read(decisionProvider);
+        final risk = _ref.read(riskProvider);
+        final studyAnalytics = _ref.read(studyAnalyticsProvider);
+
+        final moodContext = {
+          if (analytics != null) ...{
+            'dailyStress': analytics.avgDailyStress,
+            'sessionStress': analytics.avgSessionStress,
+            'trend': analytics.stressTrend,
+            'consistency': analytics.consistency,
+            'studyDeficit': analytics.studyDeficit,
+          },
+          'risk': risk?.result.totalScore ?? 0.0,
+          'burnout': studyAnalytics.burnoutScore,
+          'decisionStress': decision.avgStress,
+        };
+
+        aiMessage = await _repository.sendMessage(
+          history: updatedMessages,
+          semesterId: semesterId,
+          moodContext: moodContext,
+        );
+      }
       
       if (_isCancelled) return;
       
       final fullAiMessage = aiMessage.copyWith(semesterId: semesterId);
 
-      // Deduplicate: remove previous messages of same type in this semester
-      final latestMessages = List<AiMessage>.from(updatedMessages);
-      if (fullAiMessage.type != 'text') {
-        latestMessages.removeWhere((m) => m.type == fullAiMessage.type);
-      }
+      // Add AI message to state
+      final latestMessages = List<AiMessage>.from(state.messagesFor(semesterId));
       latestMessages.add(fullAiMessage);
 
       final finalChats = Map<String, List<AiMessage>>.from(state.chatsBySemester);
@@ -125,11 +167,10 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
         lastOpenedIntent: fullAiMessage.intent,
       );
 
-      // Animation logic (now per-semester)
       await _animateTyping(fullAiMessage, semesterId);
-    } catch (_) {
+    } catch (e) {
       final errorMessage = AiMessage(
-        text: 'Something went wrong. Please try again.',
+        text: 'Something went wrong while connecting to your academic data. Please try again.',
         isUser: false,
         semesterId: semesterId,
       );
@@ -150,20 +191,15 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
 
   Future<void> _animateTyping(AiMessage message, String semesterId) async {
     String fullText = message.text;
-    
-    // Always animate for a consistent feel, regardless of length
     for (int i = 0; i <= fullText.length; i++) {
       if (_isCancelled) {
         message.displayedText = fullText;
         _triggerRebuild();
         return;
       }
-      
       message.displayedText = fullText.substring(0, i);
       _triggerRebuild();
-      
-      // 20ms provides a smooth, "streaming" feel that is readable but fast
-      await Future.delayed(const Duration(milliseconds: 20));
+      await Future.delayed(const Duration(milliseconds: 15));
     }
   }
 
@@ -175,5 +211,12 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
 final aiAssistantProvider =
     StateNotifierProvider<AiAssistantNotifier, AiAssistantState>((ref) {
   final repository = ref.watch(aiAssistantRepositoryProvider);
-  return AiAssistantNotifier(ref: ref, repository: repository);
+  final parser = ref.watch(aiIntentParserProvider);
+  final resolver = ref.watch(aiDataResolverProvider);
+  return AiAssistantNotifier(
+    ref: ref, 
+    repository: repository,
+    parser: parser,
+    resolver: resolver,
+  );
 });

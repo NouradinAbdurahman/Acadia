@@ -23,10 +23,13 @@ import '../../widgets/semester/semester_comparison_card.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../providers/course_provider.dart';
+import '../../providers/semester_provider.dart';
+import '../../domain/decision/decision_rules.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../providers/study_sessions_provider.dart';
 import '../../providers/tasks_provider.dart';
 import '../../providers/trend_provider.dart';
+import '../../core/utils/trend_localizer.dart';
 import '../../providers/mood_provider.dart';
 import '../../providers/decision_provider.dart';
 import '../../providers/prediction_provider.dart';
@@ -40,6 +43,8 @@ import '../../domain/prediction/prediction_result.dart';
 import '../../widgets/analytics/decision_cards.dart';
 import '../../widgets/common/weekly_activity_card.dart';
 import '../../widgets/risk/risk_widgets.dart';
+import '../../providers/risk_provider.dart';
+import '../../widgets/mood/mood_daily_list.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -56,6 +61,80 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   int _roundPlanMinutes(double minutes) {
     if (minutes <= 0) return 0;
     return ((minutes / 5).ceil() * 5).clamp(5, 240);
+  }
+
+  Widget _buildMoodSourceTabs(WidgetRef ref, ThemeData theme, String currentSource) {
+    final l10n = AppLocalizations.of(ref.context)!;
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTabItem(
+              label: l10n.dailyBaseline,
+              isSelected: currentSource == 'daily',
+              color: Colors.amber.shade700,
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                ref.read(moodChartSourceProvider.notifier).state = 'daily';
+              },
+            ),
+          ),
+          Expanded(
+            child: _buildTabItem(
+              label: l10n.studySessions,
+              isSelected: currentSource == 'session',
+              color: Colors.blue.shade700,
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                ref.read(moodChartSourceProvider.notifier).state = 'session';
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabItem({
+    required String label,
+    required bool isSelected,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white.withValues(alpha: 0.9) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? color : Colors.grey.shade600,
+          ),
+        ),
+      ),
+    );
   }
 
   void _startStudyFromDecision({
@@ -118,14 +197,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final studyAnalytics = ref.watch(studyAnalyticsProvider);
     final trendDays = ref.watch(trendDaysProvider);
     final trendAsync = ref.watch(trendProvider(trendDays));
-    final moodLogsAsync = ref.watch(moodLogsProvider);
+    final moodSource = ref.watch(moodChartSourceProvider);
+    final moodLogsAsync = moodSource == 'daily' 
+        ? ref.watch(dailyMoodLogsProvider) 
+        : ref.watch(sessionMoodLogsProvider);
+    final moodTrendDays = ref.watch(moodTrendDaysProvider);
     final courses = ref.watch(courseProvider).valueOrNull ?? const <Course>[];
     final sessions = ref.watch(studySessionsProvider).valueOrNull ?? const [];
     final tasks = ref.watch(tasksProvider).valueOrNull ?? const [];
     final decision = ref.watch(decisionProvider);
     final prediction = ref.watch(predictionProvider);
 
+    final semesterId = ref.watch(activeSemesterProvider).value;
+
     return Scaffold(
+      key: Key('analytics_screen_${semesterId ?? 'none'}'),
       backgroundColor: Colors.transparent,
       body: AuthBackgroundContainer(
         child: SafeArea(
@@ -136,7 +222,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
               return SingleChildScrollView(
                 controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -289,12 +375,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ),
                       const SizedBox(height: AppSpacing.lg),
                     ] else ...[
-                      _buildSectionTitle(theme, l10n.academicRisk),
-                      const SizedBox(height: AppSpacing.md),
-                      const RiskBreakdownCard(),
-                      const SizedBox(height: AppSpacing.xl),
+                      if (ref.watch(riskProvider).hasData) ...[
+                        _buildSectionTitle(theme, l10n.academicRisk),
+                        const SizedBox(height: AppSpacing.md),
+                        const RiskBreakdownCard(),
+                        const SizedBox(height: AppSpacing.xl),
+                      ],
 
                       _buildSectionTitle(theme, l10n.moodAndStressTitle),
+                      const SizedBox(height: AppSpacing.sm),
+                      _buildMoodSourceTabs(ref, theme, moodSource),
                       const SizedBox(height: AppSpacing.md),
                       AppGlassCard(
                         padding: const EdgeInsets.all(AppSpacing.md),
@@ -304,45 +394,138 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               children: [
                                 Expanded(
                                   child: _MoodMetricTile(
-                                    title: l10n.moodAverageLabel,
-                                    value: data.moodLogCount == 0
-                                        ? l10n.moodNoData
-                                        : data.avgMood.toStringAsFixed(1),
-                                    icon: HeroIcons.faceSmile,
+                                  title: l10n.moodAverageLabel,
+                                  value: moodSource == 'daily'
+                                      ? (data.dailyMoodLogCount == 0 ? l10n.moodNoData : data.avgDailyMood.toStringAsFixed(1))
+                                      : (data.sessionMoodLogCount == 0 ? l10n.moodNoData : data.avgSessionMood.toStringAsFixed(1)),
+                                  icon: HeroIcons.faceSmile,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: _MoodMetricTile(
+                                  title: l10n.stressAverageLabel,
+                                  value: moodSource == 'daily'
+                                      ? (data.dailyMoodLogCount == 0 ? l10n.moodNoData : data.avgDailyStress.toStringAsFixed(1))
+                                      : (data.sessionMoodLogCount == 0 ? l10n.moodNoData : data.avgSessionStress.toStringAsFixed(1)),
+                                  icon: HeroIcons.bolt,
+                                ),
+                              ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  l10n.moodOverLastDays(moodTrendDays),
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                   ),
                                 ),
-                                const SizedBox(width: AppSpacing.sm),
-                                Expanded(
-                                  child: _MoodMetricTile(
-                                    title: l10n.stressAverageLabel,
-                                    value: data.moodLogCount == 0
-                                        ? l10n.moodNoData
-                                        : data.avgStress.toStringAsFixed(1),
-                                    icon: HeroIcons.bolt,
+                                Theme(
+                                  data: theme.copyWith(
+                                    hoverColor: Colors.transparent,
+                                    splashColor: Colors.transparent,
+                                    highlightColor: Colors.transparent,
+                                  ),
+                                  child: PopupMenuButton<int>(
+                                    offset: const Offset(0, 36),
+                                    elevation: 8,
+                                    shadowColor: Colors.black26,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(
+                                        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    color: theme.colorScheme.surface,
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                                        borderRadius: BorderRadius.circular(24),
+                                        border: Border.all(
+                                          color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                          width: 1.2,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            l10n.daysFilter(moodTrendDays),
+                                            style: theme.textTheme.labelMedium?.copyWith(
+                                              color: theme.colorScheme.primary,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 0.2,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            size: 18,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    itemBuilder: (context) => [7, 14, 30].map((days) {
+                                      final isSelected = days == moodTrendDays;
+                                      return PopupMenuItem<int>(
+                                        value: days,
+                                        height: 44,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                l10n.daysFilter(days),
+                                                style: theme.textTheme.bodyMedium?.copyWith(
+                                                  color: isSelected 
+                                                      ? theme.colorScheme.primary 
+                                                      : theme.colorScheme.onSurface,
+                                                  fontWeight: isSelected 
+                                                      ? FontWeight.w700 
+                                                      : FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            if (isSelected)
+                                              Icon(
+                                                Icons.check_rounded,
+                                                size: 16,
+                                                color: theme.colorScheme.primary,
+                                              ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onSelected: (value) {
+                                      Haptics.vibrate(HapticsType.selection);
+                                      ref.read(moodTrendDaysProvider.notifier).state = value;
+                                    },
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () => context.push('/mood/log'),
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(0, 30),
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(l10n.logMoodTitle, style: const TextStyle(fontSize: 12)),
-                              ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _MoodTrendChart(
+                              moodLogsAsync: moodLogsAsync,
+                              days: moodTrendDays,
                             ),
-                            const SizedBox(height: AppSpacing.xs),
-                            _MoodSevenDayChart(moodLogsAsync: moodLogsAsync),
-                            const SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: AppSpacing.md),
+                            MoodDailyList(
+                              moodLogsAsync: moodLogsAsync,
+                              days: moodTrendDays,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                l10n.consistencyScoreLine(
+                                l10n.historicalConsistencyScoreLine(
                                   (100 - studyAnalytics.timeInconsistencyScore).round(),
                                   studyAnalytics.consistencyTrendLabel,
                                 ),
@@ -407,6 +590,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           child: _TrendAnalysisSection(
                             key: ValueKey('trend-$trendDays'),
                             trend: trend,
+                            data: data,
+                            studyAnalytics: studyAnalytics,
                             showDetails: _showTrendDetails,
                             onToggleDetails: () => setState(() => _showTrendDetails = !_showTrendDetails),
                           ),
@@ -462,8 +647,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     DecisionResult decision,
     StudyAnalytics studyAnalytics,
   ) {
+    final analyticsAsync = ref.watch(analyticsProvider);
     final signature = decision.sortedItems
-        .map((item) => '${item.priority}:${item.titleKey}')
+        .map((item) => '${item.priority}:${item.title}')
         .join('|');
     final primary = decision.primaryDecision;
     if (primary == null) {
@@ -509,7 +695,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             _buildRankedFactorRow(
               theme, 
               l10n, 
-              l10n.studyProfileMainFactor(l10n.get(decision.signals.first)),
+              l10n.studyProfileMainFactor(decision.signals.first),
               isMain: true,
             ),
             if (decision.signals.length > 1) ...[
@@ -517,7 +703,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               _buildRankedFactorRow(
                 theme, 
                 l10n, 
-                l10n.studyProfileSecondaryFactor(l10n.get(decision.signals[1])),
+                l10n.studyProfileSecondaryFactor(decision.signals[1]),
               ),
             ],
             const SizedBox(height: AppSpacing.md),
@@ -527,7 +713,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               children: [
                 _buildStatBadge(
                   theme, 
-                  "${l10n.consistency}: ${(100 - studyAnalytics.timeInconsistencyScore).round()}% (${studyAnalytics.consistencyTrendLabel})",
+                  "${l10n.historicalConsistency}: ${(100 - studyAnalytics.timeInconsistencyScore).round()}% (${l10n.translateTrend(studyAnalytics.consistencyTrendLabel)})",
                   isWarning: studyAnalytics.timeInconsistencyScore >= 50,
                 ),
                 _buildStatBadge(
@@ -537,8 +723,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
                 _buildStatBadge(
                   theme, 
-                  "${l10n.stress}: ${decision.avgStress.toStringAsFixed(1)}/10",
-                  isWarning: decision.avgStress >= 7,
+                  "${l10n.dailyBaseline}: ${decision.avgDailyStress.toStringAsFixed(1)}/10",
+                  isWarning: decision.avgDailyStress >= 6.5,
+                ),
+                _buildStatBadge(
+                  theme, 
+                  "${l10n.studySessions}: ${decision.avgSessionStress.toStringAsFixed(1)}/10",
+                  isWarning: decision.avgSessionStress >= 7,
                 ),
               ],
             ),
@@ -549,12 +740,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             children: [
                _buildStatBadge(
                   theme, 
-                  "Confidence: ${decision.confidence >= 0.7 ? 'High' : (decision.confidence >= 0.4 ? 'Medium' : 'Low')}",
+                  l10n.getConfidenceLabel(decision.confidence),
                   isWarning: decision.confidence < 0.4,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  "(based on ${studyAnalytics.trackedSessionCount} sessions)",
+                  l10n.basedOnSessions(studyAnalytics.trackedSessionCount),
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     fontSize: 9,
@@ -580,7 +771,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           if (decision.suggestedSessionMinutes != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
-              l10n.get('decisionRecommendedSession', {'minutes': decision.suggestedSessionMinutes!}),
+              l10n.decisionRecommendedSession(decision.suggestedSessionMinutes!),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w700,
@@ -588,28 +779,27 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ),
           ],
           const SizedBox(height: AppSpacing.sm),
-          if (decision.emotionalStatusKey != null) ...[
-            Text(
-              _resolveStatusKey(l10n, decision.emotionalStatusKey!),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
+
           Row(
             children: [
               _buildSmallMetricBadge(
                 theme,
-                "🙂 ${l10n.moodNameGood}: ${decision.avgMood.toStringAsFixed(1)} ${DecisionInsights.isMoodTrendDecliningFromSessions(studyAnalytics.recentSessions) ? '↓' : '↑'}",
+                l10n.analyticsMoodLabel(
+                  l10n.mood,
+                  decision.avgMood.toStringAsFixed(1),
+                  DecisionInsights.isMoodTrendDecliningFromSessions(studyAnalytics.recentSessions) ? '↓' : '↑',
+                ),
                 decision.avgMood >= 3.5 ? Colors.green : (decision.avgMood <= 2.5 ? Colors.orange : Colors.blue),
               ),
               const SizedBox(width: AppSpacing.sm),
               _buildSmallMetricBadge(
                 theme,
-                "⚡ ${l10n.stress}: ${decision.avgStress.toStringAsFixed(1)} ${DecisionInsights.isStressTrendIncreasingFromSessions(studyAnalytics.recentSessions) ? '↑' : '↓'}",
-                decision.avgStress >= 7.0 ? Colors.red : (decision.avgStress >= 5.0 ? Colors.orange : Colors.green),
+                l10n.analyticsStressLabel(
+                  l10n.dailyBaseline,
+                  decision.avgDailyStress.toStringAsFixed(1),
+                  decision.avgDailyStress >= 6.5 && (analyticsAsync.value?.isStressRising ?? false) ? '↑' : '↓',
+                ),
+                decision.avgDailyStress >= 6.5 ? Colors.red : (decision.avgDailyStress >= 5.0 ? Colors.orange : Colors.green),
               ),
             ],
           ),
@@ -653,14 +843,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            l10n.get(item.titleKey, item.params),
+            item.title,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 2),
           Text(
-            l10n.get(item.descriptionKey, item.params),
+            item.description,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.78),
               fontWeight: FontWeight.w600,
@@ -703,7 +893,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
       ),
       child: Text(
-        l10n.get(signal),
+        signal,
         style: theme.textTheme.labelSmall?.copyWith(
           fontSize: 10,
           fontWeight: FontWeight.bold,
@@ -756,8 +946,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ? theme.colorScheme.error.withValues(alpha: 0.7)
             : theme.colorScheme.primary);
 
-    final title = l10n.get(item.titleKey);
-    final action = l10n.get(item.descriptionKey);
+    final title = item.title;
+    final action = item.description;
 
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -810,18 +1000,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   }
 
   String _resolveDecisionTitle(AppLocalizations l10n, String message) {
-    final parts = message.split('|');
-    final key = parts.first;
-    final value = parts.length > 1 ? parts[1] : null;
-
-    Map<String, dynamic>? params;
-    if (key == 'decision_main_factor' || key == 'decisionMainFactor') {
-      params = {'factor': _factorLabel(l10n, value ?? '')};
-    } else if (key == 'decision_worst_day' || key == 'decisionWorstDay') {
-      params = {'day': _weekdayNameFromInt(value)};
-    }
-
-    return l10n.get(key, params);
+    return message;
   }
 
   String _resolveDecisionAction(AppLocalizations l10n, String message) {
@@ -865,7 +1044,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     WidgetRef ref,
     int? suggestedMinutes,
   ) {
-    final minutes = suggestedMinutes ?? 45;
+    final analytics = ref.read(analyticsProvider).valueOrNull;
+    final minutes = suggestedMinutes ?? DecisionRules.getRecommendedSessionLength(analytics?.avgSessionStress ?? 0.0);
     final timerState = ref.read(studyTimerProvider);
     final timer = ref.read(studyTimerProvider.notifier);
 
@@ -908,23 +1088,25 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            l10n.predictionStressTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AppIcon(HeroIcons.chartBar, color: levelColor),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  l10n.predictionStressTitle,
+                  levelText,
                   style: theme.textTheme.titleSmall?.copyWith(
+                    color: levelColor,
                     fontWeight: FontWeight.w800,
                   ),
-                ),
-              ),
-              Text(
-                levelText,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: levelColor,
-                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
@@ -943,7 +1125,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               (reason) => Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  '• ${l10n.get(reason)}',
+                  '• $reason',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
                     fontWeight: FontWeight.normal,
@@ -972,12 +1154,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           const SizedBox(height: AppSpacing.xs),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: prediction.recommendedPlan.take(2).map((item) {
+            children: prediction.recommendedPlan.map((item) {
               final day = _relativeDayLabel(l10n, item.scheduledAt);
               return Padding(
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
-                  '• $day: ${item.durationMinutes} min ${l10n.get(item.focusKey)}',
+                  l10n.predictionPlanLineSimple(
+                    day,
+                    item.durationMinutes,
+                    item.focusKey,
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
                     fontWeight: FontWeight.normal,
@@ -999,7 +1185,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final delta = day.difference(today).inDays;
     if (delta == 0) return l10n.today;
     if (delta == 1) return l10n.tomorrow;
-    return DateFormat.EEEE().format(date);
+    return DateFormat.EEEE(Localizations.localeOf(context).languageCode).format(date);
   }
 
   String _predictionRiskLine(AppLocalizations l10n, PredictionResult prediction) {
@@ -1076,7 +1262,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
     final now = DateTime.now();
     final date = now.subtract(Duration(days: now.weekday - weekday));
-    return DateFormat.EEEE().format(date);
+    return DateFormat.EEEE(Localizations.localeOf(context).languageCode).format(date);
   }
 
   Widget _buildSectionTitle(ThemeData theme, String title) {
@@ -1164,7 +1350,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               const AppIcon(HeroIcons.presentationChartLine, color: Colors.blueAccent),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                "🧠 ${l10n.analyticsMoodPerformanceTitle}",
+                l10n.analyticsMoodPerformanceTitle,
                 style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
@@ -1192,7 +1378,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     Text(l10n.analyticsMoodBetterMood, style: theme.textTheme.labelSmall),
                     const SizedBox(height: 4),
                     Text(
-                      hasEnoughData ? "🚀 +${impact}m" : l10n.analyticsNotEnoughData, 
+                      hasEnoughData ? l10n.analyticsImpactPositive(impact) : l10n.analyticsNotEnoughData, 
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.greenAccent,
                         fontSize: hasEnoughData ? 20 : 10,
@@ -1206,10 +1392,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    Text(l10n.analyticsMoodHighStress, style: theme.textTheme.labelSmall),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 16), // Adjusted spacing
                     Text(
-                      hasEnoughData ? "📉 -${impact + 5}m" : l10n.analyticsNotEnoughData, 
+                      hasEnoughData ? l10n.analyticsImpactNegative(impact + 5) : l10n.analyticsNotEnoughData, 
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.redAccent,
                         fontSize: hasEnoughData ? 20 : 10,
@@ -1234,6 +1419,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         return l10n.decisionStatusModerateStress;
       case 'decisionStatusLowStress':
         return l10n.decisionStatusLowStress;
+      case 'statusStable':
+        return l10n.statusStable;
+      case 'decisionStatusDeficit':
+        return l10n.decisionStatusDeficit;
+      case 'decisionStatusInconsistent':
+        return l10n.decisionStatusInconsistent;
       default:
         return key;
     }
@@ -1285,10 +1476,14 @@ class _MoodMetricTile extends StatelessWidget {
   }
 }
 
-class _MoodSevenDayChart extends StatelessWidget {
-  const _MoodSevenDayChart({required this.moodLogsAsync});
+class _MoodTrendChart extends StatelessWidget {
+  const _MoodTrendChart({
+    required this.moodLogsAsync,
+    required this.days,
+  });
 
   final AsyncValue<List<MoodLog>> moodLogsAsync;
+  final int days;
 
   @override
   Widget build(BuildContext context) {
@@ -1309,7 +1504,7 @@ class _MoodSevenDayChart extends StatelessWidget {
         final today = DateTime(now.year, now.month, now.day);
         final values = <double>[];
 
-        for (var i = 6; i >= 0; i--) {
+        for (var i = days - 1; i >= 0; i--) {
           final day = today.subtract(Duration(days: i));
           final sameDay = logs.where((entry) {
             final d = DateTime(
@@ -1346,7 +1541,7 @@ class _MoodSevenDayChart extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Start logging to see trends',
+                    l10n.startTrackingToSeeTrends,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       fontStyle: FontStyle.italic,
@@ -1367,14 +1562,14 @@ class _MoodSevenDayChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Keep logging your mood',
+                    l10n.moodKeepLogging,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'You need 2+ entries to see a trend',
+                    l10n.moodTrendNeedsData,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       fontStyle: FontStyle.italic,
@@ -1386,116 +1581,124 @@ class _MoodSevenDayChart extends StatelessWidget {
           );
         }
 
-        final spots = values
-            .asMap()
-            .entries
-            .where((entry) => entry.value > 0)
-            .map((entry) => FlSpot(entry.key.toDouble(), entry.value))
-            .toList();
+        final bars = <LineChartBarData>[];
+        var currentContiguousSpots = <FlSpot>[];
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.moodLast7Days,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            SizedBox(
-              height: 140,
-              child: LineChart(
-                LineChartData(
-                  minX: 0,
-                  maxX: 6,
-                  minY: 1,
-                  maxY: 5,
-                  gridData: FlGridData(
-                    show: true,
-                    horizontalInterval: 1,
-                    drawVerticalLine: false,
-                    getDrawingHorizontalLine: (value) => FlLine(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                      strokeWidth: 1,
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  titlesData: FlTitlesData(
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: 1,
-                        reservedSize: 20,
-                        getTitlesWidget: (value, meta) => Text(
-                          value.toInt().toString(),
-                          style: theme.textTheme.labelSmall,
-                        ),
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 24,
-                        getTitlesWidget: (value, meta) {
-                          const labels = ['-6', '-5', '-4', '-3', '-2', '-1', '0'];
-                          final index = value.toInt();
-                          if (index < 0 || index >= labels.length) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              labels[index],
-                              style: theme.textTheme.labelSmall,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: spots,
-                      isCurved: true,
-                      color: _getMoodChartColor(spots),
-                      barWidth: 3,
-                      dotData: FlDotData(
-                        show: true,
-                        getDotPainter: (spot, xPercentage, line, index) {
-                          return FlDotCirclePainter(
-                            radius: 4,
-                            color: _getMoodLevelColor(spot.y, theme),
-                            strokeColor: theme.colorScheme.surface,
-                            strokeWidth: 2,
-                          );
-                        },
-                      ),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            _getMoodChartColor(spots).withValues(alpha: 0.2),
-                            _getMoodChartColor(spots).withValues(alpha: 0.02),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+        for (int i = 0; i < values.length; i++) {
+          if (values[i] > 0) {
+            currentContiguousSpots.add(FlSpot(i.toDouble(), values[i]));
+          } else {
+            if (currentContiguousSpots.isNotEmpty) {
+              bars.add(_buildBarData(currentContiguousSpots, theme));
+              currentContiguousSpots = [];
+            }
+          }
+        }
+        if (currentContiguousSpots.isNotEmpty) {
+          bars.add(_buildBarData(currentContiguousSpots, theme));
+        }
+
+        return SizedBox(
+          height: 140,
+          child: LineChart(
+            LineChartData(
+              minX: 0,
+              maxX: days - 1.0,
+              minY: 1,
+              maxY: 5,
+              gridData: FlGridData(
+                show: true,
+                horizontalInterval: 1,
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                  strokeWidth: 1,
                 ),
               ),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    reservedSize: 20,
+                    getTitlesWidget: (value, meta) => Text(
+                      value.toInt().toString(),
+                      style: theme.textTheme.labelSmall,
+                    ),
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    reservedSize: 24,
+                    getTitlesWidget: (value, meta) {
+                      final index = value.toInt();
+                      if (index < 0 || index >= days) return const SizedBox.shrink();
+                      
+                      final interval = days >= 30 ? 5 : (days >= 14 ? 2 : 1);
+                      if (index % interval != 0 && index != days - 1) {
+                        return const SizedBox.shrink();
+                      }
+                      
+                      final daysAgo = (days - 1) - index;
+                      final date = DateTime.now().subtract(Duration(days: daysAgo));
+                      final label = DateFormat.E(Localizations.localeOf(context).languageCode).format(date);
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          label,
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              lineBarsData: bars,
             ),
-          ],
+          ),
         );
       },
+    );
+  }
+
+  LineChartBarData _buildBarData(List<FlSpot> spots, ThemeData theme) {
+    return LineChartBarData(
+      spots: spots,
+      isCurved: true,
+      color: _getMoodChartColor(spots),
+      barWidth: 3,
+      dotData: FlDotData(
+        show: true,
+        getDotPainter: (spot, xPercentage, line, index) {
+          return FlDotCirclePainter(
+            radius: 4,
+            color: _getMoodLevelColor(spot.y, theme),
+            strokeColor: theme.colorScheme.surface,
+            strokeWidth: 2,
+          );
+        },
+      ),
+      belowBarData: BarAreaData(
+        show: true,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _getMoodChartColor(spots).withValues(alpha: 0.2),
+            _getMoodChartColor(spots).withValues(alpha: 0.02),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1548,11 +1751,15 @@ class _TrendAnalysisSection extends StatelessWidget {
   const _TrendAnalysisSection({
     super.key,
     required this.trend,
+    required this.data,
+    required this.studyAnalytics,
     required this.showDetails,
     required this.onToggleDetails,
   });
 
   final TrendData trend;
+  final AnalyticsData data;
+  final StudyAnalytics studyAnalytics;
   final bool showDetails;
   final VoidCallback onToggleDetails;
 
@@ -1573,13 +1780,17 @@ class _TrendAnalysisSection extends StatelessWidget {
             size: 20,
           ),
           label: Text(
-            showDetails ? 'Hide details' : 'View full analysis',
+            showDetails ? l10n.hideDetails : l10n.viewFullAnalysis,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
         if (showDetails) ...[
           const SizedBox(height: AppSpacing.sm),
-          _OverallStatusCard(trend: trend),
+          _OverallStatusCard(
+            trend: trend,
+            riskScore: data.riskScore,
+            consistency: studyAnalytics.historicalConsistency,
+          ),
           const SizedBox(height: 20),
           AppGlassCard(
           padding: const EdgeInsets.all(AppSpacing.md),
@@ -1770,11 +1981,11 @@ class _TrendAnalysisSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _localizeInsightTitle(context, insight),
+                          TrendLocalizer.localizeTitle(l10n, insight),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 2),
-                        Text(_localizeInsightMessage(context, insight)),
+                        Text(TrendLocalizer.localizeMessage(l10n, insight)),
                       ],
                     ),
                   ),
@@ -1817,138 +2028,6 @@ class _TrendAnalysisSection extends StatelessWidget {
     return sorted;
   }
 
-  String _localizeInsightTitle(BuildContext context, TrendInsight insight) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (insight.key ?? insight.title) {
-      case 'Build study consistency':
-      case 'study_build_consistency':
-        return l10n.trendInsightBuildConsistencyTitle;
-      case 'Study increased significantly':
-      case 'study_increased':
-        return l10n.trendInsightStudyIncreasedSignificantlyTitle;
-      case 'Study improved':
-        return l10n.trendInsightStudyImprovedTitle;
-      case 'Study declined':
-      case 'study_declined':
-        return l10n.trendInsightStudyDeclinedTitle;
-      case 'No tasks in this period':
-      case 'no_tasks':
-        return l10n.trendInsightNoTasksTitle;
-      case 'Task completion is low':
-      case 'task_completion_low_none':
-      case 'task_completion_low_some':
-        return l10n.trendInsightTaskLowTitle;
-      case 'No new workload':
-      case 'no_workload':
-        return l10n.trendInsightNoWorkloadTitle;
-      case 'Workload increased sharply':
-      case 'workload_increased':
-        return l10n.trendInsightWorkloadSharpTitle;
-      case 'Workload is rising':
-        return l10n.trendInsightWorkloadRisingTitle;
-      case 'Performance declining':
-      case 'performance_declining':
-        return l10n.trendInsightPerformanceDecliningTitle;
-      case 'Performance improving':
-      case 'performance_improving':
-        return l10n.trendInsightPerformanceImprovingTitle;
-      case 'Stable trends':
-      case 'stable_trends':
-        return l10n.trendInsightStableTitle;
-      default:
-        return insight.title;
-    }
-  }
-
-  String _localizeInsightMessage(BuildContext context, TrendInsight insight) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (insight.key) {
-      case 'study_build_consistency':
-        return l10n.trendInsightBuildConsistencyMessage;
-      case 'study_increased':
-        return l10n.trendInsightStudyIncreasedMessage(
-          insight.params['percent'] ?? 0,
-        );
-      case 'study_declined':
-        return l10n.trendInsightStudyDroppedMessage(
-          insight.params['percent'] ?? 0,
-        );
-      case 'no_tasks':
-        return l10n.trendInsightNoTasksMessage;
-      case 'task_completion_low_none':
-        return l10n.trendInsightNoTasksCompletedMessage;
-      case 'task_completion_low_some':
-        return l10n.trendInsightTaskCompletedFractionMessage(
-          insight.params['completed'] ?? 0,
-          insight.params['total'] ?? 0,
-        );
-      case 'no_workload':
-        return l10n.trendInsightNoWorkloadMessage;
-      case 'workload_increased':
-        return l10n.trendInsightWorkloadAddedMessage(
-          insight.params['count'] ?? 0,
-        );
-      case 'performance_declining':
-        return l10n.trendInsightPerformanceDecliningMessage;
-      case 'performance_improving':
-        return l10n.trendInsightPerformanceImprovingMessage;
-      case 'stable_trends':
-        return l10n.trendInsightStableMessage;
-    }
-
-    final message = insight.message;
-    if (message ==
-        'You have just started tracking study sessions. Try to study daily.') {
-      return l10n.trendInsightBuildConsistencyMessage;
-    }
-    if (message.startsWith('Study increased by ')) {
-      final match = RegExp(r'Study increased by (\d+)%').firstMatch(message);
-      final percent = int.tryParse(match?.group(1) ?? '') ?? 0;
-      return l10n.trendInsightStudyIncreasedMessage(percent);
-    }
-    if (message.startsWith('Study dropped by ')) {
-      final match = RegExp(r'Study dropped by (\d+)%').firstMatch(message);
-      final percent = int.tryParse(match?.group(1) ?? '') ?? 0;
-      return l10n.trendInsightStudyDroppedMessage(percent);
-    }
-    if (message == 'No tasks were due in this period.') {
-      return l10n.trendInsightNoTasksMessage;
-    }
-    if (message ==
-        'No tasks completed yet. Start completing tasks to track performance.') {
-      return l10n.trendInsightNoTasksCompletedMessage;
-    }
-    if (message.startsWith('You completed ')) {
-      final match = RegExp(
-        r'You completed (\d+) of (\d+) tasks',
-      ).firstMatch(message);
-      final completed = int.tryParse(match?.group(1) ?? '') ?? 0;
-      final total = int.tryParse(match?.group(2) ?? '') ?? 0;
-      return l10n.trendInsightTaskCompletedFractionMessage(completed, total);
-    }
-    if (message == 'No new tasks or deadlines were added in this period.') {
-      return l10n.trendInsightNoWorkloadMessage;
-    }
-    if (message.startsWith('You added ')) {
-      final match = RegExp(
-        r'You added (\d+) tasks/deadlines',
-      ).firstMatch(message);
-      final total = int.tryParse(match?.group(1) ?? '') ?? 0;
-      return l10n.trendInsightWorkloadAddedMessage(total);
-    }
-    if (message ==
-        'Performance trend is decreasing. Review weak courses this week.') {
-      return l10n.trendInsightPerformanceDecliningMessage;
-    }
-    if (message ==
-        'Performance trend is improving. Keep the same study consistency.') {
-      return l10n.trendInsightPerformanceImprovingMessage;
-    }
-    if (message == 'No significant change yet. Keep logging consistently.') {
-      return l10n.trendInsightStableMessage;
-    }
-    return message;
-  }
 
   String _formatDurationFromHours(double hoursValue, AppLocalizations l10n) {
     final totalMinutes = (hoursValue * 60).round();
@@ -1984,7 +2063,7 @@ class _TrendSummaryCard extends ConsumerWidget {
       0,
       (sum, value) => sum + value,
     );
-    final perfLabel = trend.gradeTrend.isEmpty
+    final perfLabel = studyAnalytics.trackedSessionCount < 3
         ? l10n.trendNotEnoughData
         : trend.performanceChange.abs() < 0.1
         ? l10n.trendStable
@@ -2261,7 +2340,7 @@ class _TrendLineChart extends StatelessWidget {
                 if (index % step != 0) return const SizedBox.shrink();
                 final date = entries[index].key;
                 return Text(
-                  _formatDayLabel(date),
+                  _formatDayLabel(date, context),
                   style: const TextStyle(fontSize: 10),
                 );
               },
@@ -2380,7 +2459,7 @@ class _TrendBarChart extends StatelessWidget {
                 if (index % step != 0) return const SizedBox.shrink();
                 final date = entries[index].key;
                 return Text(
-                  _formatDayLabel(date),
+                  _formatDayLabel(date, context),
                   style: const TextStyle(fontSize: 10),
                 );
               },
@@ -2432,7 +2511,7 @@ class _TrendGradeLineChart extends StatelessWidget {
     if (points.isEmpty) {
       return Center(
         child: Text(
-          AppLocalizations.of(context)!.trendPerformanceEmptyMessage,
+          AppLocalizations.of(context)!.noGpaDataAvailable,
           textAlign: TextAlign.center,
         ),
       );
@@ -2440,7 +2519,7 @@ class _TrendGradeLineChart extends StatelessWidget {
     if (points.length < 3) {
       return Center(
         child: Text(
-          AppLocalizations.of(context)!.trendPerformanceNeedThreeResults,
+          AppLocalizations.of(context)!.startTrackingToSeeTrends,
           textAlign: TextAlign.center,
         ),
       );
@@ -2486,7 +2565,7 @@ class _TrendGradeLineChart extends StatelessWidget {
                 if (index % step != 0) return const SizedBox.shrink();
                 final date = points[index].date;
                 return Text(
-                  _formatDayLabel(date),
+                  _formatDayLabel(date, context),
                   style: const TextStyle(fontSize: 10),
                 );
               },
@@ -2536,9 +2615,15 @@ class _TrendGradeLineChart extends StatelessWidget {
 }
 
 class _OverallStatusCard extends StatelessWidget {
-  const _OverallStatusCard({required this.trend});
+  const _OverallStatusCard({
+    required this.trend,
+    required this.riskScore,
+    required this.consistency,
+  });
 
   final TrendData trend;
+  final double riskScore;
+  final double consistency;
 
   @override
   Widget build(BuildContext context) {
@@ -2552,29 +2637,30 @@ class _OverallStatusCard extends StatelessWidget {
       (sum, value) => sum + value,
     );
     final totalTasks = _estimatedTotalTasks(trend, completed);
-    final completionRate = totalTasks == 0 ? 0.0 : completed / totalTasks;
-    final isStudyLow = totalStudyHours < 1;
-    final isTasksLow = totalTasks > 0 && completionRate < 0.5;
-    final isOnTrack =
-        totalStudyHours >= 1 && (totalTasks == 0 || completionRate >= 0.6);
-
     final l10n = AppLocalizations.of(context)!;
-    final status = isOnTrack
-        ? l10n.trendStatusOnTrack
-        : (isStudyLow && isTasksLow)
-        ? l10n.trendStatusLowAndBehind
-        : isStudyLow
-        ? l10n.trendStatusStudyNeedsImprovement
-        : isTasksLow
-        ? l10n.trendStatusTaskIncomplete
-        : l10n.trendStatusStableProgress;
-
-    final detail = isOnTrack
-        ? l10n.trendStatusOnTrackDetail
-        : (isStudyLow && completionRate > 0.9)
-            ? "Your activity is low, but task completion is strong."
-            : l10n.trendStatusNeedsFocusDetail;
-    final color = isOnTrack ? Colors.green : Colors.orange;
+    
+    // New unified logic based on user request
+    final bool isCriticalRisk = riskScore >= 50;
+    final bool isStudyDeclining = trend.studyChangePercent < 0;
+    final bool isLowConsistency = consistency < 0.5;
+    
+    final String status;
+    final String detail;
+    final Color color;
+    
+    if (isCriticalRisk) {
+      status = l10n.trendStatusNeedsAttention; // Map to appropriate L10n
+      detail = l10n.trendStatusCriticalRiskDetail;
+      color = Colors.red;
+    } else if (isStudyDeclining && isLowConsistency) {
+      status = l10n.trendStatusNeedsImprovement;
+      detail = l10n.trendStatusLowActivityHighCompletion; // Or similar
+      color = Colors.orange;
+    } else {
+      status = l10n.trendStatusOnTrack;
+      detail = l10n.trendStatusOnTrackDetail;
+      color = Colors.green;
+    }
 
     return AppGlassCard(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -2658,7 +2744,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                 Course(
                   id: courseId,
                   userId: '',
-                  courseName: 'Unknown',
+                  courseName: l10n.unknown,
                   academicSemester: 1,
                   credits: 0,
                   ects: 0,
@@ -2682,9 +2768,9 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                   .clamp(1.0, 24 * 60.0)
                   .toDouble();
         final maxY = maxMinutes <= 60
-            ? 60.0
-            : ((maxMinutes / 30).ceil() * 30).toDouble();
-        final yInterval = maxY <= 60 ? 15.0 : 60.0;
+            ? 75.0
+            : ((maxMinutes / 30).ceil() * 30 + 30).toDouble();
+        final yInterval = maxY <= 75 ? 15.0 : 60.0;
 
         return GestureDetector(
           onTap: () {
@@ -2700,7 +2786,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  height: 200,
+                  height: 240,
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final chartWidth = math.max(
@@ -2711,7 +2797,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                         scrollDirection: Axis.horizontal,
                         child: SizedBox(
                           width: chartWidth,
-                          height: 200,
+                          height: 240,
                           child: BarChart(
                             BarChartData(
                               alignment: BarChartAlignment.spaceAround,
@@ -2846,8 +2932,12 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                     ),
                                   ),
                                 ),
-                                topTitles: const AxisTitles(
-                                  sideTitles: SideTitles(showTitles: false),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    reservedSize: 24,
+                                    getTitlesWidget: (_, __) => const SizedBox.shrink(),
+                                  ),
                                 ),
                                 rightTitles: const AxisTitles(
                                   sideTitles: SideTitles(showTitles: false),
@@ -2896,105 +2986,113 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                // Legend Section
-                ...allBars.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final bar = entry.value;
-                  final isSelected = _selectedIndex == index;
-                  const legendFontSize = 10.0;
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  child: Scrollbar(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: allBars.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final bar = entry.value;
+                          final isSelected = _selectedIndex == index;
+                          const legendFontSize = 10.0;
 
-                  final displayCode = (bar.course.courseCode ??
-                          (bar.displayName.length > 8
-                              ? bar.displayName.substring(0, 7)
-                              : bar.displayName))
-                      .replaceAll(RegExp(r'[\s\-]'), '')
-                      .toUpperCase();
+                          final displayCode = (bar.course.courseCode ??
+                                  (bar.displayName.length > 8
+                                      ? bar.displayName.substring(0, 7)
+                                      : bar.displayName))
+                              .replaceAll(RegExp(r'[\s\-]'), '')
+                              .toUpperCase();
 
-                  final durationStr = _formatDurationFromMinutes(
-                    l10n: l10n,
-                    totalMinutes: bar.minutes.round(),
-                  );
+                          final durationStr = _formatDurationFromMinutes(
+                            l10n: l10n,
+                            totalMinutes: bar.minutes.round(),
+                          );
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Haptics.vibrate(HapticsType.selection);
-                        setState(() {
-                          _selectedIndex = isSelected ? null : index;
-                        });
-                      },
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: _selectedIndex == null || isSelected ? 1.0 : 0.3,
-                        child: Row(
-                          children: [
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: isSelected ? 12 : 8,
-                              height: isSelected ? 12 : 8,
-                              decoration: BoxDecoration(
-                                color: bar.course.uiColor,
-                                shape: BoxShape.circle,
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: bar.course.uiColor
-                                              .withValues(alpha: 0.4),
-                                          blurRadius: 4,
-                                          spreadRadius: 2,
-                                        )
-                                      ]
-                                    : null,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: RichText(
-                                text: TextSpan(
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                  ),
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                Haptics.vibrate(HapticsType.selection);
+                                setState(() {
+                                  _selectedIndex = isSelected ? null : index;
+                                });
+                              },
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 200),
+                                opacity: _selectedIndex == null || isSelected ? 1.0 : 0.3,
+                                child: Row(
                                   children: [
-                                    TextSpan(
-                                      text: displayCode,
-                                      style: TextStyle(
-                                        fontSize: legendFontSize,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w900
-                                            : FontWeight.w700,
-                                        letterSpacing: 0.5,
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      width: isSelected ? 12 : 8,
+                                      height: isSelected ? 12 : 8,
+                                      decoration: BoxDecoration(
+                                        color: bar.course.uiColor,
+                                        shape: BoxShape.circle,
+                                        boxShadow: isSelected
+                                            ? [
+                                                BoxShadow(
+                                                  color: bar.course.uiColor
+                                                      .withValues(alpha: 0.4),
+                                                  blurRadius: 4,
+                                                  spreadRadius: 2,
+                                                )
+                                              ]
+                                            : null,
                                       ),
                                     ),
-                                    TextSpan(
-                                      text: ' – ${bar.displayName}',
-                                      style: TextStyle(
-                                        fontSize: legendFontSize,
-                                        color: theme.colorScheme.onSurface
-                                            .withValues(alpha: isSelected ? 0.9 : 0.6),
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: ' • $durationStr',
-                                      style: TextStyle(
-                                        fontSize: legendFontSize,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w800
-                                            : FontWeight.w600,
-                                        color: theme.colorScheme.onSurface
-                                            .withValues(alpha: isSelected ? 1.0 : 0.7),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: RichText(
+                                        text: TextSpan(
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                          children: [
+                                            TextSpan(
+                                              text: displayCode,
+                                              style: TextStyle(
+                                                fontSize: legendFontSize,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.w900
+                                                    : FontWeight.w700,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: ' – ${bar.displayName}',
+                                              style: TextStyle(
+                                                fontSize: legendFontSize,
+                                                color: theme.colorScheme.onSurface
+                                                    .withValues(alpha: isSelected ? 0.9 : 0.6),
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: ' • $durationStr',
+                                              style: TextStyle(
+                                                fontSize: legendFontSize,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.w800
+                                                    : FontWeight.w600,
+                                                color: theme.colorScheme.onSurface
+                                                    .withValues(alpha: isSelected ? 1.0 : 0.7),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        }).toList(),
                       ),
                     ),
-                  );
-                }),
+                  ),
+                ),
               ],
             ),
           ),
@@ -3182,8 +3280,8 @@ class _GradeDistributionCard extends StatelessWidget {
   }
 }
 
-String _formatDayLabel(DateTime date) {
-  return DateFormat('d').format(date);
+String _formatDayLabel(DateTime date, BuildContext context) {
+  return DateFormat('d', Localizations.localeOf(context).languageCode).format(date);
 }
 
 int _xAxisStep(int length) {

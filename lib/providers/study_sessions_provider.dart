@@ -501,6 +501,8 @@ class StudySessionsNotifier
     try {
       state = const AsyncValue.loading();
       final list = await studyRepository.getSessions(userId: userId, semesterId: semesterId) as List<StudySession>;
+      
+      debugPrint('[StudySessionsProvider] Loading for Semester: $semesterId | Data Count: ${list.length}');
       if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
@@ -511,7 +513,7 @@ class StudySessionsNotifier
 
   Future<void> refresh() async {
     final userId = supabaseClient.auth.currentUser?.id;
-    final semesterId = ref.read(activeSemesterProvider);
+    final semesterId = ref.read(activeSemesterProvider).value;
     if (userId != null) {
       await loadSessions(userId: userId, semesterId: semesterId);
     }
@@ -554,7 +556,7 @@ class StudySessionsNotifier
       return;
     }
 
-    final semesterId = ref.read(activeSemesterProvider);
+    final semesterId = ref.read(activeSemesterProvider).value;
     if (semesterId == null) {
       throw Exception('No active semester set. Cannot save session.');
     }
@@ -601,9 +603,7 @@ class StudySessionsNotifier
 
         state = state.whenData((sessions) => [created, ...sessions]);
         debugPrint("✅ Saved: $minutes min");
-        ref
-          .read(analyticsProvider.notifier)
-          .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
+        ref.read(analyticsProvider.notifier).refresh();
         if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
           ref.read(moodActionsProvider).queueSessionMoodPrompt();
         }
@@ -654,7 +654,7 @@ class StudySessionsNotifier
       return;
     }
 
-    final semesterId = ref.read(activeSemesterProvider);
+    final semesterId = ref.read(activeSemesterProvider).value;
     if (semesterId == null) {
       throw Exception('No active semester set. Cannot save session.');
     }
@@ -690,9 +690,7 @@ class StudySessionsNotifier
 
         state = state.whenData((sessions) => [created, ...sessions]);
         debugPrint("✅ Pomodoro saved: ${totalFocus}m focus, ${timerState.completedCycles} cycles");
-        ref
-          .read(analyticsProvider.notifier)
-          .applySessionImpact(courseId: created.courseId, minutes: created.durationMinutes);
+        ref.read(analyticsProvider.notifier).refresh();
         if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
           ref.read(moodActionsProvider).queueSessionMoodPrompt();
         }
@@ -741,19 +739,27 @@ class StudySessionsNotifier
   }
 }
 
-final studySessionsProvider = StateNotifierProvider<StudySessionsNotifier,
-    AsyncValue<List<StudySession>>>((ref) {
+final studySessionsProvider = StateNotifierProvider<StudySessionsNotifier, AsyncValue<List<StudySession>>>((ref) {
   final repo = ref.watch(app.studyRepositoryProvider);
   final userId = ref.watch(app.currentUserProvider)?.id;
-  final semesterId = ref.watch(activeSemesterProvider);
+  final semesterIdAsync = ref.watch(activeSemesterProvider);
   final supabase = Supabase.instance.client;
+  
   final notifier = StudySessionsNotifier(
     studyRepository: repo,
     supabaseClient: supabase,
     ref: ref,
   );
-  if (userId != null) {
-    notifier.loadSessions(userId: userId, semesterId: semesterId);
-  }
+  
+  semesterIdAsync.when(
+    data: (id) {
+      if (userId != null && id != null) {
+        notifier.loadSessions(userId: userId, semesterId: id);
+      }
+    },
+    loading: () => {},
+    error: (_, __) => {},
+  );
+  
   return notifier;
 });

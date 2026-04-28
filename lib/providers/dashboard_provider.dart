@@ -188,7 +188,7 @@ final dashboardProvider = Provider<AsyncValue<DashboardData>>((ref) {
       .where((s) => s.createdAt.isAfter(startOfWeek))
       .fold(0, (sum, s) => sum + s.durationMinutes);
 
-  final activeSemesterId = ref.watch(activeSemesterProvider);
+  final activeSemesterId = ref.watch(activeSemesterProvider).value;
 
   // 5. Course Stats (filtered by active semester)
   final activeCoursesStats = courses

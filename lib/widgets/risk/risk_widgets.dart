@@ -27,20 +27,10 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final riskStateAsync = ref.watch(riskProvider);
+    final riskState = ref.watch(riskProvider);
 
-    if (riskStateAsync.hasValue && riskStateAsync.value != null) {
-      _lastRisk = riskStateAsync.value;
-    }
-
-    final riskState = riskStateAsync.value ?? _lastRisk;
-
-    if (riskState == null) {
-      // Very first load fallback.
-      return const AppGlassCard(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        child: SizedBox(height: 150),
-      );
+    if (!riskState.hasData) {
+      return const SizedBox.shrink();
     }
 
     final risk = riskState.result;
@@ -58,37 +48,11 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
           // Header row (Risk level pill & title)
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                ),
-                child: AppIcon(icon, size: 20.0, color: color),
-              ),
-              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
                   l10n.academicRisk,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-              // Level pill
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  border: Border.all(color: color.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  label,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
                 ),
               ),
             ],
@@ -158,33 +122,7 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
 
           const SizedBox(height: AppSpacing.md),
           
-          // Interpretation sentence (Smarter feedback)
-          Text(
-            riskState.getInterpretation(l10n),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
 
-          const SizedBox(height: AppSpacing.sm),
-
-          // Explanation list (reasons)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: reasons.map((r) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  AppIcon(HeroIcons.informationCircle, size: 14.0, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(r, style: theme.textTheme.bodySmall),
-                  ),
-                ],
-              ),
-            )).toList(),
-          ),
         ],
       ),
     ).animate().fade(delay: 50.ms).slideY(begin: 0.08);
@@ -215,11 +153,11 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
   String _labelForLevel(AppLocalizations l10n, String level) {
     switch (level) {
       case 'high':
-        return "Critical";
+        return l10n.riskLevelCritical;
       case 'medium':
-        return "Warning";
+        return l10n.riskLevelWarning;
       default:
-        return "Safe";
+        return l10n.riskLevelSafe;
     }
   }
 }
@@ -305,19 +243,10 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final riskStateAsync = ref.watch(riskProvider);
+    final riskState = ref.watch(riskProvider);
 
-    if (riskStateAsync.hasValue && riskStateAsync.value != null) {
-      _lastRisk = riskStateAsync.value;
-    }
-
-    final riskState = riskStateAsync.value ?? _lastRisk;
-
-    if (riskState == null) {
-      return const AppGlassCard(
-        padding: EdgeInsets.all(AppSpacing.lg),
-        child: SizedBox(height: 200),
-      );
+    if (!riskState.hasData) {
+      return const SizedBox.shrink();
     }
 
     final risk = riskState.result;
@@ -356,7 +285,7 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
             label: l10n.riskOverdueTasks,
             value: input.overdueTasks.toString(),
             contribution: risk.overdueContribution,
-            maxContribution: 45.0,
+            maxContribution: 30.0,
             color: const Color(0xFFEF4444), // red
           ),
           _BreakdownRow(
@@ -367,13 +296,6 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
             color: const Color(0xFFF97316), // orange
           ),
           const SizedBox(height: AppSpacing.sm),
-          _BreakdownRow(
-            label: l10n.totalEctsLabel,
-            value: input.totalECTS.toString(),
-            contribution: risk.ectsContribution,
-            maxContribution: 15.0,
-            color: const Color(0xFF8B5CF6), // purple
-          ),
           const SizedBox(height: AppSpacing.md),
           _BreakdownRow(
             label: l10n.riskStudyDeficit,
@@ -381,10 +303,26 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
                 ? l10n.riskGoalReached
                 : l10n.riskHoursRemaining((input.studyGoal - input.studyHours).toStringAsFixed(1)),
             contribution: risk.studyContribution,
-            maxContribution: 15.0,
+            maxContribution: 25.0,
             color: const Color(0xFF3B82F6), // blue
           ),
           const SizedBox(height: AppSpacing.sm),
+          _BreakdownRow(
+            label: l10n.riskSessionStress,
+            value: input.avgSessionStress.toStringAsFixed(1),
+            contribution: risk.sessionStressContribution,
+            maxContribution: 15.0,
+            color: const Color(0xFF8B5CF6), // purple
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _BreakdownRow(
+            label: l10n.weeklyConsistency,
+            value: '${(input.consistency * 100).toInt()}%',
+            contribution: risk.consistencyContribution,
+            maxContribution: 15.0,
+            color: const Color(0xFFF59E0B), // amber
+          ),
+          const SizedBox(height: AppSpacing.md),
           Text(
             l10n.studyDeficitBasedOnWeeklyGoal(input.studyGoal.toStringAsFixed(0)),
             style: theme.textTheme.bodySmall?.copyWith(
@@ -433,9 +371,9 @@ class BurnoutStatusCard extends ConsumerWidget {
     final deficitTrendColor = _trendColor(analytics.deficitTrendLabel);
     final consistencyTrendColor = _trendColor(analytics.consistencyTrendLabel);
     final hasFullyStableTrends =
-      analytics.burnoutTrendLabel == 'Stable' &&
-      analytics.deficitTrendLabel == 'Stable' &&
-      analytics.consistencyTrendLabel == 'Stable';
+      analytics.burnoutTrendLabel == 'stable' &&
+      analytics.deficitTrendLabel == 'stable' &&
+      analytics.consistencyTrendLabel == 'stable';
     final burnoutTrendLabel = _localizedTrendLabel(l10n, analytics.burnoutTrendLabel);
     final deficitTrendLabel = _localizedTrendLabel(l10n, analytics.deficitTrendLabel);
     final consistencyTrendLabel =
@@ -499,7 +437,7 @@ class BurnoutStatusCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            l10n.burnoutExplanationWarning, // Replacing with shorter version via logic
+            localizedExplanation,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -508,7 +446,7 @@ class BurnoutStatusCard extends ConsumerWidget {
 
           if (!analytics.hasBurnoutTrendHistory && analytics.burnoutLevel != BurnoutLevel.stable)
             Text(
-              "Trend is forming. Risk is driven by inconsistency and study deficit.",
+              l10n.burnoutExplanationNew,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 fontWeight: FontWeight.w600,
@@ -536,7 +474,7 @@ class BurnoutStatusCard extends ConsumerWidget {
             )
           else if (analytics.hasBurnoutTrendHistory)
             Text(
-              l10n.noRecoveryTrendDetectedYet,
+              analytics.burnoutTrendFallbackMessage(l10n),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                 fontStyle: FontStyle.italic,
@@ -606,15 +544,17 @@ class BurnoutStatusCard extends ConsumerWidget {
 }
 
 String _localizedTrendLabel(AppLocalizations l10n, String label) {
-  switch (label) {
-    case 'Improving':
-      return l10n.statusImproving;
-    case 'Worsening':
-      return l10n.statusDeclining;
-    case 'Unstable':
-      return l10n.statusVariable;
-    case 'Stable':
-      return l10n.statusStable;
+  switch (label.toLowerCase()) {
+    case 'improving':
+      return l10n.trendImproving;
+    case 'worsening':
+      return l10n.trendWorsening;
+    case 'unstable':
+      return l10n.trendUnstable;
+    case 'moderate':
+      return l10n.trendModerate;
+    case 'stable':
+      return l10n.trendStable;
     default:
       return label;
   }
@@ -640,25 +580,29 @@ String _localizedBurnoutExplanation(AppLocalizations l10n, BurnoutLevel level) {
     case BurnoutLevel.warning:
     case BurnoutLevel.highRisk:
     case BurnoutLevel.burnoutRisk:
-      return 'You are falling behind your weekly goal.';
+      return l10n.burnoutExplanationFallingBehind;
   }
 }
 
 List<String> _localizedBurnoutReasons(AppLocalizations l10n, StudyAnalytics analytics) {
   final reasons = <String>[];
-  if (analytics.weeklyDeficitHours > 0.25) {
-    reasons.add(
-      l10n.burnoutReasonBehindGoal(analytics.weeklyDeficitHours.toStringAsFixed(1)),
-    );
+  
+  // behavioral / pattern based reasons
+  if (analytics.avgSessionStress >= 7) {
+    reasons.add(l10n.burnoutBehaviorHighFatigue);
+    if (analytics.hasMoodTrendDown) reasons.add(l10n.burnoutBehaviorMoodInstability);
+    if (analytics.consistency < 0.6) reasons.add(l10n.burnoutBehaviorIrregularRest);
+    return reasons;
   }
+
   if (analytics.timeInconsistencyScore >= 45) {
-    reasons.add(l10n.burnoutReasonInconsistentPattern);
+    reasons.add(l10n.burnoutBehaviorUnpredictableRhythm);
   }
   if (analytics.irregularStudyPattern) {
-    reasons.add(l10n.burnoutReasonSwitchingTimes);
+    reasons.add(l10n.burnoutBehaviorSwitchingContext);
   }
   if (analytics.excessiveStudy) {
-    reasons.add(l10n.burnoutReasonLoadAboveGoal);
+    reasons.add(l10n.burnoutBehaviorMentalOverload);
   }
   if (reasons.isEmpty) {
     reasons.add(l10n.burnoutReasonNoMajorSignals);
@@ -707,12 +651,12 @@ Color _burnoutColor(BurnoutLevel level) {
 }
 
 Color _trendColor(String label) {
-  switch (label) {
-    case 'Improving':
+  switch (label.toLowerCase()) {
+    case 'improving':
       return const Color(0xFF22C55E);
-    case 'Worsening':
+    case 'worsening':
       return const Color(0xFFEF4444);
-    case 'Unstable':
+    case 'unstable':
       return const Color(0xFFF97316);
     default:
       return const Color(0xFF6B7280);
@@ -752,12 +696,14 @@ class _BreakdownRow extends StatelessWidget {
                     ?.copyWith(fontWeight: FontWeight.w600)),
             Row(
               children: [
-                Text(
-                  value,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: color, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: AppSpacing.sm),
+                if (value.isNotEmpty) ...[
+                  Text(
+                    value,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: color, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
                 Text(
                   '+${contribution.toInt()}',
                   style: theme.textTheme.labelSmall?.copyWith(

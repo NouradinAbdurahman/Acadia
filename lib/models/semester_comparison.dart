@@ -25,6 +25,36 @@ class SemesterComparison {
     return (currAvg - prevAvg) / prevAvg;
   }
 
+  /// Recalculates focus using actual study hours relative to baseline or previous period.
+  /// Ensures it aligns with study trend, consistency, and risk score, avoiding false 100% highs.
+  double? get focusDelta {
+    if (previous == null) return null;
+    
+    final currStudy = current.weeklyAverageStudyHours;
+    final prevStudy = previous!.weeklyAverageStudyHours;
+    
+    // Baseline logic to prevent infinite percentage jumps
+    final baseline = prevStudy > 0 ? prevStudy : 2.0;
+    
+    // Base focus change
+    double focusRatio = (currStudy - baseline) / baseline;
+    
+    // Do not show 100% (or positive) if total study time decreased or is very low
+    if (currStudy < prevStudy || currStudy < 1.5) {
+      focusRatio = focusRatio.clamp(-1.0, 0.0);
+    }
+    
+    // Align with study trend (consistency and risk)
+    final consistencyAlign = current.consistency - previous!.consistency;
+    // Risk delta: positive means risk INCREASED (bad). So we invert it for alignment.
+    final riskAlign = (previous!.riskScore - current.riskScore) / 100.0;
+    
+    // Blend metrics for a holistic focus score
+    double finalFocusDelta = (focusRatio * 0.6) + (consistencyAlign * 0.2) + (riskAlign * 0.2);
+    
+    return finalFocusDelta.clamp(-1.0, 1.0);
+  }
+
   /// The task completion rate delta (e.g., +5% improvement).
   double? get completionRateDelta {
     if (previous == null) return null;
@@ -71,11 +101,18 @@ class SemesterComparison {
     final insights = <String>[];
 
     // 1. Study Time Analysis
-    final sDelta = studyTimeDelta ?? 0;
-    if (sDelta.abs() > 0.05) { // Only show if more than 5% change
-      final percent = (sDelta.abs() * 100).round();
-      final action = sDelta > 0 ? l10n.increased : l10n.decreased;
-      insights.add(l10n.studyTimeDeltaMsg(action, percent));
+    final currAvg = current.weeklyAverageStudyHours;
+    final prevAvg = previous!.weeklyAverageStudyHours;
+
+    if (prevAvg > 0 && current.totalTrackedSessions > 3) {
+      final diff = currAvg - prevAvg;
+      final percentChange = (diff.abs() / prevAvg * 100).round();
+      
+      if (diff > 0 && percentChange >= 5) {
+        insights.add(l10n.studyTimeDeltaMsg(l10n.increased, percentChange));
+      } else if (diff < 0 && percentChange >= 5) {
+        insights.add(l10n.studyTimeDeltaMsg(l10n.decreased, percentChange));
+      }
     }
 
     // 2. Task Completion Analysis

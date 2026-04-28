@@ -114,16 +114,16 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                               width: tabWidth,
                               child: Center(
                                 child: Container(
-                                  width: 64,
-                                  height: 64,
+                                  width: 58,
+                                  height: 58,
                                   decoration: BoxDecoration(
                                     color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.2,
+                                      alpha: 0.15,
                                     ),
-                                    borderRadius: BorderRadius.circular(24),
+                                    borderRadius: BorderRadius.circular(18),
                                     border: Border.all(
                                       color: theme.colorScheme.primary
-                                          .withValues(alpha: 0.15),
+                                          .withValues(alpha: 0.1),
                                     ),
                                   ),
                                 ),
@@ -196,8 +196,8 @@ class _NavItemState extends State<_NavItem> {
   @override
   Widget build(BuildContext context) {
     final unselectedColor = widget.theme.brightness == Brightness.light
-        ? Colors.black.withValues(alpha: 0.5)
-        : Colors.white.withValues(alpha: 0.5);
+        ? Colors.black.withValues(alpha: 0.45)
+        : Colors.white.withValues(alpha: 0.45);
 
     final baseColor = widget.isSelected
         ? widget.theme.colorScheme.primary
@@ -207,8 +207,8 @@ class _NavItemState extends State<_NavItem> {
         ? widget.theme.colorScheme.primary
         : unselectedColor;
 
-    final iconScaleBase = widget.isSelected ? 1.08 : 1.0;
-    final iconScale = _isPressed ? iconScaleBase * 0.9 : iconScaleBase;
+    final iconScaleBase = widget.isSelected ? 1.05 : 1.0;
+    final iconScale = _isPressed ? iconScaleBase * 0.92 : iconScaleBase;
 
     return GestureDetector(
       onTapDown: (_) {
@@ -231,7 +231,7 @@ class _NavItemState extends State<_NavItem> {
       child: AnimatedSlide(
         duration: AppDurations.fast,
         curve: Curves.easeOut,
-        offset: widget.isSelected ? const Offset(0, -0.05) : Offset.zero,
+        offset: widget.isSelected ? const Offset(0, -0.02) : Offset.zero,
         child: AnimatedScale(
           scale: iconScale,
           duration: AppDurations.fast,
@@ -242,29 +242,31 @@ class _NavItemState extends State<_NavItem> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: [
-                AppIcon(widget.icon, color: baseColor, size: 24)
+                AppIcon(widget.icon, color: baseColor, size: 20)
                     .animate(target: widget.isSelected ? 1 : 0)
                     .scale(
                       begin: const Offset(1, 1),
-                      end: const Offset(1.1, 1.1),
+                      end: const Offset(1.05, 1.05),
                       duration: 220.ms,
                       curve: Curves.easeOutBack,
                     ),
-                if (widget.isSelected) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  AnimatedDefaultTextStyle(
-                    duration: AppDurations.normal,
-                    curve: Curves.easeOut,
-                    style:
-                        (widget.theme.textTheme.bodySmall ??
-                                const TextStyle(fontSize: 10))
-                            .copyWith(
-                              color: labelColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                    child: Text(widget.label),
+                const SizedBox(height: 2),
+                AnimatedDefaultTextStyle(
+                  duration: AppDurations.normal,
+                  curve: Curves.easeOut,
+                  style: (widget.theme.textTheme.labelSmall ??
+                          const TextStyle(fontSize: 8))
+                      .copyWith(
+                    color: labelColor,
+                    fontWeight: widget.isSelected ? FontWeight.w800 : FontWeight.w500,
+                    fontSize: 9.5,
                   ),
-                ],
+                  child: Text(
+                    widget.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),

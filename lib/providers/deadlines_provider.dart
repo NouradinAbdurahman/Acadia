@@ -35,14 +35,14 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
 
   Future<void> refresh() async {
     final userId = supabaseClient.auth.currentUser?.id;
-    final semesterId = _ref.read(activeSemesterProvider);
+    final semesterId = _ref.read(activeSemesterProvider).value;
     if (userId != null) {
       await loadDeadlines(userId: userId, semesterId: semesterId);
     }
   }
 
   Future<void> createDeadline(Deadline deadline) async {
-    final semesterId = _ref.read(activeSemesterProvider);
+    final semesterId = _ref.read(activeSemesterProvider).value;
     if (semesterId == null) {
       throw Exception('No active semester set. Cannot create deadline.');
     }
@@ -139,16 +139,24 @@ final deadlinesProvider =
     StateNotifierProvider<DeadlinesNotifier, AsyncValue<List<Deadline>>>((ref) {
       final repo = ref.watch(deadlineRepositoryProvider);
       final userId = ref.watch(currentUserProvider)?.id;
-      final semesterId = ref.watch(activeSemesterProvider);
+      final semesterIdAsync = ref.watch(activeSemesterProvider);
       final supabase = Supabase.instance.client;
       final notifier = DeadlinesNotifier(
         ref: ref,
         deadlineRepository: repo,
         supabaseClient: supabase,
       );
-      if (userId != null) {
-        notifier.loadDeadlines(userId: userId, semesterId: semesterId);
-      }
+
+      semesterIdAsync.when(
+        data: (id) {
+          if (userId != null && id != null) {
+            notifier.loadDeadlines(userId: userId, semesterId: id);
+          }
+        },
+        loading: () => {},
+        error: (_, __) => {},
+      );
+
       return notifier;
     });
 

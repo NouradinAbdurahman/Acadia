@@ -35,4 +35,11 @@ class NotificationService {
         .select()
         .single();
   }
+
+  Future<void> markAllAsRead(List<String> ids) async {
+    await _supabase
+        .from('notifications')
+        .update({'is_read': true})
+        .inFilter('id', ids);
+  }
 }

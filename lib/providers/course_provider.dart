@@ -8,9 +8,19 @@ import 'semester_provider.dart';
 
 final courseProvider = StateNotifierProvider<CourseNotifier, AsyncValue<List<Course>>>((ref) {
   final repo = ref.watch(courseRepositoryProvider);
-  final semesterId = ref.watch(activeSemesterProvider);
+  final semesterIdAsync = ref.watch(activeSemesterProvider);
   final notifier = CourseNotifier(repo, ref: ref);
-  notifier.loadCourses(semesterId: semesterId);
+  
+  semesterIdAsync.when(
+    data: (id) {
+      if (id != null) {
+        notifier.loadCourses(semesterId: id);
+      }
+    },
+    loading: () => {}, // Notifier starts in loading state by default
+    error: (_, __) => {},
+  );
+  
   return notifier;
 });
 
@@ -21,14 +31,12 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
   CourseNotifier(this._repository, {this.ref}) : super(const AsyncValue.loading());
 
 
-  // Holds the last non-empty result so we never show a false empty state during refresh.
-  List<Course>? _lastKnownCourses;
-
   Future<void> loadCourses({String? semesterId}) async {
-    // Preserve previous data during refresh so UI doesn't blank/flicker.
-    state = const AsyncValue<List<Course>>.loading().copyWithPrevious(state);
+    state = const AsyncValue<List<Course>>.loading();
     try {
       final courses = await _repository.getCourses(semesterId: semesterId);
+      
+      debugPrint('[CourseProvider] Loading for Semester: $semesterId | Data Count: ${courses.length}');
 
       // Migration safety: if legacy rows are missing semesterId, backfill to active semester.
       if (semesterId != null) {
@@ -53,16 +61,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
 
       if (!mounted) return;
 
-      // 🛡️ Empty-result guard: if the DB momentarily returns [] during a refresh,
-      // keep showing the last known data rather than flashing an empty state.
-      // An empty result is only trusted when there is no previous data (first load).
-      if (normalized.isEmpty && _lastKnownCourses != null && _lastKnownCourses!.isNotEmpty) {
-        debugPrint('[CourseNotifier] Refresh returned empty — keeping last known courses (${_lastKnownCourses!.length})');
-        state = AsyncValue.data(_lastKnownCourses!);
-        return;
-      }
-
-      _lastKnownCourses = normalized;
+      if (!mounted) return;
       state = AsyncValue.data(normalized);
     } catch (e, st) {
       if (!mounted) return;
@@ -72,7 +71,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
 
   Future<void> addCourse(Course course) async {
     try {
-      final semesterId = ref?.read(activeSemesterProvider);
+      final semesterId = ref?.read(activeSemesterProvider).value;
       if (semesterId == null) return;
       final courseWithSemester = course.copyWith(semesterId: semesterId);
       await _repository.createCourse(courseWithSemester);
@@ -85,7 +84,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
 
   Future<void> updateCourse(Course course) async {
     try {
-      final semesterId = ref?.read(activeSemesterProvider);
+      final semesterId = ref?.read(activeSemesterProvider).value;
       if (semesterId == null) return;
       await _repository.updateCourse(course.copyWith(semesterId: semesterId));
       await loadCourses(semesterId: semesterId);
@@ -96,7 +95,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
 
   Future<void> deleteCourse(String id) async {
     try {
-      final semesterId = ref?.read(activeSemesterProvider);
+      final semesterId = ref?.read(activeSemesterProvider).value;
       await _repository.deleteCourse(id);
       await loadCourses(semesterId: semesterId);
     } catch (e) {

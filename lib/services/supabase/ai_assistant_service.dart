@@ -6,7 +6,11 @@ class AiAssistantService {
 
   AiAssistantService(this._client);
 
-  Future<Map<String, dynamic>> sendMessage(List<AiMessage> history, String? semesterId) async {
+  Future<Map<String, dynamic>> sendMessage(
+    List<AiMessage> history,
+    String? semesterId, {
+    Map<String, dynamic>? moodContext,
+  }) async {
     // Convert message history to the format expected by the Edge Function (OpenAI format)
     // Limit to last 6 messages to keep context window manageable and snappy
     final messages = history.reversed.take(6).toList().reversed.map((m) => {
@@ -21,6 +25,7 @@ class AiAssistantService {
       body: {
         'messages': messages,
         'semesterId': semesterId,
+        if (moodContext != null) 'moodContext': moodContext,
       },
     ).timeout(const Duration(seconds: 30));
 

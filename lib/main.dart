@@ -49,15 +49,22 @@ import 'providers/onboarding_provider.dart';
 import 'providers/app_providers.dart';
 import 'providers/realtime_provider.dart';
 import 'providers/semester_goal_refresh_provider.dart';
+import 'providers/analytics_provider.dart';
+import 'providers/tasks_provider.dart';
+import 'providers/semester_provider.dart';
+import 'models/task.dart';
+import 'services/background_notification_service.dart';
+import 'services/notification_intelligence_service.dart';
+
+import 'package:firebase_core/firebase_core.dart';
 
 // We declare a globally accessible navigator key to handle programmatic pushes if necessary
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Notifications
-  await NotificationService.init();
+  
+  await Firebase.initializeApp();
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -70,6 +77,13 @@ Future<void> main() async {
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  );
+
+  // Initialize Notifications (must be after Supabase initialization)
+  await NotificationService.init();
+  await BackgroundNotificationService.initialize(
+    supabaseUrl: dotenv.env['SUPABASE_URL'] ?? '',
+    supabaseAnonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
   runApp(const ProviderScope(child: MyApp()));
@@ -85,7 +99,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final themeLoaded = ref.watch(themeLoadedProvider);
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: Listenable.merge([
       GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
@@ -478,8 +492,34 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
+
+  @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  bool _didInitialEvaluate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _evaluateIntelligence();
+    }
+  }
 
   SystemUiOverlayStyle _overlayStyleForTheme(ThemeMode themeMode) {
     final platformBrightness =
@@ -496,14 +536,48 @@ class MyApp extends ConsumerWidget {
     );
   }
 
+  Future<void> _evaluateIntelligence() async {
+    final analytics = ref.read(analyticsProvider).valueOrNull;
+    if (analytics == null) return;
+
+    Future<List<Task>> fetcher() async {
+      final userId = ref.read(currentUserProvider)?.id;
+      final semesterId = ref.read(activeSemesterProvider).value;
+      if (userId == null) return <Task>[];
+
+      try {
+        final repo = ref.read(taskRepositoryProvider);
+        return await repo.getTasks(userId: userId, semesterId: semesterId);
+      } catch (_) {
+        return ref.read(tasksProvider).valueOrNull ?? <Task>[];
+      }
+    }
+
+    await NotificationIntelligenceService.evaluateForeground(
+      analytics: analytics,
+      fetchTasks: fetcher,
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     ref.read(realtimeProvider);
-    ref.read(semesterGoalRefreshProvider);
+    ref.watch(semesterGoalRefreshProvider);
+    ref.listen(analyticsProvider, (prev, next) {
+      next.whenData((_) => _evaluateIntelligence());
+    });
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeProvider);
     final overlayStyle = _overlayStyleForTheme(themeMode);
+
+    if (!_didInitialEvaluate) {
+      _didInitialEvaluate = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _evaluateIntelligence();
+      });
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlayStyle,

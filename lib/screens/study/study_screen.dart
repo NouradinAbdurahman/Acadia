@@ -30,6 +30,7 @@ import '../../providers/decision_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../l10n/app_localizations.dart';
 import '../../l10n/l10n_extension.dart';
+import '../../domain/decision/decision_rules.dart';
 import 'study_history_screen.dart';
 
 // ─── Minimum / Maximum session constraints ───────────────────────
@@ -69,7 +70,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         if (!isIdle) return;
 
         final analytics = ref.read(studyAnalyticsProvider);
-        final minutes = _recommendedDurationForMode(analytics, next);
+        final minutes = _recommendedDurationForMode(analytics, next, ref);
         ref.read(studyTimerProvider.notifier).setDuration(Duration(minutes: minutes));
       },
     );
@@ -105,7 +106,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
             final adaptationMode = ref.read(studyAdaptationModeProvider);
             notifier.setDuration(
               Duration(
-                minutes: _recommendedDurationForMode(analytics, adaptationMode),
+                minutes: _recommendedDurationForMode(analytics, adaptationMode, ref),
               ),
             );
           }
@@ -157,9 +158,10 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     return ((minutes / 5).round() * 5).clamp(5, 240);
   }
 
-  int _recommendedDurationForMode(StudyAnalytics analytics, AdaptationMode mode) {
+  int _recommendedDurationForMode(StudyAnalytics analytics, AdaptationMode mode, WidgetRef ref) {
+    final stress = ref.read(analyticsProvider).value?.avgSessionStress ?? 0.0;
     if (mode == AdaptationMode.followBehavior) {
-      return analytics.recommendedDurationForMode(mode).clamp(30, 45);
+      return DecisionRules.getRecommendedSessionLength(stress);
     }
     return 60;
   }
@@ -219,7 +221,8 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         final extra = routeState.extra as Map<String, dynamic>?;
         if (extra != null && extra['source'] == 'analytics') {
           _handledAnalyticsArgs = true; // Mark as handled
-          final suggested = (extra['duration'] as int?) ?? 45;
+          final stress = ref.read(analyticsProvider).value?.avgSessionStress ?? 0.0;
+          final suggested = (extra['duration'] as int?) ?? DecisionRules.getRecommendedSessionLength(stress);
           if (isIdle && timerState.targetDuration.inMinutes != suggested) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
@@ -367,7 +370,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final adaptationMode = ref.watch(studyAdaptationModeProvider);
     final profile = ref.watch(studentProfileProvider).valueOrNull;
     final decision = ref.watch(decisionProvider);
-    final suggestedMinutes = decision.suggestedSessionMinutes ?? _recommendedDurationForMode(analytics, adaptationMode);
+    final suggestedMinutes = decision.suggestedSessionMinutes ?? _recommendedDurationForMode(analytics, adaptationMode, ref);
     final followBehavior = adaptationMode == AdaptationMode.followBehavior;
     final dominantSlot = analytics.dominantStudyTime;
     final hasStableSignal = analytics.hasReliableBehaviorSignal;
@@ -466,7 +469,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                       .read(studyTimerProvider.notifier)
                       .setDuration(
                         Duration(
-                          minutes: _recommendedDurationForMode(analytics, next),
+                          minutes: _recommendedDurationForMode(analytics, next, ref),
                         ),
                       );
                 },
@@ -495,7 +498,15 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-              if (isBehindGoal)
+              if (decision.avgSessionStress >= 7)
+                Text(
+                  l10n.recoveryMessageStressHigh,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
+                  ),
+                )
+              else if (isBehindGoal)
                 Text(
                   l10n.needHoursTodayToStayOnTrack(
                     '~${dailyTargetHours.toStringAsFixed(1)}',
@@ -814,7 +825,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
         if (decision.suggestedSessionMinutes != null) ...[
           Text(
-            l10n.get('decisionRecommendedSession', {'minutes': decision.suggestedSessionMinutes!}),
+            l10n.decisionRecommendedSession(decision.suggestedSessionMinutes!),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w700,

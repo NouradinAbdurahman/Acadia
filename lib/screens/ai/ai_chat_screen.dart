@@ -55,33 +55,8 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     }
   }
 
-  void _handleAction(String intent) {
-    switch (intent) {
-      case "plan_today":
-        ref.read(aiAssistantProvider.notifier).sendMessage("Help me plan my day");
-        break;
-      case "plan_week":
-        ref.read(aiAssistantProvider.notifier).sendMessage("What should my plan for this week look like?");
-        break;
-      case "email_summary":
-        ref.read(aiAssistantProvider.notifier).sendMessage("Could you send this summary to my email?");
-        break;
-      case "deadlines":
-        ref.read(aiAssistantProvider.notifier).sendMessage("What are my upcoming deadlines?");
-        break;
-      case "tasks":
-        ref.read(aiAssistantProvider.notifier).sendMessage("Can you show me my tasks?");
-        break;
-      case "summary":
-        ref.read(aiAssistantProvider.notifier).sendMessage("Can you summarize my academic week for me?");
-        break;
-      case "email_tasks":
-        ref.read(aiAssistantProvider.notifier).sendMessage("Please send my task list to my email");
-        break;
-      case "focus_now":
-        ref.read(aiAssistantProvider.notifier).sendMessage("What should I focus on right now?");
-        break;
-    }
+  void _handleAction(String action) {
+    ref.read(aiAssistantProvider.notifier).sendMessage(action);
   }
 
   List<_ActionItem> _getSmartActions(AiMessage? last) {
@@ -93,18 +68,10 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       ];
     }
 
-    // 1. Use Dynamic Suggestions from Backend if available
+    // Use Dynamic Suggestions from Backend if available
     if (last.suggestions != null && last.suggestions!.isNotEmpty) {
       return last.suggestions!.map((s) {
-        if (s.contains("plan week")) return _ActionItem("Plan week", "plan_week", Icons.calendar_view_week);
-        if (s.contains("plan today")) return _ActionItem("Plan today", "plan_today", Icons.today);
-        if (s.contains("focus")) return _ActionItem("Focus now", "focus_now", Icons.bolt);
-        if (s.contains("email plan")) return _ActionItem("Email plan", "email_tasks", Icons.mail_outline);
-        if (s.contains("email")) return _ActionItem("Email this", "email_tasks", Icons.mail_outline);
-        if (s.contains("deadlines")) return _ActionItem("Deadlines", "deadlines", Icons.timer_outlined);
-        if (s.contains("tasks") || s.contains("todo")) return _ActionItem("Tasks", "tasks", Icons.task_alt);
-        if (s.contains("summary")) return _ActionItem("Summary", "summary", Icons.summarize_outlined);
-        return _ActionItem(s, s.replaceAll(" ", "_"), Icons.arrow_forward);
+        return _ActionItem(s, s, Icons.arrow_forward);
       }).toList();
     }
 
@@ -134,7 +101,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final semesterId = ref.watch(activeSemesterProvider);
+    final semesterId = ref.watch(activeSemesterProvider).value;
     final state = ref.watch(aiAssistantProvider);
     final messages = state.messagesFor(semesterId);
     
@@ -174,7 +141,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
               )
             ),
             Builder(builder: (context) {
-              final semesterId = ref.watch(activeSemesterProvider);
+              final semesterId = ref.watch(activeSemesterProvider).value;
               final state = ref.watch(aiAssistantProvider);
               final messages = state.messagesFor(semesterId);
               final lastMsg = messages.isEmpty ? null : messages.lastWhere((m) => !m.isUser, orElse: () => messages.last);
@@ -275,23 +242,15 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
             child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 40),
           ),
           const SizedBox(height: 24),
-          Builder(builder: (context) {
-            final hour = DateTime.now().hour;
-            String greeting;
-            if (hour >= 5 && hour < 12) greeting = "Good morning";
-            else if (hour >= 12 && hour < 17) greeting = "Good afternoon";
-            else greeting = "Good evening";
-            
-            return Text(
-              '$greeting, ready to focus?',
-              style: TextStyle(
-                color: AppColors.textPrimary(context),
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
-              ),
-            );
-          }),
+          Text(
+            'How can I help with your studies today?',
+            style: TextStyle(
+              color: AppColors.textPrimary(context),
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
           const SizedBox(height: 12),
           Text(
             'I can help you plan your day, organize your week,\nor focus on what matters most.',
@@ -345,7 +304,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
 
   Widget _buildProactiveHints(BuildContext context) {
-    final semesterId = ref.watch(activeSemesterProvider);
+    final semesterId = ref.watch(activeSemesterProvider).value;
     final state = ref.watch(aiAssistantProvider);
     final messages = state.messagesFor(semesterId);
     final lastAiMessage = messages.isEmpty ? null : messages.lastWhere((m) => !m.isUser, orElse: () => messages.last);
@@ -516,14 +475,9 @@ class _MessageBubble extends ConsumerWidget {
       ));
     }
 
-    if (message.type == 'text' && (message.text.toLowerCase().contains('acadia') || message.text.toLowerCase().contains('help'))) {
+    if (message.type == 'tasks') {
       chips.add(_ActionChip(
-        label: 'Show my tasks',
-        icon: Icons.task_alt,
-        onPressed: () => ref.read(aiAssistantProvider.notifier).sendMessage("What tasks do I have for this week?"),
-      ));
-      chips.add(_ActionChip(
-        label: 'View deadlines',
+        label: 'What are my deadlines?',
         icon: Icons.timer_outlined,
         onPressed: () => ref.read(aiAssistantProvider.notifier).sendMessage("What are my upcoming deadlines?"),
       ));
@@ -981,6 +935,8 @@ class _TaskDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (data is! Map) return const SizedBox.shrink();
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1158,6 +1114,8 @@ class _SummaryDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (data is! Map) return const SizedBox.shrink();
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1344,7 +1302,7 @@ class _RecommendationCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              data['message'] ?? 'Stay focused and keep studying!',
+              data['message'] ?? 'Summary not available.',
               style: TextStyle(
                 color: AppColors.textPrimary(context),
                 fontSize: 13,

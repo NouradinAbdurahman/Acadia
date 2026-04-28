@@ -1586,6 +1586,24 @@ abstract class AppLocalizations {
   /// **'High Risk'**
   String get highRisk;
 
+  /// No description provided for @riskLevelCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical'**
+  String get riskLevelCritical;
+
+  /// No description provided for @riskLevelWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning'**
+  String get riskLevelWarning;
+
+  /// No description provided for @riskLevelSafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe'**
+  String get riskLevelSafe;
+
   /// No description provided for @riskScore.
   ///
   /// In en, this message translates to:
@@ -2375,7 +2393,7 @@ abstract class AppLocalizations {
   /// No description provided for @notEnoughData.
   ///
   /// In en, this message translates to:
-  /// **'Not enough data yet'**
+  /// **'Start tracking to see trends'**
   String get notEnoughData;
 
   /// No description provided for @addCoursesPrompt.
@@ -2477,7 +2495,7 @@ abstract class AppLocalizations {
   /// No description provided for @thisWeekLabel.
   ///
   /// In en, this message translates to:
-  /// **'This week'**
+  /// **'This Week'**
   String get thisWeekLabel;
 
   /// No description provided for @noCourseSelected.
@@ -2618,6 +2636,18 @@ abstract class AppLocalizations {
   /// **'Study deficit'**
   String get riskStudyDeficit;
 
+  /// No description provided for @riskSessionStress.
+  ///
+  /// In en, this message translates to:
+  /// **'Session stress'**
+  String get riskSessionStress;
+
+  /// No description provided for @riskConsistencyImpact.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency impact'**
+  String get riskConsistencyImpact;
+
   /// No description provided for @riskStatusMessage.
   ///
   /// In en, this message translates to:
@@ -2648,6 +2678,72 @@ abstract class AppLocalizations {
   /// **'You are in a safe range. Keep your current progress.'**
   String get riskInterpretationLow;
 
+  /// No description provided for @riskInterpretationStudyDeficit.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase study time immediately'**
+  String get riskInterpretationStudyDeficit;
+
+  /// No description provided for @studyDeficitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'High Study Deficit'**
+  String get studyDeficitTitle;
+
+  /// No description provided for @studyDeficitBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase study time immediately to stay on track.'**
+  String get studyDeficitBody;
+
+  /// No description provided for @decisionHighSessionStressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'High Study Stress'**
+  String get decisionHighSessionStressTitle;
+
+  /// No description provided for @decisionHighSessionStressBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce session length to 30-40 min to prevent burnout.'**
+  String get decisionHighSessionStressBody;
+
+  /// No description provided for @decisionLowConsistencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build Study Consistency'**
+  String get decisionLowConsistencyTitle;
+
+  /// No description provided for @decisionLowConsistencyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix your schedule before increasing workload.'**
+  String get decisionLowConsistencyBody;
+
+  /// No description provided for @burnoutExplanationNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Burnout risk is driven by sustained high stress and severe study deficit.'**
+  String get burnoutExplanationNew;
+
+  /// No description provided for @startTrackingToSeeTrends.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking to see trends'**
+  String get startTrackingToSeeTrends;
+
+  /// No description provided for @noGpaDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No GPA data available'**
+  String get noGpaDataAvailable;
+
+  /// No description provided for @riskInterpretationFocusTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on completing tasks'**
+  String get riskInterpretationFocusTasks;
+
   /// No description provided for @riskHoursRemaining.
   ///
   /// In en, this message translates to:
@@ -2659,6 +2755,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Goal reached!'**
   String get riskGoalReached;
+
+  /// No description provided for @historicalConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Historical consistency'**
+  String get historicalConsistency;
+
+  /// No description provided for @historicalConsistencyScoreLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Historical consistency: {score}% ({trend})'**
+  String historicalConsistencyScoreLine(Object score, Object trend);
+
+  /// No description provided for @weeklyConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'This week consistency'**
+  String get weeklyConsistency;
+
+  /// No description provided for @decisionHighStressOverrideTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce workload'**
+  String get decisionHighStressOverrideTitle;
+
+  /// No description provided for @decisionHighStressOverrideBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on shorter sessions to prevent burnout.'**
+  String get decisionHighStressOverrideBody;
+
+  /// No description provided for @riskExplanationLowStudyHighStress.
+  ///
+  /// In en, this message translates to:
+  /// **'High Risk due to low study activity and high stress'**
+  String get riskExplanationLowStudyHighStress;
+
+  /// No description provided for @riskExplanationDeficitOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'High Risk due to severe study deficit'**
+  String get riskExplanationDeficitOnly;
+
+  /// No description provided for @riskExplanationStressOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'High Risk due to critical stress levels'**
+  String get riskExplanationStressOnly;
+
+  /// No description provided for @riskExplanationGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'High Risk due to combined academic signals'**
+  String get riskExplanationGeneric;
 
   /// No description provided for @riskReasonOverdue.
   ///
@@ -3089,7 +3239,7 @@ abstract class AppLocalizations {
   /// No description provided for @trendNotEnoughData.
   ///
   /// In en, this message translates to:
-  /// **'Not enough data'**
+  /// **'Insufficient data'**
   String get trendNotEnoughData;
 
   /// No description provided for @trendStable.
@@ -3230,6 +3380,30 @@ abstract class AppLocalizations {
   /// **'Your activity is low and task progress is incomplete. Focus on completing tasks and increasing study time.'**
   String get trendStatusNeedsFocusDetail;
 
+  /// No description provided for @trendStatusLowActivityHighCompletion.
+  ///
+  /// In en, this message translates to:
+  /// **'Your activity is low, but task completion is strong.'**
+  String get trendStatusLowActivityHighCompletion;
+
+  /// No description provided for @trendStatusNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get trendStatusNeedsAttention;
+
+  /// No description provided for @trendStatusNeedsImprovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs improvement'**
+  String get trendStatusNeedsImprovement;
+
+  /// No description provided for @trendStatusCriticalRiskDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk factors identified. Review your study habits.'**
+  String get trendStatusCriticalRiskDetail;
+
   /// No description provided for @trendInsightBuildConsistencyTitle.
   ///
   /// In en, this message translates to:
@@ -3295,6 +3469,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Performance improving'**
   String get trendInsightPerformanceImprovingTitle;
+
+  /// No description provided for @trendInsightPerformanceStableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance stable'**
+  String get trendInsightPerformanceStableTitle;
 
   /// No description provided for @trendInsightStableTitle.
   ///
@@ -3362,11 +3542,65 @@ abstract class AppLocalizations {
   /// **'Performance trend is improving. Keep the same study consistency.'**
   String get trendInsightPerformanceImprovingMessage;
 
+  /// No description provided for @trendInsightPerformanceStableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance trend is stable. Keep up the consistent effort.'**
+  String get trendInsightPerformanceStableMessage;
+
   /// No description provided for @trendInsightStableMessage.
   ///
   /// In en, this message translates to:
   /// **'No significant change yet. Keep logging consistently.'**
   String get trendInsightStableMessage;
+
+  /// No description provided for @trendInsightLimitedDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited data for period'**
+  String get trendInsightLimitedDataTitle;
+
+  /// No description provided for @trendInsightLimitedDataMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough sessions tracked in this specific time range to calculate reliable trends.'**
+  String get trendInsightLimitedDataMessage;
+
+  /// No description provided for @trendWorsening.
+  ///
+  /// In en, this message translates to:
+  /// **'Worsening'**
+  String get trendWorsening;
+
+  /// No description provided for @trendUnstable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstable'**
+  String get trendUnstable;
+
+  /// No description provided for @trendModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get trendModerate;
+
+  /// No description provided for @recoveryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are recovering. Keep this pattern.'**
+  String get recoveryMessage;
+
+  /// No description provided for @burnoutTrendNoHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data to detect trend yet.'**
+  String get burnoutTrendNoHistory;
+
+  /// No description provided for @burnoutTrendNoRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'No recovery trend detected yet.'**
+  String get burnoutTrendNoRecovery;
 
   /// No description provided for @dashboardRiskLevelTitle.
   ///
@@ -3830,6 +4064,18 @@ abstract class AppLocalizations {
   /// **'Confidence: Medium'**
   String get confidenceMedium;
 
+  /// No description provided for @confidenceLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: Low'**
+  String get confidenceLow;
+
+  /// No description provided for @basedOnSessions.
+  ///
+  /// In en, this message translates to:
+  /// **'(based on {count} sessions)'**
+  String basedOnSessions(int count);
+
   /// No description provided for @gettingStarted.
   ///
   /// In en, this message translates to:
@@ -3865,6 +4111,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Declining'**
   String get statusDeclining;
+
+  /// No description provided for @statusModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get statusModerate;
 
   /// No description provided for @trySessionNow.
   ///
@@ -3973,6 +4225,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Variable'**
   String get statusVariable;
+
+  /// No description provided for @burnoutTrendForming.
+  ///
+  /// In en, this message translates to:
+  /// **'Burnout risk is driven by sustained high study stress and severe study deficit.'**
+  String get burnoutTrendForming;
+
+  /// No description provided for @burnoutRiskIncreasing.
+  ///
+  /// In en, this message translates to:
+  /// **'Risk is increasing due to low consistency and goal deficit.'**
+  String get burnoutRiskIncreasing;
+
+  /// No description provided for @burnoutReasonBehindGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'You are behind your weekly goal by {hours}h.'**
+  String burnoutReasonBehindGoal(String hours);
+
+  /// No description provided for @burnoutReasonInconsistent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your study pattern is inconsistent this week.'**
+  String get burnoutReasonInconsistent;
+
+  /// No description provided for @burnoutReasonFrequentSwitching.
+  ///
+  /// In en, this message translates to:
+  /// **'You are switching study times frequently.'**
+  String get burnoutReasonFrequentSwitching;
+
+  /// No description provided for @burnoutReasonLoadAboveGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Your total study load is above your weekly goal.'**
+  String get burnoutReasonLoadAboveGoal;
+
+  /// No description provided for @burnoutReasonNoSignals.
+  ///
+  /// In en, this message translates to:
+  /// **'No major burnout signals detected yet.'**
+  String get burnoutReasonNoSignals;
+
+  /// No description provided for @burnoutReasonDeficit.
+  ///
+  /// In en, this message translates to:
+  /// **'You are falling behind your weekly study goal.'**
+  String get burnoutReasonDeficit;
+
+  /// No description provided for @burnoutReasonStress.
+  ///
+  /// In en, this message translates to:
+  /// **'High stress detected during study sessions.'**
+  String get burnoutReasonStress;
+
+  /// No description provided for @burnoutReasonConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Low study consistency over the last 7 days.'**
+  String get burnoutReasonConsistency;
+
+  /// No description provided for @burnoutReasonMood.
+  ///
+  /// In en, this message translates to:
+  /// **'A declining mood trend has been detected.'**
+  String get burnoutReasonMood;
+
+  /// No description provided for @burnoutRecStable1.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your current routine steady.'**
+  String get burnoutRecStable1;
+
+  /// No description provided for @burnoutRecStable2.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue tracking your weekly goal.'**
+  String get burnoutRecStable2;
+
+  /// No description provided for @burnoutRecWarning1.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce session length a little.'**
+  String get burnoutRecWarning1;
+
+  /// No description provided for @burnoutRecWarning2.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your study time in one consistent slot.'**
+  String get burnoutRecWarning2;
+
+  /// No description provided for @burnoutRecHighRisk1.
+  ///
+  /// In en, this message translates to:
+  /// **'Shorten sessions and take breaks more often.'**
+  String get burnoutRecHighRisk1;
+
+  /// No description provided for @burnoutRecHighRisk2.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on one study time window this week.'**
+  String get burnoutRecHighRisk2;
+
+  /// No description provided for @burnoutRecHighRisk3.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a recovery day if you feel drained.'**
+  String get burnoutRecHighRisk3;
+
+  /// No description provided for @burnoutRecRisk1.
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce session length right away.'**
+  String get burnoutRecRisk1;
+
+  /// No description provided for @burnoutRecRisk2.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase break frequency and simplify goals.'**
+  String get burnoutRecRisk2;
+
+  /// No description provided for @burnoutRecRisk3.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a recovery day before pushing harder.'**
+  String get burnoutRecRisk3;
 
   /// No description provided for @overloadWarning.
   ///
@@ -4631,7 +5009,7 @@ abstract class AppLocalizations {
   /// No description provided for @burnoutInputsHumanized.
   ///
   /// In en, this message translates to:
-  /// **'• You are {deficit}h behind and your study timing is inconsistent ({inconsistency}%).'**
+  /// **'• Study deficit: {deficit}h\n• Consistency: {inconsistency}%'**
   String burnoutInputsHumanized(String deficit, int inconsistency);
 
   /// No description provided for @patternIrregularThisWeek.
@@ -4790,12 +5168,6 @@ abstract class AppLocalizations {
   /// **'Your load is high and your routine is becoming unstable.'**
   String get burnoutExplanationBurnoutRisk;
 
-  /// No description provided for @burnoutReasonBehindGoal.
-  ///
-  /// In en, this message translates to:
-  /// **'You are behind your weekly goal by {hours}h.'**
-  String burnoutReasonBehindGoal(String hours);
-
   /// No description provided for @burnoutReasonInconsistentPattern.
   ///
   /// In en, this message translates to:
@@ -4807,12 +5179,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You are switching study times frequently.'**
   String get burnoutReasonSwitchingTimes;
-
-  /// No description provided for @burnoutReasonLoadAboveGoal.
-  ///
-  /// In en, this message translates to:
-  /// **'Your total study load is above your weekly goal.'**
-  String get burnoutReasonLoadAboveGoal;
 
   /// No description provided for @burnoutReasonNoMajorSignals.
   ///
@@ -5084,6 +5450,12 @@ abstract class AppLocalizations {
   /// **'Suggested: 3-4 shorter sessions today'**
   String get suggestedShorterSessionsToday;
 
+  /// No description provided for @recoveryMessageStressHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus on shorter sessions today to avoid burnout'**
+  String get recoveryMessageStressHigh;
+
   /// No description provided for @needHoursTodayToStayOnTrack.
   ///
   /// In en, this message translates to:
@@ -5177,7 +5549,7 @@ abstract class AppLocalizations {
   /// No description provided for @moodFactors.
   ///
   /// In en, this message translates to:
-  /// **'Contributing Factors'**
+  /// **'Factors'**
   String get moodFactors;
 
   /// No description provided for @moodFactorSleep.
@@ -5342,6 +5714,36 @@ abstract class AppLocalizations {
   /// **'Mood over last 7 days'**
   String get moodLast7Days;
 
+  /// No description provided for @moodOverLastDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood over last {count} days'**
+  String moodOverLastDays(int count);
+
+  /// No description provided for @moodKeepLogging.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep logging your mood'**
+  String get moodKeepLogging;
+
+  /// No description provided for @moodTrendNeedsData.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep logging your mood to see your personal emotional trend chart.'**
+  String get moodTrendNeedsData;
+
+  /// No description provided for @dailyMoodHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Mood History'**
+  String get dailyMoodHistory;
+
+  /// No description provided for @olderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Older'**
+  String get olderLabel;
+
   /// No description provided for @decisionSmartInsights.
   ///
   /// In en, this message translates to:
@@ -5393,61 +5795,55 @@ abstract class AppLocalizations {
   /// No description provided for @decisionLowActivityHighStress.
   ///
   /// In en, this message translates to:
-  /// **'Low activity but high stress detected'**
+  /// **'Low Activity, High Stress'**
   String get decisionLowActivityHighStress;
 
   /// No description provided for @decisionLightTasksOnly.
   ///
   /// In en, this message translates to:
-  /// **'Focus on light tasks only today'**
+  /// **'Mood is low today. Stick to lighter tasks.'**
   String get decisionLightTasksOnly;
 
   /// No description provided for @decisionMainFactor.
   ///
   /// In en, this message translates to:
-  /// **'Main stress source: {factor}'**
+  /// **'Main Factor: {factor}'**
   String decisionMainFactor(String factor);
 
   /// No description provided for @decisionWorstDay.
   ///
   /// In en, this message translates to:
-  /// **'You feel lowest on {day}'**
+  /// **'Difficult {day} ahead'**
   String decisionWorstDay(String day);
-
-  /// No description provided for @decisionRecommendedSession.
-  ///
-  /// In en, this message translates to:
-  /// **'Recommended session: {minutes} min'**
-  String decisionRecommendedSession(Object minutes);
 
   /// No description provided for @decisionMorningPlanning.
   ///
   /// In en, this message translates to:
-  /// **'Morning focus: plan your key tasks'**
+  /// **'Morning Strategy'**
   String get decisionMorningPlanning;
 
   /// No description provided for @decisionAfternoonExecution.
   ///
   /// In en, this message translates to:
-  /// **'Afternoon focus: execute your top task'**
+  /// **'Afternoon Peak'**
   String get decisionAfternoonExecution;
 
   /// No description provided for @decisionNightLightReview.
   ///
   /// In en, this message translates to:
-  /// **'Night focus: keep it light and review'**
+  /// **'Night Review'**
   String get decisionNightLightReview;
 
   /// No description provided for @decisionActionShortSessions.
   ///
   /// In en, this message translates to:
-  /// **'Use shorter sessions (25 min)'**
+  /// **'High stress with low activity detected. Try 15-min sessions.'**
   String get decisionActionShortSessions;
 
   /// No description provided for @decisionActionBreakDown.
   ///
   /// In en, this message translates to:
-  /// **'Break work into smaller tasks now'**
+  /// **'Break down large tasks to reduce session stress.'**
   String get decisionActionBreakDown;
 
   /// No description provided for @decisionActionMonitorWeekly.
@@ -5459,26 +5855,26 @@ abstract class AppLocalizations {
   /// No description provided for @decisionActionPlanning.
   ///
   /// In en, this message translates to:
-  /// **'Set your top 3 tasks for today'**
+  /// **'Start with planning. Clear goals reduce session anxiety.'**
   String get decisionActionPlanning;
 
   /// No description provided for @decisionActionExecution.
   ///
   /// In en, this message translates to:
-  /// **'Run one focused execution block now'**
+  /// **'Execute difficult tasks now while energy is high.'**
   String get decisionActionExecution;
 
   /// No description provided for @decisionActionLightReview.
   ///
   /// In en, this message translates to:
-  /// **'Do light review, avoid heavy workload'**
+  /// **'Stress is trending up. Consider a lighter study session.'**
   String get decisionActionLightReview;
 
   /// No description provided for @startRecommendedSession.
   ///
   /// In en, this message translates to:
   /// **'Start Recommended Session ({minutes} min)'**
-  String startRecommendedSession(Object minutes);
+  String startRecommendedSession(int minutes);
 
   /// No description provided for @smartInsightUpdated.
   ///
@@ -5520,7 +5916,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Stress {value}/10'**
-  String stressOutOfTen(Object value);
+  String stressOutOfTen(int value);
 
   /// No description provided for @takeItSlowerTodayTitle.
   ///
@@ -5531,19 +5927,19 @@ abstract class AppLocalizations {
   /// No description provided for @takeItSlowerTodayBody.
   ///
   /// In en, this message translates to:
-  /// **'High stress detected. Use shorter sessions and protect breaks.'**
+  /// **'You have multiple deadlines soon. Pace yourself.'**
   String get takeItSlowerTodayBody;
 
   /// No description provided for @strongStateTitle.
   ///
   /// In en, this message translates to:
-  /// **'You\'re in a strong state'**
+  /// **'Peak Focus State'**
   String get strongStateTitle;
 
   /// No description provided for @strongStateBody.
   ///
   /// In en, this message translates to:
-  /// **'Push deeper work while your mood is high.'**
+  /// **'You are in a great mood with low stress. Tackle a difficult task!'**
   String get strongStateBody;
 
   /// No description provided for @view.
@@ -5573,7 +5969,7 @@ abstract class AppLocalizations {
   /// No description provided for @decisionBurnoutDurationCap.
   ///
   /// In en, this message translates to:
-  /// **'Strongly recommended: Cap study sessions to 25m'**
+  /// **'Shorter sessions recommended to prevent burnout.'**
   String get decisionBurnoutDurationCap;
 
   /// No description provided for @decisionFixedSchedule.
@@ -5585,7 +5981,7 @@ abstract class AppLocalizations {
   /// No description provided for @decisionActionFixedSchedule.
   ///
   /// In en, this message translates to:
-  /// **'Use the same study slot for 3 days'**
+  /// **'Establishing a routine can lower daily session stress.'**
   String get decisionActionFixedSchedule;
 
   /// No description provided for @postSessionMoodImproved.
@@ -5610,7 +6006,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Consistency: {score}% ({trend})'**
-  String consistencyScoreLine(Object score, String trend);
+  String consistencyScoreLine(int score, String trend);
 
   /// No description provided for @predictionStressTitle.
   ///
@@ -5639,26 +6035,26 @@ abstract class AppLocalizations {
   /// No description provided for @predictionLevelHigh.
   ///
   /// In en, this message translates to:
-  /// **'HIGH'**
+  /// **'Stress trend: Increasing'**
   String get predictionLevelHigh;
 
   /// No description provided for @predictionReasonHighStressToday.
   ///
   /// In en, this message translates to:
-  /// **'Higher stress in recent days'**
-  String get predictionReasonHighStressToday;
+  /// **'Stress: {stress}/10'**
+  String predictionReasonHighStressToday(String stress);
 
   /// No description provided for @predictionReasonLowConsistency.
   ///
   /// In en, this message translates to:
-  /// **'Your study consistency is low this week'**
-  String get predictionReasonLowConsistency;
+  /// **'Consistency: {percent}%'**
+  String predictionReasonLowConsistency(String percent);
 
   /// No description provided for @predictionReasonUpcomingWorkload.
   ///
   /// In en, this message translates to:
-  /// **'Upcoming workload this week'**
-  String get predictionReasonUpcomingWorkload;
+  /// **'Deadlines: {count}'**
+  String predictionReasonUpcomingWorkload(int count);
 
   /// No description provided for @predictionMainReasonTitle.
   ///
@@ -5675,26 +6071,26 @@ abstract class AppLocalizations {
   /// No description provided for @predictionReasonStressHigh.
   ///
   /// In en, this message translates to:
-  /// **'High stress detected recently'**
-  String get predictionReasonStressHigh;
+  /// **'Stress: {stress}/10'**
+  String predictionReasonStressHigh(String stress);
 
   /// No description provided for @predictionReasonLowConsistencyDetail.
   ///
   /// In en, this message translates to:
-  /// **'Your study consistency dropped this week'**
-  String get predictionReasonLowConsistencyDetail;
+  /// **'Consistency: {delta}%'**
+  String predictionReasonLowConsistencyDetail(String delta);
 
   /// No description provided for @predictionReasonTasksPending.
   ///
   /// In en, this message translates to:
-  /// **'You have multiple pending tasks this week'**
-  String get predictionReasonTasksPending;
+  /// **'Pending tasks: {count}'**
+  String predictionReasonTasksPending(int count);
 
   /// No description provided for @predictionReasonDeadlinesSoon.
   ///
   /// In en, this message translates to:
-  /// **'Deadlines are approaching soon'**
-  String get predictionReasonDeadlinesSoon;
+  /// **'Deadlines: {count}'**
+  String predictionReasonDeadlinesSoon(int count);
 
   /// No description provided for @predictionAffectedTitle.
   ///
@@ -5708,28 +6104,34 @@ abstract class AppLocalizations {
   /// **'{day} at {time} • {minutes} min {focus} session'**
   String predictionPlanLine(String day, String time, int minutes, String focus);
 
+  /// No description provided for @predictionPlanLineSimple.
+  ///
+  /// In en, this message translates to:
+  /// **'• {day}: {minutes} min {focus}'**
+  String predictionPlanLineSimple(String day, int minutes, String focus);
+
   /// No description provided for @predictionPlanLightFocus.
   ///
   /// In en, this message translates to:
-  /// **'light'**
+  /// **'Light Focus Session'**
   String get predictionPlanLightFocus;
 
   /// No description provided for @predictionPlanFocusExecution.
   ///
   /// In en, this message translates to:
-  /// **'focus'**
+  /// **'Focus Execution Session'**
   String get predictionPlanFocusExecution;
 
   /// No description provided for @predictionPlanDeepExecution.
   ///
   /// In en, this message translates to:
-  /// **'deep'**
+  /// **'Deep Execution Session'**
   String get predictionPlanDeepExecution;
 
   /// No description provided for @predictionPlanLightReview.
   ///
   /// In en, this message translates to:
-  /// **'light review'**
+  /// **'Light Review Session'**
   String get predictionPlanLightReview;
 
   /// No description provided for @predictionPerformanceRisk.
@@ -5795,7 +6197,7 @@ abstract class AppLocalizations {
   /// No description provided for @analyticsMoodPerformanceTitle.
   ///
   /// In en, this message translates to:
-  /// **'Mood vs Performance'**
+  /// **'🧠 Mood vs Performance'**
   String get analyticsMoodPerformanceTitle;
 
   /// No description provided for @analyticsMoodPerformanceGoodDesc.
@@ -5803,6 +6205,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your high mood positively impacts your focus duration.'**
   String get analyticsMoodPerformanceGoodDesc;
+
+  /// No description provided for @analyticsMoodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'🙂 {label}: {value} {trend}'**
+  String analyticsMoodLabel(String label, String value, String trend);
+
+  /// No description provided for @analyticsStressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'⚡ {label}: {value} {trend}'**
+  String analyticsStressLabel(String label, String value, String trend);
+
+  /// No description provided for @analyticsImpactPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'🚀 +{minutes}m'**
+  String analyticsImpactPositive(int minutes);
+
+  /// No description provided for @analyticsImpactNegative.
+  ///
+  /// In en, this message translates to:
+  /// **'📉 -{minutes}m'**
+  String analyticsImpactNegative(int minutes);
 
   /// No description provided for @analyticsMoodPerformanceBadDesc.
   ///
@@ -5849,7 +6275,7 @@ abstract class AppLocalizations {
   /// No description provided for @burnoutMessageEmotionalRisk.
   ///
   /// In en, this message translates to:
-  /// **'Your stress is rising while consistency is low. This increases burnout risk.'**
+  /// **'Emotional volatility detected in recent sessions. Prioritize mental health.'**
   String get burnoutMessageEmotionalRisk;
 
   /// No description provided for @decisionStatusModerateStress.
@@ -5903,8 +6329,8 @@ abstract class AppLocalizations {
   /// No description provided for @predictionPressureLikelyToIncrease.
   ///
   /// In en, this message translates to:
-  /// **'Rising stress and low recovery will increase pressure'**
-  String get predictionPressureLikelyToIncrease;
+  /// **'Study deficit: {hours}h'**
+  String predictionPressureLikelyToIncrease(String hours);
 
   /// No description provided for @analyticsMoodCorrelationDetected.
   ///
@@ -6037,6 +6463,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Completion'**
   String get completion;
+
+  /// No description provided for @moodEnergyLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Energy Level'**
+  String get moodEnergyLevel;
+
+  /// No description provided for @moodLoggedSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged after study session'**
+  String get moodLoggedSession;
+
+  /// No description provided for @moodLoggedManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged manually'**
+  String get moodLoggedManual;
+
+  /// No description provided for @markAllAsRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllAsRead;
+
+  /// No description provided for @mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get mood;
+
+  /// No description provided for @academic.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic'**
+  String get academic;
+
+  /// No description provided for @dailyBaseline.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Baseline'**
+  String get dailyBaseline;
+
+  /// No description provided for @studySessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Sessions'**
+  String get studySessions;
+
+  /// No description provided for @notificationOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'is overdue'**
+  String get notificationOverdue;
+
+  /// No description provided for @notificationDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'is due today'**
+  String get notificationDueToday;
+
+  /// No description provided for @notificationDueTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'is due tomorrow'**
+  String get notificationDueTomorrow;
+
+  /// No description provided for @notificationDueSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'is due soon'**
+  String get notificationDueSoon;
+
+  /// No description provided for @weeklyStudyGoalMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly study goal missed'**
+  String get weeklyStudyGoalMissed;
+
+  /// No description provided for @weeklyStudyGoalMissedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You studied {actual}h of {goal}h this week.'**
+  String weeklyStudyGoalMissedMessage(Object actual, Object goal);
+
+  /// No description provided for @decisionRisingStressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rising Stress Levels'**
+  String get decisionRisingStressTitle;
+
+  /// No description provided for @decisionStatusDeficit.
+  ///
+  /// In en, this message translates to:
+  /// **'Large study deficit'**
+  String get decisionStatusDeficit;
+
+  /// No description provided for @decisionStatusInconsistent.
+  ///
+  /// In en, this message translates to:
+  /// **'Inconsistency detected'**
+  String get decisionStatusInconsistent;
+
+  /// No description provided for @baseline.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline'**
+  String get baseline;
+
+  /// No description provided for @predictionCollectingData.
+  ///
+  /// In en, this message translates to:
+  /// **'Collecting Data'**
+  String get predictionCollectingData;
+
+  /// No description provided for @predictionCollectingDataDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Studying 5 or more sessions will activate full AI insights.'**
+  String get predictionCollectingDataDetail;
+
+  /// No description provided for @decisionRecommendedSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended: {minutes} min'**
+  String decisionRecommendedSession(int minutes);
+
+  /// No description provided for @moodTerrible.
+  ///
+  /// In en, this message translates to:
+  /// **'Terrible'**
+  String get moodTerrible;
+
+  /// No description provided for @moodBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Bad'**
+  String get moodBad;
+
+  /// No description provided for @moodNeutral.
+  ///
+  /// In en, this message translates to:
+  /// **'Neutral'**
+  String get moodNeutral;
+
+  /// No description provided for @moodGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get moodGood;
+
+  /// No description provided for @moodAmazing.
+  ///
+  /// In en, this message translates to:
+  /// **'Amazing'**
+  String get moodAmazing;
+
+  /// No description provided for @moodUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get moodUnknown;
+
+  /// No description provided for @hideDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide details'**
+  String get hideDetails;
+
+  /// No description provided for @viewFullAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'View full analysis'**
+  String get viewFullAnalysis;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @selectedSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Semester'**
+  String get selectedSemester;
+
+  /// No description provided for @minutesValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String minutesValue(int minutes);
+
+  /// No description provided for @minutesCourseValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min {course}'**
+  String minutesCourseValue(int minutes, String course);
+
+  /// No description provided for @smartAiInsights.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart AI Insights'**
+  String get smartAiInsights;
+
+  /// No description provided for @burnoutExplanationFallingBehind.
+  ///
+  /// In en, this message translates to:
+  /// **'You are showing signs of mental fatigue and irregular study habits.'**
+  String get burnoutExplanationFallingBehind;
+
+  /// No description provided for @burnoutBehaviorHighFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevated mental fatigue levels detected.'**
+  String get burnoutBehaviorHighFatigue;
+
+  /// No description provided for @burnoutBehaviorMoodInstability.
+  ///
+  /// In en, this message translates to:
+  /// **'Increasing mood variability impacting focus.'**
+  String get burnoutBehaviorMoodInstability;
+
+  /// No description provided for @burnoutBehaviorIrregularRest.
+  ///
+  /// In en, this message translates to:
+  /// **'Inconsistent rest periods between sessions.'**
+  String get burnoutBehaviorIrregularRest;
+
+  /// No description provided for @burnoutBehaviorUnpredictableRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpredictable study rhythm and timing.'**
+  String get burnoutBehaviorUnpredictableRhythm;
+
+  /// No description provided for @burnoutBehaviorSwitchingContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequent context switching affecting deep focus.'**
+  String get burnoutBehaviorSwitchingContext;
+
+  /// No description provided for @burnoutBehaviorMentalOverload.
+  ///
+  /// In en, this message translates to:
+  /// **'Cognitive load exceeding typical recovery rates.'**
+  String get burnoutBehaviorMentalOverload;
+
+  /// No description provided for @consistencyPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency: {score}%'**
+  String consistencyPercentage(Object score);
+
+  /// No description provided for @labelWithColon.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}:'**
+  String labelWithColon(Object label);
+
+  /// No description provided for @labelWithColonAndSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: '**
+  String labelWithColonAndSpace(Object label);
 }
 
 class _AppLocalizationsDelegate

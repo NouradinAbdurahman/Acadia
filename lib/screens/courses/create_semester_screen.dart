@@ -297,7 +297,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     Consumer(
                       builder: (context, ref, _) {
-                        final activeSemesterId = ref.watch(activeSemesterProvider);
+                        final activeSemesterId = ref.watch(activeSemesterProvider).value;
                         final isActive =
                             activeSemesterId == widget.semesterToEdit!.id;
                         return AppButton(

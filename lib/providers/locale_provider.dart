@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../l10n/app_localizations.dart';
 
 final localeLoadedProvider = StateProvider<bool>((ref) => false);
 
@@ -41,4 +42,9 @@ final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
   });
   
   return LocaleNotifier(box, ref);
+});
+
+final appLocalizationsProvider = Provider<AppLocalizations>((ref) {
+  final locale = ref.watch(localeProvider);
+  return lookupAppLocalizations(locale);
 });

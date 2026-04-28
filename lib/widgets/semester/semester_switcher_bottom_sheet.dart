@@ -13,7 +13,7 @@ class SemesterSwitcherBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final semestersAsync = ref.watch(orderedSemestersProvider);
-    final activeSemesterId = ref.watch(activeSemesterProvider);
+    final activeSemesterId = ref.watch(activeSemesterProvider).value;
     final isSwitching = ref.watch(isSemesterSwitchingProvider);
     final theme = Theme.of(context);
 

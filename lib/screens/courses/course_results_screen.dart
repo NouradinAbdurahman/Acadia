@@ -27,7 +27,7 @@ class CourseResultsScreen extends ConsumerWidget {
     final semestersAsync = ref.watch(orderedSemestersProvider);
     final coursesAsync = ref.watch(courseProvider);
     final resultsAsync = ref.watch(courseResultsProvider);
-    final activeSemesterId = ref.watch(activeSemesterProvider);
+    final activeSemesterId = ref.watch(activeSemesterProvider).value;
 
     return Scaffold(
       appBar: AppBar(

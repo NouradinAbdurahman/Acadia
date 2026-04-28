@@ -118,7 +118,7 @@ class _CourseResultEditorScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final activeSemester = ref.watch(activeSemesterFullProvider);
+    final activeSemester = ref.watch(activeSemesterFullProvider).valueOrNull;
     final coursesAsync = ref.watch(courseProvider);
 
     return Scaffold(

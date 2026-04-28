@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/semester.dart';
@@ -38,13 +39,19 @@ List<Semester> orderSemestersForDisplay(
 
 final orderedSemestersProvider = Provider<AsyncValue<List<Semester>>>((ref) {
   final semestersAsync = ref.watch(semesterProvider);
-  final activeSemesterId = ref.watch(activeSemesterProvider);
+  final activeIdAsync = ref.watch(activeSemesterProvider);
 
-  return semestersAsync.whenData(
-    (semesters) => orderSemestersForDisplay(
-      semesters,
-      activeSemesterId: activeSemesterId,
+  return semestersAsync.when(
+    data: (semesters) => activeIdAsync.when(
+      data: (id) => AsyncValue.data(orderSemestersForDisplay(
+        semesters,
+        activeSemesterId: id,
+      )),
+      loading: () => const AsyncValue.loading(),
+      error: (e, st) => AsyncValue.error(e, st),
     ),
+    loading: () => const AsyncValue.loading(),
+    error: (e, st) => AsyncValue.error(e, st),
   );
 });
 
@@ -95,127 +102,85 @@ class SemesterNotifier extends StateNotifier<AsyncValue<List<Semester>>> {
   }
 }
 
-final activeSemesterProvider =
-    StateNotifierProvider<ActiveSemesterNotifier, String?>((ref) {
-  // Re-initialize this notifier if the user changes
-  final user = ref.watch(currentUserProvider);
-
-  final notifier = ActiveSemesterNotifier(
-    ref.watch(semesterStateServiceProvider),
-    ref,
-  );
-
-  ref.listen<AsyncValue<List<Semester>>>(semesterProvider, (_, next) {
-    notifier.onSemesterListChanged(next.value ?? const <Semester>[]);
-  });
-
-  // Only attempt to initialize if a user is currently logged in
-  if (user != null) {
-    notifier.initialize();
-  }
-  
-  return notifier;
+final activeSemesterProvider = AsyncNotifierProvider<ActiveSemesterNotifier, String?>(() {
+  return ActiveSemesterNotifier();
 });
 
-class ActiveSemesterNotifier extends StateNotifier<String?> {
-  final SemesterStateService _service;
-  final Ref _ref;
-  bool _initialized = false;
-  bool _isInitializing = false;
+class ActiveSemesterNotifier extends AsyncNotifier<String?> {
+  SemesterStateService get _service => ref.read(semesterStateServiceProvider);
+  bool _isDisposed = false;
 
-  ActiveSemesterNotifier(this._service, this._ref) : super(null);
+  @override
+  FutureOr<String?> build() async {
+    ref.onDispose(() => _isDisposed = true);
+    
+    // Re-initialize this notifier if the user changes
+    final user = ref.watch(currentUserProvider);
+    if (user == null) return null;
 
-  Future<void> initialize() async {
-    if (_initialized || _isInitializing) return;
+    final id = await _service.getActiveSemesterId();
+    if (id != null) return id;
 
-    _isInitializing = true;
-    try {
-      final incomingActiveSemesterId = await _service.getActiveSemesterId();
-      _applyIncomingActiveSemester(incomingActiveSemesterId);
-      _initialized = true;
-      await _ensureInitializedActiveSemester();
-    } finally {
-      _isInitializing = false;
-    }
-  }
-
-  void _applyIncomingActiveSemester(String? incomingActiveSemesterId) {
-    // Hard guard: never allow null to overwrite an existing active semester.
-    if (incomingActiveSemesterId == null) {
-      if (state == null) {
-        // No active semester set yet, this is normal for new users.
-      } else {
-        debugPrint('ActiveSemester: Blocked null overwrite of existing state.');
-      }
-      return;
+    // Fallback: try to find first semester from the list
+    final semestersAsync = ref.watch(semesterProvider);
+    final semesters = semestersAsync.value ?? [];
+    if (semesters.isNotEmpty) {
+      final firstId = semesters.first.id;
+      // Persist it as active
+      await _service.updateActiveSemester(firstId);
+      return firstId;
     }
 
-    state = incomingActiveSemesterId;
-  }
-
-  Future<void> _ensureInitializedActiveSemester() async {
-    if (state != null) return;
-
-    final semesters = _ref.read(semesterProvider).value ?? const <Semester>[];
-    if (semesters.isEmpty) {
-      // Not an error if the user hasn't created any semesters yet.
-      return;
-    }
-
-    await setActiveSemester(semesters.first.id);
-  }
-
-  void onSemesterListChanged(List<Semester> semesters) {
-    if (!_initialized) return;
-
-    if (state == null && semesters.isNotEmpty) {
-      Future.microtask(() => _ensureInitializedActiveSemester());
-      return;
-    }
-
-    final currentActiveSemesterId = state;
-    if (currentActiveSemesterId == null || semesters.isEmpty) return;
-
-    final exists = semesters.any((s) => s.id == currentActiveSemesterId);
-    if (!exists) {
-      Future.microtask(() => setActiveSemester(semesters.first.id));
-    }
+    return null;
   }
 
   Future<void> setActiveSemester(String semesterId) async {
-    if (_ref.read(isSemesterSwitchingProvider)) return;
+    if (ref.read(isSemesterSwitchingProvider)) return;
 
-    final semesters = _ref.read(semesterProvider).value ?? const <Semester>[];
+    final semesters = ref.read(semesterProvider).value ?? const <Semester>[];
     if (semesters.isNotEmpty && !semesters.any((s) => s.id == semesterId)) {
       return;
     }
 
-    _ref.read(isSemesterSwitchingProvider.notifier).state = true;
+    ref.read(isSemesterSwitchingProvider.notifier).state = true;
     try {
       final success = await _service.updateActiveSemester(semesterId);
-      if (success) {
-        state = semesterId;
+      if (success && !_isDisposed) {
+        state = AsyncValue.data(semesterId);
       }
     } finally {
-      _ref.read(isSemesterSwitchingProvider.notifier).state = false;
+      ref.read(isSemesterSwitchingProvider.notifier).state = false;
+    }
+  }
+
+  // Compatibility method for the listener logic if needed
+  void onSemesterListChanged(List<Semester> semesters) {
+    if (state.value == null && semesters.isNotEmpty) {
+      setActiveSemester(semesters.first.id);
     }
   }
 }
 
-final activeSemesterFullProvider = Provider<Semester?>((ref) {
-  final activeId = ref.watch(activeSemesterProvider);
-  if (activeId == null) return null;
-  
+final activeSemesterFullProvider = Provider<AsyncValue<Semester?>>((ref) {
+  final activeIdAsync = ref.watch(activeSemesterProvider);
   final semestersAsync = ref.watch(semesterProvider);
-  return semestersAsync.when(
-    data: (list) {
-      try {
-        return list.firstWhere((s) => s.id == activeId);
-      } catch (_) {
-        return null;
-      }
+
+  return activeIdAsync.when(
+    data: (id) {
+      if (id == null) return const AsyncValue.data(null);
+      return semestersAsync.when(
+        data: (list) {
+          try {
+            return AsyncValue.data(list.firstWhere((s) => s.id == id));
+          } catch (_) {
+            return const AsyncValue.data(null);
+          }
+        },
+        loading: () => const AsyncValue.loading(),
+        error: (e, st) => AsyncValue.error(e, st),
+      );
     },
-    loading: () => null,
-    error: (e, _) => null,
+    loading: () => const AsyncValue.loading(),
+    error: (e, st) => AsyncValue.error(e, st),
   );
 });

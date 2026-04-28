@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,6 +6,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/analytics_data.dart';
+import '../models/deadline.dart';
+import '../models/mood_log.dart';
+import '../models/study_session.dart';
+import '../models/task.dart';
 import '../repositories/analytics_repository.dart';
 import 'app_providers.dart';
 import 'study_sessions_provider.dart';
@@ -13,7 +18,7 @@ import 'deadlines_provider.dart';
 import 'mood_provider.dart';
 import 'student_profile_provider.dart';
 import 'semester_provider.dart';
-import '../models/study_session.dart';
+import '../domain/decision/decision_rules.dart';
 
 
 final analyticsJumpToTrendsTokenProvider = StateProvider<int>((ref) => 0);
@@ -57,34 +62,39 @@ final _weeklyGoalBackfillInFlightProvider = StateProvider<Set<String>>(
 );
 
 final weeklyStudyGoalHoursProvider = Provider<int>((ref) {
-  final activeSemester = ref.watch(activeSemesterFullProvider);
-  if (activeSemester == null) return DEFAULT_WEEKLY_GOAL;
+  final activeSemesterAsync = ref.watch(activeSemesterFullProvider);
+  
+  return activeSemesterAsync.maybeWhen(
+    data: (activeSemester) {
+      if (activeSemester == null) return DEFAULT_WEEKLY_GOAL;
 
-  final weeklyGoal = activeSemester.weeklyStudyGoal;
-  final isInvalid = weeklyGoal == null || weeklyGoal <= 0 || weeklyGoal > 100;
-  if (!isInvalid) return weeklyGoal;
+      final weeklyGoal = activeSemester.weeklyStudyGoal;
+      final isInvalid = weeklyGoal == null || weeklyGoal <= 0 || weeklyGoal > 100;
+      if (!isInvalid) return weeklyGoal;
 
-  final inFlight = ref.watch(_weeklyGoalBackfillInFlightProvider);
-  if (!inFlight.contains(activeSemester.id)) {
-    Future.microtask(() async {
-      final inFlightNotifier =
-          ref.read(_weeklyGoalBackfillInFlightProvider.notifier);
-      inFlightNotifier.state = {...inFlightNotifier.state, activeSemester.id};
-      try {
-        await ref.read(semesterProvider.notifier).updateSemester(
-              activeSemester.copyWith(weeklyStudyGoal: DEFAULT_WEEKLY_GOAL),
-            );
-        ref.invalidate(semesterProvider);
-      } finally {
-        inFlightNotifier.state =
-            inFlightNotifier.state
-                .where((id) => id != activeSemester.id)
-                .toSet();
+      final inFlight = ref.watch(_weeklyGoalBackfillInFlightProvider);
+      if (!inFlight.contains(activeSemester.id)) {
+        Future.microtask(() async {
+          final inFlightNotifier =
+              ref.read(_weeklyGoalBackfillInFlightProvider.notifier);
+          inFlightNotifier.state = {...inFlightNotifier.state, activeSemester.id};
+          try {
+            await ref.read(semesterProvider.notifier).updateSemester(
+                  activeSemester.copyWith(weeklyStudyGoal: DEFAULT_WEEKLY_GOAL),
+                );
+            ref.invalidate(semesterProvider);
+          } finally {
+            inFlightNotifier.state =
+                inFlightNotifier.state
+                    .where((id) => id != activeSemester.id)
+                    .toSet();
+          }
+        });
       }
-    });
-  }
-
-  return DEFAULT_WEEKLY_GOAL;
+      return DEFAULT_WEEKLY_GOAL;
+    },
+    orElse: () => DEFAULT_WEEKLY_GOAL,
+  );
 });
 
 enum BurnoutLevel {
@@ -195,178 +205,180 @@ final burnoutHistoryProvider = StateNotifierProvider<BurnoutHistoryNotifier, Lis
   (ref) => BurnoutHistoryNotifier(),
 );
 
-final analyticsProvider = StateNotifierProvider<AnalyticsNotifier, AsyncValue<AnalyticsData>>(
-  (ref) {
-    ref.watch(studySessionsProvider);
-    ref.watch(tasksProvider);
-    ref.watch(deadlinesProvider);
-    ref.watch(moodLogsProvider);
+// ── FutureProvider bridges ───────────────────────────────────────────────────
+// StateNotifierProvider<_, AsyncValue<List<_>>> does not expose .future.
+// These thin bridges let AnalyticsNotifier await them with ref.watch(x.future).
 
-    final repository = ref.watch(analyticsRepositoryProvider);
-    final supabase = ref.watch(supabaseProvider);
+/// Resolves when studySessionsProvider emits its first non-loading data.
+final _studySessionsFutureProvider = FutureProvider<List<StudySession>>((ref) {
+  final async = ref.watch(studySessionsProvider);
+  return async.when(
+    data: (list) => Future.value(list),
+    loading: () => ref.watch(studySessionsProvider.notifier).stream
+        .firstWhere((v) => !v.isLoading)
+        .then((v) => v.value ?? <StudySession>[]),
+    error: (e, st) => Future.error(e, st),
+  );
+});
+
+/// Resolves when tasksProvider emits its first non-loading data.
+final _tasksFutureProvider = FutureProvider<List<Task>>((ref) {
+  final async = ref.watch(tasksProvider);
+  return async.when(
+    data: (list) => Future.value(list),
+    loading: () => ref.watch(tasksProvider.notifier).stream
+        .firstWhere((v) => !v.isLoading)
+        .then((v) => v.value ?? <Task>[]),
+    error: (e, st) => Future.error(e, st),
+  );
+});
+
+/// Resolves when deadlinesProvider emits its first non-loading data.
+final _deadlinesFutureProvider = FutureProvider<List<Deadline>>((ref) {
+  final async = ref.watch(deadlinesProvider);
+  return async.when(
+    data: (list) => Future.value(list),
+    loading: () => ref.watch(deadlinesProvider.notifier).stream
+        .firstWhere((v) => !v.isLoading)
+        .then((v) => v.value ?? <Deadline>[]),
+    error: (e, st) => Future.error(e, st),
+  );
+});
+
+// ── Analytics Provider ───────────────────────────────────────────────────────
+
+final analyticsProvider = AsyncNotifierProvider<AnalyticsNotifier, AnalyticsData>(() {
+  return AnalyticsNotifier();
+});
+
+class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
+  // Per-semester persistent cache.
+  // Key   = semesterId
+  // Value = record of the hash that produced the data + the data itself.
+  // Cache hit requires BOTH semesterId AND hash to match, so new data
+  // (e.g. moods 2→3) correctly invalidates the entry and triggers recompute.
+  final Map<String, ({int hash, AnalyticsData data})> _cache = {};
+
+  // Hash of the last dataset that entered the compute path — guards against
+  // triple-fire rebuilds within the same semester before the cache entry exists.
+  int? _lastHash;
+
+  @override
+  Future<AnalyticsData> build() async {
     final user = ref.watch(currentUserProvider);
-    final semesterId = ref.watch(activeSemesterProvider);
-    
-    final notifier = AnalyticsNotifier(
-      repository: repository,
-      supabaseClient: supabase,
-      ref: ref,
+    if (user == null) return AnalyticsData.empty();
+
+    // 1. Await active semester — the keystone dependency.
+    final semesterId = await ref.watch(activeSemesterProvider.future);
+    if (semesterId == null) {
+      _lastHash = null;
+      return AnalyticsData.empty();
+    }
+
+    // 2. Await ALL data providers in parallel.
+    final results = await Future.wait([
+      ref.watch(_studySessionsFutureProvider.future),
+      ref.watch(_tasksFutureProvider.future),
+      ref.watch(moodLogsProvider.future),
+      ref.watch(_deadlinesFutureProvider.future),
+    ]);
+
+    final sessions  = results[0] as List<StudySession>;
+    final tasks     = results[1] as List<Task>;
+    final moods     = results[2] as List<MoodLog>;
+    final deadlines = results[3] as List<Deadline>;
+
+    // 3. Hard guard: if everything is truly empty, clear cache and return empty.
+    if (sessions.isEmpty && tasks.isEmpty && moods.isEmpty && deadlines.isEmpty) {
+      debugPrint('[AnalyticsProvider] All data empty for Semester: $semesterId — returning empty.');
+      _lastHash = null;
+      _cache.remove(semesterId);
+      return AnalyticsData.empty();
+    }
+
+    // 4. Compute stable hash for this data snapshot.
+    // Include lengths of all datasets that affect the final report.
+    final currentHash = Object.hash(
+      semesterId, 
+      sessions.length, 
+      tasks.length, 
+      moods.length, 
+      deadlines.length,
     );
-    
-    if (user != null) {
-      notifier.loadAnalytics(user.id, semesterId: semesterId);
+
+    // 5. Cache check — requires BOTH semesterId AND hash to match.
+    final cached = _cache[semesterId];
+    if (cached != null && cached.hash == currentHash) {
+      debugPrint('[AnalyticsProvider] Cache hit — Semester: $semesterId (hash: $currentHash).');
+      return cached.data;
     }
-    
-    return notifier;
-  },
-);
 
-
-class AnalyticsNotifier extends StateNotifier<AsyncValue<AnalyticsData>> {
-  final AnalyticsRepository repository;
-  final SupabaseClient supabaseClient;
-  final Ref ref;
-
-  AnalyticsNotifier({
-    required this.repository,
-    required this.supabaseClient,
-    required this.ref,
-  }) : super(const AsyncValue.loading());
-
-
-  Future<void> loadAnalytics(String userId, {String? semesterId}) async {
-    try {
-      // Preserve previous data during refresh so downstream providers (decision, prediction) don't collapse.
-      state = const AsyncValue<AnalyticsData>.loading().copyWithPrevious(state);
-      final data = await repository.getAnalyticsData(userId, semesterId: semesterId);
-      final moodLogs = semesterId == null
-          ? const []
-          : await ref.read(moodRepositoryProvider).getMoodLogs(semesterId: semesterId);
-
-      final moodCount = moodLogs.length;
-      final avgMood = moodCount == 0
-          ? 0.0
-          : moodLogs
-                  .map((entry) => entry.moodLevel)
-                  .reduce((a, b) => a + b) /
-              moodCount;
-      final avgStress = moodCount == 0
-          ? 0.0
-          : moodLogs
-                  .map((entry) => entry.stressLevel)
-                  .reduce((a, b) => a + b) /
-              moodCount;
-
-      if (!mounted) return;
-      state = AsyncValue.data(
-        AnalyticsData(
-          studyHoursPerCourse: data.studyHoursPerCourse,
-          gradeDistribution: data.gradeDistribution,
-          taskCompletionRate: data.taskCompletionRate,
-          completedTasks: data.completedTasks,
-          totalTasks: data.totalTasks,
-          averageGPA: data.averageGPA,
-          weeklyAverageStudyHours: data.weeklyAverageStudyHours,
-          totalECTS: data.totalECTS,
-          riskScore: data.riskScore,
-          avgMood: avgMood,
-          avgStress: avgStress,
-          moodLogCount: moodCount,
-          hasData: data.hasData,
-        ),
-      );
-    } catch (e, st) {
-      if (!mounted) return;
-      state = AsyncValue.error(e, st);
+    // 6. Intra-build deduplication — only reached when cache is absent/stale.
+    //    Prevents triple-fire while sessions/tasks/moods resolve sequentially
+    //    on the very first load before the cache entry has been written.
+    if (_lastHash == currentHash) {
+      debugPrint('[AnalyticsProvider] Skipping duplicate build (hash: $currentHash).');
+      return state.value ?? AnalyticsData.empty();
     }
+
+    // 7. Real computation.
+    debugPrint('[AnalyticsProvider] Computing for Semester: $semesterId | Sessions: ${sessions.length} | Tasks: ${tasks.length} | Moods: ${moods.length} | Deadlines: ${deadlines.length}');
+
+    final repository = ref.read(analyticsRepositoryProvider);
+    final data = await repository.computeFromPreloaded(
+      userId: user.id,
+      semesterId: semesterId,
+      sessions: sessions,
+      tasks: tasks,
+      moodLogs: moods,
+    );
+
+    _lastHash = currentHash;
+    _cache[semesterId] = (hash: currentHash, data: data);
+
+    debugPrint('[AnalyticsProvider] Computed for Semester: $semesterId | Sessions: ${sessions.length} | Tasks: ${tasks.length} | Moods: ${moods.length} | Deadlines: ${deadlines.length}');
+    return data;
   }
 
+  /// Invalidates and forces a fresh computation for the current semester,
+  /// bypassing both the hash guard and the persistent cache.
   Future<void> refresh() async {
-    final userId = supabaseClient.auth.currentUser?.id;
-    final semesterId = ref.read(activeSemesterProvider);
-    if (userId != null) {
-      await loadAnalytics(userId, semesterId: semesterId);
-    }
+    _lastHash = null;
+    final semesterId = ref.read(activeSemesterProvider).value;
+    if (semesterId != null) _cache.remove(semesterId);
+    ref.invalidateSelf();
+    await future;
   }
 
+  /// Silently updates state without triggering a full rebuild.
   Future<void> refreshSilently() async {
-    final userId = supabaseClient.auth.currentUser?.id;
-    final semesterId = ref.read(activeSemesterProvider);
-    if (userId == null) return;
+    final user = ref.read(currentUserProvider);
+    final semesterId = ref.read(activeSemesterProvider).value;
+    if (user == null || semesterId == null) return;
 
-    final previous = state;
     try {
-      final data = await repository.getAnalyticsData(userId, semesterId: semesterId);
-      final moodLogs = semesterId == null
-          ? const []
-          : await ref.read(moodRepositoryProvider).getMoodLogs(semesterId: semesterId);
+      final sessions = ref.read(studySessionsProvider).value ?? <StudySession>[];
+      final tasks    = ref.read(tasksProvider).value ?? <Task>[];
+      final moods    = ref.read(moodLogsProvider).value ?? <MoodLog>[];
 
-      final moodCount = moodLogs.length;
-      final avgMood = moodCount == 0
-          ? 0.0
-          : moodLogs
-                  .map((entry) => entry.moodLevel)
-                  .reduce((a, b) => a + b) /
-              moodCount;
-      final avgStress = moodCount == 0
-          ? 0.0
-          : moodLogs
-                  .map((entry) => entry.stressLevel)
-                  .reduce((a, b) => a + b) /
-              moodCount;
-
-      if (!mounted) return;
-      state = AsyncValue.data(
-        AnalyticsData(
-          studyHoursPerCourse: data.studyHoursPerCourse,
-          gradeDistribution: data.gradeDistribution,
-          taskCompletionRate: data.taskCompletionRate,
-          completedTasks: data.completedTasks,
-          totalTasks: data.totalTasks,
-          averageGPA: data.averageGPA,
-          weeklyAverageStudyHours: data.weeklyAverageStudyHours,
-          totalECTS: data.totalECTS,
-          riskScore: data.riskScore,
-          avgMood: avgMood,
-          avgStress: avgStress,
-          moodLogCount: moodCount,
-          hasData: data.hasData,
-        ),
+      final data = await ref.read(analyticsRepositoryProvider).computeFromPreloaded(
+        userId: user.id,
+        semesterId: semesterId,
+        sessions: sessions,
+        tasks: tasks,
+        moodLogs: moods,
       );
+      final hash = Object.hash(semesterId, sessions.length, tasks.length, moods.length);
+      _lastHash = hash;
+      _cache[semesterId] = (hash: hash, data: data);
+      state = AsyncValue.data(data);
     } catch (_) {
-      if (!mounted) return;
-      state = previous;
+      // Keep previous state on silent error.
     }
   }
-
-  void applySessionImpact({required String courseId, required int minutes}) {
-    final current = state.valueOrNull;
-    if (current == null || minutes <= 0) return;
-
-    final nextHoursByCourse = Map<String, double>.from(current.studyHoursPerCourse);
-    final currentHours = nextHoursByCourse[courseId] ?? 0.0;
-    nextHoursByCourse[courseId] = currentHours + (minutes / 60.0);
-
-    state = AsyncValue.data(
-      AnalyticsData(
-        studyHoursPerCourse: nextHoursByCourse,
-        gradeDistribution: current.gradeDistribution,
-        taskCompletionRate: current.taskCompletionRate,
-        completedTasks: current.completedTasks,
-        totalTasks: current.totalTasks,
-        averageGPA: current.averageGPA,
-        weeklyAverageStudyHours: current.weeklyAverageStudyHours,
-        totalECTS: current.totalECTS,
-        riskScore: current.riskScore,
-          avgMood: current.avgMood,
-          avgStress: current.avgStress,
-          moodLogCount: current.moodLogCount,
-          hasData: current.hasData,
-      ),
-    );
-  }
-
 }
+
+
 
 class StudyAnalytics {
   final List<StudySession> sessions;
@@ -374,6 +386,10 @@ class StudyAnalytics {
   final String breakPattern;
   final String preferredStudyTime;
   final List<BurnoutSnapshot> burnoutHistory;
+  final double avgDailyStress;
+  final double avgSessionStress;
+  final bool hasMoodTrendDown;
+  // Removed final consistency field to use getter instead
 
   StudyAnalytics(
     this.sessions,
@@ -381,7 +397,34 @@ class StudyAnalytics {
     this.breakPattern = 'mixed',
     this.preferredStudyTime = 'morning',
     this.burnoutHistory = const [],
+    this.avgDailyStress = 0.0,
+    this.avgSessionStress = 0.0,
+    this.hasMoodTrendDown = false,
   });
+
+  double get consistency => (activeDaysThisWeek / 7.0).clamp(0.0, 1.0);
+  double get historicalConsistency {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 14));
+    final activeDays = sessions
+        .where((s) => s.createdAt.isAfter(start))
+        .map((s) => _burnoutDayKey(s.createdAt))
+        .toSet()
+        .length;
+    return (activeDays / 14.0).clamp(0.0, 1.0);
+  }
+  double get weeklyConsistency => (totalThisWeekHours / (weeklyGoalMinutes / 60.0)).clamp(0.0, 1.0);
+
+  double get totalThisWeekHours => weekMinutes / 60.0;
+
+  int get weekMinutes {
+    final now = DateTime.now();
+    final weekStart = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+    return sessions
+        .where((s) => !s.createdAt.isBefore(weekStart))
+        .fold(0, (sum, s) => sum + s.durationMinutes);
+  }
 
   int get todayMinutes {
     final now = DateTime.now();
@@ -447,7 +490,7 @@ class StudyAnalytics {
     final now = DateTime.now();
     final weekStart = DateTime(now.year, now.month, now.day)
         .subtract(Duration(days: now.weekday - 1));
-    return sessions.where((s) => s.createdAt.isAfter(weekStart)).length;
+    return sessions.where((s) => !s.createdAt.isBefore(weekStart)).length;
   }
 
   int get activeDaysThisWeek {
@@ -455,7 +498,7 @@ class StudyAnalytics {
     final weekStart = DateTime(now.year, now.month, now.day)
         .subtract(Duration(days: now.weekday - 1));
     return sessions
-        .where((s) => s.createdAt.isAfter(weekStart))
+        .where((s) => !s.createdAt.isBefore(weekStart))
         .map((s) => s.createdAt.day)
         .toSet()
         .length;
@@ -487,7 +530,7 @@ class StudyAnalytics {
         .subtract(Duration(days: now.weekday - 1));
     
     for (final s in sessions) {
-      if (s.createdAt.isAfter(weekStart)) {
+      if (!s.createdAt.isBefore(weekStart)) {
         final day = s.createdAt.weekday; 
         data[day] = (data[day] ?? 0) + s.durationMinutes;
       }
@@ -545,7 +588,7 @@ class StudyAnalytics {
     return (base + timeAdjustment).clamp(20, 60);
   }
 
-  int get suggestedDuration => _suggestedDurationForStudyTime(preferredStudyTime);
+  int get suggestedDuration => DecisionRules.getRecommendedSessionLength(avgSessionStress);
 
   int suggestedDurationForMode(AdaptationMode mode) {
     final slot = mode == AdaptationMode.followBehavior && hasReliableBehaviorSignal
@@ -663,7 +706,7 @@ class StudyAnalytics {
   }
 
   bool get hasReliableBehaviorSignal =>
-      trackedSessionCount >= 4 && behaviorConfidence >= 70.0;
+      trackedSessionCount >= 3 && behaviorConfidence >= 70.0;
 
   bool get shouldSuggestBehaviorShift {
     final dominant = dominantStudyTime;
@@ -731,16 +774,16 @@ class StudyAnalytics {
 
   String get burnoutTrendLabel {
     final delta = burnoutTrendDelta;
-    if (delta > 5) return 'Worsening';
-    if (delta < -5) return 'Improving';
-    return 'Stable';
+    if (delta > 5) return 'worsening';
+    if (delta < -5) return 'improving';
+    return 'stable';
   }
 
   bool get hasBurnoutTrendHistory => _recentBurnoutSnapshots.length >= 3;
 
-  String get burnoutTrendFallbackMessage {
-    if (hasBurnoutTrendHistory) return 'No recovery trend detected yet.';
-    return 'Not enough data to detect trend yet.';
+  String burnoutTrendFallbackMessage(AppLocalizations l10n) {
+    if (hasBurnoutTrendHistory) return l10n.burnoutTrendNoRecovery;
+    return l10n.burnoutTrendNoHistory;
   }
 
   String get burnoutTrendDirection {
@@ -757,9 +800,9 @@ class StudyAnalytics {
 
   String get deficitTrendLabel {
     final delta = deficitTrendDelta;
-    if (delta > 0.25) return 'Worsening';
-    if (delta < -0.25) return 'Improving';
-    return 'Stable';
+    if (delta > 0.25) return 'worsening';
+    if (delta < -0.25) return 'improving';
+    return 'stable';
   }
 
   String get deficitTrendDirection {
@@ -776,9 +819,9 @@ class StudyAnalytics {
 
   String get consistencyTrendLabel {
     final score = 100 - timeInconsistencyScore;
-    if (score < 40) return 'Unstable';
-    if (score < 70) return 'Moderate';
-    return 'Stable';
+    if (score < 40) return 'unstable';
+    if (score < 70) return 'moderate';
+    return 'stable';
   }
 
   String get consistencyTrendDirection {
@@ -792,9 +835,9 @@ class StudyAnalytics {
     return deficitTrendDelta < -0.25 && consistencyTrendDelta > 5;
   }
 
-  String get recoveryMessage {
+  String recoveryMessage(AppLocalizations l10n) {
     if (!recoveryDetected) return '';
-    return 'You are recovering. Keep this pattern.';
+    return l10n.recoveryMessage;
   }
 
   double get timeInconsistencyScore {
@@ -803,7 +846,7 @@ class StudyAnalytics {
   }
 
   bool get irregularStudyPattern {
-    return sessionsThisWeekCount >= 4 && timeInconsistencyScore >= 55.0;
+    return sessionsThisWeekCount >= 3 && timeInconsistencyScore >= 55.0;
   }
 
   bool get isStable => hasData && trend == "stable";
@@ -831,7 +874,7 @@ class StudyAnalytics {
     int lastWeek = 0;
 
     for (final s in sessions) {
-      if (s.createdAt.isAfter(startOfThisWeek)) {
+      if (!s.createdAt.isBefore(startOfThisWeek)) {
         thisWeek += s.durationMinutes;
       } else if (s.createdAt.isAfter(startOfLastWeek) && s.createdAt.isBefore(startOfThisWeek)) {
         lastWeek += s.durationMinutes;
@@ -863,7 +906,10 @@ class StudyAnalytics {
     if (minutes == 0) return l10n.noStudyActivityYet;
     if (activeDays == 1) return l10n.studiedOnlyOneDay;
     if (minutes < 60) return l10n.gettingStartedExtend;
-    if (minutes < 180) return l10n.buildingConsistency;
+    if (minutes < 180) {
+      if (sessions.length >= 10) return l10n.studyConsistent;
+      return l10n.buildingConsistency;
+    }
     return l10n.strongConsistentPattern;
   }
 
@@ -910,7 +956,7 @@ class StudyAnalytics {
     });
 
     final days = ['', l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
-    return "${days[peakDay]} (${formatDuration(maxMin)})";
+    return "${days[peakDay]} (${formatDuration(maxMin, l10n)})";
   }
 
   int get currentStreak {
@@ -1008,7 +1054,7 @@ class StudyAnalytics {
     
     // Trend forming message fix
     if (burnoutLevel != BurnoutLevel.stable && sessions.length < 7) {
-        return "Trend is forming. Risk is increasing due to pattern inconsistency.";
+        return l10n.burnoutTrendForming;
     }
 
     final sThisWeek = thisWeekSessions;
@@ -1021,7 +1067,7 @@ class StudyAnalytics {
 
     switch (burnoutLevel) {
       case BurnoutLevel.warning:
-        return "Risk is increasing due to low consistency and goal deficit.";
+        return l10n.burnoutRiskIncreasing;
       case BurnoutLevel.highRisk:
         return l10n.highRisk;
       case BurnoutLevel.burnoutRisk:
@@ -1060,75 +1106,95 @@ class StudyAnalytics {
   }
 
   double get burnoutScore {
-    var base =
-        (weeklyDeficitRatio * 35.0) +
-        ((timeInconsistencyScore / 100.0) * 15.0) +
-        (irregularStudyPattern ? 15.0 : 0.0) +
-        (overloadRatio * 15.0);
+    double score = 0;
     
-    // Severity Scaling
-    final sThisWeek = thisWeekSessions;
-    final stresses = sThisWeek.where((s) => s.stress != null).map((s) => s.stress!).toList();
-    final avgStressNow = stresses.isNotEmpty ? stresses.reduce((a, b) => a + b) / stresses.length : 0.0;
-
-    if (avgStressNow >= 7) base += 15.0;
-    if (avgMoodThisWeek > 0 && avgMoodThisWeek <= 3.0) base += 10.0;
-    if (weeklyDeficitHours > 10) base += 10.0;
-
-    return base.clamp(0.0, 100.0);
+    // 1. Deficit Ratio (40 pts max, capped at 25 for truth-consistency)
+    final deficitRatio = (weeklyDeficitHours / 24.0).clamp(0.0, 1.0);
+    score += (deficitRatio * 40.0).clamp(0.0, 25.0);
+    
+    // 2. Study Pressure (25 pts)
+    // Truth-Consistency Fix: High burnout requires sustained high stress
+    final stressDays = sessions.where((s) => (s.stress ?? 0) >= 7).map((s) => _burnoutDayKey(s.createdAt)).toSet().length;
+    
+    if (avgSessionStress >= 7 && stressDays >= 3) {
+      score += 25.0;
+    } else if (avgSessionStress >= 6 || stressDays >= 1) {
+      score += 15.0;
+    }
+    
+    // 3. Consistency (20 pts)
+    if (consistency < 0.6) {
+      score += (1.0 - consistency) * 20.0;
+    }
+    
+    // 4. Mood Trend (10 pts)
+    if (hasMoodTrendDown) {
+      score += 10.0;
+    }
+    
+    return score.clamp(0.0, 100.0);
   }
 
   BurnoutLevel get burnoutLevel {
     final score = burnoutScore;
-    if (score >= 75) return BurnoutLevel.burnoutRisk;
-    if (score >= 55) return BurnoutLevel.highRisk;
+    final stressDays = sessions.where((s) => (s.stress ?? 0) >= 7).map((s) => _burnoutDayKey(s.createdAt)).toSet().length;
+    final hasHighStressSignals = avgSessionStress >= 7 && stressDays >= 3;
+
+    if (score >= 75 && hasHighStressSignals) return BurnoutLevel.burnoutRisk;
+    if (score >= 55 && hasHighStressSignals) return BurnoutLevel.highRisk;
     if (score >= 30) return BurnoutLevel.warning;
     return BurnoutLevel.stable;
   }
 
-  List<String> get burnoutReasons {
+  List<String> getBurnoutReasons(AppLocalizations l10n) {
     final reasons = <String>[];
-    if (weeklyDeficitHours > 0.25) {
-      reasons.add('You are behind your weekly goal by ${weeklyDeficitHours.toStringAsFixed(1)}h.');
+    
+    // Stress Override: If stress is high, prioritize it and suppress deficit messages
+    if (avgSessionStress >= 7) {
+      reasons.add(l10n.burnoutReasonStress);
+      if (hasMoodTrendDown) reasons.add(l10n.burnoutReasonMood);
+      if (consistency < 0.6) reasons.add(l10n.burnoutReasonConsistency);
+      return reasons;
     }
-    if (timeInconsistencyScore >= 45) {
-      reasons.add('Your study pattern is inconsistent this week.');
-    }
-    if (irregularStudyPattern) {
-      reasons.add('You are switching study times frequently.');
-    }
-    if (excessiveStudy) {
-      reasons.add('Your total study load is above your weekly goal.');
-    }
-    if (reasons.isEmpty) {
-      reasons.add('No major burnout signals detected yet.');
-    }
+
+    if (weeklyDeficitHours > 10) reasons.add(l10n.burnoutReasonDeficit);
+    if (avgSessionStress >= 5) reasons.add(l10n.burnoutReasonStress);
+    if (consistency < 0.6) reasons.add(l10n.burnoutReasonConsistency);
+    if (hasMoodTrendDown) reasons.add(l10n.burnoutReasonMood);
     return reasons;
   }
 
-  List<String> get burnoutRecommendations {
+  List<String> getBurnoutRecommendations(AppLocalizations l10n) {
+    // Stress Override: If stress is high, provide recovery-focused advice regardless of level
+    if (avgSessionStress >= 7) {
+      return [
+        l10n.decisionHighStressOverrideBody,
+        l10n.burnoutRecommendationHigh1, // Use some recovery focused ones
+      ];
+    }
+
     switch (burnoutLevel) {
       case BurnoutLevel.stable:
-        return const [
-          'Keep your current routine steady.',
-          'Continue tracking your weekly goal.',
+        return [
+          l10n.burnoutRecStable1,
+          l10n.burnoutRecStable2,
         ];
       case BurnoutLevel.warning:
-        return const [
-          'Reduce session length a little.',
-          'Keep your study time in one consistent slot.',
+        return [
+          l10n.burnoutRecWarning1,
+          l10n.burnoutRecWarning2,
         ];
       case BurnoutLevel.highRisk:
-        return const [
-          'Shorten sessions and take breaks more often.',
-          'Focus on one study time window this week.',
-          'Take a recovery day if you feel drained.',
+        return [
+          l10n.burnoutRecHighRisk1,
+          l10n.burnoutRecHighRisk2,
+          l10n.burnoutRecHighRisk3,
         ];
       case BurnoutLevel.burnoutRisk:
-        return const [
-          'Reduce session length right away.',
-          'Increase break frequency and simplify goals.',
-          'Take a recovery day before pushing harder.',
+        return [
+          l10n.burnoutRecRisk1,
+          l10n.burnoutRecRisk2,
+          l10n.burnoutRecRisk3,
         ];
     }
   }
@@ -1146,11 +1212,11 @@ class StudyAnalytics {
     }
   }
 
-  String formatDuration(int minutes) {
+  String formatDuration(int minutes, AppLocalizations l10n) {
     if (minutes >= 60) {
-      return '${(minutes / 60).toStringAsFixed(1)}h';
+      return '${(minutes / 60).toStringAsFixed(1)}${l10n.hoursAbbreviation}';
     }
-    return '$minutes m';
+    return '$minutes${l10n.minutesAbbreviation}';
   }
 
   String getInsight(StudySession s, AppLocalizations l10n) {
@@ -1280,6 +1346,7 @@ final studyAnalyticsProvider = Provider<StudyAnalytics>((ref) {
   final sessionsAsync = ref.watch(studySessionsProvider);
   final profileAsync = ref.watch(studentProfileProvider);
   final burnoutHistory = ref.watch(burnoutHistoryProvider);
+  final analyticsData = ref.watch(analyticsProvider).valueOrNull;
   final profile = profileAsync.valueOrNull;
   final goalMinutes = ref.watch(weeklyStudyGoalHoursProvider) * 60;
 
@@ -1290,6 +1357,9 @@ final studyAnalyticsProvider = Provider<StudyAnalytics>((ref) {
       breakPattern: profile?.breakPattern ?? 'mixed',
       preferredStudyTime: profile?.preferredStudyTime ?? 'morning',
       burnoutHistory: burnoutHistory,
+      avgDailyStress: analyticsData?.avgDailyStress ?? 0.0,
+      avgSessionStress: analyticsData?.avgSessionStress ?? 0.0,
+      hasMoodTrendDown: (analyticsData?.dailyMoodTrend ?? 'stable') == 'down',
     ),
     orElse: () => StudyAnalytics(
       [],
@@ -1297,6 +1367,9 @@ final studyAnalyticsProvider = Provider<StudyAnalytics>((ref) {
       breakPattern: profile?.breakPattern ?? 'mixed',
       preferredStudyTime: profile?.preferredStudyTime ?? 'morning',
       burnoutHistory: burnoutHistory,
+      avgDailyStress: analyticsData?.avgDailyStress ?? 0.0,
+      avgSessionStress: analyticsData?.avgSessionStress ?? 0.0,
+      hasMoodTrendDown: (analyticsData?.dailyMoodTrend ?? 'stable') == 'down',
     ),
   );
 
@@ -1305,7 +1378,7 @@ final studyAnalyticsProvider = Provider<StudyAnalytics>((ref) {
       date: DateTime.now(),
       score: analytics.burnoutScore,
       deficitHours: analytics.weeklyDeficitHours,
-      inconsistencyScore: analytics.timeInconsistencyScore,
+      inconsistencyScore: (1.0 - analytics.consistency) * 100.0,
     ),
   );
 

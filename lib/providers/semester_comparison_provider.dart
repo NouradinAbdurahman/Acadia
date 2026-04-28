@@ -9,7 +9,7 @@ final semesterComparisonProvider = FutureProvider<SemesterComparison?>((ref) asy
   final userAsync = await ref.watch(currentAppUserProvider.future);
   if (userAsync == null) return null;
 
-  final activeId = ref.watch(activeSemesterProvider);
+  final activeId = ref.watch(activeSemesterProvider).value;
   final semestersAsync = ref.watch(semesterProvider);
   final analyticsRepo = ref.watch(analyticsRepositoryProvider);
 

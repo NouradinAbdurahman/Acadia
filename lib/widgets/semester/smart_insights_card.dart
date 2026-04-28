@@ -6,6 +6,8 @@ import '../../providers/trend_provider.dart';
 import '../../core/design/app_spacing.dart';
 import '../../components/app_glass_card.dart';
 import '../../models/trend_data.dart';
+import '../../l10n/app_localizations.dart';
+import '../../core/utils/trend_localizer.dart';
 
 class SmartInsightsCard extends ConsumerWidget {
   const SmartInsightsCard({super.key});
@@ -14,6 +16,7 @@ class SmartInsightsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final trendAsync = ref.watch(trendProvider(7));
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return trendAsync.when(
       data: (trend) {
@@ -46,7 +49,7 @@ class SmartInsightsCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Text(
-                    'Smart AI Insights',
+                    l10n.smartAiInsights,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
@@ -58,7 +61,7 @@ class SmartInsightsCard extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                topInsight.title,
+                TrendLocalizer.localizeTitle(l10n, topInsight),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: _insightColor(topInsight.type, theme),
@@ -66,7 +69,7 @@ class SmartInsightsCard extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                topInsight.message,
+                TrendLocalizer.localizeMessage(l10n, topInsight),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),

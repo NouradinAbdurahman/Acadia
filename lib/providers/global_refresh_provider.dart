@@ -20,7 +20,7 @@ final globalRefreshProvider = Provider<Future<void> Function()>((ref) {
 
     await ref.read(semesterProvider.notifier).loadSemesters();
 
-    final semesterId = ref.read(activeSemesterProvider);
+    final semesterId = ref.read(activeSemesterProvider).value;
 
     await Future.wait<void>([
       ref.read(courseProvider.notifier).loadCourses(),
@@ -34,13 +34,11 @@ final globalRefreshProvider = Provider<Future<void> Function()>((ref) {
             .loadForSemester(semesterId, forceRefresh: true),
     ]);
 
-    await ref
-        .read(analyticsProvider.notifier)
-        .loadAnalytics(user.id, semesterId: semesterId);
+    await ref.read(analyticsProvider.notifier).refresh();
 
     final days = ref.read(trendDaysProvider);
     ref.invalidate(trendProvider(days));
-    await ref.read(riskProvider.future);
+    ref.read(riskProvider);
 
     ref.invalidate(dashboardProvider);
   };

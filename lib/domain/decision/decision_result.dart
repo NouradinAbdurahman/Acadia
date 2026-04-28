@@ -1,15 +1,15 @@
 enum DecisionType { warning, recommendation, insight }
 
 class DecisionItem {
-  final String titleKey;
-  final String descriptionKey;
+  final String title;
+  final String description;
   final Map<String, dynamic>? params;
   final DecisionType type;
   final int priority;
 
   const DecisionItem({
-    required this.titleKey,
-    required this.descriptionKey,
+    required this.title,
+    required this.description,
     this.params,
     required this.type,
     required this.priority,
@@ -22,6 +22,8 @@ class DecisionResult {
   final double confidence;
   final double avgMood;
   final double avgStress;
+  final double avgDailyStress;
+  final double avgSessionStress;
   final String? emotionalStatusKey;
   final List<String> signals; // e.g. ['signal_stress_high', 'consistency_low']
 
@@ -31,6 +33,8 @@ class DecisionResult {
     this.confidence = 0.0,
     this.avgMood = 0.0,
     this.avgStress = 0.0,
+    this.avgDailyStress = 0.0,
+    this.avgSessionStress = 0.0,
     this.emotionalStatusKey,
     this.signals = const [],
   });
@@ -41,13 +45,15 @@ class DecisionResult {
         confidence = 0.0,
         avgMood = 0.0,
         avgStress = 0.0,
+        avgDailyStress = 0.0,
+        avgSessionStress = 0.0,
         emotionalStatusKey = null,
         signals = const [];
 
   bool get hasContent => items.isNotEmpty;
 
   bool get hasDeadlinePressure =>
-      items.any((item) => item.titleKey == 'decision_deadline_pressure');
+      items.any((item) => item.title.contains('deadline'));
 
   List<DecisionItem> get sortedItems {
     final sorted = [...items]..sort((a, b) {

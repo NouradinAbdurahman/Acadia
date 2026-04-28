@@ -114,7 +114,7 @@ class _SemesterHistoryItem extends ConsumerWidget {
     final theme = Theme.of(context);
     final repository = ref.watch(analyticsRepositoryProvider);
     final currentUser = ref.watch(currentAppUserProvider).value;
-    final activeSemesterId = ref.watch(activeSemesterProvider);
+    final activeSemesterId = ref.watch(activeSemesterProvider).value;
     final l10n = AppLocalizations.of(context)!;
 
     return FutureBuilder<AnalyticsData>(

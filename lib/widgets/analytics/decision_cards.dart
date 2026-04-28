@@ -134,6 +134,7 @@ class _PlanRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Row(
       children: [
@@ -145,7 +146,7 @@ class _PlanRow extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
-            '$minutes min $course',
+            l10n.minutesCourseValue(minutes, course),
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -165,6 +166,7 @@ class _RecoveryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Row(
       children: [
@@ -177,7 +179,7 @@ class _RecoveryRow extends StatelessWidget {
           ),
         ),
         Text(
-          '$minutes min',
+          l10n.minutesValue(minutes),
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.colorScheme.primary,

@@ -39,8 +39,8 @@ class AppGlassCard extends StatelessWidget {
           border: Border.all(
             color: isDark 
                 ? Colors.white.withValues(alpha: 0.08) 
-                : Colors.black.withValues(alpha: 0.05),
-            width: 1.2, // Slightly more modern border weight
+                : Colors.black.withValues(alpha: 0.12),
+            width: 1.2,
           ),
           boxShadow: isDark ? null : [
             BoxShadow(

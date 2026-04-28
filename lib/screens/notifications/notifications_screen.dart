@@ -15,6 +15,7 @@ import '../../providers/bottom_nav_provider.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_back_button.dart';
 import '../../core/theme/app_colors.dart';
+import '../../models/notification.dart';
 
 enum _NotificationGroup {
   today,
@@ -22,14 +23,29 @@ enum _NotificationGroup {
   earlier,
 }
 
-class NotificationsScreen extends ConsumerWidget {
+enum _NotificationCategory {
+  all,
+  tasks,
+  deadlines,
+  mood,
+  academic,
+}
+
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
-  Future<void> _onRefresh(WidgetRef ref) async {
+  @override
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  _NotificationCategory _selectedCategory = _NotificationCategory.all;
+
+  Future<void> _onRefresh() async {
     await ref.read(notificationsProvider.notifier).loadNotifications();
   }
 
-  _NotificationGroup _groupForNotification(dynamic notification) {
+  _NotificationGroup _groupForNotification(NotificationModel notification) {
     switch (notification.type) {
       case 'due_today':
         return _NotificationGroup.today;
@@ -59,6 +75,10 @@ class NotificationsScreen extends ConsumerWidget {
       case 'overdue':
       case 'task_overdue':
         return HeroIcons.exclamationTriangle;
+      case 'mood_check':
+        return HeroIcons.faceSmile;
+      case 'study_goal':
+        return HeroIcons.trophy;
       default:
         return HeroIcons.calendarDays;
     }
@@ -71,6 +91,10 @@ class NotificationsScreen extends ConsumerWidget {
         return AppColors.error;
       case 'due_tomorrow':
         return theme.colorScheme.secondary;
+      case 'mood_check':
+        return Colors.orange;
+      case 'study_goal':
+        return Colors.amber;
       default:
         return theme.colorScheme.primary;
     }
@@ -82,14 +106,30 @@ class NotificationsScreen extends ConsumerWidget {
     return parts.first.trim();
   }
 
-  Future<void> _handleNotificationTap(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic notification,
-  ) async {
+  bool _matchesCategory(NotificationModel n, _NotificationCategory category) {
+    if (category == _NotificationCategory.all) return true;
+    
+    final refId = n.referenceId ?? '';
+    final type = n.type;
+
+    switch (category) {
+      case _NotificationCategory.tasks:
+        return refId.startsWith('task:');
+      case _NotificationCategory.deadlines:
+        return refId.startsWith('deadline:');
+      case _NotificationCategory.mood:
+        return refId.startsWith('mood:') || type.contains('mood');
+      case _NotificationCategory.academic:
+        return type == 'study_goal' || type == 'season_finished' || (!refId.startsWith('task:') && !refId.startsWith('deadline:') && !refId.startsWith('mood:'));
+      default:
+        return true;
+    }
+  }
+
+  Future<void> _handleNotificationTap(NotificationModel notification) async {
     Haptics.vibrate(HapticsType.selection);
     await ref.read(notificationsProvider.notifier).markAsRead(notification.id);
-    if (!context.mounted) return;
+    if (!mounted) return;
 
     final referenceId = notification.referenceId?.toString();
     if (referenceId != null && referenceId.startsWith('task:')) {
@@ -114,7 +154,7 @@ class NotificationsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final notificationsAsync = ref.watch(notificationsProvider);
@@ -125,198 +165,317 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: AppBackButton(),
+        leading: const AppBackButton(),
         title: Text(l10n.notifications),
         foregroundColor: theme.colorScheme.onSurface,
+        actions: [
+          const SizedBox(width: AppSpacing.sm),
+        ],
       ),
       body: AuthBackgroundContainer(
         child: SafeArea(
-          child: notificationsAsync.when(
-          data: (notifications) {
-            if (notifications.isEmpty) {
-              return RefreshIndicator(
-                onRefresh: () => _onRefresh(ref),
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.65,
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
+            children: [
+              _buildCategoryTabs(l10n, theme),
+              Expanded(
+                child: notificationsAsync.when(
+                  data: (notifications) {
+                    final filtered = notifications.where((n) => _matchesCategory(n, _selectedCategory)).toList();
+                    
+                    if (filtered.isEmpty) {
+                      return RefreshIndicator(
+                        onRefresh: _onRefresh,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           children: [
-                            AppIcon(
-                              HeroIcons.checkCircle,
-                              size: 64,
-                              color: theme.textTheme.bodySmall?.color,
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            Text(
-                              l10n.notificationsCaughtUp,
-                              style: theme.textTheme.bodyLarge,
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.55,
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    AppIcon(
+                                      HeroIcons.checkCircle,
+                                      size: 64,
+                                      color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
+                                    ),
+                                    const SizedBox(height: AppSpacing.md),
+                                    Text(
+                                      l10n.notificationsCaughtUp,
+                                      style: theme.textTheme.bodyLarge?.copyWith(
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
+                      );
+                    }
 
-            final grouped = <_NotificationGroup, List<dynamic>>{
-              _NotificationGroup.today: [],
-              _NotificationGroup.tomorrow: [],
-              _NotificationGroup.earlier: [],
-            };
+                    final grouped = <_NotificationGroup, List<NotificationModel>>{
+                      _NotificationGroup.today: [],
+                      _NotificationGroup.tomorrow: [],
+                      _NotificationGroup.earlier: [],
+                    };
 
-            for (final notification in notifications) {
-              grouped[_groupForNotification(notification)]!.add(notification);
-            }
+                    for (final notification in filtered) {
+                      grouped[_groupForNotification(notification)]!.add(notification);
+                    }
 
-            final orderedGroups = [
-              _NotificationGroup.today,
-              _NotificationGroup.tomorrow,
-              _NotificationGroup.earlier,
-            ];
+                    final orderedGroups = [
+                      _NotificationGroup.today,
+                      _NotificationGroup.tomorrow,
+                      _NotificationGroup.earlier,
+                    ];
 
-            return RefreshIndicator(
-              onRefresh: () => _onRefresh(ref),
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.xl,
-                ),
-                children: [
-                  for (final group in orderedGroups)
-                    if (grouped[group]!.isNotEmpty) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: Text(
-                          _groupTitle(l10n, group),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                    return RefreshIndicator(
+                      onRefresh: _onRefresh,
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                          AppSpacing.xl,
                         ),
-                      ),
-                      for (var i = 0; i < grouped[group]!.length; i++) ...[
-                        Builder(
-                          builder: (context) {
-                            final n = grouped[group]![i];
-                            final statusColor = _statusColor(n.type, theme);
-                            final isOverdue =
-                                n.type == 'overdue' || n.type == 'task_overdue';
-                            final courseName = _extractCourseName(n.message);
-                            final courseColor = courseColorByName[courseName];
-                            final identityColor =
-                                courseColor ?? theme.colorScheme.outline.withValues(alpha: 0.45);
-
-                            return GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () => _handleNotificationTap(context, ref, n),
-                              child: AppGlassCard(
-                                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                                padding: const EdgeInsets.all(AppSpacing.md),
-                                child: Container(
-                                  padding: const EdgeInsets.all(AppSpacing.sm),
-                                  decoration: BoxDecoration(
-                                    color: isOverdue
-                                        ? AppColors.error.withValues(alpha: 0.08)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: isOverdue
-                                          ? AppColors.error.withValues(alpha: 0.2)
-                                          : Colors.transparent,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: identityColor,
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                      ),
-                                      const SizedBox(width: AppSpacing.md),
-                                      Expanded(
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Container(
-                                              width: 28,
-                                              height: 28,
-                                              decoration: BoxDecoration(
-                                                color: statusColor.withValues(alpha: 0.14),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Center(
-                                                child: AppIcon(
-                                                  _iconForType(n.type),
-                                                  size: 16,
-                                                  color: statusColor,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: AppSpacing.md),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    n.title,
-                                                    style: theme.textTheme.titleSmall?.copyWith(
-                                                      fontWeight: FontWeight.w700,
-                                                      color: n.isRead
-                                                          ? theme.colorScheme.onSurface.withValues(alpha: 0.75)
-                                                          : (isOverdue
-                                                              ? AppColors.error
-                                                              : theme.colorScheme.onSurface),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    n.message,
-                                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                        children: [
+                          for (final group in orderedGroups)
+                            if (grouped[group]!.isNotEmpty) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: AppSpacing.md, top: AppSpacing.sm),
+                                child: Text(
+                                  _groupTitle(l10n, group),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: theme.colorScheme.primary,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ),
-                            )
-                                .animate(delay: Duration(milliseconds: i * 45))
-                                .fade(duration: AppDurations.fast)
-                                .slideY(begin: 0.05);
-                          },
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.md),
-                    ],
-                ],
-              ).animate().fade(duration: AppDurations.slow),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => Center(
-            child: Text(l10n.networkError),
-          ),
+                              for (var i = 0; i < grouped[group]!.length; i++) ...[
+                                _buildNotificationCard(grouped[group]![i], theme, courseColorByName),
+                              ],
+                              const SizedBox(height: AppSpacing.md),
+                            ],
+                        ],
+                      ),
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (_, _) => Center(
+                    child: Text(l10n.networkError),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildCategoryTabs(AppLocalizations l10n, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
+
+    Widget catChip(_NotificationCategory category, String label) {
+      final selected = _selectedCategory == category;
+      return Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.sm),
+        child: ChoiceChip(
+          label: Text(label),
+          selected: selected,
+          showCheckmark: false,
+          elevation: 0,
+          onSelected: (val) {
+            if (val) {
+              Haptics.vibrate(HapticsType.selection);
+              setState(() => _selectedCategory = category);
+            }
+          },
+          labelStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: selected
+                ? Colors.white
+                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            fontSize: 14,
+          ),
+          selectedColor: theme.colorScheme.primary,
+          backgroundColor: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(
+              color: selected ? theme.colorScheme.primary : Colors.transparent,
+              width: 1,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      height: 84,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            catChip(_NotificationCategory.all, l10n.all),
+            catChip(_NotificationCategory.tasks, l10n.tasks),
+            catChip(_NotificationCategory.deadlines, l10n.deadlines),
+            catChip(_NotificationCategory.mood, l10n.mood),
+            catChip(_NotificationCategory.academic, l10n.academic),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationCard(NotificationModel n, ThemeData theme, Map<String, Color> courseColorByName) {
+    final statusColor = _statusColor(n.type, theme);
+    final isOverdue = n.type == 'overdue' || n.type == 'task_overdue';
+    final courseName = _extractCourseName(n.message);
+    final courseColor = courseColorByName[courseName];
+    final identityColor = courseColor ?? theme.colorScheme.outline.withValues(alpha: 0.45);
+    final isUnread = !n.isRead;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _handleNotificationTap(n),
+      child: AppGlassCard(
+        margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        // Visual distinction for read/unread
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isUnread 
+              ? (isOverdue ? AppColors.error.withValues(alpha: 0.12) : theme.colorScheme.primary.withValues(alpha: 0.06))
+              : theme.colorScheme.onSurface.withValues(alpha: 0.02),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isUnread 
+                ? (isOverdue ? AppColors.error.withValues(alpha: 0.3) : theme.colorScheme.primary.withValues(alpha: 0.15))
+                : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+            ),
+          ),
+          child: Opacity(
+            opacity: isUnread ? 1.0 : 0.65,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Identity bar
+                Container(
+                  width: 4,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: identityColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Icon Circle
+                      Stack(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.14),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: AppIcon(
+                                _iconForType(n.type),
+                                size: 18,
+                                color: statusColor,
+                              ),
+                            ),
+                          ),
+                          if (isUnread)
+                            Positioned(
+                              right: 0,
+                              top: 0,
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: theme.cardColor, width: 2),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      // Content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    n.title,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
+                                      color: isOverdue ? AppColors.error : theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                                if (isUnread)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'NEW',
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              n.message,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: isUnread ? 0.8 : 0.6),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    )
+    .animate()
+    .fade(duration: AppDurations.fast)
+    .slideY(begin: 0.05);
   }
 }

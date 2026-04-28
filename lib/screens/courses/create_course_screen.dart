@@ -79,7 +79,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
 
     final user = ref.read(currentUserProvider);
     if (user == null) return;
-    final activeSemester = ref.read(activeSemesterFullProvider);
+    final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
     if (activeSemester == null) {
       _showError(l10n.noSemestersYet);
       return;
@@ -130,7 +130,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final activeSemester = ref.watch(activeSemesterFullProvider);
+    final activeSemester = ref.watch(activeSemesterFullProvider).valueOrNull;
 
     return Scaffold(
       appBar: AppBar(

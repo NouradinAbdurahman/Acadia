@@ -5,7 +5,7 @@ extension LocalizationHelper on AppLocalizations {
     switch (key) {
       case 'predictionPressureLikelyToIncrease':
       case 'prediction_pressure_likely_to_increase':
-        return predictionPressureLikelyToIncrease;
+        return predictionPressureLikelyToIncrease(params?['hours']?.toString() ?? '0.0');
       case 'predictionStressLikelyIncrease':
       case 'prediction_stress_likely_increase':
         return predictionStressLikelyIncrease;
@@ -43,19 +43,19 @@ extension LocalizationHelper on AppLocalizations {
       case 'decisionDeadlinePressure':
         return decisionDeadlinePressure;
       case 'predictionReasonHighStressToday':
-        return predictionReasonHighStressToday;
+        return predictionReasonHighStressToday(params?['stress']?.toString() ?? '0.0');
       case 'predictionReasonLowConsistency':
-        return predictionReasonLowConsistency;
+        return predictionReasonLowConsistency(params?['percent']?.toString() ?? '0');
       case 'predictionReasonUpcomingWorkload':
-        return predictionReasonUpcomingWorkload;
+        return predictionReasonUpcomingWorkload(params?['count'] as int? ?? 0);
       case 'predictionReasonStressHigh':
-        return predictionReasonStressHigh;
+        return predictionReasonStressHigh(params?['stress']?.toString() ?? '0.0');
       case 'predictionReasonLowConsistencyDetail':
-        return predictionReasonLowConsistencyDetail;
+        return predictionReasonLowConsistencyDetail(params?['delta']?.toString() ?? '0');
       case 'predictionReasonTasksPending':
-        return predictionReasonTasksPending;
+        return predictionReasonTasksPending(params?['count'] as int? ?? 0);
       case 'predictionReasonDeadlinesSoon':
-        return predictionReasonDeadlinesSoon;
+        return predictionReasonDeadlinesSoon(params?['count'] as int? ?? 0);
       case 'postSessionMoodImproved':
         return postSessionMoodImproved;
       case 'signalStressHigh':
@@ -73,9 +73,9 @@ extension LocalizationHelper on AppLocalizations {
       case 'stress':
         return stress;
       case 'decisionWorstDay':
-        return decisionWorstDay(params?['day'] ?? '');
+        return decisionWorstDay(params?['day']?.toString() ?? '');
       case 'decisionMainFactor':
-        return decisionMainFactor(params?['factor'] ?? '');
+        return decisionMainFactor(params?['factor']?.toString() ?? '');
       case 'takeItSlowerTodayTitle':
         return takeItSlowerTodayTitle;
       case 'takeItSlowerTodayBody':
@@ -139,13 +139,37 @@ extension LocalizationHelper on AppLocalizations {
       case 'studyProfileEvening':
         return studyProfileEvening;
       case 'studyProfileMainFactor':
-        return studyProfileMainFactor(params?['factor'] ?? '');
+        return studyProfileMainFactor(params?['factor']?.toString() ?? '');
       case 'studyProfileSecondaryFactor':
-        return studyProfileSecondaryFactor(params?['factor'] ?? '');
+        return studyProfileSecondaryFactor(params?['factor']?.toString() ?? '');
       case 'decisionRecommendedSession':
-        return decisionRecommendedSession(params?['minutes'] ?? 0);
+        final mins = params?['minutes'];
+        return decisionRecommendedSession(mins is num ? mins.toInt() : 0);
       default:
-        return key; 
+        return key;
     }
+  }
+
+  String translateTrend(String trend) {
+    switch (trend) {
+      case 'Improving':
+        return statusImproving;
+      case 'Worsening':
+        return statusDeclining;
+      case 'Unstable':
+        return statusVariable;
+      case 'Moderate':
+        return statusModerate;
+      case 'Stable':
+        return statusStable;
+      default:
+        return trend;
+    }
+  }
+
+  String getConfidenceLabel(double confidence) {
+    if (confidence >= 0.7) return confidenceHigh;
+    if (confidence >= 0.4) return confidenceMedium;
+    return confidenceLow;
   }
 }

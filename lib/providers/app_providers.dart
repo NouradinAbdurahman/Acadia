@@ -14,6 +14,8 @@ import '../services/supabase/semester_service.dart';
 import '../services/supabase/notification_service.dart';
 import '../services/supabase/trend_service.dart';
 import '../services/supabase/ai_assistant_service.dart';
+import '../services/ai/intent_parser.dart';
+import '../services/ai/data_resolver.dart';
 import '../services/storage/avatar_service.dart';
 
 import '../repositories/auth_repository.dart';
@@ -52,6 +54,16 @@ final notificationServiceProvider = Provider<NotificationService>((ref) => Notif
 final trendServiceProvider = Provider<TrendService>((ref) => TrendService(ref.watch(supabaseProvider)));
 final aiAssistantServiceProvider = Provider<AiAssistantService>((ref) => AiAssistantService(ref.watch(supabaseProvider)));
 final avatarServiceProvider = Provider<AvatarService>((ref) => AvatarService(ref.watch(supabaseProvider)));
+
+// AI Logic Services
+final aiIntentParserProvider = Provider<AiIntentParser>((ref) => AiIntentParser());
+final aiDataResolverProvider = Provider<AiDataResolver>((ref) {
+  return AiDataResolver(
+    ref.watch(taskRepositoryProvider),
+    ref.watch(deadlineRepositoryProvider),
+    ref.watch(analyticsRepositoryProvider),
+  );
+});
 
 
 // --- REPOSITORIES ---

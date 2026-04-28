@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/mood_log.dart';
@@ -19,15 +20,36 @@ final moodPromptRequestProvider = StateProvider<MoodPromptRequest?>((ref) {
   return null;
 });
 
+final moodTrendDaysProvider = StateProvider<int>((ref) => 7);
+
+final moodChartSourceProvider = StateProvider<String>((ref) => 'daily');
+
 final moodLogsProvider = FutureProvider<List<MoodLog>>((ref) async {
-  final semesterId = ref.watch(activeSemesterProvider);
+  final semesterIdAsync = ref.watch(activeSemesterProvider);
+  
+  // Use .when or await to handle the async semester
+  final semesterId = await ref.watch(activeSemesterProvider.future);
   if (semesterId == null) return <MoodLog>[];
 
-  return ref.read(moodRepositoryProvider).getMoodLogs(semesterId: semesterId);
+  final logs = await ref.read(moodRepositoryProvider).getMoodLogs(semesterId: semesterId);
+  debugPrint('[MoodProvider] Loading for Semester: $semesterId | Data Count: ${logs.length}');
+  return logs;
+});
+
+bool _isSessionMoodSource(String source) => source.trim().toLowerCase() == 'session';
+
+final dailyMoodLogsProvider = FutureProvider<List<MoodLog>>((ref) async {
+  final logs = await ref.watch(moodLogsProvider.future);
+  return logs.where((log) => !_isSessionMoodSource(log.source)).toList();
+});
+
+final sessionMoodLogsProvider = FutureProvider<List<MoodLog>>((ref) async {
+  final logs = await ref.watch(moodLogsProvider.future);
+  return logs.where((log) => _isSessionMoodSource(log.source)).toList();
 });
 
 final todayMoodProvider = FutureProvider<bool>((ref) async {
-  final logs = await ref.watch(moodLogsProvider.future);
+  final logs = await ref.watch(dailyMoodLogsProvider.future);
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   
@@ -124,7 +146,7 @@ class MoodActions {
     String source = 'manual',
   }) async {
     final user = ref.read(currentUserProvider);
-    final semesterId = ref.read(activeSemesterProvider);
+    final semesterId = ref.read(activeSemesterProvider).value;
 
     if (user == null) {
       throw Exception('No active user. Cannot save mood log.');
@@ -160,6 +182,8 @@ class MoodActions {
     // Invalidate providers to trigger UI updates using microtask
     Future.microtask(() {
       ref.invalidate(moodLogsProvider);
+      ref.invalidate(dailyMoodLogsProvider);
+      ref.invalidate(sessionMoodLogsProvider);
       ref.invalidate(todayMoodProvider);
       ref.invalidate(analyticsProvider);
       ref.invalidate(riskProvider);
