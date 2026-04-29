@@ -40,9 +40,12 @@ class CourseResultsNotifier extends StateNotifier<AsyncValue<List<CourseResult>>
   final dynamic repository;
   final SupabaseClient supabaseClient;
   String? _lastLoadedSemesterId;
+  String? _activeRequestSemesterId;
 
   void clear() {
     _lastLoadedSemesterId = null;
+    _activeRequestSemesterId = null;
+    if (!mounted) return;
     state = const AsyncValue.data([]);
   }
 
@@ -50,8 +53,10 @@ class CourseResultsNotifier extends StateNotifier<AsyncValue<List<CourseResult>>
     String semesterId, {
     bool forceRefresh = false,
   }) async {
+    if (!mounted) return;
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) {
+      if (!mounted) return;
       state = const AsyncValue.data([]);
       return;
     }
@@ -60,15 +65,20 @@ class CourseResultsNotifier extends StateNotifier<AsyncValue<List<CourseResult>>
       return;
     }
 
+    _activeRequestSemesterId = semesterId;
+    final requestSemesterId = semesterId;
+
     try {
       final items = await repository.getResultsBySemester(
             userId: userId,
             semesterId: semesterId,
           )
           as List<CourseResult>;
+      if (!mounted || _activeRequestSemesterId != requestSemesterId) return;
       _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(items);
     } catch (e, st) {
+      if (!mounted || _activeRequestSemesterId != requestSemesterId) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -88,13 +98,16 @@ class CourseResultsNotifier extends StateNotifier<AsyncValue<List<CourseResult>>
     required CourseResult result,
     required String semesterId,
   }) async {
+    if (!mounted) return;
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) return;
 
     try {
       await repository.saveResult(userId: userId, result: result);
+      if (!mounted) return;
       await loadForSemester(semesterId, forceRefresh: true);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -103,13 +116,16 @@ class CourseResultsNotifier extends StateNotifier<AsyncValue<List<CourseResult>>
     required String resultId,
     required String semesterId,
   }) async {
+    if (!mounted) return;
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) return;
 
     try {
       await repository.deleteResult(userId: userId, resultId: resultId);
+      if (!mounted) return;
       await loadForSemester(semesterId, forceRefresh: true);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }

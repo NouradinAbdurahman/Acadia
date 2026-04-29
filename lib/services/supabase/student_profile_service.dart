@@ -5,6 +5,10 @@ import '../../models/student_profile.dart';
 abstract class StudentProfileServiceBase {
   Future<StudentProfile?> getProfile();
   Future<bool> createOrUpdateProfile(StudentProfile profile);
+  Future<bool> upsertInitialProfile({
+    required String userId,
+    required String fullName,
+  });
   Future<bool> markOnboardingComplete();
 }
 
@@ -50,13 +54,28 @@ class StudentProfileService implements StudentProfileServiceBase {
 
       await _supabase.from('student_profiles').upsert(data, onConflict: 'user_id');
 
-      await _supabase.from('users').update({
-        'name': profile.fullName,
-      }).eq('id', user.id);
-
       return true;
     } catch (e) {
       debugPrint('Error updating student profile: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> upsertInitialProfile({
+    required String userId,
+    required String fullName,
+  }) async {
+    try {
+      await _supabase.from('student_profiles').upsert({
+        'user_id': userId,
+        'full_name': fullName.trim(),
+        'onboarding_complete': false,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id');
+      return true;
+    } catch (e) {
+      debugPrint('Error upserting initial student profile: $e');
       return false;
     }
   }
@@ -67,19 +86,26 @@ class StudentProfileService implements StudentProfileServiceBase {
       final user = _supabase.auth.currentUser;
       if (user == null) return false;
 
-      // 1. Update profiles table
-      await _supabase
-          .from('student_profiles')
-          .update({'onboarding_complete': true})
-          .eq('user_id', user.id);
+      // 1. Update users table (Source of Truth for routing)
+      await _supabase.from('users').update({
+        'academic_profile_completed': true,
+      }).eq('id', user.id);
 
-      // 2. Update users table (Source of Truth for routing)
-      await _supabase
-          .from('users')
-          .update({
-            'academic_profile_completed': true,
-          })
-          .eq('id', user.id);
+      // 2. Create a default semester for the user
+      final semesterResponse = await _supabase.from('semesters').insert({
+        'user_id': user.id,
+        'name': 'Semester 1',
+        'is_active': true,
+        'start_date': DateTime.now().toIso8601String(),
+      }).select().single();
+
+      final semesterId = semesterResponse['id'];
+
+      // 3. Update profiles table with completion status AND active semester
+      await _supabase.from('student_profiles').update({
+        'onboarding_complete': true,
+        'active_semester_id': semesterId,
+      }).eq('user_id', user.id);
           
       return true;
     } catch (e) {

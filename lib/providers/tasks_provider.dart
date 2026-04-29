@@ -31,11 +31,14 @@ final tasksProvider = StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>
   semesterIdAsync.when(
     data: (id) {
       if (userId != null && id != null) {
+        debugPrint("[TasksProvider] Loading tasks for user: $userId, semester: $id");
         notifier.loadTasks(userId: userId, semesterId: id);
+        return;
       }
+      notifier.setEmptyState();
     },
-    loading: () => {},
-    error: (_, __) => {},
+    loading: () => notifier.setEmptyState(),
+    error: (_, __) => notifier.setEmptyState(),
   );
   
   return notifier;
@@ -123,15 +126,28 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
   final Ref _ref;
   final dynamic taskRepository;
   final SupabaseClient supabaseClient;
+  String? _lastLoadedSemesterId;
+
+  void setEmptyState() {
+    _lastLoadedSemesterId = null;
+    state = const AsyncValue.data(<Task>[]);
+  }
 
   Future<void> loadTasks({required String userId, String? semesterId}) async {
+    if (semesterId != null &&
+        _lastLoadedSemesterId == semesterId &&
+        state.hasValue) {
+      return;
+    }
     try {
+      debugPrint("[TasksNotifier] Loading tasks for user: $userId, semester: $semesterId");
       // Strict reset on semester load to prevent cross-semester leaks.
       state = const AsyncValue<List<Task>>.loading();
       final list = await taskRepository.getTasks(userId: userId, semesterId: semesterId) as List<Task>;
       
-      debugPrint('[TaskProvider] Loading for Semester: $semesterId | Data Count: ${list.length}');
+      debugPrint('[TasksNotifier] Load complete. Semester: $semesterId | Data Count: ${list.length}');
       if (!mounted) return;
+      _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(list);
     } catch (e, st) {
       if (!mounted) return;

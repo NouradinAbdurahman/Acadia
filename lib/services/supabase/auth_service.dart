@@ -89,41 +89,4 @@ class AuthService {
         .maybeSingle();
   }
 
-  Future<void> updateWeeklyStudyGoal(String userId, int goal) async {
-    try {
-      final updated = await _supabase
-          .from('users')
-          .update({'weekly_study_goal': goal})
-          .eq('id', userId)
-          .select('weekly_study_goal')
-          .maybeSingle();
-
-        // Temporary debug for weekly-goal persistence verification.
-        print('SAVE RESPONSE: $updated');
-
-      if (updated == null) {
-        throw Exception('Failed to update weekly study goal for user.');
-      }
-
-      final saved = updated['weekly_study_goal'] as int?;
-      if (saved != goal) {
-        throw Exception('Weekly study goal was not saved correctly.');
-      }
-    } on PostgrestException catch (e) {
-      // Backward compatibility: some environments may not have this column yet.
-      if (e.code == 'PGRST204' ||
-          (e.message).toLowerCase().contains('weekly_study_goal')) {
-        return;
-      }
-      rethrow;
-    } catch (e) {
-      // Fallback safety for schema cache/driver variants.
-      final message = e.toString().toLowerCase();
-      if (message.contains('weekly_study_goal') &&
-          (message.contains('pgrst204') || message.contains('schema cache'))) {
-        return;
-      }
-      rethrow;
-    }
-  }
 }

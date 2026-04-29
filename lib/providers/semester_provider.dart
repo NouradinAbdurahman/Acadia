@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/semester.dart';
 import '../repositories/semester_repository.dart';
@@ -108,34 +107,20 @@ final activeSemesterProvider = AsyncNotifierProvider<ActiveSemesterNotifier, Str
 
 class ActiveSemesterNotifier extends AsyncNotifier<String?> {
   SemesterStateService get _service => ref.read(semesterStateServiceProvider);
-  bool _isDisposed = false;
 
   @override
   FutureOr<String?> build() async {
-    ref.onDispose(() => _isDisposed = true);
-    
     // Re-initialize this notifier if the user changes
     final user = ref.watch(currentUserProvider);
     if (user == null) return null;
 
-    final id = await _service.getActiveSemesterId();
-    if (id != null) return id;
-
-    // Fallback: try to find first semester from the list
-    final semestersAsync = ref.watch(semesterProvider);
-    final semesters = semestersAsync.value ?? [];
-    if (semesters.isNotEmpty) {
-      final firstId = semesters.first.id;
-      // Persist it as active
-      await _service.updateActiveSemester(firstId);
-      return firstId;
-    }
-
-    return null;
+    // Single source of truth: student_profiles.active_semester_id
+    return await _service.getActiveSemesterId();
   }
 
   Future<void> setActiveSemester(String semesterId) async {
     if (ref.read(isSemesterSwitchingProvider)) return;
+    if (state.valueOrNull == semesterId) return;
 
     final semesters = ref.read(semesterProvider).value ?? const <Semester>[];
     if (semesters.isNotEmpty && !semesters.any((s) => s.id == semesterId)) {
@@ -145,18 +130,12 @@ class ActiveSemesterNotifier extends AsyncNotifier<String?> {
     ref.read(isSemesterSwitchingProvider.notifier).state = true;
     try {
       final success = await _service.updateActiveSemester(semesterId);
-      if (success && !_isDisposed) {
-        state = AsyncValue.data(semesterId);
-      }
+      if (!success) return;
+      // Update local async state immediately after DB persistence.
+      // Downstream providers already watch activeSemesterProvider and will reload.
+      state = AsyncValue.data(semesterId);
     } finally {
       ref.read(isSemesterSwitchingProvider.notifier).state = false;
-    }
-  }
-
-  // Compatibility method for the listener logic if needed
-  void onSemesterListChanged(List<Semester> semesters) {
-    if (state.value == null && semesters.isNotEmpty) {
-      setActiveSemester(semesters.first.id);
     }
   }
 }

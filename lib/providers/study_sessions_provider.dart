@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/services.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter/widgets.dart';
 
@@ -496,14 +495,26 @@ class StudySessionsNotifier
   final dynamic studyRepository;
   final SupabaseClient supabaseClient;
   final Ref ref;
+  String? _lastLoadedSemesterId;
+
+  void setEmptyState() {
+    _lastLoadedSemesterId = null;
+    state = const AsyncValue.data(<StudySession>[]);
+  }
 
   Future<void> loadSessions({required String userId, String? semesterId}) async {
+    if (semesterId != null &&
+        _lastLoadedSemesterId == semesterId &&
+        state.hasValue) {
+      return;
+    }
     try {
       state = const AsyncValue.loading();
       final list = await studyRepository.getSessions(userId: userId, semesterId: semesterId) as List<StudySession>;
       
       debugPrint('[StudySessionsProvider] Loading for Semester: $semesterId | Data Count: ${list.length}');
       if (!mounted) return;
+      _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(list);
     } catch (e, st) {
       if (!mounted) return;
@@ -755,10 +766,12 @@ final studySessionsProvider = StateNotifierProvider<StudySessionsNotifier, Async
     data: (id) {
       if (userId != null && id != null) {
         notifier.loadSessions(userId: userId, semesterId: id);
+        return;
       }
+      notifier.setEmptyState();
     },
-    loading: () => {},
-    error: (_, __) => {},
+    loading: () => notifier.setEmptyState(),
+    error: (_, __) => notifier.setEmptyState(),
   );
   
   return notifier;

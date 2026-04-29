@@ -3,9 +3,11 @@ import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/app_user.dart';
 import '../services/supabase/auth_service.dart';
+import '../services/supabase/student_profile_service.dart';
 
 class AuthRepository {
   final AuthService _authService;
+  final StudentProfileServiceBase _studentProfileService;
   final SupabaseClient _supabase = Supabase.instance.client;
 
   DateTime? _lastEmailRateLimit;
@@ -15,7 +17,10 @@ class AuthRepository {
   int _emailRateLimitCount = 0;
   int _authRateLimitCount = 0;
 
-  AuthRepository(this._authService) {
+  AuthRepository(
+    this._authService, {
+    StudentProfileServiceBase? studentProfileService,
+  }) : _studentProfileService = studentProfileService ?? StudentProfileService() {
     _loadLimits();
     // Clean up expired limits on start
     _syncLimits();
@@ -147,7 +152,7 @@ class AuthRepository {
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(const Duration(seconds: 45));
       
       // Reset counter on success
       _authRateLimitCount = 0;
@@ -162,6 +167,10 @@ class AuthRepository {
       } else if (e.code == 'too_many_requests' || msg.contains('too many requests')) {
         _markRateLimit(isEmail: false);
       }
+      debugPrint("LOGIN REAL ERROR: $e");
+      rethrow;
+    } catch (e) {
+      debugPrint("LOGIN REAL ERROR: $e");
       rethrow;
     }
   }
@@ -267,17 +276,17 @@ class AuthRepository {
       ).timeout(const Duration(seconds: 20));
       
       if (response.user != null) {
-        // Create user profile directly into 'users' table if it doesn't exist
-        try {
-          await _supabase.from('users').upsert({
-            'id': response.user!.id,
-            'email': response.user!.email,
-            'name': fullName,
-            'academic_profile_completed': false,
-          }, onConflict: 'id');
-        } catch (e) {
-          debugPrint('Error creating user profile: $e');
-        }
+        // Keep auth-linked app row for routing/system flags.
+        await _supabase.from('users').upsert({
+          'id': response.user!.id,
+          'academic_profile_completed': false,
+        }, onConflict: 'id');
+
+        // Single source of truth for display name via profile service layer.
+        await _studentProfileService.upsertInitialProfile(
+          userId: response.user!.id,
+          fullName: fullName,
+        );
       }
       
       return response;
@@ -317,10 +326,6 @@ class AuthRepository {
       return AppUser.fromJson(response);
     }
     return null;
-  }
-
-  Future<void> updateWeeklyStudyGoal(String userId, int goal) async {
-    await _authService.updateWeeklyStudyGoal(userId, goal);
   }
 
   Future<void> logout() async {

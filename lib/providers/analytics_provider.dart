@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,11 +9,11 @@ import '../models/deadline.dart';
 import '../models/mood_log.dart';
 import '../models/study_session.dart';
 import '../models/task.dart';
-import '../repositories/analytics_repository.dart';
 import 'app_providers.dart';
 import 'study_sessions_provider.dart';
 import 'tasks_provider.dart';
 import 'deadlines_provider.dart';
+import 'course_provider.dart';
 import 'mood_provider.dart';
 import 'student_profile_provider.dart';
 import 'semester_provider.dart';
@@ -57,43 +56,20 @@ final studyAdaptationModeProvider =
 
 const DEFAULT_WEEKLY_GOAL = 15;
 
-final _weeklyGoalBackfillInFlightProvider = StateProvider<Set<String>>(
-  (ref) => <String>{},
-);
-
 final weeklyStudyGoalHoursProvider = Provider<int>((ref) {
   final activeSemesterAsync = ref.watch(activeSemesterFullProvider);
-  
-  return activeSemesterAsync.maybeWhen(
+
+  return activeSemesterAsync.when(
     data: (activeSemester) {
       if (activeSemester == null) return DEFAULT_WEEKLY_GOAL;
-
       final weeklyGoal = activeSemester.weeklyStudyGoal;
-      final isInvalid = weeklyGoal == null || weeklyGoal <= 0 || weeklyGoal > 100;
-      if (!isInvalid) return weeklyGoal;
-
-      final inFlight = ref.watch(_weeklyGoalBackfillInFlightProvider);
-      if (!inFlight.contains(activeSemester.id)) {
-        Future.microtask(() async {
-          final inFlightNotifier =
-              ref.read(_weeklyGoalBackfillInFlightProvider.notifier);
-          inFlightNotifier.state = {...inFlightNotifier.state, activeSemester.id};
-          try {
-            await ref.read(semesterProvider.notifier).updateSemester(
-                  activeSemester.copyWith(weeklyStudyGoal: DEFAULT_WEEKLY_GOAL),
-                );
-            ref.invalidate(semesterProvider);
-          } finally {
-            inFlightNotifier.state =
-                inFlightNotifier.state
-                    .where((id) => id != activeSemester.id)
-                    .toSet();
-          }
-        });
+      if (weeklyGoal == null || weeklyGoal <= 0 || weeklyGoal > 100) {
+        return DEFAULT_WEEKLY_GOAL;
       }
-      return DEFAULT_WEEKLY_GOAL;
+      return weeklyGoal;
     },
-    orElse: () => DEFAULT_WEEKLY_GOAL,
+    loading: () => DEFAULT_WEEKLY_GOAL,
+    error: (_, __) => DEFAULT_WEEKLY_GOAL,
   );
 });
 
@@ -205,46 +181,6 @@ final burnoutHistoryProvider = StateNotifierProvider<BurnoutHistoryNotifier, Lis
   (ref) => BurnoutHistoryNotifier(),
 );
 
-// ── FutureProvider bridges ───────────────────────────────────────────────────
-// StateNotifierProvider<_, AsyncValue<List<_>>> does not expose .future.
-// These thin bridges let AnalyticsNotifier await them with ref.watch(x.future).
-
-/// Resolves when studySessionsProvider emits its first non-loading data.
-final _studySessionsFutureProvider = FutureProvider<List<StudySession>>((ref) {
-  final async = ref.watch(studySessionsProvider);
-  return async.when(
-    data: (list) => Future.value(list),
-    loading: () => ref.watch(studySessionsProvider.notifier).stream
-        .firstWhere((v) => !v.isLoading)
-        .then((v) => v.value ?? <StudySession>[]),
-    error: (e, st) => Future.error(e, st),
-  );
-});
-
-/// Resolves when tasksProvider emits its first non-loading data.
-final _tasksFutureProvider = FutureProvider<List<Task>>((ref) {
-  final async = ref.watch(tasksProvider);
-  return async.when(
-    data: (list) => Future.value(list),
-    loading: () => ref.watch(tasksProvider.notifier).stream
-        .firstWhere((v) => !v.isLoading)
-        .then((v) => v.value ?? <Task>[]),
-    error: (e, st) => Future.error(e, st),
-  );
-});
-
-/// Resolves when deadlinesProvider emits its first non-loading data.
-final _deadlinesFutureProvider = FutureProvider<List<Deadline>>((ref) {
-  final async = ref.watch(deadlinesProvider);
-  return async.when(
-    data: (list) => Future.value(list),
-    loading: () => ref.watch(deadlinesProvider.notifier).stream
-        .firstWhere((v) => !v.isLoading)
-        .then((v) => v.value ?? <Deadline>[]),
-    error: (e, st) => Future.error(e, st),
-  );
-});
-
 // ── Analytics Provider ───────────────────────────────────────────────────────
 
 final analyticsProvider = AsyncNotifierProvider<AnalyticsNotifier, AnalyticsData>(() {
@@ -271,30 +207,32 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
     // 1. Await active semester — the keystone dependency.
     final semesterId = await ref.watch(activeSemesterProvider.future);
     if (semesterId == null) {
+      debugPrint('[AnalyticsProvider] No active semester found — returning empty.');
       _lastHash = null;
       return AnalyticsData.empty();
     }
+    debugPrint('[AnalyticsProvider] Found active semester: $semesterId. Starting data fetch...');
 
-    // 2. Await ALL data providers in parallel.
-    final results = await Future.wait([
-      ref.watch(_studySessionsFutureProvider.future),
-      ref.watch(_tasksFutureProvider.future),
-      ref.watch(moodLogsProvider.future),
-      ref.watch(_deadlinesFutureProvider.future),
-    ]);
-
-    final sessions  = results[0] as List<StudySession>;
-    final tasks     = results[1] as List<Task>;
-    final moods     = results[2] as List<MoodLog>;
-    final deadlines = results[3] as List<Deadline>;
-
-    // 3. Hard guard: if everything is truly empty, clear cache and return empty.
-    if (sessions.isEmpty && tasks.isEmpty && moods.isEmpty && deadlines.isEmpty) {
-      debugPrint('[AnalyticsProvider] All data empty for Semester: $semesterId — returning empty.');
-      _lastHash = null;
-      _cache.remove(semesterId);
-      return AnalyticsData.empty();
+    // 2. Wait until all semester-scoped dependencies are ready.
+    // This prevents partial analytics runs during staggered provider hydration.
+    final sessionsAsync = ref.watch(studySessionsProvider);
+    final tasksAsync = ref.watch(tasksProvider);
+    final moodsAsync = ref.watch(moodLogsProvider);
+    final deadlinesAsync = ref.watch(deadlinesProvider);
+    final coursesAsync = ref.watch(courseProvider);
+    if (sessionsAsync.isLoading ||
+        tasksAsync.isLoading ||
+        moodsAsync.isLoading ||
+        deadlinesAsync.isLoading ||
+        coursesAsync.isLoading) {
+      return state.value ?? AnalyticsData.empty();
     }
+
+    // 3. Read provider values after readiness gate.
+    final sessions = sessionsAsync.value ?? <StudySession>[];
+    final tasks = tasksAsync.value ?? <Task>[];
+    final moods = moodsAsync.value ?? <MoodLog>[];
+    final deadlines = deadlinesAsync.value ?? <Deadline>[];
 
     // 4. Compute stable hash for this data snapshot.
     // Include lengths of all datasets that affect the final report.
@@ -321,7 +259,16 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
       return state.value ?? AnalyticsData.empty();
     }
 
-    // 7. Real computation.
+    // 7. Hard guard for true empty snapshot with dedup support.
+    if (sessions.isEmpty && tasks.isEmpty && moods.isEmpty && deadlines.isEmpty) {
+      debugPrint('[AnalyticsProvider] All data empty for Semester: $semesterId — returning empty.');
+      final empty = AnalyticsData.empty();
+      _lastHash = currentHash;
+      _cache[semesterId] = (hash: currentHash, data: empty);
+      return empty;
+    }
+
+    // 8. Real computation.
     debugPrint('[AnalyticsProvider] Computing for Semester: $semesterId | Sessions: ${sessions.length} | Tasks: ${tasks.length} | Moods: ${moods.length} | Deadlines: ${deadlines.length}');
 
     final repository = ref.read(analyticsRepositoryProvider);

@@ -134,7 +134,7 @@ class AppButtonState extends State<AppButton> with SingleTickerProviderStateMixi
                       ),
                     )
                     : Row(
-                      mainAxisSize: MainAxisSize.max,
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (widget.icon != null) ...[

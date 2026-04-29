@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -96,11 +97,19 @@ final currentUserProvider = Provider<User?>((ref) {
 });
 
 final currentAppUserProvider = FutureProvider<AppUser?>((ref) async {
+  debugPrint("Fetching current user from database...");
+  debugPrint("Auth user id: ${Supabase.instance.client.auth.currentUser?.id}");
+  
   final user = ref.watch(currentUserProvider);
-  if (user == null) return null;
+  if (user == null) {
+    debugPrint("Fetched user: null (no auth user)");
+    return null;
+  }
   
   final authRepo = ref.watch(authRepositoryProvider);
-  return await authRepo.getUserProfile(user.id);
+  final appUser = await authRepo.getUserProfile(user.id);
+  debugPrint("Fetched user: $appUser");
+  return appUser;
 });
 
 // --- DATA PROVIDERS ---

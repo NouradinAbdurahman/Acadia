@@ -143,10 +143,10 @@ class _AcademicOnboardingScreenState
     final profile = StudentProfile(
       id: '', // Will be handled by upsert
       userId: '', // Will be handled by service
-      fullName: _nameController.text,
-      universityName: _universityController.text,
+      fullName: _nameController.text.trim(),
+      universityName: _universityController.text.trim(),
       degreeType: _selectedDegree,
-      major: _majorController.text,
+      major: _majorController.text.trim(),
       academicYear: null,
       currentSemester: _selectedSemester,
       expectedGraduationYear: _selectedGradYear,
@@ -177,19 +177,13 @@ class _AcademicOnboardingScreenState
         ref.invalidate(weeklyStudyGoalHoursProvider);
       }
 
-      // CRITICAL: Wait for the app user state to actually refresh from DB 
-      // before we attempt navigation. This ensures the GoRouter redirect 
-      // sees the 'academic_profile_completed = true' state.
-      debugPrint('[AcademicOnboarding] Waiting for provider refresh...');
-      await ref.read(currentAppUserProvider.future);
-      debugPrint('[AcademicOnboarding] Provider refreshed. Transitioning to home.');
-
+      // CRITICAL: Force provider to fully resolve BEFORE navigation
+      debugPrint('[AcademicOnboarding] Refreshing user state from DB...');
+      final _ = await ref.refresh(currentAppUserProvider.future);
+      debugPrint('[AcademicOnboarding] User state ready. Transitioning to home.');
+ 
       if (mounted) {
-        // Use a small delay to ensure GoRouter has processed the provider update
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          context.go('/home');
-        }
+        context.go('/home');
       }
     } catch (e) {
       debugPrint('[AcademicOnboarding] Error during finish: $e');

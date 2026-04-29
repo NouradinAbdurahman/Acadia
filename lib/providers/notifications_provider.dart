@@ -44,6 +44,8 @@ class NotificationsNotifier
   String? _subscribedUserId;
   Timer? _reloadDebounce;
   bool _isLoading = false;
+  int _fetchGeneration = 0;
+  int _loadGeneration = 0;
 
   bool _payloadBelongsToUser(dynamic payload, String userId) {
     final newUserId = payload.newRecord['user_id']?.toString();
@@ -54,8 +56,10 @@ class NotificationsNotifier
   void _scheduleReload({required bool withSync}) {
     _reloadDebounce?.cancel();
     _reloadDebounce = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
       final semesterId = ref.read(activeSemesterProvider).value;
       if (semesterId == null) {
+        if (!mounted) return;
         state = const AsyncValue.data([]);
         return;
       }
@@ -69,8 +73,11 @@ class NotificationsNotifier
   }
 
   Future<void> _fetchNotificationsOnly({required String semesterId}) async {
+    final currentGeneration = ++_fetchGeneration;
+    if (!mounted) return;
     final userId = supabaseClient.auth.currentUser?.id;
     if (userId == null) {
+      if (!mounted || currentGeneration != _fetchGeneration) return;
       state = const AsyncValue.data([]);
       return;
     }
@@ -82,8 +89,10 @@ class NotificationsNotifier
                 semesterId: semesterId,
               )
               as List<NotificationModel>;
+      if (!mounted || currentGeneration != _fetchGeneration) return;
       state = AsyncValue.data(notifications);
     } catch (_) {
+      if (!mounted || currentGeneration != _fetchGeneration) return;
       state = const AsyncValue.data([]);
     }
   }
@@ -477,6 +486,8 @@ class NotificationsNotifier
 
   Future<void> loadNotifications() async {
     if (_isLoading) return;
+    final currentGeneration = ++_loadGeneration;
+    if (!mounted) return;
 
     final userId = supabaseClient.auth.currentUser?.id;
     final semesterId = ref.read(activeSemesterProvider).value;
@@ -486,11 +497,13 @@ class NotificationsNotifier
         await supabaseClient.removeChannel(_realtimeChannel!);
         _realtimeChannel = null;
       }
+      if (!mounted || currentGeneration != _loadGeneration) return;
       state = const AsyncValue.data([]);
       return;
     }
 
     if (semesterId == null) {
+      if (!mounted || currentGeneration != _loadGeneration) return;
       state = const AsyncValue.data([]);
       return;
     }
@@ -518,18 +531,23 @@ class NotificationsNotifier
                 semesterId: semesterId,
               )
               as List<NotificationModel>;
+      if (!mounted || currentGeneration != _loadGeneration) return;
       state = AsyncValue.data(notifications);
     } catch (e, st) {
+      if (!mounted || currentGeneration != _loadGeneration) return;
       state = AsyncValue.error(e, st);
     } finally {
+      if (!mounted || currentGeneration != _loadGeneration) return;
       _isLoading = false;
     }
   }
 
   Future<void> markAsRead(String id) async {
+    if (!mounted) return;
     try {
       final updated =
           await notificationRepository.markAsRead(id) as NotificationModel;
+      if (!mounted) return;
       state = state.whenData(
         (items) => items.map((n) => n.id == updated.id ? updated : n).toList(),
       );
@@ -539,6 +557,7 @@ class NotificationsNotifier
   }
 
   Future<void> markAllAsRead() async {
+    if (!mounted) return;
     final currentNotifications = state.valueOrNull;
     if (currentNotifications == null || currentNotifications.isEmpty) return;
 
@@ -550,6 +569,7 @@ class NotificationsNotifier
 
     try {
       // Optimistic update
+      if (!mounted) return;
       state = AsyncValue.data(
         currentNotifications.map((NotificationModel n) => n.copyWith(isRead: true)).toList(),
       );
@@ -557,6 +577,7 @@ class NotificationsNotifier
       await notificationRepository.markAllAsRead(unreadIds);
     } catch (_) {
       // Rollback or reload on error
+      if (!mounted) return;
       loadNotifications();
     }
   }

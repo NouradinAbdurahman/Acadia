@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/app_providers.dart';
+import '../../providers/student_profile_provider.dart';
 import '../ai/ai_chat_screen.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -27,7 +28,9 @@ class ProfileScreen extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeProvider);
     final appUser = ref.watch(currentAppUserProvider).asData?.value;
+    final studentProfile = ref.watch(studentProfileProvider).value;
     final avatarUrl = appUser?.avatarUrl;
+    final displayName = (studentProfile?.fullName ?? '').trim();
     final bottomNavClearance = MediaQuery.of(context).padding.bottom + 120;
 
     Future<void> uploadAvatar(File file) async {
@@ -258,7 +261,9 @@ class ProfileScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  appUser?.name ?? l10n.student,
+                                  displayName.isNotEmpty
+                                      ? displayName
+                                      : l10n.student,
                                   style: theme.textTheme.headlineSmall
                                       ?.copyWith(
                                         fontWeight: FontWeight.bold,

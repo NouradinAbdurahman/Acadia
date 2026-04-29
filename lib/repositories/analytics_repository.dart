@@ -78,10 +78,9 @@ class AnalyticsRepository {
       semesterId: semesterId,
     );
     final courses = await _analyticsService.getCourses(semesterId: semesterId);
-    final settings = await _analyticsService.getUserSettings(userId);
     final semData = await _analyticsService.getSemester(semesterId);
 
-    final studyGoal = (semData?['weekly_study_goal'] ?? settings?['weekly_study_goal'] ?? 15).toDouble();
+    final studyGoal = (semData?['weekly_study_goal'] ?? 15).toDouble();
 
     // ── Compute from typed Dart models ─────────────────────────────────────
 
@@ -90,7 +89,7 @@ class AnalyticsRepository {
     // ── Mood stats — split by source to match UI expectations ──────────────
     // The analytics screen reads dailyMoodLogCount/sessionMoodLogCount etc.
     // Aggregate-only fields (avgMood, avgStress, moodLogCount) are also kept.
-    bool _isSession(MoodLog m) => (m.source ?? '').trim().toLowerCase() == 'session';
+    bool _isSession(MoodLog m) => m.source.trim().toLowerCase() == 'session';
 
     final dailyMoods   = moodLogs.where((m) => !_isSession(m)).toList();
     final sessionMoods = moodLogs.where((m) => _isSession(m)).toList();
@@ -276,7 +275,6 @@ class AnalyticsRepository {
               semesterId: semesterId,
             );
       final courses = await _analyticsService.getCourses(semesterId: semesterId);
-      final settings = await _analyticsService.getUserSettings(userId);
       
       List<Map<String, dynamic>> moodLogs = [];
       try {
@@ -294,7 +292,7 @@ class AnalyticsRepository {
 
       // Settings Data
       final semData = semesterId != null ? await _analyticsService.getSemester(semesterId) : null;
-      final studyGoal = (semData?['weekly_study_goal'] ?? settings?['weekly_study_goal'] ?? 15).toDouble();
+      final studyGoal = (semData?['weekly_study_goal'] ?? 15).toDouble();
 
       // Stress Calculation
       final hasStressData = moodLogs.isNotEmpty;

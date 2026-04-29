@@ -14,11 +14,14 @@ final courseProvider = StateNotifierProvider<CourseNotifier, AsyncValue<List<Cou
   semesterIdAsync.when(
     data: (id) {
       if (id != null) {
+        debugPrint("[CourseProvider] Loading courses for semester: $id");
         notifier.loadCourses(semesterId: id);
+        return;
       }
+      notifier.setEmptyState();
     },
-    loading: () => {}, // Notifier starts in loading state by default
-    error: (_, __) => {},
+    loading: () => notifier.setEmptyState(),
+    error: (_, __) => notifier.setEmptyState(),
   );
   
   return notifier;
@@ -28,10 +31,21 @@ final courseProvider = StateNotifierProvider<CourseNotifier, AsyncValue<List<Cou
 class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
   final CourseRepository _repository;
   final Ref? ref;
+  String? _lastLoadedSemesterId;
   CourseNotifier(this._repository, {this.ref}) : super(const AsyncValue.loading());
+
+  void setEmptyState() {
+    _lastLoadedSemesterId = null;
+    state = const AsyncValue.data(<Course>[]);
+  }
 
 
   Future<void> loadCourses({String? semesterId}) async {
+    if (semesterId != null &&
+        _lastLoadedSemesterId == semesterId &&
+        state.hasValue) {
+      return;
+    }
     state = const AsyncValue<List<Course>>.loading();
     try {
       final courses = await _repository.getCourses(semesterId: semesterId);
@@ -62,6 +76,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
       if (!mounted) return;
 
       if (!mounted) return;
+      _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(normalized);
     } catch (e, st) {
       if (!mounted) return;

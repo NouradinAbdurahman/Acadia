@@ -94,13 +94,16 @@ class _EditAcademicProfileScreenState
     Haptics.vibrate(HapticsType.medium);
 
     final currentProfile = ref.read(studentProfileProvider).value;
+    final normalizedFullName = _nameController.text.trim();
+    final normalizedUniversity = _universityController.text.trim();
+    final normalizedMajor = _majorController.text.trim();
     final updatedProfile = StudentProfile(
       id: currentProfile?.id ?? '',
       userId: currentProfile?.userId ?? '',
-      fullName: _nameController.text,
-      universityName: _universityController.text,
+      fullName: normalizedFullName,
+      universityName: normalizedUniversity,
       degreeType: _selectedDegree,
-      major: _majorController.text,
+      major: normalizedMajor,
       academicYear: currentProfile?.academicYear,
       currentSemester: _selectedSemester,
       expectedGraduationYear: _selectedGradYear,
@@ -134,8 +137,11 @@ class _EditAcademicProfileScreenState
       }
 
       if (mounted) {
-        if (context.canPop()) context.pop();
-        if (!context.canPop()) context.go('/profile');
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/home');
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.saveChanges)),
         );

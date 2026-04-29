@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,13 +20,25 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
   final Ref _ref;
   final dynamic deadlineRepository;
   final SupabaseClient supabaseClient;
+  String? _lastLoadedSemesterId;
+
+  void setEmptyState() {
+    _lastLoadedSemesterId = null;
+    state = const AsyncValue.data(<Deadline>[]);
+  }
 
   Future<void> loadDeadlines({required String userId, String? semesterId}) async {
+    if (semesterId != null &&
+        _lastLoadedSemesterId == semesterId &&
+        state.hasValue) {
+      return;
+    }
     try {
       // Preserve previous data during refresh so UI doesn't blank/flicker.
       state = const AsyncValue<List<Deadline>>.loading().copyWithPrevious(state);
       final list = await deadlineRepository.getDeadlines(userId: userId, semesterId: semesterId) as List<Deadline>;
       if (!mounted) return;
+      _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(list);
     } catch (e, st) {
       if (!mounted) return;
@@ -37,6 +50,7 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
     final userId = supabaseClient.auth.currentUser?.id;
     final semesterId = _ref.read(activeSemesterProvider).value;
     if (userId != null) {
+      debugPrint("[DeadlinesNotifier] Refreshing for user: $userId, semester: $semesterId");
       await loadDeadlines(userId: userId, semesterId: semesterId);
     }
   }
@@ -150,11 +164,14 @@ final deadlinesProvider =
       semesterIdAsync.when(
         data: (id) {
           if (userId != null && id != null) {
+            debugPrint("[DeadlinesProvider] Loading deadlines for user: $userId, semester: $id");
             notifier.loadDeadlines(userId: userId, semesterId: id);
+            return;
           }
+          notifier.setEmptyState();
         },
-        loading: () => {},
-        error: (_, __) => {},
+        loading: () => notifier.setEmptyState(),
+        error: (_, __) => notifier.setEmptyState(),
       );
 
       return notifier;

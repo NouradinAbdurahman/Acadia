@@ -85,11 +85,4 @@ class AnalyticsService {
         .gte('created_at', startDate.toIso8601String());
   }
 
-  Future<Map<String, dynamic>?> getUserSettings(String userId) async {
-    return await supabase
-        .from('users')
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
-  }
 }

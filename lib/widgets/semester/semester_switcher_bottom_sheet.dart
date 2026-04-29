@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
@@ -92,14 +93,13 @@ class SemesterSwitcherBottomSheet extends ConsumerWidget {
                     isSwitching: isSwitching,
                     onTap: () async {
                       if (!isActive && !isSwitching) {
-                        try {
-                          await ref
+                        // Close immediately for responsive UX, then switch semester.
+                        Navigator.pop(context);
+                        unawaited(
+                          ref
                               .read(activeSemesterProvider.notifier)
-                              .setActiveSemester(semester.id);
-                          if (context.mounted) Navigator.pop(context);
-                        } catch (e) {
-                          // Handle error if needed
-                        }
+                              .setActiveSemester(semester.id),
+                        );
                       } else if (isActive) {
                         Navigator.pop(context);
                       }

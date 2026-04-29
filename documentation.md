@@ -615,7 +615,8 @@ Services are the lowest layer that actually makes API calls. They don't know any
 
 **StudentProfileService** — Academic profile management.
 - `getProfile()` — reads from `student_profiles`
-- `createOrUpdateProfile(profile)` — upserts profile data, also syncs the name to the `users` table. Has a safety guard to prevent accidentally writing `active_semester_id` through this service
+- `createOrUpdateProfile(profile)` — upserts profile data in `student_profiles` (single profile source of truth). Has a safety guard to prevent accidentally writing `active_semester_id` through this service
+- `upsertInitialProfile(userId, fullName)` — signup-time profile seed in `student_profiles` (used by OTP verification flow)
 - `markOnboardingComplete()` — sets `onboarding_complete = true` in `student_profiles` and `academic_profile_completed = true` in `users`
 
 **SemesterStateService** — Manages the active semester.
@@ -624,7 +625,7 @@ Services are the lowest layer that actually makes API calls. They don't know any
 
 **AnalyticsService** — Aggregation queries for analytics.
 - `getStudySessions(userId, startDate, semesterId)` — with joined course names and colors
-- `getTasks(userId, semesterId)`, `getCourses(semesterId)`, `getCourseResults(userId, semesterId)`, `getSemester(semesterId)`, `getMoodLogs(userId, startDate)`, `getUserSettings(userId)`
+- `getTasks(userId, semesterId)`, `getCourses(semesterId)`, `getCourseResults(userId, semesterId)`, `getSemester(semesterId)`, `getMoodLogs(userId, startDate)`
 
 **TrendService** — Time-series queries for charts.
 - `getStudySessions(userId, since, semesterId)`, `getCompletedTasks(userId, since, semesterId)`, `getCreatedTasks(userId, since, semesterId)`, `getCreatedDeadlines(userId, since, semesterId)`, `getCourseResults(userId, since, semesterId)`
@@ -1030,15 +1031,14 @@ The root identity. Every other table references this.
 ### users
 A lightweight app-level user table. Not the auth table — this is our own.
 - `id` — matches auth.users ID
-- `email`, `name` — basic info
 - `avatar_url` — profile picture
 - `academic_profile_completed` — whether academic onboarding is done (drives routing)
-- `weekly_study_goal` — default study goal
+- Legacy note: older schemas may still have `email`, `name`, `weekly_study_goal` columns, but they are no longer authoritative app sources
 
 ### student_profiles
 The detailed academic profile.
 - `user_id` — 1:1 with users
-- `full_name`, `university_name`, `degree_type`, `major`, `minor` — academic identity
+- `full_name`, `university_name`, `degree_type`, `major`, `minor` — academic identity (`full_name` is the canonical display name)
 - `academic_year`, `current_semester`, `expected_graduation_year` — progress
 - `study_hours_per_week`, `preferred_study_time`, `break_pattern` — study preferences
 - `timezone`, `country` — for notification scheduling
@@ -1764,8 +1764,9 @@ We've gone through 23 database migrations so far. Here's what each one did:
 | 21 | `2026040902_ensure_study_sessions_course_fk` | Ensured study_sessions.course_id foreign key was properly enforced |
 | 22 | `2026041601_mood_stress_foundation` | Created `mood_logs` table with proper structure (mood_level, stress_level, factors, source) |
 | 23 | `2026041602_mood_settings_tracking_enabled` | Added `tracking_enabled` to mood_settings |
-| 24 | `2026042101_add_users_weekly_study_goal` | Added `weekly_study_goal` to users table |
-| 25 | `2026042102_semesters_weekly_study_goal` | Added `weekly_study_goal` to semesters table |
+| 24 | `2026042101_add_users_weekly_study_goal` | Added `weekly_study_goal` to users table (legacy) |
+| 25 | `2026042102_semesters_weekly_study_goal` | Added `weekly_study_goal` to semesters table (canonical source) |
+| 26 | `2026042901_drop_legacy_users_weekly_goal` | Removed legacy `users.weekly_study_goal` column |
 
 The key theme across migrations is **semester isolation** — we progressively made `semester_id` a required NOT NULL foreign key on almost every table. Early versions of the app didn't have semester scoping, so a lot of data was just floating around without a semester context. The migrations fixed that.
 

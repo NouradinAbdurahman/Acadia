@@ -134,7 +134,7 @@ assets/
 
 supabase/
   schema.sql                # Base database schema
-  2026031602_*.sql ...      # 23 migration scripts
+  2026031602_*.sql ...      # migration scripts (latest includes legacy weekly-goal cleanup)
   functions/
     acadia-ai/              # AI assistant Edge Function (Deno, NVIDIA NIM, Resend)
     send-push/              # FCM push notification Edge Function (Deno)
@@ -321,8 +321,9 @@ Run the SQL files in the Supabase dashboard SQL editor, in this order:
 21. `supabase/2026040902_ensure_study_sessions_course_fk.sql`
 22. `supabase/2026041601_mood_stress_foundation.sql`
 23. `supabase/2026041602_mood_settings_tracking_enabled.sql`
-24. `supabase/2026042101_add_users_weekly_study_goal.sql`
+24. `supabase/2026042101_add_users_weekly_study_goal.sql` (legacy)
 25. `supabase/2026042102_semesters_weekly_study_goal.sql`
+26. `supabase/2026042901_drop_legacy_users_weekly_goal.sql`
 
 These scripts create/update tables, constraints, RLS policies, triggers, and RPC functions.
 
@@ -407,7 +408,7 @@ flutter gen-l10n
 
 | Model | Purpose |
 |---|---|
-| `AppUser` | Auth identity (id, email, name, avatar, academic_profile_completed, weekly_study_goal) |
+| `AppUser` | Auth-linked app user (id, email, name, avatar, academic_profile_completed) |
 | `StudentProfile` | Academic profile (university, degree, major, study preferences) |
 | `Semester` | Academic term (name, dates, weekly_study_goal, is_current) |
 | `Course` | Course (name, code, ECTS, credits, color, semester_id) |

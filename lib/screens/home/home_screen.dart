@@ -115,7 +115,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
 
     // Select ONLY values to prevent rebuild spam during refreshing states
-    final appUser = ref.watch(currentAppUserProvider.select((v) => v.asData?.value));
     final data = ref.watch(dashboardProvider.select((v) => v.value));
     final trendAsync = ref.watch(trendProvider(7));
     final studentProfile = ref.watch(studentProfileProvider).value;
@@ -141,9 +140,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   duration: const Duration(milliseconds: 180),
                   switchInCurve: Curves.easeOut,
                   switchOutCurve: Curves.easeIn,
-                  child: (isFirstLoad || _isRefreshing)
-                    ? const HomeSkeletonScreen()
-                    : Container(
+                  child: ref.watch(currentAppUserProvider).when(
+                    data: (user) {
+                      if (user == null) {
+                        return const Center(child: Text("User not found"));
+                      }
+                      
+                      // Handle secondary loading state for dashboard data
+                      if (isFirstLoad || _isRefreshing) {
+                        return const HomeSkeletonScreen();
+                      }
+
+                      return Container(
                         color: (analytics?.avgStress ?? 0) >= 8
                             ? Colors.red.withValues(alpha: 0.04)
                             : Colors.transparent,
@@ -159,9 +167,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 context,
                                 theme,
                                 l10n,
-                                appUser,
+                                user,
                                 studentProfile,
-                                data,
+                                data!,
                                 unreadNotifications,
                               ),
 
@@ -260,11 +268,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 final coursesAsync = ref.watch(courseProvider);
                                 final isRefreshing = coursesAsync.isLoading;
 
-                                if (isRefreshing && data.topCourses.isEmpty) {
+                                if (isRefreshing && data!.topCourses.isEmpty) {
                                   return const SizedBox.shrink();
                                 }
 
-                                return data.topCourses.isEmpty
+                                return data!.topCourses.isEmpty
                                     ? Padding(
                                         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
                                         child: AppGlassCard(
@@ -304,7 +312,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       ).animate().fade().slideY(begin: 0.1)
                                     : const SizedBox.shrink();
                               }),
-                              if (data.topCourses.isNotEmpty || ref.watch(courseProvider).isLoading) ...[
+                              if (data!.topCourses.isNotEmpty || ref.watch(courseProvider).isLoading) ...[
                                 if (!ref.watch(courseProvider).isLoading || data.topCourses.isNotEmpty)
                                   _StatusPanel(data: data),
 
@@ -341,7 +349,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ],
                           ),
                         ), // closes SingleChildScrollView
-                      ), // closes Container
+                      );
+                    },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => Center(child: Text("Error: $e")),
+                  ),
                 ), // closes AnimatedSwitcher
               ), // closes RefreshIndicator
               if (_isRefreshing)
@@ -365,6 +377,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     DashboardData data,
     int unreadNotifications,
   ) {
+    final displayName = (studentProfile?.fullName ?? '').trim();
 
     return Row(
       children: [
@@ -390,7 +403,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               Text(
-                appUser?.name ?? l10n.student,
+                displayName.isNotEmpty ? displayName : l10n.student,
                 softWrap: true,
                 overflow: TextOverflow.visible,
                 style: theme.textTheme.titleLarge?.copyWith(
