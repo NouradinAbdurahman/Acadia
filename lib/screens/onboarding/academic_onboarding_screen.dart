@@ -18,6 +18,7 @@ import '../../providers/analytics_provider.dart';
 import '../../providers/semester_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
+import '../../providers/app_providers.dart';
 import '../../core/theme/app_colors.dart';
 
 class AcademicOnboardingScreen extends ConsumerStatefulWidget {

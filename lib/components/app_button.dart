@@ -133,8 +133,8 @@ class AppButtonState extends State<AppButton> with SingleTickerProviderStateMixi
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
+                    : Row(
+                      mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (widget.icon != null) ...[
