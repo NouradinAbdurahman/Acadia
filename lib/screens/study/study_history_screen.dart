@@ -355,15 +355,25 @@ class _StudyHistoryScreenState extends ConsumerState<StudyHistoryScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.greenAccent.withValues(alpha: 0.15),
+                              color: theme.brightness == Brightness.dark
+                                  ? Colors.greenAccent.withValues(alpha: 0.15)
+                                  : Colors.green.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: (theme.brightness == Brightness.dark
+                                        ? Colors.greenAccent
+                                        : Colors.green.shade700)
+                                    .withValues(alpha: 0.35),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const AppIcon(
+                                AppIcon(
                                   HeroIcons.check,
-                                  color: Colors.greenAccent,
+                                  color: theme.brightness == Brightness.dark
+                                      ? Colors.greenAccent
+                                      : Colors.green.shade700,
                                   size: 12,
                                   solid: true,
                                 ),
@@ -371,7 +381,9 @@ class _StudyHistoryScreenState extends ConsumerState<StudyHistoryScreen> {
                                 Text(
                                   l10n.statusCompleted,
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: Colors.greenAccent,
+                                    color: theme.brightness == Brightness.dark
+                                        ? Colors.greenAccent
+                                        : Colors.green.shade700,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 10,
                                   ),

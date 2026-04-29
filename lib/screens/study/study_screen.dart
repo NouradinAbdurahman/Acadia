@@ -29,7 +29,6 @@ import '../../providers/student_profile_provider.dart';
 import '../../providers/decision_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../l10n/app_localizations.dart';
-import '../../l10n/l10n_extension.dart';
 import '../../domain/decision/decision_rules.dart';
 import 'study_history_screen.dart';
 
@@ -448,38 +447,54 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              SegmentedButton<AdaptationMode>(
-                segments: [
-                  ButtonSegment<AdaptationMode>(
-                    value: AdaptationMode.keepPreference,
-                    label: Text(l10n.keepMyPreference),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                   ),
-                  ButtonSegment<AdaptationMode>(
-                    value: AdaptationMode.followBehavior,
-                    label: Text(l10n.followActualBehavior),
-                  ),
-                ],
-                showSelectedIcon: true,
-                emptySelectionAllowed: false,
-                selected: {adaptationMode},
-                onSelectionChanged: (selection) {
-                  final next = selection.first;
-                  ref.read(studyAdaptationModeProvider.notifier).setMode(next);
-                  ref
-                      .read(studyTimerProvider.notifier)
-                      .setDuration(
-                        Duration(
-                          minutes: _recommendedDurationForMode(analytics, next, ref),
-                        ),
-                      );
-                },
-                style: ButtonStyle(
-                  textStyle: WidgetStateProperty.resolveWith((states) {
-                    return theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    );
-                  }),
+                ),
+                child: Row(
+                  children: [
+                    _buildRecommendedModeTab(
+                      context: context,
+                      label: l10n.keepMyPreference,
+                      selected: adaptationMode == AdaptationMode.keepPreference,
+                      onTap: () {
+                        final next = AdaptationMode.keepPreference;
+                        Haptics.vibrate(HapticsType.selection);
+                        ref.read(studyAdaptationModeProvider.notifier).setMode(next);
+                        ref
+                            .read(studyTimerProvider.notifier)
+                            .setDuration(
+                              Duration(
+                                minutes: _recommendedDurationForMode(analytics, next, ref),
+                              ),
+                            );
+                      },
+                    ),
+                    _buildRecommendedModeTab(
+                      context: context,
+                      label: l10n.followActualBehavior,
+                      selected: adaptationMode == AdaptationMode.followBehavior,
+                      onTap: () {
+                        final next = AdaptationMode.followBehavior;
+                        Haptics.vibrate(HapticsType.selection);
+                        ref.read(studyAdaptationModeProvider.notifier).setMode(next);
+                        ref
+                            .read(studyTimerProvider.notifier)
+                            .setDuration(
+                              Duration(
+                                minutes: _recommendedDurationForMode(analytics, next, ref),
+                              ),
+                            );
+                      },
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -1757,6 +1772,48 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected ? theme.colorScheme.primary : null,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendedModeTab({
+    required BuildContext context,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md,
+          ),
+          decoration: BoxDecoration(
+            color: selected ? theme.colorScheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: selected ? Colors.white : theme.colorScheme.onSurface,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ),
       ),

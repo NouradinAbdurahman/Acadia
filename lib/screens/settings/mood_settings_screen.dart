@@ -114,30 +114,15 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      SegmentedButton<String>(
-                        segments: [
-                          ButtonSegment<String>(
-                            value: 'daily',
-                            label: Text(l10n.reminderTypeDaily),
-                          ),
-                          ButtonSegment<String>(
-                            value: 'session',
-                            label: Text(l10n.reminderTypeAfterStudy),
-                          ),
-                          ButtonSegment<String>(
-                            value: 'both',
-                            label: Text(l10n.reminderTypeBoth),
-                          ),
-                        ],
-                        selected: {settings.reminderType},
-                        onSelectionChanged:
-                            (settings.trackingEnabled && settings.reminderEnabled)
-                                ? (selection) {
-                                    Haptics.vibrate(HapticsType.selection);
-                                    notifier.updateReminderType(selection.first);
-                                  }
-                                : null,
-                        showSelectedIcon: false,
+                      _buildSegmentedControl(
+                        value: settings.reminderType,
+                        enabled: settings.trackingEnabled && settings.reminderEnabled,
+                        options: {
+                          'daily': l10n.reminderTypeDaily,
+                          'session': l10n.reminderTypeAfterStudy,
+                          'both': l10n.reminderTypeBoth,
+                        },
+                        onChanged: (value) => notifier.updateReminderType(value),
                       ),
                       if (settings.trackingEnabled && settings.reminderEnabled) ...[
                         const SizedBox(height: AppSpacing.lg),
@@ -226,6 +211,77 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSegmentedControl({
+    required String value,
+    required Map<String, String> options,
+    required ValueChanged<String> onChanged,
+    bool enabled = true,
+  }) {
+    final theme = Theme.of(context);
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: enabled ? 1.0 : 0.55,
+      child: IgnorePointer(
+        ignoring: !enabled,
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: theme.brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.06)
+                : theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            ),
+          ),
+          child: Row(
+            children: options.entries.map((entry) {
+              final isSelected = value == entry.key;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    Haptics.vibrate(HapticsType.selection);
+                    onChanged(entry.key);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        entry.value,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),

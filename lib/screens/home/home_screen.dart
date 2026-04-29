@@ -158,7 +158,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: SingleChildScrollView(
                           controller: _scrollController,
                           physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          padding: const EdgeInsets.all(AppSpacing.md),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -275,38 +275,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 return data!.topCourses.isEmpty
                                     ? Padding(
                                         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                                        child: AppGlassCard(
-                                          padding: const EdgeInsets.all(AppSpacing.xl),
-                                          child: Column(
-                                            children: [
-                                              HeroIcon(
-                                                HeroIcons.sparkles,
-                                                size: 48,
-                                                color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                                              ),
-                                              const SizedBox(height: AppSpacing.md),
-                                              Text(
-                                                l10n.noCoursesForSemester,
-                                                style: theme.textTheme.titleMedium?.copyWith(
-                                                  fontWeight: FontWeight.bold,
+                                        child: SizedBox(
+                                          width: double.infinity,
+                                          child: AppGlassCard(
+                                            padding: const EdgeInsets.all(AppSpacing.xl),
+                                            child: Column(
+                                              children: [
+                                                HeroIcon(
+                                                  HeroIcons.sparkles,
+                                                  size: 48,
+                                                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
                                                 ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              const SizedBox(height: AppSpacing.sm),
-                                              Text(
-                                                l10n.addCoursesPrompt,
-                                                style: theme.textTheme.bodyMedium?.copyWith(
-                                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                                const SizedBox(height: AppSpacing.md),
+                                                Text(
+                                                  l10n.noCoursesForSemester,
+                                                  style: theme.textTheme.titleMedium?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                  textAlign: TextAlign.center,
                                                 ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              const SizedBox(height: AppSpacing.lg),
-                                              AppButton(
-                                                text: l10n.addCourse,
-                                                onPressed: () => context.push('/create-course'),
-                                                variant: AppButtonVariant.primary,
-                                              ),
-                                            ],
+                                                const SizedBox(height: AppSpacing.sm),
+                                                Text(
+                                                  l10n.addCoursesPrompt,
+                                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: AppSpacing.lg),
+                                                ConstrainedBox(
+                                                  constraints: const BoxConstraints(maxWidth: 260),
+                                                  child: AppButton(
+                                                    text: l10n.addCourse,
+                                                    onPressed: () => context.push('/create-course'),
+                                                    variant: AppButtonVariant.primary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ).animate().fade().slideY(begin: 0.1)
@@ -378,6 +384,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     int unreadNotifications,
   ) {
     final displayName = (studentProfile?.fullName ?? '').trim();
+    final isDark = theme.brightness == Brightness.dark;
 
     return Row(
       children: [
@@ -395,25 +402,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.welcome,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-              Text(
                 displayName.isNotEmpty ? displayName : l10n.student,
                 softWrap: true,
                 overflow: TextOverflow.visible,
                 style: theme.textTheme.titleLarge?.copyWith(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w900,
                   color: theme.colorScheme.onSurface,
                   height: 1.2,
-                  decoration: TextDecoration.underline,
-                  decorationThickness: 2,
-                  decorationColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                  decoration: TextDecoration.none,
                 ),
               ),
               if (studentProfile?.universityName != null)
@@ -423,7 +420,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    color: theme.colorScheme.onSurface.withValues(
+                      alpha: isDark ? 0.66 : 0.62,
+                    ),
                   ),
                 ),
               Text(
@@ -432,7 +431,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  color: theme.colorScheme.onSurface.withValues(
+                    alpha: isDark ? 0.66 : 0.62,
+                  ),
                 ),
               ),
             ],
@@ -1698,7 +1699,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               if (action != null) ...[
                 const SizedBox(height: AppSpacing.lg),
-                action,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 260),
+                  child: action,
+                ),
               ],
             ],
           ),
@@ -1992,18 +1996,26 @@ class _NotificationButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return AnimatedPressable(
       onTap: () => context.push('/notifications'),
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.07),
           shape: BoxShape.circle,
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.18 : 0.12),
+          ),
         ),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            const AppIcon(HeroIcons.bell, size: 24),
+            AppIcon(
+              HeroIcons.bell,
+              size: 24,
+              color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.96 : 0.88),
+            ),
             if (unreadCount > 0)
               Positioned(
                 right: -4,
@@ -2041,6 +2053,7 @@ class _AiAssistantButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return AnimatedPressable(
       onTap: () {
         Navigator.of(context).push(
@@ -2050,13 +2063,17 @@ class _AiAssistantButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.07),
           shape: BoxShape.circle,
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.18 : 0.12),
+          ),
         ),
-        child: const AppIcon(
+        child: AppIcon(
           HeroIcons.sparkles, 
           size: 24, 
           solid: true,
+          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.96 : 0.88),
         ),
       ),
     );

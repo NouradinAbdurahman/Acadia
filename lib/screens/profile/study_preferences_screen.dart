@@ -188,23 +188,14 @@ class _StudyPreferencesScreenState
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  SegmentedButton<String>(
-                    segments: [
-                      ButtonSegment(
-                        value: 'morning',
-                        label: Text(l10n.morning),
-                      ),
-                      ButtonSegment(
-                        value: 'afternoon',
-                        label: Text(l10n.afternoon),
-                      ),
-                      ButtonSegment(value: 'night', label: Text(l10n.night)),
-                    ],
-                    selected: {_preferredTime},
-                    onSelectionChanged: (selection) {
-                      Haptics.vibrate(HapticsType.selection);
-                      setState(() => _preferredTime = selection.first);
+                  _buildSegmentedControl(
+                    value: _preferredTime,
+                    options: {
+                      'morning': l10n.morning,
+                      'afternoon': l10n.afternoon,
+                      'night': l10n.night,
                     },
+                    onChanged: (val) => setState(() => _preferredTime = val),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
@@ -214,23 +205,14 @@ class _StudyPreferencesScreenState
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  SegmentedButton<String>(
-                    segments: [
-                      ButtonSegment(
-                        value: 'pomodoro',
-                        label: Text(l10n.pomodoro),
-                      ),
-                      ButtonSegment(
-                        value: 'deep_work',
-                        label: Text(l10n.deepWork),
-                      ),
-                      ButtonSegment(value: 'mixed', label: Text(l10n.mixed)),
-                    ],
-                    selected: {_breakPattern},
-                    onSelectionChanged: (selection) {
-                      Haptics.vibrate(HapticsType.selection);
-                      setState(() => _breakPattern = selection.first);
+                  _buildSegmentedControl(
+                    value: _breakPattern,
+                    options: {
+                      'pomodoro': l10n.pomodoro,
+                      'deep_work': l10n.deepWork,
+                      'mixed': l10n.mixed,
                     },
+                    onChanged: (val) => setState(() => _breakPattern = val),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
@@ -250,6 +232,73 @@ class _StudyPreferencesScreenState
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSegmentedControl({
+    required String value,
+    required Map<String, String> options,
+    required ValueChanged<String> onChanged,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: 0.06)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Row(
+        children: options.entries.map((entry) {
+          final isSelected = value == entry.key;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                onChanged(entry.key);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    entry.value,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: isSelected
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

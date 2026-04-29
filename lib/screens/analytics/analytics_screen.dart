@@ -66,11 +66,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildMoodSourceTabs(WidgetRef ref, ThemeData theme, String currentSource) {
     final l10n = AppLocalizations.of(ref.context)!;
     return Container(
-      height: 40,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        color: theme.brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: 0.06)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+        ),
       ),
       child: Row(
         children: [
@@ -78,7 +82,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             child: _buildTabItem(
               label: l10n.dailyBaseline,
               isSelected: currentSource == 'daily',
-              color: Colors.amber.shade700,
+              theme: theme,
               onTap: () {
                 Haptics.vibrate(HapticsType.selection);
                 ref.read(moodChartSourceProvider.notifier).state = 'daily';
@@ -89,7 +93,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             child: _buildTabItem(
               label: l10n.studySessions,
               isSelected: currentSource == 'session',
-              color: Colors.blue.shade700,
+              theme: theme,
               onTap: () {
                 Haptics.vibrate(HapticsType.selection);
                 ref.read(moodChartSourceProvider.notifier).state = 'session';
@@ -104,22 +108,26 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildTabItem({
     required String label,
     required bool isSelected,
-    required Color color,
+    required ThemeData theme,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withValues(alpha: 0.9) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   )
                 ]
               : null,
@@ -127,10 +135,81 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         alignment: Alignment.center,
         child: Text(
           label,
-          style: TextStyle(
+          style: theme.textTheme.labelMedium?.copyWith(
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? color : Colors.grey.shade600,
+            color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendDaysTabs(WidgetRef ref, ThemeData theme, int trendDays) {
+    final l10n = AppLocalizations.of(ref.context)!;
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: 0.06)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Row(
+        children: [7, 14, 30].map((days) {
+          return Expanded(
+            child: _buildTrendDaysTab(
+              label: l10n.daysFilter(days),
+              isSelected: trendDays == days,
+              theme: theme,
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                ref.read(trendDaysProvider.notifier).state = days;
+              },
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTrendDaysTab({
+    required String label,
+    required bool isSelected,
+    required ThemeData theme,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  )
+                ]
+              : [],
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),
@@ -222,7 +301,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
               return SingleChildScrollView(
                 controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 100),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  24,
+                  AppSpacing.md,
+                  100,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -570,19 +654,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         child: _buildSectionTitle(theme, l10n.trendAnalysis),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        children: [7, 14, 30].map((days) {
-                          return ChoiceChip(
-                            label: Text(l10n.daysFilter(days)),
-                            selected: trendDays == days,
-                            onSelected: (_) {
-                              Haptics.vibrate(HapticsType.selection);
-                              ref.read(trendDaysProvider.notifier).state = days;
-                            },
-                          );
-                        }).toList(),
-                      ),
+                      _buildTrendDaysTabs(ref, theme, trendDays),
                       const SizedBox(height: AppSpacing.md),
                       trendAsync.when(
                         data: (trend) => AnimatedSwitcher(

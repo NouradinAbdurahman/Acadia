@@ -514,20 +514,61 @@ class _EditAcademicProfileScreenState
     required Map<String, String> options,
     required ValueChanged<String> onChanged,
   }) {
-    return SegmentedButton<String>(
-      segments: options.entries
-          .map(
-            (entry) => ButtonSegment<String>(
-              value: entry.key,
-              label: Text(entry.value),
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: 0.06)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Row(
+        children: options.entries.map((entry) {
+          final isSelected = value == entry.key;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Haptics.vibrate(HapticsType.selection);
+                onChanged(entry.key);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    entry.value,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
             ),
-          )
-          .toList(),
-      selected: {value},
-      onSelectionChanged: (selection) {
-        Haptics.vibrate(HapticsType.selection);
-        onChanged(selection.first);
-      },
+          );
+        }).toList(),
+      ),
     );
   }
 }

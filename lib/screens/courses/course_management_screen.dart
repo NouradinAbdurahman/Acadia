@@ -186,31 +186,33 @@ class _CourseManagementScreenState
       child: ChoiceChip(
         label: Text(label),
         selected: selected,
+        showCheckmark: false,
+        elevation: 0,
         onSelected: (val) {
           Haptics.vibrate(HapticsType.selection);
           onSelected(val);
         },
         labelStyle: theme.textTheme.bodyMedium?.copyWith(
           color: selected
-              ? Colors.white
+              ? theme.colorScheme.primary
               : theme.colorScheme.onSurface.withValues(alpha: 0.7),
-          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-          fontSize: 12,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          fontSize: 13,
         ),
-        selectedColor: theme.colorScheme.primary,
-        backgroundColor: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.03),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        selectedColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+        backgroundColor: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           side: BorderSide(
             color: selected
-                ? theme.colorScheme.primary
+                ? theme.colorScheme.primary.withValues(
+                    alpha: isDark ? 0.3 : 0.5,
+                  )
                 : (isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.05)),
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : theme.colorScheme.outline.withValues(alpha: 0.3)),
             width: 1,
           ),
         ),
@@ -252,10 +254,13 @@ class _CourseManagementScreenState
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpacing.xl),
-          AppButton(
-            onPressed: () => context.push('/create-course'),
-            icon: const AppIcon(HeroIcons.plus, size: 20, color: Colors.white),
-            text: l10n.addFirstCourseBtn,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 260),
+            child: AppButton(
+              onPressed: () => context.push('/create-course'),
+              icon: const AppIcon(HeroIcons.plus, size: 20, color: Colors.white),
+              text: l10n.addFirstCourseBtn,
+            ),
           ),
         ],
       ),

@@ -12,6 +12,7 @@ import '../ai/ai_chat_screen.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/design/app_spacing.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_glass_card.dart';
@@ -138,7 +139,12 @@ class ProfileScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 16, 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              24,
+              AppSpacing.md,
+              8,
+            ),
             child: Text(
               title.toUpperCase(),
               style: const TextStyle(

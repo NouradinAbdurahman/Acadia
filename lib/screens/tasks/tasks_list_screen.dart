@@ -183,6 +183,7 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
   void _showCreateOptions(BuildContext context) {
     Haptics.vibrate(HapticsType.medium);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
 
     showModalBottomSheet(
@@ -196,7 +197,9 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
             top: Radius.circular(AppSpacing.xl),
           ),
           border: Border.all(
-            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            color: theme.colorScheme.outline.withValues(
+              alpha: isDark ? 0.1 : 0.3,
+            ),
             width: 1,
           ),
         ),
@@ -207,7 +210,9 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                color: theme.colorScheme.onSurface.withValues(
+                  alpha: isDark ? 0.1 : 0.22,
+                ),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -716,7 +721,9 @@ class _SegmentTabs extends StatelessWidget {
           labelStyle: theme.textTheme.bodyMedium?.copyWith(
             color: selected
                 ? Colors.white
-                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                : theme.colorScheme.onSurface.withValues(
+                    alpha: isDark ? 0.6 : 0.85,
+                  ),
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             fontSize: 15,
           ),
@@ -731,7 +738,9 @@ class _SegmentTabs extends StatelessWidget {
             side: BorderSide(
               color: selected
                   ? theme.colorScheme.secondary
-                  : Colors.transparent,
+                  : (isDark
+                      ? Colors.transparent
+                      : theme.colorScheme.outline.withValues(alpha: 0.35)),
               width: 1,
             ),
           ),
@@ -835,10 +844,12 @@ class _StatusFilterTabs extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
               color: selected
-                  ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                  ? theme.colorScheme.primary.withValues(
+                      alpha: isDark ? 0.3 : 0.5,
+                    )
                   : (isDark
                         ? Colors.white.withValues(alpha: 0.1)
-                        : Colors.black.withValues(alpha: 0.05)),
+                        : theme.colorScheme.outline.withValues(alpha: 0.3)),
               width: 1,
             ),
           ),

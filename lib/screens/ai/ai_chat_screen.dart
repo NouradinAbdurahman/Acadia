@@ -7,6 +7,7 @@ import '../../providers/tasks_provider.dart';
 import '../../providers/semester_provider.dart';
 import '../../models/ai_message.dart';
 import '../../theme/app_colors.dart';
+import '../../core/design/app_spacing.dart';
 
 class AIChatScreen extends ConsumerStatefulWidget {
   const AIChatScreen({super.key});
@@ -187,7 +188,12 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                   ? _buildEmptyState(context)
                   : ListView.separated(
                       controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        10,
+                        AppSpacing.md,
+                        24,
+                      ),
                       itemCount: messages.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 18),
                       itemBuilder: (context, index) {
@@ -315,7 +321,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         itemCount: actions.length,
         itemBuilder: (context, index) {
           final action = actions[index];
@@ -1366,7 +1372,12 @@ class _InputArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        12,
+        AppSpacing.md,
+        32,
+      ),
       decoration: BoxDecoration(
         color: AppColors.background(context),
         border: Border(top: BorderSide(color: AppColors.border(context).withValues(alpha: 0.2), width: 0.5)),
@@ -1376,7 +1387,7 @@ class _InputArea extends StatelessWidget {
           Expanded(
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               decoration: BoxDecoration(
                 color: AppColors.aiCard(context),
                 borderRadius: BorderRadius.circular(30),

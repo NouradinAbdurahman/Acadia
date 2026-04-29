@@ -40,6 +40,10 @@ class SessionDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryTextColor = theme.colorScheme.onSurface;
+    final secondaryTextColor = theme.colorScheme.onSurface.withValues(alpha: 0.75);
+    final mutedTextColor = theme.colorScheme.onSurface.withValues(alpha: 0.58);
     final localeTag = Localizations.localeOf(context).toLanguageTag();
     final analytics = ref.watch(studyAnalyticsProvider);
 
@@ -58,7 +62,7 @@ class SessionDetailScreen extends ConsumerWidget {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: theme.iconTheme.copyWith(color: Colors.white),
+        iconTheme: theme.iconTheme.copyWith(color: theme.colorScheme.onSurface),
       ),
       body: AuthBackgroundContainer(
         child: SafeArea(
@@ -72,7 +76,7 @@ class SessionDetailScreen extends ConsumerWidget {
                   session.course?.courseName ?? l10n.course,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: primaryTextColor,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -81,14 +85,14 @@ class SessionDetailScreen extends ConsumerWidget {
                       ? l10n.pomodoroSubtitle(session.cyclesCompleted ?? 0, session.totalCycles ?? 4)
                       : "$sessionTypeStr • ${session.durationMinutes}m",
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white70,
+                    color: secondaryTextColor,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   timeFormatted,
                   style: theme.textTheme.labelLarge?.copyWith(
-                    color: Colors.white54,
+                    color: mutedTextColor,
                   ),
                 ),
 
@@ -131,7 +135,7 @@ class SessionDetailScreen extends ConsumerWidget {
                           "Mood & Stress",
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: Colors.white54,
+                            color: secondaryTextColor,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -148,12 +152,18 @@ class SessionDetailScreen extends ConsumerWidget {
                                       style: const TextStyle(fontSize: 18),
                                     ),
                                     const SizedBox(width: AppSpacing.sm),
-                                    const Text("Mood", style: TextStyle(color: Colors.white70)),
+                                    Text(
+                                      "Mood",
+                                      style: TextStyle(color: secondaryTextColor),
+                                    ),
                                   ],
                                 ),
                                 Text(
                                   session.mood!.toStringAsFixed(1),
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryTextColor,
+                                  ),
                                 ),
                               ],
                             ),
@@ -162,16 +172,19 @@ class SessionDetailScreen extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Row(
+                              Row(
                                 children: [
-                                  Text("⚡", style: TextStyle(fontSize: 18)),
-                                  SizedBox(width: AppSpacing.sm),
-                                  Text("Stress Level", style: TextStyle(color: Colors.white70)),
+                                  const Text("⚡", style: TextStyle(fontSize: 18)),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text("Stress Level", style: TextStyle(color: secondaryTextColor)),
                                 ],
                               ),
                               Text(
                                 "${session.stress!.toStringAsFixed(1)} / 10",
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryTextColor,
+                                ),
                               ),
                             ],
                           ),
@@ -205,7 +218,9 @@ class SessionDetailScreen extends ConsumerWidget {
                           l10n.focusPoints("${impact >= 0 ? '+' : ''}$impact"),
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: impact >= 0 ? Colors.greenAccent : Colors.redAccent,
+                            color: impact >= 0
+                                ? (isDark ? Colors.greenAccent : Colors.green.shade700)
+                                : (isDark ? Colors.redAccent : Colors.red.shade700),
                           ),
                         ),
                       ),
@@ -225,13 +240,16 @@ class SessionDetailScreen extends ConsumerWidget {
                   // ── Section 1: Overview ──
                   Text(
                     l10n.overview,
-                    style: theme.textTheme.labelSmall?.copyWith(color: Colors.white38, letterSpacing: 1.2),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: mutedTextColor,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   _buildDataRow(
                     theme, l10n.cycles,
                     "${session.cyclesCompleted ?? 0} / ${session.totalCycles ?? 4}",
-                    Colors.white,
+                    primaryTextColor,
                   ),
                   const SizedBox(height: 10),
                   ClipRRect(
@@ -239,48 +257,88 @@ class SessionDetailScreen extends ConsumerWidget {
                     child: LinearProgressIndicator(
                       value: ((session.cyclesCompleted ?? 0) / (session.totalCycles ?? 4)).clamp(0.0, 1.0),
                       minHeight: 6,
-                      backgroundColor: Colors.white12,
+                      backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        session.completed ? Colors.greenAccent : Colors.orangeAccent,
+                        session.completed
+                            ? (isDark ? Colors.greenAccent : Colors.green.shade600)
+                            : (isDark ? Colors.orangeAccent : Colors.orange.shade700),
                       ),
                     ),
                   ),
-                  const Divider(height: 28, color: Colors.white24),
+                  Divider(
+                    height: 28,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.24),
+                  ),
 
                   // ── Section 2: Metrics ──
                   Text(
                     l10n.pomodoroMetrics,
-                    style: theme.textTheme.labelSmall?.copyWith(color: Colors.white38, letterSpacing: 1.2),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: mutedTextColor,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  _buildDataRow(theme, l10n.focusTimeLabel, "${session.totalFocusMinutes ?? session.durationMinutes} min", Colors.white),
-                  const Divider(height: 20, color: Colors.white12),
-                  _buildDataRow(theme, l10n.breakTimeLabel, "${session.totalBreakMinutes ?? 0} min", Colors.white70),
-                  const Divider(height: 28, color: Colors.white24),
+                  _buildDataRow(
+                    theme,
+                    l10n.focusTimeLabel,
+                    "${session.totalFocusMinutes ?? session.durationMinutes} min",
+                    primaryTextColor,
+                  ),
+                  Divider(
+                    height: 20,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                  ),
+                  _buildDataRow(
+                    theme,
+                    l10n.breakTimeLabel,
+                    "${session.totalBreakMinutes ?? 0} min",
+                    secondaryTextColor,
+                  ),
+                  Divider(
+                    height: 28,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.24),
+                  ),
 
                   // ── Section 3: Performance ──
                   Text(
                     l10n.pomodoroPerformance,
-                    style: theme.textTheme.labelSmall?.copyWith(color: Colors.white38, letterSpacing: 1.2),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: mutedTextColor,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   _buildDataRow(
                     theme, l10n.statusCompleted,
                     l10n.completionOfCycles((((session.cyclesCompleted ?? 0) / (session.totalCycles ?? 4)) * 100).round()),
-                    session.completed ? Colors.greenAccent : Colors.orangeAccent,
+                    session.completed
+                        ? (isDark ? Colors.greenAccent : Colors.green.shade700)
+                        : (isDark ? Colors.orangeAccent : Colors.orange.shade700),
                   ),
-                  const Divider(height: 20, color: Colors.white12),
+                  Divider(
+                    height: 20,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                  ),
                   _buildDataRow(
                     theme, l10n.statusCompleted,
                     session.completed ? l10n.completedYes : l10n.completedNo,
-                    session.completed ? Colors.greenAccent : Colors.orangeAccent,
+                    session.completed
+                        ? (isDark ? Colors.greenAccent : Colors.green.shade700)
+                        : (isDark ? Colors.orangeAccent : Colors.orange.shade700),
                   ),
-                  const Divider(height: 28, color: Colors.white24),
+                  Divider(
+                    height: 28,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.24),
+                  ),
 
                   // ── Cycle Timeline ──
                   Text(
                     l10n.pomodoroTimeline,
-                    style: theme.textTheme.labelSmall?.copyWith(color: Colors.white38, letterSpacing: 1.2),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: mutedTextColor,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   _buildCycleTimeline(theme, l10n, session),
@@ -289,21 +347,29 @@ class SessionDetailScreen extends ConsumerWidget {
                     theme,
                     l10n.statusCompleted,
                     session.completed ? l10n.completedYes : l10n.completedNo,
-                    session.completed ? Colors.greenAccent : Colors.redAccent,
+                    session.completed
+                        ? (isDark ? Colors.greenAccent : Colors.green.shade700)
+                        : (isDark ? Colors.redAccent : Colors.red.shade700),
                   ),
-                  const Divider(height: 24, color: Colors.white24),
+                  Divider(
+                    height: 24,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.24),
+                  ),
                   _buildDataRow(
                     theme,
                     l10n.cycles,
                     "${session.completedCycles ?? '-'}",
-                    Colors.white,
+                    primaryTextColor,
                   ),
-                  const Divider(height: 24, color: Colors.white24),
+                  Divider(
+                    height: 24,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.24),
+                  ),
                   _buildDataRow(
                     theme,
                     l10n.breaksSkipped,
                     "${session.skippedBreaks ?? 0}",
-                    Colors.white,
+                    primaryTextColor,
                   ),
                 ],
                     ],
@@ -323,14 +389,14 @@ class SessionDetailScreen extends ConsumerWidget {
                           l10n.studyIntent,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: Colors.white54,
+                            color: secondaryTextColor,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           session.intent!,
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: Colors.white,
+                            color: primaryTextColor,
                             height: 1.5,
                           ),
                         ),
@@ -348,6 +414,9 @@ class SessionDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildCycleTimeline(ThemeData theme, AppLocalizations l10n, StudySession session) {
+    final isDark = theme.brightness == Brightness.dark;
+    final subtleColor = theme.colorScheme.onSurface.withValues(alpha: 0.24);
+    final mediumColor = theme.colorScheme.onSurface.withValues(alpha: 0.72);
     final completed = session.cyclesCompleted ?? 0;
     final total = session.totalCycles ?? 4;
     final rows = <Widget>[];
@@ -366,16 +435,20 @@ class SessionDetailScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isDone
-                  ? Colors.greenAccent.withValues(alpha: 0.15)
+                  ? (isDark
+                      ? Colors.greenAccent.withValues(alpha: 0.15)
+                      : Colors.green.withValues(alpha: 0.10))
                   : isInProgress
-                      ? Colors.yellowAccent.withValues(alpha: 0.12)
-                      : Colors.white.withValues(alpha: 0.05),
+                      ? (isDark
+                          ? Colors.yellowAccent.withValues(alpha: 0.12)
+                          : Colors.orange.withValues(alpha: 0.10))
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.05),
               border: Border.all(
                 color: isDone
-                    ? Colors.greenAccent
+                    ? (isDark ? Colors.greenAccent : Colors.green.shade700)
                     : isInProgress
-                        ? Colors.yellowAccent
-                        : Colors.white24,
+                        ? (isDark ? Colors.yellowAccent : Colors.orange.shade700)
+                        : subtleColor,
                 width: 1.5,
               ),
             ),
@@ -385,10 +458,10 @@ class SessionDetailScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 11,
                   color: isDone
-                      ? Colors.greenAccent
+                      ? (isDark ? Colors.greenAccent : Colors.green.shade700)
                       : isInProgress
-                          ? Colors.yellowAccent
-                          : Colors.white24,
+                          ? (isDark ? Colors.yellowAccent : Colors.orange.shade700)
+                          : subtleColor,
                 ),
               ),
             ),
@@ -402,10 +475,12 @@ class SessionDetailScreen extends ConsumerWidget {
                     : l10n.focusCycleNotReached(i),
             style: theme.textTheme.bodySmall?.copyWith(
               color: isDone
-                  ? Colors.white70
+                  ? mediumColor
                   : isInProgress
-                      ? Colors.yellowAccent.withValues(alpha: 0.85)
-                      : Colors.white24,
+                      ? (isDark
+                          ? Colors.yellowAccent.withValues(alpha: 0.85)
+                          : Colors.orange.shade700)
+                      : subtleColor,
             ),
           ),
         ],
@@ -417,11 +492,15 @@ class SessionDetailScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(left: 13, top: 3, bottom: 3),
           child: Row(
             children: [
-              Container(width: 2, height: 14, color: Colors.white12),
+              Container(
+                width: 2,
+                height: 14,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+              ),
               const SizedBox(width: 23),
               Text(
                 i <= completed ? l10n.breakDone(5) : l10n.breakPending,
-                style: theme.textTheme.labelSmall?.copyWith(color: Colors.white24),
+                style: theme.textTheme.labelSmall?.copyWith(color: subtleColor),
               ),
             ],
           ),
@@ -442,7 +521,7 @@ class SessionDetailScreen extends ConsumerWidget {
         Text(
           label,
           style: theme.textTheme.titleMedium?.copyWith(
-            color: Colors.white70,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
           ),
         ),
         Text(

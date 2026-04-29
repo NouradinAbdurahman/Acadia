@@ -222,7 +222,10 @@ class _EmptyResultsState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.lg),
-            AppButton(onPressed: onAdd, text: l10n.addResult),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: AppButton(onPressed: onAdd, text: l10n.addResult),
+            ),
           ],
         ),
       ),
