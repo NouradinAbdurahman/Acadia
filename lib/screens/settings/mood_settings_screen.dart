@@ -9,8 +9,6 @@ import '../../components/app_glass_card.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/mood_settings.dart';
-import '../../providers/app_providers.dart';
 import '../../providers/mood_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 
@@ -22,13 +20,6 @@ class MoodSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
-  bool _initialized = false;
-  bool _trackingEnabled = true;
-  bool _reminderEnabled = true;
-  String _reminderType = 'both';
-  TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
-  bool _isSaving = false;
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -40,13 +31,18 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
       body: AuthBackgroundContainer(
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.xl,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    AppBackButton(),
+                    const AppBackButton(alignToContentEdge: true),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(

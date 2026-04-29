@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' as services;
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
@@ -32,6 +31,7 @@ class LiveStudySessionCard extends ConsumerWidget {
     final sortedCourses = List.from(courses)..sort((a, b) => a.courseCode.compareTo(b.courseCode));
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

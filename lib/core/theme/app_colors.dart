@@ -34,4 +34,19 @@ class AppColors {
   
   static const shadowSoft = Color(0x1A000000); // 10% black
   static const glowPrimary = Color(0x663B82F6); // 40% primary
+
+  /// Log Mood — emoji scale (single source; used for rings + labels)
+  static const moodAwful = Color(0xFFE53935);
+  static const moodBad = Color(0xFFFF7043);
+  static const moodNeutral = Color(0xFFFFC107);
+  static const moodGood = Color(0xFF66BB6A);
+  static const moodGreat = Color(0xFF22C55E);
+
+  /// Sliders — tuned for contrast on light + dark inactive tracks
+  static const stressAccent = Color(0xFFEA580C);
+  static const energyAccent = Color(0xFF0D9488);
+
+  /// Mood History / Analytics — “Daily baseline” vs “Study sessions” tab accents
+  static const moodSourceDailyAccent = Color(0xFFFFA000); // Material amber 700
+  static const moodSourceSessionAccent = Color(0xFF1976D2); // Material blue 700
 }

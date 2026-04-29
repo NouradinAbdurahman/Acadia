@@ -65,24 +65,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildMoodSourceTabs(WidgetRef ref, ThemeData theme, String currentSource) {
     final l10n = AppLocalizations.of(ref.context)!;
-    return Container(
+    return RepaintBoundary(
+      child: Container(
+      height: 48,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? Colors.white.withValues(alpha: 0.06)
-            : theme.colorScheme.surface,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        ),
       ),
       child: Row(
         children: [
           Expanded(
-            child: _buildTabItem(
+            child: _buildMoodStressTabItem(
               label: l10n.dailyBaseline,
               isSelected: currentSource == 'daily',
               theme: theme,
+              accentColor: AppColors.moodSourceDailyAccent,
               onTap: () {
                 Haptics.vibrate(HapticsType.selection);
                 ref.read(moodChartSourceProvider.notifier).state = 'daily';
@@ -90,10 +88,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ),
           ),
           Expanded(
-            child: _buildTabItem(
+            child: _buildMoodStressTabItem(
               label: l10n.studySessions,
               isSelected: currentSource == 'session',
               theme: theme,
+              accentColor: AppColors.moodSourceSessionAccent,
               onTap: () {
                 Haptics.vibrate(HapticsType.selection);
                 ref.read(moodChartSourceProvider.notifier).state = 'session';
@@ -102,43 +101,45 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
-  Widget _buildTabItem({
+  /// Same visual pattern as Mood History “Filter by source” tabs.
+  Widget _buildMoodStressTabItem({
     required String label,
     required bool isSelected,
     required ThemeData theme,
+    required Color accentColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
+      behavior: HitTestBehavior.opaque,
+      // Static container — AnimatedContainer lerps transparent↔surface and causes visible flicker.
+      child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+          color: isSelected ? theme.cardColor : null,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  )
+                    color: AppColors.shadowSoft,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
                 ]
               : null,
         ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+        child: Center(
+          child: Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: isSelected
+                  ? accentColor
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -150,12 +151,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: theme.brightness == Brightness.dark
-            ? Colors.white.withValues(alpha: 0.06)
-            : theme.colorScheme.surface,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+          color: theme.colorScheme.onSurface.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.14 : 0.16,
+          ),
         ),
       ),
       child: Row(

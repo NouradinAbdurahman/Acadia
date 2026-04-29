@@ -15,7 +15,6 @@ import '../../l10n/app_localizations.dart';
 import '../../core/design/app_spacing.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/auth/auth_background_container.dart';
-import '../../components/app_glass_card.dart';
 import '../../components/app_bottom_sheet_picker.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -155,21 +154,33 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
           ),
-          AppGlassCard(
+          Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: EdgeInsets.zero,
-            child: Column(
-              children: [
-                for (var i = 0; i < children.length; i++) ...[
-                  children[i],
-                  if (i < children.length - 1)
-                    Divider(
-                      height: 1,
-                      indent: 50,
-                      color: Colors.white.withValues(alpha: 0.08),
-                    ),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.14 : 0.16,
+                ),
+                width: 1,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Column(
+                children: [
+                  for (var i = 0; i < children.length; i++) ...[
+                    children[i],
+                    if (i < children.length - 1)
+                      Divider(
+                        height: 1,
+                        indent: 50,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                      ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],
@@ -270,11 +281,10 @@ class ProfileScreen extends ConsumerWidget {
                                   displayName.isNotEmpty
                                       ? displayName
                                       : l10n.student,
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.onSurface,
-                                      ),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -343,10 +353,12 @@ class ProfileScreen extends ConsumerWidget {
                                   AppPickerOption(
                                     value: 'en',
                                     title: l10n.languageEnglish,
+                                    flagEmoji: '🇺🇸',
                                   ),
                                   AppPickerOption(
                                     value: 'tr',
                                     title: l10n.languageTurkish,
+                                    flagEmoji: '🇹🇷',
                                   ),
                                 ],
                                 selectedValue: locale.languageCode,
@@ -375,6 +387,11 @@ class ProfileScreen extends ConsumerWidget {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              Text(
+                                locale.languageCode == 'tr' ? '🇹🇷' : '🇺🇸',
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                              const SizedBox(width: 6),
                               Text(
                                 locale.languageCode == 'tr'
                                     ? l10n.languageTurkish

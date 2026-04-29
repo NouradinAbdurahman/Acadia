@@ -14,12 +14,15 @@ class AppPickerOption<T> {
     required this.title,
     this.subtitle,
     this.swatchColor,
+    /// Leading emoji (e.g. language flags 🇺🇸 / 🇹🇷 — same as onboarding).
+    this.flagEmoji,
   });
 
   final T value;
   final String title;
   final String? subtitle;
   final Color? swatchColor;
+  final String? flagEmoji;
 }
 
 class AppBottomSheetPicker<T> extends StatelessWidget {
@@ -349,6 +352,16 @@ Future<T?> showAppBottomSheetPicker<T>({
                               ),
                               child: Row(
                                 children: [
+                                  if (option.flagEmoji != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: AppSpacing.sm,
+                                      ),
+                                      child: Text(
+                                        option.flagEmoji!,
+                                        style: const TextStyle(fontSize: 24),
+                                      ),
+                                    ),
                                   if (option.swatchColor != null)
                                     Container(
                                       margin: const EdgeInsets.only(

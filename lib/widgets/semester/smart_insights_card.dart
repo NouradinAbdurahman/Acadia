@@ -36,6 +36,7 @@ class SmartInsightsCard extends ConsumerWidget {
         final topInsight = sorted.first;
 
         return AppGlassCard(
+          borderOnly: true,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -179,6 +179,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const _SemesterBanner(),
                               const SizedBox(height: AppSpacing.md),
 
+                              // --- SECTION 1.55: MOOD ENTRY PROMPT (ONLY IF NOT LOGGED TODAY) ---
+                              ref.watch(moodSettingsProvider.notifier).shouldShowDaily
+                                  ? todayMoodAsync.when(
+                                      data: (hasLoggedToday) {
+                                        if (!hasLoggedToday) {
+                                          return _buildMoodEntryCard(context, theme, l10n);
+                                        }
+                                        return const SizedBox.shrink();
+                                      },
+                                      loading: () => const SizedBox.shrink(),
+                                      error: (e, st) => const SizedBox.shrink(),
+                                    )
+                                  : const SizedBox.shrink(),
+                              if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
+                                  !(todayMoodAsync.asData?.value ?? true))
+                                const SizedBox(height: AppSpacing.md),
+
                               // --- SECTION 1.6: STUDY HEATMAP ---
                               const RepaintBoundary(child: StudyHeatmap()),
                               
@@ -203,19 +220,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 const SizedBox(height: AppSpacing.lg),
                               ],
 
-                              // --- SECTION 2.1: MOOD ENTRY CARD OR SUMMARY (CONDITIONAL) ---
-                              ref.watch(moodSettingsProvider.notifier).shouldShowDaily
-                                  ? todayMoodAsync.when(
-                                      data: (hasLoggedToday) {
-                                        if (!hasLoggedToday) {
-                                          return _buildMoodEntryCard(context, theme, l10n);
-                                        }
-                                        return const SizedBox.shrink();
-                                      },
-                                      loading: () => const SizedBox.shrink(),
-                                      error: (e, st) => const SizedBox.shrink(),
-                                    )
-                                  : const SizedBox.shrink(),
+                              // --- SECTION 2.1: MOOD HISTORY (CONDITIONAL) ---
                                if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
                                   todayMoodAsync.asData?.value != null) ...[
                                 const SizedBox(height: AppSpacing.md),
@@ -250,6 +255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                                 AppGlassCard(
+                                  borderOnly: true,
                                   padding: const EdgeInsets.all(AppSpacing.md),
                                   child: MoodDailyList(
                                     moodLogsAsync: moodLogsAsync,
@@ -278,6 +284,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                         child: SizedBox(
                                           width: double.infinity,
                                           child: AppGlassCard(
+                                            borderOnly: true,
                                             padding: const EdgeInsets.all(AppSpacing.xl),
                                             child: Column(
                                               children: [
@@ -521,6 +528,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -890,16 +898,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: child,
       ),
       child: AppGlassCard(
+        borderOnly: true,
         key: ValueKey('mood-card'),
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
-            AppIcon(
-              HeroIcons.faceSmile,
-              size: 28,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -921,9 +924,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            TextButton(
+            TextButton.icon(
               onPressed: () => context.push('/mood/log'),
-              child: Text(
+              icon: AppIcon(
+                HeroIcons.plusCircle,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              label: Text(
                 l10n.logMoodTitle,
                 style: theme.textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
@@ -949,6 +957,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final emoji = emojiMap[todayLog.moodLevel] ?? '😐';
     
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
@@ -1001,6 +1010,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AppLocalizations l10n,
   ) {
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
@@ -1045,6 +1055,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AppLocalizations l10n,
   ) {
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
@@ -1110,6 +1121,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return AppGlassCard(
+      borderOnly: true,
       key: ValueKey('decision-$signature'),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -1368,6 +1380,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1428,6 +1441,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ) {
     final timeLabel = MaterialLocalizations.of(context);
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1674,6 +1688,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Widget? action,
   }) {
     return AppGlassCard(
+      borderOnly: true,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -1827,6 +1842,7 @@ class _ProgressOverviewCard extends ConsumerWidget {
         context.go('/home');
       },
       child: AppGlassCard(
+        borderOnly: true,
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: () {
           if (!trendAsync.hasValue || trendAsync.value == null) {
@@ -2002,10 +2018,11 @@ class _NotificationButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.07),
+          color: Colors.transparent,
           shape: BoxShape.circle,
           border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.18 : 0.12),
+            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.16),
+            width: 1,
           ),
         ),
         child: Stack(
@@ -2063,10 +2080,11 @@ class _AiAssistantButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.07),
+          color: Colors.transparent,
           shape: BoxShape.circle,
           border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.18 : 0.12),
+            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.16),
+            width: 1,
           ),
         ),
         child: AppIcon(
@@ -2111,6 +2129,7 @@ class _CompactQuickMenuCard extends StatelessWidget {
     return AnimatedPressable(
       onTap: () => context.push(item.route),
       child: AppGlassCard(
+        borderOnly: true,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.sm,
@@ -2170,6 +2189,7 @@ class _StatusPanel extends StatelessWidget {
     return AnimatedPressable(
       onTap: () => context.push('/tasks?filter=$overviewFilter&source=dashboard'),
       child: AppGlassCard(
+        borderOnly: true,
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2282,8 +2302,10 @@ class _DeadlineListItem extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final diff = deadline.deadlineDate.difference(DateTime.now()).inDays;
+    final isDark = theme.brightness == Brightness.dark;
 
     return AppGlassCard(
+      borderOnly: true,
       child: Row(
         children: [
           Container(
@@ -2301,11 +2323,22 @@ class _DeadlineListItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(deadline.course, style: theme.textTheme.bodySmall),
+                Text(
+                  deadline.course,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(
+                      alpha: isDark ? 0.76 : 0.82,
+                    ),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 Text(
                   deadline.title,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface.withValues(
+                      alpha: isDark ? 0.96 : 0.92,
+                    ),
                   ),
                 ),
                 Text(
@@ -2334,10 +2367,12 @@ class _CourseActivityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: AppGlassCard(
+        borderOnly: true,
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2368,14 +2403,18 @@ class _CourseActivityCard extends StatelessWidget {
                     children: [
                       Text(
                         '${stats.tasksCount} ${l10n.tasks}',
-                        style: theme.textTheme.bodySmall,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: isDark ? 0.78 : 0.84,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '•',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.3,
+                            alpha: isDark ? 0.46 : 0.52,
                           ),
                         ),
                       ),
@@ -2392,7 +2431,7 @@ class _CourseActivityCard extends StatelessWidget {
                         '•',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.3,
+                            alpha: isDark ? 0.46 : 0.52,
                           ),
                         ),
                       ),
@@ -2401,7 +2440,7 @@ class _CourseActivityCard extends StatelessWidget {
                         '${stats.course.ects} ${l10n.ectsLabel}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.75,
+                            alpha: isDark ? 0.82 : 0.86,
                           ),
                         ),
                       ),
@@ -2417,12 +2456,20 @@ class _CourseActivityCard extends StatelessWidget {
                   '${stats.studyMinutes ~/ 60}${l10n.hoursAbbreviation} ${stats.studyMinutes % 60}${l10n.minutesAbbreviation}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface.withValues(
+                      alpha: isDark ? 0.9 : 0.88,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   l10n.study,
-                  style: theme.textTheme.labelSmall?.copyWith(fontSize: 9),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontSize: 9,
+                    color: theme.colorScheme.onSurface.withValues(
+                      alpha: isDark ? 0.72 : 0.78,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -2460,6 +2507,7 @@ class _SemesterBanner extends ConsumerWidget {
             duration: const Duration(milliseconds: 200),
             opacity: isSwitching ? 0.6 : 1.0,
             child: AppGlassCard(
+              borderOnly: true,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
               child: Row(
                 children: [

@@ -100,6 +100,7 @@ class SessionDetailScreen extends ConsumerWidget {
 
                 /// FOCUS INSIGHT
                 AppGlassCard(
+                  borderOnly: true,
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,6 +128,7 @@ class SessionDetailScreen extends ConsumerWidget {
                 /// MOOD & STRESS
                 if (session.mood != null || session.stress != null) ...[
                   AppGlassCard(
+                    borderOnly: true,
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,6 +198,7 @@ class SessionDetailScreen extends ConsumerWidget {
 
                 /// SCORE IMPACT
                 AppGlassCard(
+                  borderOnly: true,
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -232,6 +235,7 @@ class SessionDetailScreen extends ConsumerWidget {
 
                 /// SESSION DATA
                 AppGlassCard(
+                  borderOnly: true,
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -381,6 +385,7 @@ class SessionDetailScreen extends ConsumerWidget {
                 /// INTENT
                 if (session.intent != null && session.intent!.trim().isNotEmpty) ...[
                   AppGlassCard(
+                    borderOnly: true,
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

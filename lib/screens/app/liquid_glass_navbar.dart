@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:heroicons/heroicons.dart';
@@ -11,6 +10,14 @@ import '../../core/design/app_durations.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
+
+class _GlassNavTokens {
+  static const double navHeight = 88;
+  static const double outerBlur = 30;
+  static const double activeBlur = 12;
+  static const double activeSize = 60;
+  static const double activeRadius = 20;
+}
 
 class LiquidGlassNavbar extends StatefulWidget {
   const LiquidGlassNavbar({
@@ -28,6 +35,32 @@ class LiquidGlassNavbar extends StatefulWidget {
 
 class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
   double _dragDelta = 0;
+  Offset? _dragStart;
+
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (_dragStart == null) return;
+
+    final dx = event.position.dx - _dragStart!.dx;
+    final dy = event.position.dy - _dragStart!.dy;
+
+    // Prioritize taps: only treat as nav-swipe when movement is clearly horizontal.
+    const horizontalIntentThreshold = 16.0;
+    if (dx.abs() < horizontalIntentThreshold || dx.abs() <= dy.abs() * 1.15) return;
+
+    // Step threshold for each tab jump while swiping.
+    _dragDelta += event.delta.dx;
+    const stepThreshold = 52.0;
+    if (_dragDelta.abs() < stepThreshold) return;
+
+    final direction = _dragDelta > 0 ? 1 : -1;
+    _dragDelta = 0;
+    final current = widget.selectedIndex;
+    final next = (current + direction).clamp(0, 4).toInt();
+    if (next != current) {
+      Haptics.vibrate(HapticsType.selection);
+      widget.onSelectedIndex(next);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,64 +75,44 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
           bottom: 0,
         ),
         child: SizedBox(
-          height: 84,
+          height: _GlassNavTokens.navHeight,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.xl + AppRadius.sm),
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+              filter: ImageFilter.blur(
+                sigmaX: _GlassNavTokens.outerBlur,
+                sigmaY: _GlassNavTokens.outerBlur,
+              ),
               child: Container(
                 decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.light
-                      ? Colors.white.withValues(alpha: 0.88)
-                      : const Color(0xFF0F172A).withValues(alpha: 0.7),
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(
                     AppRadius.xl + AppRadius.sm,
                   ),
                   border: Border.all(
-                    color: theme.brightness == Brightness.light
-                        ? Colors.black.withValues(alpha: 0.08)
-                        : Colors.white.withValues(alpha: 0.12),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(
-                        alpha: theme.brightness == Brightness.light
-                            ? 0.08
-                            : 0.5,
-                      ),
-                      blurRadius: 32,
-                      offset: const Offset(0, 16),
-                      spreadRadius: -4,
+                    color: theme.colorScheme.onSurface.withValues(
+                      alpha: theme.brightness == Brightness.light ? 0.22 : 0.2,
                     ),
-                  ],
+                    width: 0.8,
+                  ),
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final tabWidth = constraints.maxWidth / 5;
 
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onHorizontalDragUpdate: (details) {
-                        _dragDelta += details.delta.dx;
-                        const threshold = 40.0;
-                        if (_dragDelta.abs() >= threshold) {
-                          final direction = _dragDelta > 0 ? 1 : -1;
-                          _dragDelta = 0;
-                          final current = widget.selectedIndex;
-                          final next = (current + direction)
-                              .clamp(0, 4)
-                              .toInt();
-                          if (next != current) {
-                            Haptics.vibrate(HapticsType.selection);
-                            widget.onSelectedIndex(next);
-                          }
-                        }
-                      },
-                      onHorizontalDragEnd: (_) {
+                    return Listener(
+                      behavior: HitTestBehavior.translucent,
+                      onPointerDown: (event) {
+                        _dragStart = event.position;
                         _dragDelta = 0;
                       },
-                      onHorizontalDragCancel: () {
+                      onPointerMove: _handlePointerMove,
+                      onPointerUp: (_) {
+                        _dragStart = null;
+                        _dragDelta = 0;
+                      },
+                      onPointerCancel: (_) {
+                        _dragStart = null;
                         _dragDelta = 0;
                       },
                       child: Stack(
@@ -113,17 +126,40 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                             child: SizedBox(
                               width: tabWidth,
                               child: Center(
-                                child: Container(
-                                  width: 58,
-                                  height: 58,
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.15,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    _GlassNavTokens.activeRadius,
+                                  ),
+                                  child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                      sigmaX: _GlassNavTokens.activeBlur,
+                                      sigmaY: _GlassNavTokens.activeBlur,
                                     ),
-                                    borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(
-                                      color: theme.colorScheme.primary
-                                          .withValues(alpha: 0.1),
+                                    child: Container(
+                                      width: _GlassNavTokens.activeSize,
+                                      height: _GlassNavTokens.activeSize,
+                                      decoration: BoxDecoration(
+                                        color: Colors.transparent,
+                                        borderRadius: BorderRadius.circular(
+                                          _GlassNavTokens.activeRadius,
+                                        ),
+                                        border: Border.all(
+                                          color: Color.alphaBlend(
+                                            theme.colorScheme.primary.withValues(
+                                              alpha: theme.brightness == Brightness.light
+                                                  ? 0.08
+                                                  : 0.06,
+                                            ),
+                                            theme.colorScheme.outlineVariant.withValues(
+                                              alpha: theme.brightness == Brightness.light
+                                                  ? 0.48
+                                                  : 0.42,
+                                            ),
+                                          ),
+                                          width: 0.7,
+                                        ),
+                                        boxShadow: [],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -242,7 +278,7 @@ class _NavItemState extends State<_NavItem> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: [
-                AppIcon(widget.icon, color: baseColor, size: 20)
+                AppIcon(widget.icon, color: baseColor, size: 21)
                     .animate(target: widget.isSelected ? 1 : 0)
                     .scale(
                       begin: const Offset(1, 1),
@@ -259,7 +295,7 @@ class _NavItemState extends State<_NavItem> {
                       .copyWith(
                     color: labelColor,
                     fontWeight: widget.isSelected ? FontWeight.w800 : FontWeight.w500,
-                    fontSize: 9.5,
+                    fontSize: 10,
                   ),
                   child: Text(
                     widget.label,

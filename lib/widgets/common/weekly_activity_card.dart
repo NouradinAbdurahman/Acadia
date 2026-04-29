@@ -25,6 +25,7 @@ class WeeklyActivityCard extends StatelessWidget {
     final change = analytics.weeklyChange;
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

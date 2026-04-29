@@ -305,6 +305,7 @@ class _StudyHistoryScreenState extends ConsumerState<StudyHistoryScreen> {
           );
         },
         child: AppGlassCard(
+          borderOnly: true,
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,

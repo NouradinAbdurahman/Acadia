@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:heroicons/heroicons.dart';
 import 'package:intl/intl.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import '../../components/app_back_button.dart';
 
 import '../../components/app_glass_card.dart';
-import '../../core/design/app_icons.dart';
 import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/mood_log.dart';
 import '../../providers/mood_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_radius.dart';
+import '../../core/theme/app_colors.dart';
 import '../../widgets/mood/mood_details_bottom_sheet.dart';
 
 import '../../widgets/mood/mood_daily_list.dart';
@@ -40,10 +39,15 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
                 child: Row(
                   children: [
-                    AppBackButton(),
+                    const AppBackButton(alignToContentEdge: true),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -64,7 +68,7 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -132,9 +136,9 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
 
                     return ListView.separated(
                       padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
+                        AppSpacing.md,
                         0,
-                        AppSpacing.lg,
+                        AppSpacing.md,
                         AppSpacing.xl,
                       ),
                       itemCount: sections.fold<int>(
@@ -186,9 +190,10 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
   }
   
   Widget _buildSourceTabs(AppLocalizations l10n, ThemeData theme) {
-    return Container(
+    return RepaintBoundary(
+      child: Container(
       height: 48,
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
@@ -211,7 +216,7 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
             child: _buildTabItem(
               label: l10n.dailyBaseline,
               isSelected: _selectedSource == 'manual',
-              color: Colors.amber.shade700,
+              color: AppColors.moodSourceDailyAccent,
               onTap: () {
                 Haptics.vibrate(HapticsType.selection);
                 setState(() => _selectedSource = 'manual');
@@ -222,7 +227,7 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
             child: _buildTabItem(
               label: l10n.studySessions,
               isSelected: _selectedSource == 'session',
-              color: Colors.blue.shade700,
+              color: AppColors.moodSourceSessionAccent,
               onTap: () {
                 Haptics.vibrate(HapticsType.selection);
                 setState(() => _selectedSource = 'session');
@@ -230,6 +235,7 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -243,16 +249,15 @@ class _MoodHistoryScreenState extends ConsumerState<MoodHistoryScreen> {
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? theme.cardColor : Colors.transparent,
+          color: isSelected ? theme.cardColor : null,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: AppColors.shadowSoft,
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -353,7 +358,7 @@ class _MoodHistoryItem extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      '${log.note!}',
+                      log.note!,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(

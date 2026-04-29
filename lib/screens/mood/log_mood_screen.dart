@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:heroicons/heroicons.dart';
-import 'package:haptic_feedback/haptic_feedback.dart';
 
 import '../../components/app_button.dart';
-import '../../core/design/app_icons.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/design/app_spacing.dart';
+import '../../core/theme/app_colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/mood_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
@@ -146,12 +143,18 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
 
   Color _getMoodColor(int level, ThemeData theme) {
     switch (level) {
-      case 1: return const Color(0xFFE53935); // Awful (clean red)
-      case 2: return const Color(0xFFFF7043); // Bad (soft orange)
-      case 3: return const Color(0xFFFFC107); // Neutral (amber)
-      case 4: return const Color(0xFF66BB6A); // Good (soft green)
-      case 5: return const Color(0xFF2ECC71); // Great (balanced green)
-      default: return theme.colorScheme.primary;
+      case 1:
+        return AppColors.moodAwful;
+      case 2:
+        return AppColors.moodBad;
+      case 3:
+        return AppColors.moodNeutral;
+      case 4:
+        return AppColors.moodGood;
+      case 5:
+        return AppColors.moodGreat;
+      default:
+        return theme.colorScheme.primary;
     }
   }
 
@@ -223,7 +226,8 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                                   height: isSelected ? 90 : 70,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: Colors.white.withValues(alpha: 0.04),
+                                    color: theme.colorScheme.surfaceContainerHighest
+                                        .withValues(alpha: 0.35),
                                     gradient: isSelected
                                         ? RadialGradient(
                                             colors: [
@@ -277,7 +281,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
             },
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.sm),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: Text(
@@ -329,9 +333,12 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
             trackHeight: 12,
             activeTrackColor: activeColor,
             inactiveTrackColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            thumbColor: Colors.white,
-            overlayColor: activeColor.withValues(alpha: 0.2),
-            valueIndicatorTextStyle: const TextStyle(color: Colors.white),
+            thumbColor: theme.colorScheme.surface,
+            overlayColor: activeColor.withValues(alpha: 0.22),
+            valueIndicatorTextStyle: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ) ??
+                TextStyle(color: theme.colorScheme.onSurface),
           ),
           child: Row(
             children: [
@@ -368,8 +375,8 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
 
   Widget _buildFactors(ThemeData theme, List<(String, String, IconData)> factors, Color moodColor) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
       children: factors.map((entry) {
         final key = entry.$1;
         final label = entry.$2;
@@ -377,6 +384,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
         final isSelected = _selectedFactors.contains(key);
         
         return _FactorChip(
+          theme: theme,
           label: label,
           icon: icon,
           isSelected: isSelected,
@@ -414,38 +422,57 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
     final defaultSave = l10n.saveMood;
     final dynamicSaveText = l10n.saveMoodDots(_nameForMood(_moodLevel, l10n), _stressLevel.round().toString());
 
+    final descMutedAlpha =
+        theme.brightness == Brightness.dark ? 0.76 : 0.82;
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0),
       body: AuthBackgroundContainer(
         child: SafeArea(
           child: Column(
             children: [
-              // Header
+              // Top bar: back + centered title; description below (no cards).
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    AppBackButton(),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
+                    Row(
+                      children: [
+                        const AppBackButton(alignToContentEdge: true),
+                        Expanded(
+                          child: Text(
                             l10n.logMoodTitle,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w800,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
-                          Text(
-                            widget.source == 'session'
-                                ? l10n.moodAfterSessionPrompt
-                                : l10n.moodManualPrompt,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                        ),
+                        const SizedBox(
+                          width: kMinInteractiveDimension,
+                          height: kMinInteractiveDimension,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      widget.source == 'session'
+                          ? l10n.moodAfterSessionPrompt
+                          : l10n.moodManualPrompt,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: descMutedAlpha),
+                        fontWeight: FontWeight.w500,
+                        height: 1.45,
                       ),
                     ),
                   ],
@@ -455,7 +482,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
               // Scrollable Form Sections
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -464,7 +491,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                       // SECTION 1: MOOD SELECTOR
                       _buildMoodSelector(theme, l10n),
 
-                      const SizedBox(height: 48),
+                      const SizedBox(height: AppSpacing.xxl),
 
                       // SECTION 2: STRESS & ENERGY
                       _buildSlider(
@@ -476,7 +503,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                           }
                           setState(() => _stressLevel = val);
                         },
-                        activeColor: Colors.deepOrangeAccent,
+                        activeColor: AppColors.stressAccent,
                         theme: theme,
                         l10n: l10n,
                       ),
@@ -490,12 +517,12 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                           }
                           setState(() => _energyLevel = val);
                         },
-                        activeColor: Colors.tealAccent.shade400,
+                        activeColor: AppColors.energyAccent,
                         theme: theme,
                         l10n: l10n,
                       ),
 
-                      const SizedBox(height: 48),
+                      const SizedBox(height: AppSpacing.xxl),
 
                       // SECTION 3: FACTORS
                       Text(
@@ -511,10 +538,22 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
 
                       // SECTION 4: NOTES
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withValues(
+                            alpha: theme.brightness == Brightness.dark
+                                ? 0.42
+                                : 0.65,
+                          ),
                           borderRadius: BorderRadius.circular(AppRadius.lg),
+                          border: Border.all(
+                            color: theme.colorScheme.outline
+                                .withValues(alpha: 0.22),
+                          ),
                         ),
                         child: TextField(
                           controller: _noteController,
@@ -529,7 +568,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
                         ),
                       ),
                       
-                      const SizedBox(height: 64),
+                      const SizedBox(height: AppSpacing.xxxl),
                     ],
                   ),
                 ),
@@ -537,7 +576,12 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
 
               // SECTION 5: SAVE BUTTON (Sticky Bottom)
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                ),
                 child: AppButton(
                   text: _isSaving ? defaultSave : dynamicSaveText,
                   onPressed: _isSaving ? null : _saveMood,
@@ -554,6 +598,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
 }
 
 class _FactorChip extends StatelessWidget {
+  final ThemeData theme;
   final String label;
   final IconData icon;
   final bool isSelected;
@@ -561,6 +606,7 @@ class _FactorChip extends StatelessWidget {
   final VoidCallback onTap;
 
   const _FactorChip({
+    required this.theme,
     required this.label,
     required this.icon,
     required this.isSelected,
@@ -570,6 +616,13 @@ class _FactorChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = theme.colorScheme;
+    final muted = cs.onSurface.withValues(alpha: 0.74);
+    final unselectedFill = cs.surfaceContainerHighest.withValues(
+      alpha: theme.brightness == Brightness.dark ? 0.38 : 0.72,
+    );
+    final unselectedBorder = cs.outline.withValues(alpha: 0.28);
+
     return GestureDetector(
       onTap: () {
         Haptics.vibrate(HapticsType.selection);
@@ -584,20 +637,23 @@ class _FactorChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + AppSpacing.xs,
+          ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            color: isSelected ? moodColor.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            color: isSelected ? moodColor.withValues(alpha: 0.16) : unselectedFill,
             border: Border.all(
-              color: isSelected ? moodColor.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.06),
+              color: isSelected ? moodColor.withValues(alpha: 0.55) : unselectedBorder,
             ),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: moodColor.withValues(alpha: 0.25),
+                      color: moodColor.withValues(alpha: 0.22),
                       blurRadius: 12,
                       spreadRadius: 1,
-                    )
+                    ),
                   ]
                 : [],
           ),
@@ -606,16 +662,15 @@ class _FactorChip extends StatelessWidget {
             children: [
               if (isSelected) ...[
                 Icon(Icons.check, size: 14, color: moodColor),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpacing.xs),
               ],
-              Icon(icon, size: 16, color: isSelected ? moodColor : Colors.white70),
-              const SizedBox(width: 6),
+              Icon(icon, size: 16, color: isSelected ? moodColor : muted),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isSelected ? moodColor : Colors.white70,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? moodColor : muted,
                 ),
               ),
             ],

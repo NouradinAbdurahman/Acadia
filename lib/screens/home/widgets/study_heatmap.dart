@@ -5,15 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/design/app_spacing.dart';
 import '../../../core/design/app_radius.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../components/app_glass_card.dart';
 import '../../../providers/study_heatmap_provider.dart';
 import '../../../providers/dashboard_provider.dart';
 import '../../../models/heatmap_day.dart';
 import '../../../l10n/app_localizations.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-
-import 'package:flutter/services.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 
 class StudyHeatmap extends ConsumerStatefulWidget {
@@ -83,6 +81,7 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
     final maxScore = data.maxScore;
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,6 +192,7 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
   Widget _buildHeader(BuildContext context, int streak) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -210,7 +210,9 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
             Text(
               l10n.studyIntensitySubtitle,
               style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.4),
+                color: theme.colorScheme.onSurface.withOpacity(
+                  isDark ? 0.62 : 0.72,
+                ),
                 fontWeight: FontWeight.w500,
                 fontSize: 9,
               ),
@@ -224,6 +226,7 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
 
   Widget _buildWeekdayLabels(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final locale = Localizations.localeOf(context).toString();
     
     // Get localized weekday names
@@ -249,7 +252,9 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontSize: 7.5,
                       fontWeight: FontWeight.w900,
-                      color: theme.colorScheme.onSurface.withOpacity(0.35),
+                      color: theme.colorScheme.onSurface.withOpacity(
+                        isDark ? 0.56 : 0.64,
+                      ),
                     ),
                   ),
                 ),
@@ -261,6 +266,7 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
 
   Widget _buildMonthLabels(BuildContext context, List<HeatmapDay> days) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final List<Widget> labels = [];
 
     final renderedMonthKeys = <String>{};
@@ -303,7 +309,9 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
                   fontSize: 7.5,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
-                  color: theme.colorScheme.onSurface.withOpacity(0.35),
+                  color: theme.colorScheme.onSurface.withOpacity(
+                    isDark ? 0.56 : 0.64,
+                  ),
                 ),
                 softWrap: false,
                 overflow: TextOverflow.visible,
@@ -330,6 +338,7 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Center(
         child: Column(
@@ -365,12 +374,13 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
 
   Widget _buildLegend(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final baseColor = theme.colorScheme.primary;
 
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text(l10n.heatmapLegendLess, style: theme.textTheme.labelSmall?.copyWith(fontSize: 7, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withOpacity(0.4), letterSpacing: 0.5)),
+        Text(l10n.heatmapLegendLess, style: theme.textTheme.labelSmall?.copyWith(fontSize: 7, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withOpacity(isDark ? 0.6 : 0.68), letterSpacing: 0.5)),
         const SizedBox(width: 8),
         _legendItem(theme, theme.colorScheme.onSurface.withOpacity(0.06), "0${l10n.min}", context),
         _legendItem(theme, baseColor.withOpacity(0.25), "30${l10n.min}", context),
@@ -378,13 +388,14 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
         _legendItem(theme, baseColor.withOpacity(0.7), "2${l10n.hoursAbbreviation}", context),
         _legendItem(theme, baseColor, "3${l10n.hoursAbbreviation}+", context),
         const SizedBox(width: 8),
-        Text(l10n.heatmapLegendMore, style: theme.textTheme.labelSmall?.copyWith(fontSize: 7, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withOpacity(0.4), letterSpacing: 0.5)),
+        Text(l10n.heatmapLegendMore, style: theme.textTheme.labelSmall?.copyWith(fontSize: 7, fontWeight: FontWeight.w900, color: theme.colorScheme.onSurface.withOpacity(isDark ? 0.6 : 0.68), letterSpacing: 0.5)),
       ],
     );
   }
 
   Widget _legendItem(ThemeData theme, Color color, String label, BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = theme.brightness == Brightness.dark;
     return Tooltip(
       message: l10n.heatmapActivityLegendTooltip(label),
       child: Padding(
@@ -398,7 +409,9 @@ class _StudyHeatmapState extends ConsumerState<StudyHeatmap> {
               style: theme.textTheme.labelSmall?.copyWith(
                 fontSize: 6,
                 fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface.withOpacity(0.3),
+                color: theme.colorScheme.onSurface.withOpacity(
+                  isDark ? 0.52 : 0.6,
+                ),
               ),
             ),
           ],
@@ -486,29 +499,63 @@ class _HeatmapCell extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     final dateStr = DateFormat.yMMMMEEEEd(locale).format(day.date);
 
-    showModalBottomSheet(
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withOpacity(0.99),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-        ),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(dateStr, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
-            const Divider(height: 32),
-            if (day.score > 0)
-              _highlightStat(context, Icons.check_circle, l10n.goodConsistency, theme.colorScheme.primary),
-            
-            _infoRow(context, l10n.activity, l10n.studySession),
-            _infoRow(context, l10n.duration, l10n.minutesShort(day.totalMinutes)),
-            _infoRow(context, l10n.sessions, "${day.sessionsCount}"),
-            const SizedBox(height: AppSpacing.lg),
-          ],
+      backgroundColor: theme.colorScheme.surface.withValues(alpha: 0),
+      barrierColor: theme.colorScheme.shadow.withValues(alpha: 0.45),
+      builder: (context) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: isDark ? AppGradients.darkBackground : AppGradients.lightBackground,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.lg,
+                right: AppSpacing.lg,
+                top: AppSpacing.md,
+                bottom: MediaQuery.of(context).padding.bottom + AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    dateStr,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Divider(
+                    height: 32,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                  ),
+                  if (day.score > 0)
+                    _highlightStat(context, Icons.check_circle, l10n.goodConsistency,
+                        theme.colorScheme.primary),
+                  _infoRow(context, l10n.activity, l10n.studySession),
+                  _infoRow(context, l10n.duration, l10n.minutesShort(day.totalMinutes)),
+                  _infoRow(context, l10n.sessions, '${day.sessionsCount}'),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

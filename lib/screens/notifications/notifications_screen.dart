@@ -74,11 +74,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 
-  Color _sharedTopChromeColor(ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
-    return theme.colorScheme.surface.withValues(alpha: isDark ? 0.9 : 0.96);
-  }
-
   Future<void> _onRefresh() async {
     await ref.read(notificationsProvider.notifier).loadNotifications();
   }
@@ -195,6 +190,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final topChromeColor = theme.brightness == Brightness.dark
+        ? const Color(0xFF0F172A)
+        : theme.colorScheme.surface;
     final notificationsAsync = ref.watch(notificationsProvider);
     final courses = ref.watch(courseProvider).value ?? [];
     final courseColorByName = <String, Color>{
@@ -205,10 +203,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       appBar: AppBar(
         leading: const AppBackButton(),
         title: Text(l10n.notifications),
-        backgroundColor: _sharedTopChromeColor(theme),
+        backgroundColor: topChromeColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         foregroundColor: theme.colorScheme.onSurface,
         actions: [
           const SizedBox(width: AppSpacing.sm),
@@ -219,7 +218,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           bottom: false,
           child: Column(
             children: [
-              _buildCategoryTabs(l10n, theme, _isScrolled),
+              _buildCategoryTabs(l10n, theme, topChromeColor),
               Expanded(
                 child: notificationsAsync.when(
                   data: (notifications) {
@@ -325,7 +324,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget _buildCategoryTabs(
     AppLocalizations l10n,
     ThemeData theme,
-    bool isScrolled,
+    Color topChromeColor,
   ) {
     final isDark = theme.brightness == Brightness.dark;
 
@@ -377,12 +376,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       height: 84,
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: _sharedTopChromeColor(theme),
-        border: Border(
-          bottom: BorderSide(
-            color: theme.colorScheme.outline.withValues(alpha: 0.12),
-          ),
-        ),
+        color: topChromeColor,
       ),
       child: ListView(
         scrollDirection: Axis.horizontal,
@@ -413,6 +407,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       behavior: HitTestBehavior.opaque,
       onTap: () => _handleNotificationTap(n),
       child: AppGlassCard(
+        borderOnly: true,
         margin: const EdgeInsets.only(bottom: AppSpacing.lg),
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Opacity(

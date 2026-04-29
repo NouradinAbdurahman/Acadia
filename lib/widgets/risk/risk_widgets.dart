@@ -41,6 +41,7 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
     final reasons = riskState.getReasons(l10n);
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,6 +256,7 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
     final color = _colorForLevel(risk.riskLevel);
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,6 +382,7 @@ class BurnoutStatusCard extends ConsumerWidget {
       _localizedTrendLabel(l10n, analytics.consistencyTrendLabel);
 
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

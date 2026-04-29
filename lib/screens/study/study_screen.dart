@@ -436,6 +436,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         AppGlassCard(
+          borderOnly: true,
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,6 +649,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                 : (courseMinutesToday[secondCourseId] ?? 0);
 
             return AppGlassCard(
+              borderOnly: true,
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,6 +802,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                     ? (dash.weeklyStudyCompletedMinutes / dash.weeklyStudyGoalMinutes).clamp(0.0, 1.0)
                     : 0.0;
                 return AppGlassCard(
+                  borderOnly: true,
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
                     children: [
@@ -937,6 +940,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   Widget _buildPomodoroInfo(BuildContext context, ThemeData theme, AppLocalizations l10n, StudyTimerState state) {
     final focusMinutes = 25 * state.totalRounds;
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Column(
         children: [
@@ -1319,6 +1323,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
         // 4. Metadata row
         AppGlassCard(
+          borderOnly: true,
           padding: const EdgeInsets.symmetric(
             vertical: AppSpacing.lg,
             horizontal: AppSpacing.md,
@@ -1348,6 +1353,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
         if (state.intent == 'analytics_recommendation') ...[
           AppGlassCard(
+            borderOnly: true,
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               children: [
@@ -1376,6 +1382,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
 
         // 5. Progress context (today + weekly)
         AppGlassCard(
+          borderOnly: true,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
@@ -1421,6 +1428,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
             // Streak
             Expanded(
               child: AppGlassCard(
+                borderOnly: true,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.lg,
@@ -2081,6 +2089,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         if (state.intent != null && state.intent!.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.md),
           AppGlassCard(
+            borderOnly: true,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 12),
             child: Row(
               children: [
@@ -2358,6 +2367,7 @@ class _ActiveStatMiniCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AppGlassCard(
+      borderOnly: true,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -4,10 +4,17 @@ import 'package:heroicons/heroicons.dart';
 import 'package:go_router/go_router.dart';
 
 class AppBackButton extends StatelessWidget {
-  const AppBackButton({super.key, this.onPressed, this.color});
+  const AppBackButton({
+    super.key,
+    this.onPressed,
+    this.color,
+    /// Left-align the icon with padded screen content (removes default IconButton inset).
+    this.alignToContentEdge = false,
+  });
 
   final VoidCallback? onPressed;
   final Color? color;
+  final bool alignToContentEdge;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +26,14 @@ class AppBackButton extends StatelessWidget {
     }
 
     return IconButton(
+      style: alignToContentEdge
+          ? IconButton.styleFrom(
+              padding: EdgeInsets.zero,
+              alignment: Alignment.centerLeft,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              minimumSize: const Size(kMinInteractiveDimension, kMinInteractiveDimension),
+            )
+          : null,
       onPressed: () {
         Haptics.vibrate(HapticsType.medium);
         if (onPressed != null) {

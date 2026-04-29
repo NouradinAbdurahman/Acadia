@@ -35,6 +35,7 @@ class SemesterComparisonCard extends ConsumerWidget {
             : l10n.riskDecreased(riskDelta.abs().round());
 
         return AppGlassCard(
+          borderOnly: true,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

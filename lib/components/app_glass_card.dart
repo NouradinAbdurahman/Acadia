@@ -8,6 +8,7 @@ class AppGlassCard extends StatelessWidget {
   final double? width;
   final EdgeInsetsGeometry? margin;
   final Clip clipBehavior;
+  final bool borderOnly;
 
   const AppGlassCard({
     super.key,
@@ -17,6 +18,7 @@ class AppGlassCard extends StatelessWidget {
     this.width,
     this.margin,
     this.clipBehavior = Clip.antiAlias,
+    this.borderOnly = true,
   });
 
   @override
@@ -32,23 +34,33 @@ class AppGlassCard extends StatelessWidget {
         margin: margin,
         padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: isDark 
-              ? Colors.white.withValues(alpha: 0.05) 
-              : Colors.white.withValues(alpha: 0.7),
+          color: borderOnly
+              ? Colors.transparent
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.7)),
           borderRadius: BorderRadius.circular(24), // Smoother edges
           border: Border.all(
-            color: isDark 
-                ? Colors.white.withValues(alpha: 0.08) 
-                : Colors.black.withValues(alpha: 0.12),
-            width: 1.2,
+            color: borderOnly
+                ? theme.colorScheme.onSurface.withValues(
+                    alpha: isDark ? 0.14 : 0.16,
+                  )
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.12)),
+            width: borderOnly ? 1 : 1.2,
           ),
-          boxShadow: isDark ? null : [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: borderOnly
+              ? null
+              : (isDark
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]),
         ),
         clipBehavior: clipBehavior,
         child: child,
