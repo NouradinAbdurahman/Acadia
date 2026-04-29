@@ -274,7 +274,7 @@ class AuthRepository {
             'email': response.user!.email,
             'name': fullName,
             'academic_profile_completed': false,
-          });
+          }, onConflict: 'id');
         } catch (e) {
           debugPrint('Error creating user profile: $e');
         }

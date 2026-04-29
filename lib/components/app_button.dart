@@ -141,18 +141,21 @@ class AppButtonState extends State<AppButton> with SingleTickerProviderStateMixi
                           widget.icon!,
                           const SizedBox(width: AppSpacing.sm),
                         ],
-                        widget.child ?? Text(
-                          widget.text,
-                          style: (widget.variant == AppButtonVariant.text
-                            ? theme.textTheme.bodyMedium
-                            : theme.textTheme.bodyLarge)?.copyWith(
-                                color: isDisabled
-                                    ? theme.textTheme.bodySmall?.color
-                                    : (widget.variant == AppButtonVariant.primary
-                                        ? Colors.white
-                                        : theme.colorScheme.primary),
-                                fontWeight: FontWeight.w600,
-                              ),
+                        Flexible(
+                          child: widget.child ?? Text(
+                            widget.text,
+                            textAlign: TextAlign.center,
+                            style: (widget.variant == AppButtonVariant.text
+                              ? theme.textTheme.bodyMedium
+                              : theme.textTheme.bodyLarge)?.copyWith(
+                                  color: isDisabled
+                                      ? theme.textTheme.bodySmall?.color
+                                      : (widget.variant == AppButtonVariant.primary
+                                          ? Colors.white
+                                          : theme.colorScheme.primary),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
                         ),
                       ],
                     ).animate().fade(duration: AppDurations.fast),

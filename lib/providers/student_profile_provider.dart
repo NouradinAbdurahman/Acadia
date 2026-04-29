@@ -40,8 +40,11 @@ class StudentProfileNotifier extends StateNotifier<AsyncValue<StudentProfile?>> 
 
   Future<void> completeOnboarding() async {
     final success = await _service.markOnboardingComplete();
-    if (success && state.hasValue) {
-      state = AsyncValue.data(state.value?.copyWith(onboardingComplete: true));
+    if (success) {
+      if (state.hasValue) {
+        state = AsyncValue.data(state.value?.copyWith(onboardingComplete: true));
+      }
+      // Always invalidate app user to ensure router re-evaluates with fresh DB state
       _ref.invalidate(currentAppUserProvider);
     }
   }

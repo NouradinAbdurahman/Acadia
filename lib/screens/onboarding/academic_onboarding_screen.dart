@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,6 +33,8 @@ class _AcademicOnboardingScreenState
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isSubmitting = false;
+  bool _showInfoCard = true;
+  Timer? _infoCardTimer;
   final int _currentYear = DateTime.now().year;
 
   // Form Controllers
@@ -50,6 +53,12 @@ class _AcademicOnboardingScreenState
   void initState() {
     super.initState();
     _prefillForm();
+    
+    _infoCardTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted) {
+        setState(() => _showInfoCard = false);
+      }
+    });
   }
 
   void _prefillForm() {
@@ -71,6 +80,7 @@ class _AcademicOnboardingScreenState
 
   @override
   void dispose() {
+    _infoCardTimer?.cancel();
     _pageController.dispose();
     _nameController.dispose();
     _universityController.dispose();
@@ -149,22 +159,43 @@ class _AcademicOnboardingScreenState
     );
 
     try {
+      debugPrint('[AcademicOnboarding] Starting profile update...');
       await ref.read(studentProfileProvider.notifier).updateProfile(profile);
+      
+      debugPrint('[AcademicOnboarding] Marking onboarding complete...');
       await ref.read(studentProfileProvider.notifier).completeOnboarding();
 
       // Persist weekly goal to active semester.
       final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
       if (activeSemester != null) {
+        debugPrint('[AcademicOnboarding] Persisting weekly goal: ${_studyHours.toInt()}');
         await ref.read(semesterProvider.notifier).updateSemester(
               activeSemester.copyWith(weeklyStudyGoal: _studyHours.toInt()),
             );
         ref.invalidate(semesterProvider);
         ref.invalidate(weeklyStudyGoalHoursProvider);
-        _studyHours = ref.read(weeklyStudyGoalHoursProvider).toDouble();
       }
 
+      // CRITICAL: Wait for the app user state to actually refresh from DB 
+      // before we attempt navigation. This ensures the GoRouter redirect 
+      // sees the 'academic_profile_completed = true' state.
+      debugPrint('[AcademicOnboarding] Waiting for provider refresh...');
+      await ref.read(currentAppUserProvider.future);
+      debugPrint('[AcademicOnboarding] Provider refreshed. Transitioning to home.');
+
       if (mounted) {
-        context.go('/home');
+        // Use a small delay to ensure GoRouter has processed the provider update
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (mounted) {
+          context.go('/home');
+        }
+      }
+    } catch (e) {
+      debugPrint('[AcademicOnboarding] Error during finish: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving profile: $e')),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -189,52 +220,98 @@ class _AcademicOnboardingScreenState
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     children: [
-                      AppGlassCard(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(AppRadius.lg),
-                              ),
-                              child: AppIcon(
-                                HeroIcons.sparkles,
-                                color: theme.colorScheme.primary,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n?.academicAnalyticsContext ??
-                                        'This information helps personalize your academic analytics and recommendations.',
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                                      height: 1.35,
+                      AnimatedSwitcher(
+                        duration: AppDurations.normal,
+                        child: _showInfoCard
+                            ? Padding(
+                                key: const ValueKey('onboarding_info_card'),
+                                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    AppGlassCard(
+                                      padding: const EdgeInsets.all(AppSpacing.md),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(AppSpacing.sm),
+                                            decoration: BoxDecoration(
+                                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                                            ),
+                                            child: AppIcon(
+                                              HeroIcons.sparkles,
+                                              color: theme.colorScheme.primary,
+                                              size: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(width: AppSpacing.md),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  l10n?.academicAnalyticsContext ??
+                                                      'This information helps personalize your academic analytics and recommendations.',
+                                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                                                    height: 1.35,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: AppSpacing.xs),
+                                                Text(
+                                                  l10n?.onboardingRiskImpactHint ??
+                                                      'Your semester and study goal are used to calculate academic risk and progress insights.',
+                                                  style: theme.textTheme.bodySmall?.copyWith(
+                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                                                    height: 1.3,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Text(
-                                    l10n?.onboardingRiskImpactHint ??
-                                        'Your semester and study goal are used to calculate academic risk and progress insights.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                                      height: 1.3,
+                                    Positioned(
+                                      top: -8,
+                                      right: -8,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          _infoCardTimer?.cancel();
+                                          setState(() => _showInfoCard = false);
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(AppSpacing.xs),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.surface,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(alpha: 0.1),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                            border: Border.all(
+                                              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: AppIcon(
+                                            HeroIcons.xMark,
+                                            size: 14,
+                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                                  ],
+                                ).animate().fade().slideY(begin: -0.2, end: 0),
+                              )
+                            : const SizedBox.shrink(),
                       ),
-                      const SizedBox(height: AppSpacing.lg),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
