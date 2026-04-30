@@ -193,13 +193,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
     final fieldFillColor = isLight
-        ? theme.colorScheme.surface.withValues(alpha: 0.92)
+        ? theme.colorScheme.surface.withValues(alpha: 0.9)
         : Colors.white.withValues(alpha: 0.06);
     final fieldBorderColor = isLight
-        ? theme.colorScheme.outline.withValues(alpha: 0.55)
+        ? theme.colorScheme.outline.withValues(alpha: 0.28)
         : Colors.white.withValues(alpha: 0.15);
     final fieldFocusedBorderColor = isLight
-        ? theme.colorScheme.primary
+        ? theme.colorScheme.primary.withValues(alpha: 0.78)
         : theme.colorScheme.primary.withValues(alpha: 0.9);
     final authRepo = ref.read(authRepositoryProvider);
 
