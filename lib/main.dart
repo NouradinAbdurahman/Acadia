@@ -13,6 +13,7 @@ import 'services/notification_service.dart';
 
 import 'core/config/env_validation.dart';
 import 'core/theme/app_theme.dart';
+import 'components/app_swipe_back.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/auth/forgot_password_otp_screen.dart';
@@ -680,7 +681,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
           // Additional safety layer for status bar visibility
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: _overlayStyleForTheme(themeMode),
-            child: child ?? const SizedBox.shrink(),
+            child: AppSwipeBack(child: child ?? const SizedBox.shrink()),
           );
         },
       ),
