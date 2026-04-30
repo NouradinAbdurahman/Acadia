@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +35,7 @@ import 'screens/notifications/notifications_screen.dart';
 import 'screens/courses/course_management_screen.dart';
 import 'screens/courses/semester_management_screen.dart';
 import 'screens/courses/create_course_screen.dart';
+import 'screens/courses/create_semester_screen.dart';
 import 'screens/courses/course_results_screen.dart';
 import 'screens/courses/course_result_editor_screen.dart';
 import 'screens/profile/edit_academic_profile_screen.dart';
@@ -88,6 +90,16 @@ void main() {
       ),
     );
 
+    if (kDebugMode) {
+      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+        debugPrint('EVENT: ${data.event}');
+        debugPrint('SESSION: ${data.session != null ? 'not null' : 'null'}');
+        if (data.session != null) {
+          debugPrint('SIGNED IN SUCCESSFULLY');
+        }
+      });
+    }
+
     // Initialize Notifications (must be after Supabase initialization)
     await NotificationService.init();
     await BackgroundNotificationService.initialize(
@@ -116,6 +128,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final onboardingCompleted = ref.watch(onboardingProvider);
   final languageSelected = ref.watch(languageSelectedProvider);
   final themeLoaded = ref.watch(themeLoadedProvider);
+  final activeSemesterAsync = ref.watch(activeSemesterProvider);
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -230,6 +243,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const AcademicOnboardingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).chain(CurveTween(curve: Curves.easeInOutCubic)),
+              ),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/onboarding-semester',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const CreateSemesterScreen(isOnboarding: true),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
               position: animation.drive(
@@ -497,7 +528,21 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/academic-onboarding';
       }
 
+      // 3.5. Active-semester guard — enforce first semester creation
+      final isOnboardingSemesterScreen =
+          state.matchedLocation == '/onboarding-semester';
+      if (activeSemesterAsync.isLoading) {
+        // Wait for the active-semester check before deciding
+        return isSplashScreen ? null : '/splash';
+      }
+      if (activeSemesterAsync.asData?.value == null &&
+          !isOnboardingSemesterScreen) {
+        return '/onboarding-semester';
+      }
+
       // 4. Entry redirection to home
+      // NOTE: /onboarding-semester is intentionally NOT here — the screen
+      // navigates itself to /home via context.go() after semester creation.
       if (isSplashScreen ||
           isAuthScreen ||
           isLanguageScreen ||
@@ -593,8 +638,9 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
           Future(() async {
             try {
               await ref.read(authRepositoryProvider).ensurePublicUserRowIfMissing();
-            } catch (_) {
-              // RLS or network; router still proceeds with academic onboarding if needed.
+            } catch (e) {
+              // Log clearly so RLS / network failures are visible in the console.
+              debugPrint('[AuthListener] ensurePublicUserRowIfMissing failed: $e');
             }
             ref.invalidate(currentAppUserProvider);
           });

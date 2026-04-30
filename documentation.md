@@ -46,8 +46,9 @@ Acadia is a Flutter app built for students. The whole point is to give you one p
 
 Here's what it can do:
 
-- **Sign up and log in** with email/password, verify your email with an OTP code, and reset your password if you forget it
+- **Sign up and log in** with email/password + OTP, password reset OTP, and social OAuth (Google + Apple via Supabase PKCE)
 - **Set up your academic profile** — your university, degree, major, expected graduation year
+- **Create first semester during onboarding** — Home is blocked until an active semester is set
 - **Manage semesters** — create them, switch between them, set a weekly study goal for each one
 - **Add courses** — with ECTS credits, color coding, and course codes
 - **Create tasks and deadlines** — link tasks to courses and deadlines, set priorities, estimate time
@@ -118,13 +119,17 @@ Hive is our local key-value store. We open the `settings` box which holds things
 ```dart
 await dotenv.load(fileName: ".env");
 ```
-We load the `.env` file which contains the Supabase URL, anon key, service role key, and NVIDIA API key. These are secrets that shouldn't be hardcoded in the app.
+We load the `.env` file which contains Supabase keys, OAuth redirect URLs, and AI keys. These values are validated at startup so missing required keys fail fast.
 
 **Step 5: Supabase**
 ```dart
 await Supabase.initialize(
-  url: dotenv.env['SUPABASE_URL'] ?? '',
-  anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  url: dotenv.env['SUPABASE_URL']!.trim(),
+  anonKey: dotenv.env['SUPABASE_ANON_KEY']!.trim(),
+  authOptions: const FlutterAuthClientOptions(
+    authFlowType: AuthFlowType.pkce,
+    detectSessionInUri: true,
+  ),
 );
 ```
 This connects to our Supabase backend — the Postgres database, the auth system, the storage buckets, and the real-time subscription engine. Everything the app does data-wise goes through Supabase.
@@ -172,6 +177,7 @@ Here are all the routes in the app:
 | `/reset-password` | ResetPasswordScreen | Set new password |
 | `/onboarding` | OnboardingWelcomeScreen | 4-page intro carousel |
 | `/academic-onboarding` | AcademicOnboardingScreen | Academic profile setup wizard |
+| `/onboarding-semester` | CreateSemesterScreen(isOnboarding: true) | Mandatory first-semester creation |
 | `/home` | AppShell | Main app with 5 tabs |
 | `/tasks` | TasksListScreen | Tasks and deadlines list |
 | `/create-task` | CreateTaskScreen | New task form |
@@ -214,8 +220,11 @@ We need the `AppUser` object from the database to know if they've completed thei
 **Check 4: Is the academic profile incomplete?**
 If the user exists but `academicProfileCompleted` is false, they get sent to `/academic-onboarding`. The only exceptions are if they're already on that screen, or if they're resetting their password or verifying their email.
 
-**Check 5: Is everything done?**
-If the user is fully set up and they try to go to `/splash`, any auth screen, `/language`, `/onboarding`, or `/academic-onboarding`, they get redirected to `/home`. No reason to go back to those screens.
+**Check 5: Is active semester missing?**
+If `student_profiles.active_semester_id` is null, the user is redirected to `/onboarding-semester` and stays there until they create their first semester.
+
+**Check 6: Is everything done?**
+If the user is fully set up and has an active semester, then trying to access `/splash`, auth screens, `/language`, `/onboarding`, or `/academic-onboarding` redirects to `/home`.
 
 The router also listens to Supabase auth state changes through a `GoRouterRefreshStream`. So if the user logs out (session disappears) or logs in (session appears), the router automatically re-evaluates all the guards and redirects accordingly.
 
@@ -580,6 +589,10 @@ Services are the lowest layer that actually makes API calls. They don't know any
 - `resendOTP(email, type)` — resends the code
 - `getUserProfile(userId)` — reads from the `users` table
 - `updateWeeklyStudyGoal(userId, goal)` — updates the weekly study goal
+
+**AuthRepository** (orchestration layer over AuthService) also handles:
+- `signInWithOAuth(provider)` — Google/Apple OAuth with external browser + PKCE callback
+- `ensurePublicUserRowIfMissing()` — called on `AuthChangeEvent.signedIn` to ensure both `users` and `student_profiles` rows exist for OAuth users
 
 **CourseService** — CRUD for courses.
 - `getCourses(semesterId)`, `createCourse(data)`, `updateCourse(id, data)`, `deleteCourse(id)`
@@ -1723,6 +1736,9 @@ The `.env` file (copied from `.env.example`) contains:
 | `SUPABASE_URL` | Supabase project URL | App startup |
 | `SUPABASE_ANON_KEY` | Supabase anonymous key | App startup |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (bypasses RLS) | Edge Functions |
+| `OAUTH_REDIRECT_URL` | Mobile OAuth callback URL (e.g. `com.acadia.app://auth-callback`) | Google/Apple sign-in on mobile |
+| `PASSWORD_RESET_REDIRECT_URL` | Password reset deep link URL | Password reset flow |
+| `WEB_OAUTH_REDIRECT_URL` | Optional web OAuth callback override | Flutter web OAuth (optional) |
 | `NVIDIA_API_KEY` | NVIDIA NIM API key | AI assistant |
 | `NVIDIA_MODEL` | Which LLM model to use | AI assistant |
 | `APP_ENV` | "development" or "production" | Optional |
@@ -1738,6 +1754,8 @@ Edge Functions also need these secrets (set via `supabase functions secrets set`
 ## 29. Migration History
 
 We've gone through 23 database migrations so far. Here's what each one did:
+
+In addition to migrations, we keep a reusable runtime policy script at `lib/services/supabase/rls_policies.sql` for reapplying core RLS policies during environment setup/recovery.
 
 | # | Migration | What It Did |
 |---|---|---|

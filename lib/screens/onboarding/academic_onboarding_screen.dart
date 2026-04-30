@@ -162,36 +162,39 @@ class _AcademicOnboardingScreenState
     try {
       debugPrint('[AcademicOnboarding] Starting profile update...');
       await ref.read(studentProfileProvider.notifier).updateProfile(profile);
-      
+      if (!mounted) return;
+
       debugPrint('[AcademicOnboarding] Marking onboarding complete...');
       await ref.read(studentProfileProvider.notifier).completeOnboarding();
+      if (!mounted) return;
 
-      // Persist weekly goal to active semester.
+      // Persist weekly goal to active semester if one already exists.
       final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
       if (activeSemester != null) {
         debugPrint('[AcademicOnboarding] Persisting weekly goal: ${_studyHours.toInt()}');
         await ref.read(semesterProvider.notifier).updateSemester(
               activeSemester.copyWith(weeklyStudyGoal: _studyHours.toInt()),
             );
+        if (!mounted) return;
         ref.invalidate(semesterProvider);
         ref.invalidate(weeklyStudyGoalHoursProvider);
       }
 
-      // CRITICAL: Force provider to fully resolve BEFORE navigation
+      // Force provider to resolve with updated DB state before navigation.
       debugPrint('[AcademicOnboarding] Refreshing user state from DB...');
-      final _ = await ref.refresh(currentAppUserProvider.future);
+      await ref.refresh(currentAppUserProvider.future).catchError((_) => null);
+      if (!mounted) return;
+
       debugPrint('[AcademicOnboarding] User state ready. Transitioning to home.');
- 
-      if (mounted) {
-        context.go('/home');
-      }
+      context.go('/home');
     } catch (e) {
       debugPrint('[AcademicOnboarding] Error during finish: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving profile: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)?.networkError ?? 'Error saving profile'),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

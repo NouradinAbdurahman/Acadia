@@ -3,13 +3,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// OAuth callback used by Supabase browser flow on **mobile** (`signInWithOAuth`).
 /// Must match Supabase Dashboard → Authentication → URL Configuration → Redirect URLs.
-/// Example: `com.acadia.app://auth-callback`
+/// Example: `com.acadia.app://auth-callback/`
 String oauthRedirectUrlFromEnv() {
   final v = dotenv.env['OAUTH_REDIRECT_URL']?.trim();
   if (v == null || v.isEmpty) {
     throw StateError(
       'Missing OAUTH_REDIRECT_URL in .env. Use the same value you allowlisted in '
-      'Supabase (e.g. com.acadia.app://auth-callback).',
+      'Supabase (e.g. com.acadia.app://auth-callback/).',
     );
   }
   return v;

@@ -73,12 +73,13 @@ class SemesterNotifier extends StateNotifier<AsyncValue<List<Semester>>> {
     }
   }
 
-  Future<void> addSemester(Semester semester) async {
+  Future<Semester?> addSemester(Semester semester) async {
     try {
-      await _repository.createSemester(semester);
+      final created = await _repository.createSemester(semester);
       await loadSemesters();
+      return created;
     } catch (e) {
-      // Handle error
+      return null;
     }
   }
 

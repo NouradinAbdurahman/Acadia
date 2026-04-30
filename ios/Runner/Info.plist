@@ -29,6 +29,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>google</string>
+		<string>comgooglemaps</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Acadia needs access to your camera to let you take a profile picture.</string>

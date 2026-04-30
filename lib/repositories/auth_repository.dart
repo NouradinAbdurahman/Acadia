@@ -157,26 +157,76 @@ class AuthRepository {
       redirectTo: oauthRedirectForCurrentPlatform(),
       // iOS: external browser avoids in-app webview / canOpenUrl issues; Android Google same.
       authScreenLaunchMode: LaunchMode.externalApplication,
+      queryParams: const {
+        'access_type': 'offline',
+        'prompt': 'consent',
+      },
     );
   }
 
-  /// Ensures a `public.users` row exists for OAuth sign-ins (email OTP flow
-  /// upserts elsewhere). Safe to call multiple times.
+  /// Ensures a `public.users` row AND a `student_profiles` row both exist for
+  /// the signed-in user. Called on every `AuthChangeEvent.signedIn` so it is
+  /// safe (and cheap) to call multiple times — the SELECT short-circuits when
+  /// the row already exists.
   Future<void> ensurePublicUserRowIfMissing() async {
     final user = _supabase.auth.currentUser;
+    debugPrint('[ensurePublicUser] called — user: ${user?.id ?? 'null'}');
     if (user == null) return;
 
+    // ── 1. public.users ─────────────────────────────────────────────────────
     final existing = await _supabase
         .from('users')
         .select('id')
         .eq('id', user.id)
         .maybeSingle();
-    if (existing != null) return;
 
-    await _supabase.from('users').insert({
-      'id': user.id,
-      'academic_profile_completed': false,
-    });
+    if (existing == null) {
+      debugPrint('[ensurePublicUser] No users row found — inserting...');
+      try {
+        await _supabase.from('users').insert({
+          'id': user.id,
+          'email': user.email,
+          'name': user.userMetadata?['full_name'] ??
+              user.userMetadata?['name'] ??
+              user.email,
+          'academic_profile_completed': false,
+        });
+        debugPrint('[ensurePublicUser] users row inserted ✓');
+      } catch (e) {
+        debugPrint('[ensurePublicUser] ERROR inserting users row: $e');
+        rethrow;
+      }
+    } else {
+      debugPrint('[ensurePublicUser] users row already exists ✓');
+    }
+
+    // ── 2. student_profiles ──────────────────────────────────────────────────
+    // Pre-create the profile row for OAuth users so that later UPDATE calls
+    // (markOnboardingComplete, updateActiveSemester) always find a row.
+    final existingProfile = await _supabase
+        .from('student_profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (existingProfile == null) {
+      debugPrint('[ensurePublicUser] No student_profiles row — upserting...');
+      try {
+        await _studentProfileService.upsertInitialProfile(
+          userId: user.id,
+          fullName: user.userMetadata?['full_name'] ??
+              user.userMetadata?['name'] ??
+              user.email ??
+              '',
+        );
+        debugPrint('[ensurePublicUser] student_profiles row upserted ✓');
+      } catch (e) {
+        debugPrint('[ensurePublicUser] ERROR upserting student_profiles: $e');
+        // Non-fatal: onboarding screen will upsert it again on save.
+      }
+    } else {
+      debugPrint('[ensurePublicUser] student_profiles row already exists ✓');
+    }
   }
 
   Future<AuthResponse> login(String email, String password) async {

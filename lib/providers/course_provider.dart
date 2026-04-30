@@ -21,7 +21,7 @@ final courseProvider = StateNotifierProvider<CourseNotifier, AsyncValue<List<Cou
       notifier.setEmptyState();
     },
     loading: () => notifier.setEmptyState(),
-    error: (_, __) => notifier.setEmptyState(),
+    error: (e, _) => notifier.setEmptyState(),
   );
   
   return notifier;
@@ -74,8 +74,6 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
                 .toList();
 
       if (!mounted) return;
-
-      if (!mounted) return;
       _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(normalized);
     } catch (e, st) {
@@ -112,6 +110,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
     try {
       final semesterId = ref?.read(activeSemesterProvider).value;
       await _repository.deleteCourse(id);
+      if (semesterId == null) return;
       await loadCourses(semesterId: semesterId);
     } catch (e) {
       // Handle error

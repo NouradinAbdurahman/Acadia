@@ -4,8 +4,8 @@ Acadia is a Flutter-based academic productivity app that helps students plan cou
 
 ## Core Features
 
-- **Authentication** — Email/password signup with OTP verification, password reset via OTP flow, auth rate limiting with exponential backoff
-- **Multi-step onboarding** — Language selection, welcome carousel, academic profile wizard (university, degree, major, courses)
+- **Authentication** — Email/password signup with OTP verification, password reset via OTP flow, Google + Apple OAuth (Supabase PKCE), auth rate limiting with exponential backoff
+- **Multi-step onboarding** — Language selection, welcome carousel, academic profile wizard, mandatory first-semester creation before entering Home
 - **Semester management** — Create/edit/delete semesters, set active semester as the app-wide data scope, weekly study goals per semester
 - **Course management** — CRUD courses per semester with ECTS credits, color coding, and active/inactive status
 - **Task and deadline planning** — Tasks with course/deadline linking, priority, estimated time; deadlines with type (assignment/exam/quiz/project), completion tracking
@@ -177,8 +177,8 @@ auth.users
 1. `WidgetsFlutterBinding.ensureInitialized()`
 2. `Firebase.initializeApp()` — FCM push notifications
 3. `Hive.initFlutter()` + open `settings` box — local persistence
-4. `dotenv.load(".env")` — Supabase URL, anon key, NVIDIA key
-5. `Supabase.initialize()` — Auth + DB + Realtime
+4. `dotenv.load(".env")` — Supabase/Auth/OAuth environment keys
+5. `Supabase.initialize()` — Auth + DB + Realtime (`AuthFlowType.pkce`, `detectSessionInUri: true`)
 6. `NotificationService.init()` — local notification channels, FCM permissions
 7. `BackgroundNotificationService.initialize()` — periodic background worker (Android via Workmanager, iOS via BackgroundFetch)
 8. `runApp(ProviderScope(child: MyApp()))` — Riverpod-wrapped app
@@ -188,7 +188,7 @@ auth.users
 Routing is centralized in `main.dart` using `go_router` with a redirect function enforcing this flow:
 
 ```
-Splash → Language Selection → Onboarding → Login/Signup → Academic Onboarding → Home
+Splash → Language Selection → Onboarding → Login/Signup → Academic Onboarding → Onboarding Semester → Home
 ```
 
 Guard logic (evaluated in order):
@@ -196,7 +196,8 @@ Guard logic (evaluated in order):
 2. **Not logged in** — No language → `/language`; onboarding incomplete → `/onboarding`; else → `/login`
 3. **Logged in but profile loading** → stay on `/splash`
 4. **Academic profile incomplete** → `/academic-onboarding`
-5. **All complete** → redirect auth/onboarding/language screens to `/home`
+5. **No active semester in `student_profiles.active_semester_id`** → `/onboarding-semester`
+6. **All complete** → redirect auth/onboarding/language screens to `/home`
 
 The router also watches `GoRouterRefreshStream` on Supabase auth state changes for auto-redirect on login/logout.
 
@@ -268,11 +269,17 @@ NVIDIA_API_KEY=YOUR_NVIDIA_API_KEY
 NVIDIA_MODEL=meta/llama-3.1-70b-instruct
 APP_ENV=development
 API_TIMEOUT=10000
+OAUTH_REDIRECT_URL=com.acadia.app://auth-callback
+PASSWORD_RESET_REDIRECT_URL=com.acadia.app://reset-password
+# Optional for Flutter web OAuth callback:
+# WEB_OAUTH_REDIRECT_URL=https://your-deployed-app.example/
 ```
 
 Required for startup:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
+- `OAUTH_REDIRECT_URL`
+- `PASSWORD_RESET_REDIRECT_URL`
 
 Required for AI assistant:
 - `NVIDIA_API_KEY`
@@ -325,7 +332,13 @@ Run the SQL files in the Supabase dashboard SQL editor, in this order:
 25. `supabase/2026042102_semesters_weekly_study_goal.sql`
 26. `supabase/2026042901_drop_legacy_users_weekly_goal.sql`
 
-These scripts create/update tables, constraints, RLS policies, triggers, and RPC functions.
+These scripts create/update tables, constraints, triggers, and RPC functions.
+
+Then run:
+
+27. `lib/services/supabase/rls_policies.sql`
+
+This applies the current RLS policy set used by the app (`users`, `student_profiles`, `semesters`, `courses`, `tasks`, `deadlines`).
 
 ### 4. Deploy Edge Functions
 

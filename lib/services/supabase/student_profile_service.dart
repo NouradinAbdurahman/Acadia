@@ -86,27 +86,18 @@ class StudentProfileService implements StudentProfileServiceBase {
       final user = _supabase.auth.currentUser;
       if (user == null) return false;
 
-      // 1. Update users table (Source of Truth for routing)
+      // 1. Mark users table — source of truth for the router's profile gate.
       await _supabase.from('users').update({
         'academic_profile_completed': true,
       }).eq('id', user.id);
 
-      // 2. Create a default semester for the user
-      final semesterResponse = await _supabase.from('semesters').insert({
-        'user_id': user.id,
-        'name': 'Semester 1',
-        'is_active': true,
-        'start_date': DateTime.now().toIso8601String(),
-      }).select().single();
-
-      final semesterId = semesterResponse['id'];
-
-      // 3. Update profiles table with completion status AND active semester
+      // 2. Mark student_profiles complete.
+      //    active_semester_id is left untouched here; the onboarding-semester
+      //    screen sets it after the user creates their first semester.
       await _supabase.from('student_profiles').update({
         'onboarding_complete': true,
-        'active_semester_id': semesterId,
       }).eq('user_id', user.id);
-          
+
       return true;
     } catch (e) {
       debugPrint('Error completing onboarding: $e');

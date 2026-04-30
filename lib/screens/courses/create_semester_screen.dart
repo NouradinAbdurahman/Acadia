@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_radius.dart';
@@ -17,7 +18,17 @@ import 'semester_management_screen.dart';
 
 class CreateSemesterScreen extends ConsumerStatefulWidget {
   final Semester? semesterToEdit;
-  const CreateSemesterScreen({super.key, this.semesterToEdit});
+
+  /// When true the screen is part of the first-run onboarding flow:
+  /// the new semester is automatically set as active and the user
+  /// is forwarded to Home instead of being popped back.
+  final bool isOnboarding;
+
+  const CreateSemesterScreen({
+    super.key,
+    this.semesterToEdit,
+    this.isOnboarding = false,
+  });
 
   @override
   ConsumerState<CreateSemesterScreen> createState() =>
@@ -56,7 +67,15 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
       _endDate = widget.semesterToEdit?.endDate;
       _nameController.text = widget.semesterToEdit!.name;
     } else {
+      // Apply with English fallback first; then re-apply once l10n is available.
       _applyAutoFill();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _applyAutoFill(l10n: AppLocalizations.of(context));
+          });
+        }
+      });
     }
 
     if (!_academicYearOptions.contains(_selectedAcademicStartYear)) {
@@ -110,7 +129,17 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
       );
 
       if (widget.semesterToEdit == null) {
-        await ref.read(semesterProvider.notifier).addSemester(semester);
+        final created =
+            await ref.read(semesterProvider.notifier).addSemester(semester);
+
+        if (widget.isOnboarding && created != null) {
+          // First semester — make it active immediately then go to Home.
+          await ref
+              .read(activeSemesterProvider.notifier)
+              .setActiveSemester(created.id);
+          if (mounted) context.go('/home');
+          return;
+        }
       } else {
         await ref.read(semesterProvider.notifier).updateSemester(semester);
       }
@@ -127,13 +156,16 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
     }
   }
 
-  void _applyAutoFill() {
+  void _applyAutoFill({AppLocalizations? l10n}) {
     final startYear = _selectedAcademicStartYear;
     final endYear = startYear + 1;
 
+    final fallLabel = l10n?.fallSemester ?? 'Fall';
+    final springLabel = l10n?.springSemester ?? 'Spring';
+
     final generatedName = _selectedSeason == 'fall'
-        ? '$startYear-$endYear Fall'
-        : '$startYear-$endYear Spring';
+        ? '$startYear-$endYear $fallLabel'
+        : '$startYear-$endYear $springLabel';
 
     final generatedStartDate = _selectedSeason == 'fall'
         ? DateTime(startYear, 9, 1)
@@ -184,7 +216,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: AppBackButton(),
+        leading: widget.isOnboarding ? const SizedBox.shrink() : AppBackButton(),
         title: Text(
           widget.semesterToEdit == null ? l10n.addSemester : l10n.editSemester,
         ),
@@ -201,22 +233,34 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: AppButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const SemesterManagementScreen(),
-                          ),
-                        );
-                      },
-                      variant: AppButtonVariant.text,
-                      text: l10n.allSemesters,
+                  if (widget.isOnboarding) ...[
+                    Text(
+                      l10n.createFirstSemester,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.65),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ] else
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: AppButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const SemesterManagementScreen(),
+                            ),
+                          );
+                        },
+                        variant: AppButtonVariant.text,
+                        text: l10n.allSemesters,
+                      ),
+                    ),
                   const SizedBox(height: AppSpacing.sm),
                   _buildSectionHeader(l10n.semester),
                   const SizedBox(height: AppSpacing.md),
@@ -241,7 +285,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
                             if (value == null) return;
                             setState(() {
                               _selectedSeason = value;
-                              _applyAutoFill();
+                              _applyAutoFill(l10n: AppLocalizations.of(context));
                             });
                           },
                         ),
@@ -266,7 +310,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
                             if (value == null) return;
                             setState(() {
                               _selectedAcademicStartYear = value;
-                              _applyAutoFill();
+                              _applyAutoFill(l10n: AppLocalizations.of(context));
                             });
                           },
                         ),
