@@ -32,6 +32,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  OAuthProvider? _oauthBusy;
   String? _errorMessage;
   Timer? _countdownTimer;
 
@@ -163,6 +164,31 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _signInWithOAuth(OAuthProvider provider) async {
+    if (_isLoading || _oauthBusy != null) return;
+
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      Haptics.vibrate(HapticsType.light);
+      _oauthBusy = provider;
+      _errorMessage = null;
+    });
+
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      final launched = await authRepo.signInWithOAuth(provider);
+      if (!launched && mounted) {
+        setState(() => _errorMessage = l10n?.networkError ?? '');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('OAUTH ERROR: $e');
+      setState(() => _errorMessage = l10n?.networkError ?? '');
+    } finally {
+      if (mounted) setState(() => _oauthBusy = null);
     }
   }
 
@@ -351,7 +377,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ).animate().fade(delay: 200.ms).slideY(begin: 0.1),
                 const SizedBox(height: AppSpacing.xl),
                 AppButton(
-                  onPressed: (_isLoading || isEmailLimited) ? null : _signUp,
+                  onPressed: (_isLoading || isEmailLimited || _oauthBusy != null)
+                      ? null
+                      : _signUp,
                   isLoading: _isLoading,
                   text: buttonText,
                   isFullWidth: true,
@@ -366,6 +394,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         context: context,
                         assetPath: 'assets/google.png',
                         label: l10n?.googleLabel ?? '',
+                        isGoogleIcon: true,
+                        isBusy: _oauthBusy == OAuthProvider.google,
+                        onPressed: (_isLoading || _oauthBusy != null)
+                            ? null
+                            : () => _signInWithOAuth(OAuthProvider.google),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -374,6 +407,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         context: context,
                         assetPath: 'assets/icons/apple.png',
                         label: l10n?.appleLabel ?? '',
+                        isGoogleIcon: false,
+                        isBusy: _oauthBusy == OAuthProvider.apple,
+                        onPressed: (_isLoading || _oauthBusy != null)
+                            ? null
+                            : () => _signInWithOAuth(OAuthProvider.apple),
                       ),
                     ),
                   ],
@@ -448,10 +486,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     required BuildContext context,
     required String assetPath,
     required String label,
+    required bool isGoogleIcon,
+    required bool isBusy,
+    VoidCallback? onPressed,
   }) {
     final theme = Theme.of(context);
+    final iconSize = isGoogleIcon ? 24.0 : 20.0;
     return OutlinedButton(
-      onPressed: () {},
+      onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         minimumSize: const Size.fromHeight(50),
         side: BorderSide(
@@ -462,32 +504,41 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         ),
         backgroundColor: Colors.white.withValues(alpha: 0.05),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            assetPath,
-            width: label == 'Google' ? 24 : 20,
-            height: label == 'Google' ? 24 : 20,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(
-                Icons.apple,
-                size: 20,
-                color: theme.colorScheme.onSurface,
-              );
-            },
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
+      child: isBusy
+          ? SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  assetPath,
+                  width: iconSize,
+                  height: iconSize,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      isGoogleIcon ? Icons.g_mobiledata : Icons.apple,
+                      size: iconSize,
+                      color: theme.colorScheme.onSurface,
+                    );
+                  },
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:acadia/l10n/app_localizations.dart';
 import 'services/notification_service.dart';
 
+import 'core/config/env_validation.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
@@ -61,32 +64,48 @@ import 'package:firebase_core/firebase_core.dart';
 // We declare a globally accessible navigator key to handle programmatic pushes if necessary
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  await Firebase.initializeApp();
+void main() {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive
-  await Hive.initFlutter();
-  await Hive.openBox('settings');
+    await Firebase.initializeApp();
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+    // Initialize Hive
+    await Hive.initFlutter();
+    await Hive.openBox('settings');
 
-  // Initialize Supabase
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-  );
+    // Load environment variables (create `.env` from `.env.example`; never commit secrets).
+    await dotenv.load(fileName: '.env');
+    validateRequiredEnv();
 
-  // Initialize Notifications (must be after Supabase initialization)
-  await NotificationService.init();
-  await BackgroundNotificationService.initialize(
-    supabaseUrl: dotenv.env['SUPABASE_URL'] ?? '',
-    supabaseAnonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-  );
+    // PKCE is required for mobile OAuth → deep link return; matches Supabase GoTrue flow.
+    await Supabase.initialize(
+      url: dotenv.env['SUPABASE_URL']!.trim(),
+      anonKey: dotenv.env['SUPABASE_ANON_KEY']!.trim(),
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.pkce,
+        detectSessionInUri: true,
+      ),
+    );
 
-  runApp(const ProviderScope(child: MyApp()));
+    // Initialize Notifications (must be after Supabase initialization)
+    await NotificationService.init();
+    await BackgroundNotificationService.initialize(
+      supabaseUrl: dotenv.env['SUPABASE_URL'] ?? '',
+      supabaseAnonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    );
+
+    runApp(const ProviderScope(child: MyApp()));
+  }, (Object error, StackTrace stack) {
+    // Deep-link PKCE failures call notifyException → can surface here; avoid crashing debug builds.
+    if (error is AuthException) {
+      debugPrint('Supabase auth (handled): ${error.message}');
+      return;
+    }
+    FlutterError.dumpErrorToConsole(
+      FlutterErrorDetails(exception: error, stack: stack),
+    );
+  });
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -566,6 +585,21 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     ref.watch(semesterGoalRefreshProvider);
     ref.listen(analyticsProvider, (prev, next) {
       next.whenData((_) => _evaluateIntelligence());
+    });
+    ref.listen(authStateProvider, (prev, next) {
+      next.whenData((authState) {
+        if (authState.event == AuthChangeEvent.signedIn &&
+            authState.session != null) {
+          Future(() async {
+            try {
+              await ref.read(authRepositoryProvider).ensurePublicUserRowIfMissing();
+            } catch (_) {
+              // RLS or network; router still proceeds with academic onboarding if needed.
+            }
+            ref.invalidate(currentAppUserProvider);
+          });
+        }
+      });
     });
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);

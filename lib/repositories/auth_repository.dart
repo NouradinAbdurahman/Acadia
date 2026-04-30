@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config/oauth_env.dart';
 import '../models/app_user.dart';
 import '../services/supabase/auth_service.dart';
 import '../services/supabase/student_profile_service.dart';
@@ -143,6 +144,41 @@ class AuthRepository {
 
   // --- Authenticated Methods ---
 
+  /// Opens the provider’s OAuth page in a browser / Custom Tabs. Completion is
+  /// observed via [authStateChanges] after the app receives the redirect URL.
+  ///
+  /// `redirectTo` comes from `.env` ([oauthRedirectForCurrentPlatform]) — must match
+  /// Supabase Auth URL allowlist and Google Cloud **Web** OAuth redirect
+  /// (`https://<project>.supabase.co/auth/v1/callback` is configured in Google,
+  /// not in this string).
+  Future<bool> signInWithOAuth(OAuthProvider provider) async {
+    return _supabase.auth.signInWithOAuth(
+      provider,
+      redirectTo: oauthRedirectForCurrentPlatform(),
+      // iOS: external browser avoids in-app webview / canOpenUrl issues; Android Google same.
+      authScreenLaunchMode: LaunchMode.externalApplication,
+    );
+  }
+
+  /// Ensures a `public.users` row exists for OAuth sign-ins (email OTP flow
+  /// upserts elsewhere). Safe to call multiple times.
+  Future<void> ensurePublicUserRowIfMissing() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    final existing = await _supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+    if (existing != null) return;
+
+    await _supabase.from('users').insert({
+      'id': user.id,
+      'academic_profile_completed': false,
+    });
+  }
+
   Future<AuthResponse> login(String email, String password) async {
     if (isAuthRateLimited()) {
       throw AuthApiException('Please wait before trying to login again.', code: 'too_many_requests');
@@ -225,7 +261,7 @@ class AuthRepository {
     try {
       await _supabase.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'com.acadia.app://reset-password',
+        redirectTo: passwordResetRedirectUrlFromEnv(),
       ).timeout(const Duration(seconds: 15));
     } on AuthApiException catch (e) {
       if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {

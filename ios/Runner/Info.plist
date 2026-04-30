@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>google</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Acadia needs access to your camera to let you take a profile picture.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -55,6 +59,19 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.acadia.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.acadia.app</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>
