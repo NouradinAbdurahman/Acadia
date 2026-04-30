@@ -57,7 +57,8 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
     final current = widget.selectedIndex;
     final next = (current + direction).clamp(0, 4).toInt();
     if (next != current) {
-      Haptics.vibrate(HapticsType.selection);
+      // Stronger haptic for tab changes so feedback is clearly noticeable.
+      Haptics.vibrate(HapticsType.medium);
       widget.onSelectedIndex(next);
     }
   }
@@ -256,7 +257,8 @@ class _NavItemState extends State<_NavItem> {
         setState(() {
           _isPressed = false;
         });
-        Haptics.vibrate(HapticsType.selection);
+        // Stronger haptic for bottom-nav taps.
+        Haptics.vibrate(HapticsType.medium);
         widget.onTap();
       },
       onTapCancel: () {

@@ -196,6 +196,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final fieldFillColor = isLight
+        ? theme.colorScheme.surface.withValues(alpha: 0.92)
+        : Colors.white.withValues(alpha: 0.06);
+    final fieldBorderColor = isLight
+        ? theme.colorScheme.outline.withValues(alpha: 0.55)
+        : Colors.white.withValues(alpha: 0.15);
+    final fieldFocusedBorderColor = isLight
+        ? theme.colorScheme.primary
+        : theme.colorScheme.primary.withValues(alpha: 0.9);
     final authRepo = ref.read(authRepositoryProvider);
     final isEmailLimited = authRepo.isBlockedForEmail();
     final remainingTime = authRepo.remainingEmailRateLimitTime();
@@ -214,7 +224,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         leading: AppBackButton(),
         title: const SizedBox.shrink(),
         elevation: 0,
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         iconTheme: IconThemeData(color: theme.colorScheme.onSurface),
       ),
       body: AuthBackgroundContainer(
@@ -287,9 +300,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               controller: _nameController,
                               labelText: l10n?.fullName ?? '',
                               prefixIcon: HeroIcons.user,
-                              fillColor: Colors.white.withValues(alpha: 0.06),
-                              borderColor: Colors.white.withValues(alpha: 0.15),
-                              focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                              fillColor: fieldFillColor,
+                              borderColor: fieldBorderColor,
+                              focusedBorderColor: fieldFocusedBorderColor,
                               validator: (value) =>
                                   value == null || value.isEmpty ? (l10n?.requiredField ?? '') : null,
                             ),
@@ -298,9 +311,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               controller: _emailController,
                               labelText: l10n?.email ?? '',
                               prefixIcon: HeroIcons.envelope,
-                              fillColor: Colors.white.withValues(alpha: 0.06),
-                              borderColor: Colors.white.withValues(alpha: 0.15),
-                              focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                              fillColor: fieldFillColor,
+                              borderColor: fieldBorderColor,
+                              focusedBorderColor: fieldFocusedBorderColor,
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) =>
                                   value == null || value.isEmpty || !value.contains('@')
@@ -313,9 +326,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               onChanged: (_) => setState(() {}),
                               labelText: l10n?.password ?? '',
                               prefixIcon: HeroIcons.lockClosed,
-                              fillColor: Colors.white.withValues(alpha: 0.06),
-                              borderColor: Colors.white.withValues(alpha: 0.15),
-                              focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                              fillColor: fieldFillColor,
+                              borderColor: fieldBorderColor,
+                              focusedBorderColor: fieldFocusedBorderColor,
                               obscureText: true,
                               validator: (value) => validatePasswordForSignup(value, l10n),
                             ),
@@ -363,9 +376,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       controller: _confirmPasswordController,
                       labelText: l10n?.confirmPassword ?? '',
                       prefixIcon: HeroIcons.lockClosed,
-                      fillColor: Colors.white.withValues(alpha: 0.06),
-                      borderColor: Colors.white.withValues(alpha: 0.15),
-                      focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                      fillColor: fieldFillColor,
+                      borderColor: fieldBorderColor,
+                      focusedBorderColor: fieldFocusedBorderColor,
                       obscureText: true,
                       validator: (value) => validateConfirmPasswordForSignup(
                         value,

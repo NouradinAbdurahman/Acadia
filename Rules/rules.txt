@@ -569,6 +569,28 @@
       if (activeId == 'some_id') ... // ❌ Always false
 
 
+────────────────────────────────────────────────────────────────────────────────
+  RULE 20 — SHARED SWIPE BACK NAVIGATION (GLOBAL)
+────────────────────────────────────────────────────────────────────────────────
+
+  Back navigation gestures MUST be implemented only through the shared widget:
+
+      lib/components/app_swipe_back.dart
+
+  RULES:
+    - Do NOT implement ad-hoc swipe-to-pop GestureDetector logic in individual screens.
+    - App-wide swipe-back behavior must be attached at app shell level
+      (MaterialApp.router builder) so it applies consistently to all routable screens.
+    - Any screen that has a working back action must also support swipe-back via the shared wrapper.
+    - If swipe-back behavior needs tuning (edge width, drag threshold, direction),
+      update ONLY `lib/components/app_swipe_back.dart`.
+    - Keep both edge gestures supported unless explicitly changed by product decision:
+        - Left-edge → right swipe (iOS-native style)
+        - Right-edge → left swipe (fallback behavior used in this app)
+    - For nested navigation stacks, always attempt nearest navigator pop first,
+      then root navigator fallback (as implemented in the shared component).
+
+
 ================================================================================
   END OF RULES — Last updated: 2026-04-28
 ================================================================================

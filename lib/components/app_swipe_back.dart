@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// Shared back-swipe behavior for screens that can pop.
 ///
@@ -15,36 +14,44 @@ class AppSwipeBack extends StatefulWidget {
 }
 
 class _AppSwipeBackState extends State<AppSwipeBack> {
-  static const double _edgeTriggerWidth = 28;
-  static const double _popDistance = 72;
+  static const double _edgeTriggerWidth = 40;
+  static const double _popDistance = 48;
 
   bool _tracking = false;
+  bool _startedFromLeftEdge = false;
   double _dragDistance = 0;
 
   @override
   Widget build(BuildContext context) {
-    final canPop = GoRouter.of(context).canPop();
-
-    // Only enable on screens that can navigate back (same semantic as back button).
-    if (!canPop) return widget.child;
-
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onHorizontalDragStart: (details) {
         final width = MediaQuery.sizeOf(context).width;
-        final fromRightEdge = details.globalPosition.dx >=
-            (width - _edgeTriggerWidth);
-        _tracking = fromRightEdge;
+        final fromLeftEdge = details.globalPosition.dx <= _edgeTriggerWidth;
+        final fromRightEdge =
+            details.globalPosition.dx >= (width - _edgeTriggerWidth);
+        _tracking = fromLeftEdge || fromRightEdge;
+        _startedFromLeftEdge = fromLeftEdge;
         _dragDistance = 0;
       },
       onHorizontalDragUpdate: (details) {
         if (!_tracking) return;
-        // Left swipe from right edge produces negative delta.
-        _dragDistance += -details.delta.dx;
+        // Support both common back gestures:
+        // - iOS-like: right swipe from left edge
+        // - requested fallback: left swipe from right edge
+        final delta = _startedFromLeftEdge ? details.delta.dx : -details.delta.dx;
+        _dragDistance += delta;
       },
       onHorizontalDragEnd: (_) {
         if (_tracking && _dragDistance >= _popDistance && context.mounted) {
-          context.pop();
+          // Try nearest navigator first (works for nested stacks / shell routes).
+          final didPopNearest =
+              Navigator.maybeOf(context)?.maybePop() ?? Future<bool>.value(false);
+          didPopNearest.then((popped) {
+            if (popped || !context.mounted) return;
+            // Fallback: attempt root navigator pop.
+            Navigator.maybeOf(context, rootNavigator: true)?.maybePop();
+          });
         }
         _tracking = false;
         _dragDistance = 0;

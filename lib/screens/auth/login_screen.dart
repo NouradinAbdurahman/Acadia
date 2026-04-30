@@ -191,6 +191,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final fieldFillColor = isLight
+        ? theme.colorScheme.surface.withValues(alpha: 0.92)
+        : Colors.white.withValues(alpha: 0.06);
+    final fieldBorderColor = isLight
+        ? theme.colorScheme.outline.withValues(alpha: 0.55)
+        : Colors.white.withValues(alpha: 0.15);
+    final fieldFocusedBorderColor = isLight
+        ? theme.colorScheme.primary
+        : theme.colorScheme.primary.withValues(alpha: 0.9);
     final authRepo = ref.read(authRepositoryProvider);
 
     final isAuthLimited = authRepo.isAuthRateLimited();
@@ -209,7 +219,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
       ),
       body: AuthBackgroundContainer(
         child: SafeArea(
@@ -280,9 +293,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         controller: _emailController,
                         labelText: l10n?.email ?? '',
                         prefixIcon: HeroIcons.envelope,
-                        fillColor: Colors.white.withValues(alpha: 0.06),
-                        borderColor: Colors.white.withValues(alpha: 0.15),
-                        focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                        fillColor: fieldFillColor,
+                        borderColor: fieldBorderColor,
+                        focusedBorderColor: fieldFocusedBorderColor,
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) =>
                             value == null || value.isEmpty || !value.contains('@')
@@ -294,9 +307,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         controller: _passwordController,
                         labelText: l10n?.password ?? '',
                         prefixIcon: HeroIcons.lockClosed,
-                        fillColor: Colors.white.withValues(alpha: 0.06),
-                        borderColor: Colors.white.withValues(alpha: 0.15),
-                        focusedBorderColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+                        fillColor: fieldFillColor,
+                        borderColor: fieldBorderColor,
+                        focusedBorderColor: fieldFocusedBorderColor,
                         obscureText: true,
                         validator: (value) => value == null || value.length < 8
                             ? (l10n?.passwordTooShort ?? '')
