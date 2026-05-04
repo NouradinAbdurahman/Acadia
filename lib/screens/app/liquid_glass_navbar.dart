@@ -34,35 +34,6 @@ class LiquidGlassNavbar extends StatefulWidget {
 }
 
 class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
-  double _dragDelta = 0;
-  Offset? _dragStart;
-
-  void _handlePointerMove(PointerMoveEvent event) {
-    if (_dragStart == null) return;
-
-    final dx = event.position.dx - _dragStart!.dx;
-    final dy = event.position.dy - _dragStart!.dy;
-
-    // Prioritize taps: only treat as nav-swipe when movement is clearly horizontal.
-    const horizontalIntentThreshold = 16.0;
-    if (dx.abs() < horizontalIntentThreshold || dx.abs() <= dy.abs() * 1.15) return;
-
-    // Step threshold for each tab jump while swiping.
-    _dragDelta += event.delta.dx;
-    const stepThreshold = 52.0;
-    if (_dragDelta.abs() < stepThreshold) return;
-
-    final direction = _dragDelta > 0 ? 1 : -1;
-    _dragDelta = 0;
-    final current = widget.selectedIndex;
-    final next = (current + direction).clamp(0, 4).toInt();
-    if (next != current) {
-      // Stronger haptic for tab changes so feedback is clearly noticeable.
-      Haptics.vibrate(HapticsType.medium);
-      widget.onSelectedIndex(next);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -101,23 +72,8 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                   builder: (context, constraints) {
                     final tabWidth = constraints.maxWidth / 5;
 
-                    return Listener(
-                      behavior: HitTestBehavior.translucent,
-                      onPointerDown: (event) {
-                        _dragStart = event.position;
-                        _dragDelta = 0;
-                      },
-                      onPointerMove: _handlePointerMove,
-                      onPointerUp: (_) {
-                        _dragStart = null;
-                        _dragDelta = 0;
-                      },
-                      onPointerCancel: (_) {
-                        _dragStart = null;
-                        _dragDelta = 0;
-                      },
-                      child: Stack(
-                        children: [
+                    return Stack(
+                      children: [
                           AnimatedPositioned(
                             duration: AppDurations.normal,
                             curve: Curves.easeOutCubic,
@@ -195,8 +151,7 @@ class _LiquidGlassNavbarState extends State<LiquidGlassNavbar> {
                             ],
                           ),
                         ],
-                      ),
-                    );
+                      );
                   },
                 ),
               ),
