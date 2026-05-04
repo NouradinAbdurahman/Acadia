@@ -75,6 +75,19 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
     state = state.copyWith(isLoading: false);
   }
 
+  void clearChatForSemester(String? semesterId) {
+    if (semesterId == null) return;
+    final updatedChats = Map<String, List<AiMessage>>.from(state.chatsBySemester);
+    updatedChats.remove(semesterId);
+    _isCancelled = true;
+    state = state.copyWith(
+      chatsBySemester: updatedChats,
+      isLoading: false,
+      clearError: true,
+      lastOpenedIntent: null,
+    );
+  }
+
   Future<void> sendMessage(String message) async {
     final trimmed = message.trim();
     if (trimmed.isEmpty) {
@@ -120,8 +133,16 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
 
       // 2. Resolve or Fallback
       if (intent.type != AiIntentType.unknown) {
-        // REAL DATA RESOLUTION
-        aiMessage = await _resolver.resolve(intent, user.id, semesterId);
+        // Use the same pre-computed data the app UI displays
+        final analyticsSnapshot = _ref.read(analyticsProvider).valueOrNull;
+        final riskSnapshot = _ref.read(riskProvider);
+        aiMessage = await _resolver.resolve(
+          intent,
+          user.id,
+          semesterId,
+          analyticsSnapshot: analyticsSnapshot,
+          riskSnapshot: riskSnapshot.hasData ? riskSnapshot : null,
+        );
       } else {
         // FALLBACK TO LLM (Edge Function)
         final analytics = _ref.read(analyticsProvider).valueOrNull;
@@ -137,7 +158,18 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
             'consistency': analytics.consistency,
             'studyDeficit': analytics.studyDeficit,
           },
-          'risk': risk?.result.totalScore ?? 0.0,
+          'risk': risk.result.totalScore,
+          if (risk.hasData)
+            'riskDetail': {
+              'score': risk.result.totalScore,
+              'level': risk.result.riskLevel,
+              'overdueTasks': risk.input.overdueTasks,
+              'upcomingTasks': risk.input.upcomingTasks,
+              'studyDeficit': risk.input.studyDeficit,
+              'avgSessionStress': risk.input.avgSessionStress,
+              'consistency': risk.input.consistency,
+              if (risk.trendDelta != null) 'trendDelta': risk.trendDelta,
+            },
           'burnout': studyAnalytics.burnoutScore,
           'decisionStress': decision.avgStress,
         };

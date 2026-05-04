@@ -3,6 +3,15 @@ import '../../models/ai_intent.dart';
 class AiIntentParser {
   AiIntent parse(String message) {
     final lower = message.toLowerCase();
+
+    // Must hit the Edge Function (not local risk/task parsers) so "send my risk to email" works.
+    if (_wantsEmailDelivery(lower)) {
+      return AiIntent(
+        type: AiIntentType.unknown,
+        filter: const AiFilter(),
+        originalMessage: message,
+      );
+    }
     
     // 1. Identify Intent Type
     AiIntentType type = AiIntentType.unknown;
@@ -25,6 +34,15 @@ class AiIntentParser {
 
     // 2. Identify Time Range
     TimeRange? timeRange;
+    DateTime? startDate;
+    DateTime? endDate;
+    final explicitRange = _extractAbsoluteDateRange(lower);
+    if (explicitRange != null) {
+      startDate = explicitRange['start'];
+      endDate = explicitRange['end'];
+      timeRange = TimeRange.custom;
+    }
+
     if (_matches(lower, [r'\btoday', r'tonight', r'\bnow\b'])) {
       timeRange = TimeRange.today;
     } else if (_matches(lower, [r'this week', r'upcoming week', r'next 7 days'])) {
@@ -39,7 +57,10 @@ class AiIntentParser {
     String? course;
     final courseMatch = RegExp(r'(?:for|in|about)\s+([a-z\d\s]+)$').firstMatch(lower);
     if (courseMatch != null) {
-      course = courseMatch.group(1)?.trim();
+      final candidate = courseMatch.group(1)?.trim();
+      if (candidate != null && !_looksLikeDatePhrase(candidate)) {
+        course = candidate;
+      }
     }
 
     return AiIntent(
@@ -48,6 +69,8 @@ class AiIntentParser {
         timeRange: timeRange,
         isCompleted: type == AiIntentType.getCompletedTasks,
         course: course,
+        startDate: startDate,
+        endDate: endDate,
       ),
       originalMessage: message,
     );
@@ -55,5 +78,79 @@ class AiIntentParser {
 
   bool _matches(String text, List<String> patterns) {
     return patterns.any((p) => RegExp(p).hasMatch(text));
+  }
+
+  Map<String, DateTime>? _extractAbsoluteDateRange(String lower) {
+    final monthMap = <String, int>{
+      'january': 1,
+      'february': 2,
+      'march': 3,
+      'april': 4,
+      'may': 5,
+      'june': 6,
+      'july': 7,
+      'august': 8,
+      'september': 9,
+      'october': 10,
+      'november': 11,
+      'december': 12,
+      'jan': 1,
+      'feb': 2,
+      'mar': 3,
+      'apr': 4,
+      'jun': 6,
+      'jul': 7,
+      'aug': 8,
+      'sep': 9,
+      'sept': 9,
+      'oct': 10,
+      'nov': 11,
+      'dec': 12,
+    };
+
+    final monthRegex = RegExp(
+      r'\b(?:in|for|during)?\s*(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec)\b(?:\s+(\d{4}))?',
+    );
+    final match = monthRegex.firstMatch(lower);
+    if (match == null) return null;
+
+    final monthToken = match.group(1);
+    if (monthToken == null) return null;
+    final month = monthMap[monthToken];
+    if (month == null) return null;
+
+    final now = DateTime.now();
+    final parsedYear = int.tryParse(match.group(2) ?? '');
+    final year = parsedYear ?? now.year;
+    final start = DateTime(year, month, 1);
+    final end = DateTime(year, month + 1, 1).subtract(const Duration(days: 1));
+    return {'start': start, 'end': end};
+  }
+
+  bool _looksLikeDatePhrase(String text) {
+    return RegExp(
+      r'\b(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec|today|week|month|year)\b',
+    ).hasMatch(text);
+  }
+
+  /// User is asking to receive something by email (handled by acadia-ai + Resend).
+  bool _wantsEmailDelivery(String lower) {
+    if (RegExp(r'\bemail\s+me\b').hasMatch(lower)) return true;
+    final targetsEmail = lower.contains('email') ||
+        lower.contains('e-mail') ||
+        lower.contains('inbox');
+    if (targetsEmail &&
+        RegExp(r'\b(send|forward|mail|deliver|shoot|push)\b').hasMatch(lower)) {
+      return true;
+    }
+    if (RegExp(r'\b(send|mail)\s+this\b').hasMatch(lower) ||
+        RegExp(r'\bmail\s+this\b').hasMatch(lower)) {
+      return true;
+    }
+    if (RegExp(r'\bto\s+(my\s+)?(email|e-?mail|inbox)\b').hasMatch(lower) &&
+        RegExp(r'\b(send|forward|mail|get)\b').hasMatch(lower)) {
+      return true;
+    }
+    return false;
   }
 }

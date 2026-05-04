@@ -13,8 +13,8 @@ Acadia is a Flutter-based academic productivity app that helps students plan cou
 - **Mood and stress tracking** — 5-level mood selector, stress/energy sliders, factor chips (sleep, workload, health, motivation, social, exams), optional notes; daily + post-session logging; configurable reminders
 - **Analytics** — Study hours per course, GPA, task completion rate, consistency, study deficit, burnout score, risk score, weekly/semester comparison
 - **Decision engine** — Multi-factor scored priority (urgency 34%, deficit 24%, workload 16%, ECTS 16%, risk 10%) recommending which course to study and for how long
-- **Risk scoring** — Computed from overdue tasks, study deficit, grade risk, stress levels, and consistency; includes grade adjustments (FF/DD/DC penalty, BA/AA relief)
-- **AI assistant** — Regex-based intent parser for local queries (tasks, deadlines, study summary, progress, risk status) + NVIDIA NIM LLM fallback via Supabase Edge Function
+- **Risk scoring** — `riskProvider` builds `RiskInput` from live tasks, sessions, moods, deadlines, courses, and results; `RiskCalculator` feeds `RiskEngine` (overdue, due soon, study deficit, **session** stress, **task-completion** consistency — not the analytics “study-day” consistency metric)
+- **AI assistant** — Regex intent parser → local answers use the **same Riverpod snapshots as the UI** (`analyticsProvider` for summaries/progress, `riskProvider` for academic risk so scores match Home/Analytics). Unknown intents → Supabase `acadia-ai` Edge Function (NVIDIA NIM) with server-side summary math aligned to the app’s week/study logic
 - **Smart notifications** — Context-aware push alerts (overdue, deadline, risk, stress, batched academic summary) with anti-spam cooldowns, daily rate limits, behavior adaptation, night-time suppression, and background evaluation
 - **Dashboard** — Greeting, mood card, study heatmap, live session card, tasks preview, GPA cards, semester comparison, smart insights, quick-action FAB
 - **Profile and settings** — Avatar upload, academic profile editing, study preferences, mood settings, theme (light/dark/system), language (EN/TR), change password
@@ -237,9 +237,27 @@ Three layers working together:
 
 Two processing paths:
 
-- **Local intent resolution** (fast, free): User message → `AiIntentParser` (regex NLU) → `AiDataResolver` (fetches from repositories) → structured response with data payload. Supports: tasks by time range, completed tasks, upcoming deadlines, study summary, progress, risk status.
+- **Local intent resolution** (fast, free): User message → `AiIntentParser` (regex NLU) → `AiDataResolver`. Tasks/deadlines still load from repositories; **study summary / progress** use the same `AnalyticsData` as `analyticsProvider` (not a separate DB path). **Academic risk** reuses `riskProvider`’s precomputed `RiskState` (same score and inputs as the Risk Breakdown card — e.g. session stress and task-completion %, not `AnalyticsData.consistency` which measures distinct study days).
 
-- **LLM fallback** (cloud, paid): Unknown intent → Supabase Edge Function `acadia-ai` → NVIDIA NIM (Llama 3.1 70B) → AI-generated text. Also supports: `email_tasks` (via Resend), `get_focus`, `summarize_last`, `get_profile`, `get_courses`.
+- **LLM fallback** (cloud, paid): Unknown intent → Supabase Edge Function `acadia-ai` → NVIDIA NIM (Llama 3.1 70B). The function’s `get_summary` path computes real **this-week study hours** and **weekly task completion** from Postgres (no hardcoded placeholders); free-form `ai` chat receives a short numeric context block built the same way so answers stay close to in-app numbers.
+
+Also on the Edge path: `email_tasks` (Resend), `get_focus`, `summarize_last`, `get_profile`, `get_courses`.
+
+### Recent AI updates (May 2026)
+
+- **Truth-value parity fixed** — AI summary/progress uses the same `analyticsProvider` snapshot as UI; risk uses `riskProvider` `RiskState` values, so chat text/cards and Home/Analytics show the same score.
+- **Flexible email sending** — phrases like “send this to email”, “email my risk/summary/deadlines/courses/profile” are routed to Edge email flow (not just tasks). Sender is required from env/secret: `RESEND_FROM` (no hardcoded fallback).
+- **Exact time/month filtering** — local intent parsing now supports explicit month ranges (e.g. “in April”, “April 2026”) and resolver enforces exact date windows instead of broad matches.
+- **Task fallback improved** — if `tasks` table has no items for a request, assistant falls back to `academic_deadlines` and still returns actionable task-like results.
+- **Summary expanded** — summary now includes risk, deficit, due soon/overdue, stress values, and consistency in both text and summary card data payload.
+- **AI chat UX updates** — keyboard dismisses on send, auto-scroll follows the latest content at bottom while typing, empty state layout is centered/responsive, added extra empty-state action button, header now supports minimize (down arrow) and “Close & Clear Chat”.
+- **AI route animation** — opening/closing AI chat now uses a longer slide + fade transition; dismiss (minimize/close-clear) animates downward.
+
+### Deploying AI changes
+
+```bash
+supabase functions deploy acadia-ai
+```
 
 ## Study Timer
 
@@ -349,7 +367,8 @@ supabase functions deploy send-push
 
 Set Edge Function secrets:
 - `NVIDIA_API_KEY`, `NVIDIA_MODEL` (for acadia-ai)
-- `RESEND_API_KEY` (for acadia-ai email feature)
+- `RESEND_API_KEY` (required for **Email my tasks** in the AI assistant)
+- `RESEND_FROM` (required for email sends — e.g. `Acadia <noreply@yourdomain.com>`; must match a verified sender in Resend, no hardcoded default in code)
 - `FIREBASE_SERVICE_ACCOUNT` (for send-push)
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (both functions)
 
@@ -405,6 +424,7 @@ flutter gen-l10n
 - If you change onboarding/auth flow, review route redirect logic in `main.dart`.
 - New tables must have RLS enabled and `auth.uid() = user_id` policies defined.
 - Use `globalRefreshProvider` for bulk data refresh (respects dependency order).
+- When changing risk or analytics formulas, update **both** `riskProvider` / `analyticsProvider` **and** the assistant (`AiDataResolver`, optional `acadia-ai` summaries) so numbers stay aligned.
 - Timer state persists in Hive box `timer_state` — clear it in `StudyTimerNotifier.reset()` if you modify timer logic.
 - Notification deduplication relies on `(user_id, reference_id, type)` unique index — include a `referenceId` when creating notifications.
 

@@ -440,8 +440,29 @@ class ProfileScreen extends ConsumerWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const AIChatScreen(),
+                          PageRouteBuilder(
+                            pageBuilder: (_, animation, secondaryAnimation) =>
+                                const AIChatScreen(),
+                            transitionDuration: const Duration(milliseconds: 420),
+                            reverseTransitionDuration: const Duration(milliseconds: 380),
+                            transitionsBuilder:
+                                (context, animation, secondaryAnimation, child) {
+                                  final offset = Tween<Offset>(
+                                    begin: const Offset(0, 1),
+                                    end: Offset.zero,
+                                  ).animate(
+                                    CurvedAnimation(
+                                      parent: animation,
+                                      curve: Curves.easeOutCubic,
+                                      reverseCurve: Curves.easeInCubic,
+                                    ),
+                                  );
+                                  final fade = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+                  return FadeTransition(
+                    opacity: fade,
+                    child: SlideTransition(position: offset, child: child),
+                  );
+                                },
                           ),
                         );
                       },

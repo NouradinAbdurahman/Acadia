@@ -27,17 +27,14 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     super.dispose();
   }
 
-  void _scrollToMessage(GlobalKey key) {
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final context = key.currentContext;
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          duration: const Duration(milliseconds: 500),
-          alignment: 0.05,
-          curve: Curves.easeOut,
-        );
-      }
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOut,
+      );
     });
   }
 
@@ -57,7 +54,26 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
 
   void _handleAction(String action) {
-    ref.read(aiAssistantProvider.notifier).sendMessage(action);
+    _submitPrompt(action);
+  }
+
+  void _submitPrompt(String text) {
+    final prompt = text.trim();
+    if (prompt.isEmpty) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    ref.read(aiAssistantProvider.notifier).sendMessage(prompt);
+  }
+
+  void _minimizeChat() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    Navigator.pop(context);
+  }
+
+  void _closeAndClearCurrentChat() {
+    final semesterId = ref.read(activeSemesterProvider).value;
+    ref.read(aiAssistantProvider.notifier).clearChatForSemester(semesterId);
+    FocusManager.instance.primaryFocus?.unfocus();
+    Navigator.pop(context);
   }
 
   List<_ActionItem> _getSmartActions(AiMessage? last) {
@@ -81,7 +97,11 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       return [
         _ActionItem("Review deadlines", "deadlines", Icons.event),
         _ActionItem("Plan today", "plan_today", Icons.today),
-        _ActionItem("Email summary", "email_tasks", Icons.mail_outline),
+        _ActionItem(
+          "Email summary",
+          "Please send my study summary to my email",
+          Icons.mail_outline,
+        ),
       ];
     }
 
@@ -105,14 +125,18 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     final semesterId = ref.watch(activeSemesterProvider).value;
     final state = ref.watch(aiAssistantProvider);
     final messages = state.messagesFor(semesterId);
+    final isEmpty = messages.isEmpty;
     
     ref.listen<AiAssistantState>(aiAssistantProvider, (previous, next) {
       final prevMessages = previous?.messagesFor(semesterId) ?? [];
       final nextMessages = next.messagesFor(semesterId);
       
-      // Only scroll when a new USER message is added in CURRENT semester
-      if (nextMessages.length > prevMessages.length && nextMessages.last.isUser) {
-        _scrollToMessage(nextMessages.last.key);
+      // Always follow the latest content at the bottom.
+      if (nextMessages.length > prevMessages.length) {
+        _scrollToBottom();
+      } else if (next.isLoading) {
+        // During typing animation/streaming, keep scrolling to end.
+        _scrollToBottom();
       }
 
       if (previous?.error == next.error || next.error == null) return;
@@ -169,13 +193,35 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
           ],
         ),
         leading: IconButton(
-          icon: Icon(Icons.close, color: AppColors.textPrimary(context), size: 20),
-          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textPrimary(context), size: 26),
+          onPressed: _minimizeChat,
         ),
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: Icon(Icons.more_horiz, color: AppColors.textSecondary(context)),
-            onPressed: () {},
+            color: AppColors.aiCard(context),
+            onSelected: (value) {
+              if (value == 'close_clear') _closeAndClearCurrentChat();
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'close_clear',
+                child: Row(
+                  children: const [
+                    Icon(Icons.delete_forever_outlined, color: Colors.red, size: 18),
+                    SizedBox(width: 10),
+                    Text(
+                      'Close & Clear Chat',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 8),
         ],
@@ -184,7 +230,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
         child: Column(
           children: [
             Expanded(
-              child: messages.isEmpty
+              child: isEmpty
                   ? _buildEmptyState(context)
                   : ListView.separated(
                       controller: _scrollController,
@@ -207,11 +253,11 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
             ),
             if (state.isLoading)
               const _ThinkingIndicator(),
-            _buildProactiveHints(context),
+            if (!isEmpty) _buildProactiveHints(context),
             _InputArea(
               controller: _controller,
               isLoading: state.isLoading,
-              onSend: (text) => ref.read(aiAssistantProvider.notifier).sendMessage(text),
+              onSend: _submitPrompt,
               onStop: () => ref.read(aiAssistantProvider.notifier).stopResponse(),
             ),
           ],
@@ -221,56 +267,77 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.aiCard(context),
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  AppColors.primary.withValues(alpha: 0.2),
-                  Colors.transparent,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxHeight < 620;
+        final maxContentWidth = constraints.maxWidth < 420 ? constraints.maxWidth : 420.0;
+        return Center(
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: isCompact ? 12 : 24,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxContentWidth),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(isCompact ? 20 : 24),
+                    decoration: BoxDecoration(
+                      color: AppColors.aiCard(context),
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.primary.withValues(alpha: 0.2),
+                          Colors.transparent,
+                        ],
+                        radius: 0.8,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          blurRadius: 40,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      color: AppColors.primary,
+                      size: isCompact ? 34 : 40,
+                    ),
+                  ),
+                  SizedBox(height: isCompact ? 18 : 24),
+                  Text(
+                    'How can I help with your studies today?',
+                    style: TextStyle(
+                      color: AppColors.textPrimary(context),
+                      fontSize: isCompact ? 28 : 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'I can help you plan your day, organize your week,\nor focus on what matters most.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary(context),
+                      fontSize: isCompact ? 13 : 14,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: isCompact ? 22 : 32),
+                  _buildSuggestionGrid(context),
                 ],
-                radius: 0.8,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  blurRadius: 40,
-                  spreadRadius: 10,
-                ),
-              ],
-            ),
-            child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 40),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'How can I help with your studies today?',
-            style: TextStyle(
-              color: AppColors.textPrimary(context),
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            'I can help you plan your day, organize your week,\nor focus on what matters most.',
-            style: TextStyle(
-              color: AppColors.textSecondary(context),
-              fontSize: 14,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          _buildSuggestionGrid(context),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -279,12 +346,13 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       {'label': 'Summary', 'icon': Icons.summarize_outlined},
       {'label': 'My Tasks', 'icon': Icons.task_alt},
       {'label': 'Deadlines', 'icon': Icons.timer_outlined},
+      {'label': 'Academic Risk', 'icon': Icons.warning_amber_rounded},
     ];
 
     return Wrap(
       spacing: 12,
       children: suggestions.map((s) => InkWell(
-        onTap: () => ref.read(aiAssistantProvider.notifier).sendMessage("Can you show me my ${s['label']}?"),
+        onTap: () => _submitPrompt("Can you show me my ${s['label']}?"),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -347,7 +415,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       child: ActionChip(
         avatar: Icon(icon, size: 14, color: AppColors.textSecondary(context)),
         label: Text(label, style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
-        onPressed: () => ref.read(aiAssistantProvider.notifier).sendMessage(label),
+        onPressed: () => _submitPrompt(label),
         backgroundColor: AppColors.aiCard(context),
         side: BorderSide(color: AppColors.border(context)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -477,7 +545,10 @@ class _MessageBubble extends ConsumerWidget {
       chips.add(_ActionChip(
         label: 'Send to email',
         icon: Icons.mail_outline,
-        onPressed: () => ref.read(aiAssistantProvider.notifier).sendMessage("Could you send this to my email?"),
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          ref.read(aiAssistantProvider.notifier).sendMessage("Could you send this to my email?");
+        },
       ));
     }
 
@@ -485,7 +556,10 @@ class _MessageBubble extends ConsumerWidget {
       chips.add(_ActionChip(
         label: 'What are my deadlines?',
         icon: Icons.timer_outlined,
-        onPressed: () => ref.read(aiAssistantProvider.notifier).sendMessage("What are my upcoming deadlines?"),
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          ref.read(aiAssistantProvider.notifier).sendMessage("What are my upcoming deadlines?");
+        },
       ));
     }
 
@@ -1122,6 +1196,15 @@ class _SummaryDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (data is! Map) return const SizedBox.shrink();
     
+    final total = data['total'] ?? 0;
+    final completed = data['completed'] ?? 0;
+    final hours = data['hours'] ?? 0;
+    final riskScore = data['riskScore'];
+    final overdue = data['overdue'] ?? 0;
+    final dueSoon = data['dueSoon'] ?? 0;
+    final deficit = data['studyDeficit'] ?? 0;
+    final consistency = data['consistencyPct'];
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1129,12 +1212,82 @@ class _SummaryDashboard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border(context)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
         children: [
-          Expanded(child: _StatItem(label: "Tasks", value: "${data['total'] ?? 0}", icon: Icons.assignment_outlined, color: AppColors.primary)),
-          Expanded(child: _StatItem(label: "Done", value: "${data['completed'] ?? 0}", icon: Icons.check_circle_outline, color: AppColors.completed)),
-          Expanded(child: _StatItem(label: "Hours", value: "${data['hours'] ?? 0}h", icon: Icons.timer_outlined, color: AppColors.statHours)),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Tasks",
+              value: "$total",
+              icon: Icons.assignment_outlined,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Done",
+              value: "$completed",
+              icon: Icons.check_circle_outline,
+              color: AppColors.completed,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Hours",
+              value: "${hours}h",
+              icon: Icons.timer_outlined,
+              color: AppColors.statHours,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Risk",
+              value: riskScore == null ? "-" : (riskScore as num).toStringAsFixed(1),
+              icon: Icons.warning_amber_rounded,
+              color: AppColors.urgent,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Overdue",
+              value: "$overdue",
+              icon: Icons.error_outline,
+              color: AppColors.urgent,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Due Soon",
+              value: "$dueSoon",
+              icon: Icons.schedule,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Deficit",
+              value: "${(deficit is num ? deficit.toStringAsFixed(1) : deficit)}h",
+              icon: Icons.trending_down,
+              color: AppColors.statHours,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "Consistency",
+              value: consistency == null ? "-" : "$consistency%",
+              icon: Icons.track_changes,
+              color: AppColors.completed,
+            ),
+          ),
         ],
       ),
     );

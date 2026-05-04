@@ -689,9 +689,10 @@ Services are the lowest layer that actually makes API calls. They don't know any
 - Uses regex patterns like "tasks.*today", "deadlines.*this week", "how am I doing"
 
 **AiDataResolver** (in `services/ai/`) — Executes resolved intents.
-- `resolve(intent, userId, semesterId)` — dispatches based on intent type
-- For task/deadline intents, fetches real data from repositories and formats human-readable responses
-- For risk status, re-runs `RiskEngine.calculate()`
+- `resolve(intent, userId, semesterId, { analyticsSnapshot, riskSnapshot })` — dispatches based on intent type
+- **Tasks / deadlines** — still fetched via `TaskRepository` / `DeadlineRepository` (same tables as the rest of the app)
+- **Study summary / progress** — uses the `AnalyticsData` passed in from `analyticsProvider` (the same object the Analytics screens compute via `AnalyticsRepository.computeFromPreloaded`), not `AnalyticsRepository.getAnalyticsData()` in isolation
+- **Academic risk** — uses the `RiskState` passed in from `riskProvider` (same `totalScore` and inputs as Home + Analytics “Risk Breakdown”). It does **not** re-call `RiskEngine` with `AnalyticsData.avgStress` / `AnalyticsData.consistency`, because those fields mean different things than `RiskInput.avgSessionStress` / task-completion ratio
 
 ---
 
@@ -862,8 +863,8 @@ This one delegates to the `DecisionEngine` class in the domain layer. It takes i
 
 ### risk_provider.dart — Risk Scoring
 
-- **`riskInputProvider`** — aggregates all the inputs needed for risk calculation: overdue tasks, upcoming tasks, total ECTS, study hours, study deficit, grade risk, stress data, consistency
-- **`riskProvider`** — computes the current risk score and the previous week's risk score for trend comparison. Uses the `RiskCalculator` from the domain layer.
+- **`riskInputProvider`** — aggregates inputs for `RiskCalculator`: overdue/upcoming **tasks**, rolling-window study hours + deficit vs weekly goal, **task-completion ratio** (stored as `consistency` on `RiskInput`), **session-sourced** average stress, deadline penalties, grade-linked adjustments, etc. Waits until tasks, sessions, moods, deadlines, courses, and course results have finished loading for the active semester.
+- **`riskProvider`** — reads that input and returns `RiskState` (`RiskResult.totalScore`, breakdown, trend vs prior week). The **AI assistant’s risk replies** read this same provider so the score matches the Risk Breakdown card.
 
 ### trend_provider.dart — Trend Data
 
@@ -1212,19 +1213,20 @@ This is the more complex one. It handles AI chat messages from the app.
 |---|---|
 | `get_tasks` | Queries the `tasks` table, categorizes into urgent/pending/completed |
 | `get_deadlines` | Queries `academic_deadlines` for upcoming items |
-| `get_summary` | Summarizes task completion progress |
+| `get_summary` | Loads tasks + `study_sessions` for the semester; reports real **this-week study hours**, **weekly scoped task completion**, overdue count, and deficit-aligned copy (matches app analytics logic, not placeholder values) |
 | `get_focus` | Returns the single most urgent task |
-| `email_tasks` | Sends a styled HTML email via Resend with the task breakdown |
+| `email_tasks` | Sends HTML via Resend; requires `RESEND_API_KEY` and **verified** `RESEND_FROM` (no hardcoded `from` — must be set via secrets / `.env` for local serve). Hard-routed when the user message mentions email + send/mail. On Resend API error, the assistant replies with the error text instead of claiming success. |
 | `get_profile` | Returns full student profile data |
 | `get_courses` | Queries courses for the current semester |
 | `get_details` | Returns the last context data in detail |
 | `summarize_last` | Uses the LLM to summarize the last fetched data |
-| `ai` | Falls back to general LLM chat with an academic system prompt |
+| `ai` | General LLM chat; the handler first loads the same summary-style aggregates (study hours, weekly tasks, overdue count) and injects them into the system prompt so free-form answers stay consistent with dashboard numbers |
 
 **Environment variables it needs:**
 - `NVIDIA_API_KEY` — for the LLM API
 - `NVIDIA_MODEL` — which model to use
-- `RESEND_API_KEY` — for sending emails
+- `RESEND_API_KEY` — Resend API key (required for email)
+- `RESEND_FROM` — required verified sender for Resend (e.g. `Acadia <noreply@yourdomain.com>`); set as Edge secret and in `.env` for local `functions serve`
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` — for database access
 
 ### send-push — FCM Push Notification Sender
@@ -1300,22 +1302,55 @@ When you type something in the chat, it first goes through the `AiIntentParser`:
    - "progress" or "how am I" → `getProgress`
    - "risk" or "danger" → `getRiskStatus`
 
-2. **Time range detection** — "today", "this week", "last week", "last 2 weeks"
+2. **Time range detection** — "today", "this week", "last week", "last 2 weeks", plus explicit month windows such as "in April" / "April 2026" (mapped to exact start/end dates)
 
 3. **Course detection** — trailing "for/in/about [course name]" patterns
 
-If an intent is detected, the `AiDataResolver` takes over. It fetches real data from the repositories, formats it into a human-readable response, and returns it as an `AiMessage` with a structured data payload. This happens entirely on-device (well, the data comes from Supabase, but there's no LLM call).
+If an intent is detected, the `AiDataResolver` takes over. **Tasks and deadlines** still come straight from repositories (fresh Supabase reads). **Anything that depends on aggregated analytics or risk** must match what the user already sees:
+
+- **`ai_assistant_provider`** passes `ref.read(analyticsProvider).valueOrNull` into the resolver for summary/progress intents — same `AnalyticsData` as the Analytics tab (study hours, GPA, weekly task stats, deficit, etc.).
+- For **`getRiskStatus`**, it passes `ref.read(riskProvider)` (wrapped as `riskSnapshot` when `hasData` is true). The assistant prints `RiskState.result.totalScore` and the same `RiskInput` fields that power the “Risk Breakdown” UI (overdue count, due soon, study deficit, **session** stress, **task completion** fraction as “consistency”). That avoids the old bug where the assistant recomputed risk using `AnalyticsData.consistency` (distinct study days in the last week) and `AnalyticsData.avgStress` (blended mood average), which produced a different score (e.g. 43 vs 31) even though both called `RiskEngine`.
+
+This path is still “no LLM” for matched intents — only Supabase reads for tasks/deadlines, plus in-memory provider snapshots for analytics/risk.
 
 ### Path 2: LLM Fallback (Cloud and Paid)
 
 If the intent parser can't figure out what you're asking (returns `unknown`), the app falls back to the `acadia-ai` Edge Function. This sends your message plus the last 6 messages of conversation history to NVIDIA NIM (Llama 3.1 70B), which generates a response. This costs money per API call, which is why we try the local path first.
 
+The Edge Function mirrors key app math where it matters: **`get_summary`** aggregates `study_sessions` for the active semester and scopes weekly task stats to the same Monday-based week window used in Flutter analytics; the generic **`ai`** branch injects a compact numeric context (hours, tasks, overdue) into the system prompt so the model does not invent study statistics.
+
 The Edge Function also supports special intents that the local path doesn't:
-- **email_tasks** — sends you an email with your task breakdown
+- **email_tasks** — flexible delivery intent: can send tasks, summary, academic risk, deadlines, courses, profile, or “this/last reply” to email depending on the request text
 - **get_focus** — tells you the single most urgent thing to work on
 - **get_profile** — returns your academic profile
 - **get_courses** — lists your courses
 - **summarize_last** — summarizes the last data that was fetched
+
+### Recent Fixes and Enhancements (May 2026)
+
+1. **Risk parity fix (single source of truth)**
+   - Summary text and summary cards now use the same effective risk value (`riskProvider` score when available, fallback to analytics only when needed), removing mismatches like `31.8` vs `43.4`.
+
+2. **Exact date filtering behavior**
+   - When users ask for specific periods (for example, “completed tasks in April”), resolver applies strict date boundaries instead of returning full-history lists.
+
+3. **Deadline fallback for task requests**
+   - If no rows are found in `tasks`, resolver falls back to `academic_deadlines` so “show my tasks” still returns useful academic items.
+
+4. **Flexible email intent routing**
+   - Client parser avoids swallowing email requests locally; email-like prompts are forwarded to Edge.
+   - Edge hard-routes email delivery first and chooses payload type by message meaning (`risk`, `summary`, `deadlines`, `courses`, `profile`, `focus`, `tasks`, or previous reply).
+   - `RESEND_FROM` is mandatory from env/secrets (no hardcoded sender fallback).
+
+5. **Expanded summary payload**
+   - Summary response now includes broader metrics: risk, deficit, overdue, due soon, consistency %, and stress indicators (plus risk contribution metadata when available).
+
+6. **AI chat UX improvements**
+   - Send action dismisses keyboard.
+   - Auto-scroll follows the newest content while AI is typing.
+   - Empty-state layout is centered and responsive; extra empty-state action button added.
+   - Header behavior updated: down-arrow minimize action, and three-dots menu action `Close & Clear Chat` that clears current-semester conversation.
+   - AI chat open/close transition updated to longer slide+fade, with downward dismiss effect.
 
 ### Typing Animation
 
@@ -1498,26 +1533,30 @@ The `studyAnalyticsProvider` takes the raw analytics and computes study-specific
 
 The risk score tries to quantify how likely a student is to have academic problems. It's a number from 0 to 100.
 
-### How It's Calculated
+### Where the number comes from (important)
 
-The `RiskEngine.calculate()` method takes a `RiskInput` and computes the score:
+The number on **Home** and **Analytics → Risk Breakdown** comes from **`riskProvider` → `RiskCalculator.calculate(RiskInput)` → `RiskEngine.calculate(...)`**.
 
-1. **Base risk** starts at a neutral value
-2. **Overdue task adjustment** — each overdue task adds points (more if the linked deadline is high priority)
-3. **Study deficit adjustment** — being behind the weekly study goal adds points proportionally
-4. **Grade risk adjustment** —
-   - FF: +15, DD: +8, DC: +5 (bad grades increase risk)
-   - BA: -3, AA: -5 (good grades decrease risk)
-5. **Stress adjustment** — higher average stress adds points
-6. **Consistency adjustment** — lower study consistency adds points
-7. **Overdue deadline penalty** — additional points for each uncompleted past deadline
-8. **Linked task completion relief** — if a deadline has completed tasks, the deadline's risk contribution is reduced
-9. **Recently completed deadline adjustment** — if a deadline was completed recently, it reduces risk
+`riskInputProvider` builds that `RiskInput` from **live** semester-scoped tasks, study sessions, mood logs, deadlines, courses, and course results. Two fields are easy to confuse with analytics elsewhere:
 
-The final score is clamped to 0-100 and categorized as:
-- **Low** (0-33)
-- **Moderate** (34-66)
-- **High** (67-100)
+| Field on `RiskInput` | What it actually is | *Not* the same as |
+|---|---|---|
+| **`consistency`** | **Task completion ratio** — `completedTasks ÷ totalTasks` for the semester (or `1.0` if there are no tasks) | `AnalyticsData.consistency` (distinct days with study in the last 7 days ÷ 7) |
+| **Stress fed into `RiskEngine`** | **`avgSessionStress`** — average stress from mood logs whose `source` is session | `AnalyticsData.avgStress` (blend of all mood logs) or “Daily Baseline” alone |
+
+Study deficit and hours in `RiskInput` use a **rolling last-7-days** window from `DateTime.now()` for sessions, plus the semester’s **weekly study goal** from `weeklyStudyGoalHoursProvider` (semester `weekly_study_goal`, clamped). Grade and deadline **modifiers** are computed inside `riskInputProvider` (penalties and relief) and stored on `RiskInput`, but the **additive 0–100 score** shown in the breakdown is produced by `RiskEngine` from the five factors above (overdue, due soon, deficit, stress, consistency).
+
+### How `RiskEngine` weights those five factors
+
+`RiskEngine.calculate` combines:
+
+1. **Overdue tasks** — up to 30 points (capped)
+2. **Tasks due soon** — up to 15 points (capped)
+3. **Study deficit** — up to 25 points, normalized vs a 24h reference band
+4. **Stress** — up to 15 points when `hasStressData` is true, from the **session** stress level (0–10 scale)
+5. **Consistency penalty** — up to 15 points from `(1 − consistency) × 15`, where `consistency` is the **task completion** ratio described above
+
+The raw sum is clamped to 0–100. `RiskCalculator` maps that into `RiskResult` (contributions per bucket, `totalScore`, `riskLevel` string: `low` / `medium` / `high` with thresholds at 30 and 60).
 
 ### Risk Trend
 

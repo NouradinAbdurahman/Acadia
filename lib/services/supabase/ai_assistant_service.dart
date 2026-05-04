@@ -20,17 +20,40 @@ class AiAssistantService {
       'data': m.data,
     }).toList();
 
+    // Previous assistant turn — used for "send this to email" and structured lastData.
+    Map<String, dynamic>? clientContext;
+    for (var i = history.length - 2; i >= 0; i--) {
+      final m = history[i];
+      if (!m.isUser) {
+        clientContext = {
+          'lastAssistantText': m.text,
+          'lastAssistantType': m.type,
+          if (m.intent != null) 'lastAssistantIntent': m.intent,
+          if (m.data != null) 'lastData': m.data,
+        };
+        break;
+      }
+    }
+
     final response = await _client.functions.invoke(
       'acadia-ai',
       body: {
         'messages': messages,
         'semesterId': semesterId,
         if (moodContext != null) 'moodContext': moodContext,
+        if (clientContext != null) 'context': clientContext,
       },
     ).timeout(const Duration(seconds: 30));
 
     if (response.status != 200) {
-      throw Exception('Failed to get response from AI');
+      final raw = response.data;
+      var message = 'Failed to get response from AI';
+      if (raw is Map) {
+        message = (raw['error'] as String?) ??
+            (raw['reply'] as String?) ??
+            message;
+      }
+      throw Exception(message);
     }
 
     return response.data as Map<String, dynamic>;

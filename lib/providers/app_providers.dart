@@ -62,7 +62,6 @@ final aiDataResolverProvider = Provider<AiDataResolver>((ref) {
   return AiDataResolver(
     ref.watch(taskRepositoryProvider),
     ref.watch(deadlineRepositoryProvider),
-    ref.watch(analyticsRepositoryProvider),
   );
 });
 

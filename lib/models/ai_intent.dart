@@ -20,15 +20,19 @@ class AiFilter {
   final TimeRange? timeRange;
   final bool? isCompleted;
   final String? course;
+  final DateTime? startDate;
+  final DateTime? endDate;
 
   const AiFilter({
     this.timeRange,
     this.isCompleted,
     this.course,
+    this.startDate,
+    this.endDate,
   });
 
   @override
-  String toString() => 'AiFilter(timeRange: $timeRange, isCompleted: $isCompleted, course: $course)';
+  String toString() => 'AiFilter(timeRange: $timeRange, isCompleted: $isCompleted, course: $course, startDate: $startDate, endDate: $endDate)';
 }
 
 class AiIntent {

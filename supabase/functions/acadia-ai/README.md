@@ -13,6 +13,11 @@ Required variables:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
+**Email (`email_tasks` intent)** — required if students use “Send to email”:
+
+- `RESEND_API_KEY` — from [Resend](https://resend.com) API keys
+- `RESEND_FROM` — **required** verified sender (e.g. `Acadia <noreply@yourdomain.com>`). There is no default in code; set it in Supabase secrets and mirror it in project `.env` for `supabase functions serve --env-file .env`.
+
 ## Local run
 
 ```bash
@@ -25,6 +30,9 @@ supabase functions serve acadia-ai --env-file .env
 supabase secrets set NVIDIA_API_KEY=your_key
 supabase secrets set NVIDIA_MODEL=meta/llama-3.1-70b-instruct
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+supabase secrets set RESEND_API_KEY=re_xxxx
+# Optional — after verifying your domain in Resend:
+# supabase secrets set RESEND_FROM="Acadia <notify@yourdomain.com>"
 ```
 
 ## Request body
