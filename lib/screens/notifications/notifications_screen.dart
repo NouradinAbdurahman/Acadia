@@ -81,10 +81,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   _NotificationGroup _groupForNotification(NotificationModel notification) {
     switch (notification.type) {
       case 'due_today':
+      case 'risk':
+      case 'stress':
+      case 'academic_summary':
+      case 'study_goal':
+      case 'mood':
+      case 'mood_check':
         return _NotificationGroup.today;
       case 'due_tomorrow':
         return _NotificationGroup.tomorrow;
       case 'overdue':
+      case 'overdue_batch':
       case 'task_overdue':
         return _NotificationGroup.earlier;
       default:
@@ -106,28 +113,50 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   HeroIcons _iconForType(String type) {
     switch (type) {
       case 'overdue':
+      case 'overdue_batch':
       case 'task_overdue':
         return HeroIcons.exclamationTriangle;
+      case 'risk':
+        return HeroIcons.shieldExclamation;
+      case 'stress':
+        return HeroIcons.fire;
+      case 'academic_summary':
+        return HeroIcons.academicCap;
+      case 'mood':
       case 'mood_check':
         return HeroIcons.faceSmile;
       case 'study_goal':
         return HeroIcons.trophy;
-      default:
+      case 'deadline':
+      case 'deadline_batch':
+      case 'due_today':
+      case 'due_tomorrow':
         return HeroIcons.calendarDays;
+      default:
+        return HeroIcons.bellAlert;
     }
   }
 
   Color _statusColor(String type, ThemeData theme) {
     switch (type) {
       case 'overdue':
+      case 'overdue_batch':
       case 'task_overdue':
+      case 'risk':
         return AppColors.error;
+      case 'stress':
+        return Colors.deepOrange;
+      case 'due_today':
+        return theme.colorScheme.primary;
       case 'due_tomorrow':
         return theme.colorScheme.secondary;
+      case 'mood':
       case 'mood_check':
         return Colors.orange;
       case 'study_goal':
         return Colors.amber;
+      case 'academic_summary':
+        return Colors.teal;
       default:
         return theme.colorScheme.primary;
     }
@@ -141,19 +170,26 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
   bool _matchesCategory(NotificationModel n, _NotificationCategory category) {
     if (category == _NotificationCategory.all) return true;
-    
+
     final refId = n.referenceId ?? '';
     final type = n.type;
 
     switch (category) {
       case _NotificationCategory.tasks:
-        return refId.startsWith('task:');
+        return refId.startsWith('task:') || type == 'task_overdue';
       case _NotificationCategory.deadlines:
-        return refId.startsWith('deadline:');
+        return refId.startsWith('deadline:') ||
+            type == 'deadline' ||
+            type == 'deadline_batch';
       case _NotificationCategory.mood:
-        return refId.startsWith('mood:') || type.contains('mood');
+        return type == 'mood' ||
+            type == 'mood_check' ||
+            type == 'stress';
       case _NotificationCategory.academic:
-        return type == 'study_goal' || type == 'season_finished' || (!refId.startsWith('task:') && !refId.startsWith('deadline:') && !refId.startsWith('mood:'));
+        return type == 'risk' ||
+            type == 'academic_summary' ||
+            type == 'study_goal' ||
+            type == 'system';
       default:
         return true;
     }
@@ -177,13 +213,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       return;
     }
 
-    if (notification.type == 'study_goal') {
-      ref.read(bottomNavProvider.notifier).state = 2;
-      context.go('/home');
-      return;
+    switch (notification.type) {
+      case 'due_today':
+      case 'due_tomorrow':
+      case 'overdue':
+      case 'task_overdue':
+      case 'deadline':
+      case 'deadline_batch':
+      case 'overdue_batch':
+        context.push('/tasks');
+        return;
+      case 'risk':
+      case 'academic_summary':
+      case 'stress':
+      case 'study_goal':
+      case 'mood':
+      case 'mood_check':
+        ref.read(bottomNavProvider.notifier).state = 0;
+        context.go('/home');
+        return;
+      default:
+        context.go('/home');
     }
-
-    context.push('/tasks');
   }
 
   @override

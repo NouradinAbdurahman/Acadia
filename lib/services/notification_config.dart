@@ -13,6 +13,23 @@ class NotificationConfig {
 }
 
 class NotificationTypeConfig {
+  static const List<String> allTypes = [
+    'deadline',
+    'deadline_batch',
+    'task_overdue',
+    'overdue',
+    'overdue_batch',
+    'study_goal',
+    'system',
+    'due_today',
+    'due_tomorrow',
+    'risk',
+    'stress',
+    'academic_summary',
+    'mood',
+    'mood_check',
+  ];
+
   static const Map<String, NotificationConfig> values = {
     'risk': NotificationConfig(
       isCritical: true,
@@ -32,6 +49,12 @@ class NotificationTypeConfig {
       cooldown: Duration(hours: 4),
       allowNightDelivery: true,
     ),
+    'task_overdue': NotificationConfig(
+      isCritical: true,
+      isSilent: false,
+      cooldown: Duration(hours: 4),
+      allowNightDelivery: true,
+    ),
     'deadline': NotificationConfig(
       isCritical: false,
       isSilent: false,
@@ -42,12 +65,42 @@ class NotificationTypeConfig {
       isSilent: false,
       cooldown: Duration(hours: 12),
     ),
+    'due_today': NotificationConfig(
+      isCritical: false,
+      isSilent: false,
+      cooldown: Duration(hours: 12),
+    ),
+    'due_tomorrow': NotificationConfig(
+      isCritical: false,
+      isSilent: false,
+      cooldown: Duration(hours: 12),
+    ),
     'academic_summary': NotificationConfig(
       isCritical: false,
       isSilent: true,
       cooldown: Duration(hours: 24),
     ),
     'stress': NotificationConfig(
+      isCritical: false,
+      isSilent: false,
+      cooldown: Duration(hours: 12),
+    ),
+    'study_goal': NotificationConfig(
+      isCritical: false,
+      isSilent: false,
+      cooldown: Duration(hours: 24),
+    ),
+    'mood': NotificationConfig(
+      isCritical: false,
+      isSilent: false,
+      cooldown: Duration(hours: 24),
+    ),
+    'mood_check': NotificationConfig(
+      isCritical: false,
+      isSilent: false,
+      cooldown: Duration(hours: 24),
+    ),
+    'system': NotificationConfig(
       isCritical: false,
       isSilent: false,
       cooldown: Duration(hours: 12),

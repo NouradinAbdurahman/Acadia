@@ -87,17 +87,15 @@ class NotificationService {
       // 8. Handle push in app (Foreground)
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         final notification = message.notification;
-        final androidMessage = message.notification?.android;
-
-        if (notification != null && androidMessage != null) {
+        if (notification != null) {
+          final type = message.data['type'] ?? 'system';
+          final id = message.data['id'] ?? '';
           _plugin.show(
             notification.hashCode,
             notification.title,
             notification.body,
-            _notificationDetails,
-            payload: message.data['type'] != null 
-                ? "${message.data['type']}|${message.data['id'] ?? ''}" 
-                : null,
+            _notificationDetailsForType(type),
+            payload: '$type|$id',
           );
         }
       });
@@ -110,6 +108,9 @@ class NotificationService {
           _onNotificationTap("$type|${id ?? ''}");
         }
       });
+
+      // 10. Handle cold-start (app was terminated, user tapped push)
+      await _handleInitialMessage();
     }
   }
 
@@ -251,11 +252,27 @@ class NotificationService {
 
   static bool isSilentType(String type) => NotificationTypeConfig.resolve(type).isSilent;
 
+  static Future<String?> _getActiveSemesterId() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return null;
+      final row = await Supabase.instance.client
+          .from('student_profiles')
+          .select('active_semester_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      return row?['active_semester_id'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<void> enqueueSmartNotification({
     required String title,
     required String body,
     required String type,
     String? referenceId,
+    String? semesterId,
   }) async {
     final config = NotificationTypeConfig.resolve(type);
     final supabase = Supabase.instance.client;
@@ -265,19 +282,18 @@ class NotificationService {
 
     if (!await NotificationBehaviorService.canSendDaily()) return;
 
+    final effectiveSemesterId = semesterId ?? await _getActiveSemesterId();
+
     final shouldOnlyInbox = config.isSilent || (!config.allowNightDelivery && isNightTime());
-    try {
-      await supabase.from('notifications').insert({
-        'user_id': user.id,
-        'title': title,
-        'message': body,
-        'type': type,
-        if (referenceId != null) 'reference_id': referenceId,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
-      });
-    } catch (_) {
-      // If inbox write fails, do not block other channels.
-    }
+
+    await _writeInbox(
+      userId: user.id,
+      title: title,
+      body: body,
+      type: type,
+      referenceId: referenceId,
+      semesterId: effectiveSemesterId,
+    );
 
     await NotificationBehaviorService.recordSent(
       type,
@@ -286,7 +302,7 @@ class NotificationService {
 
     if (shouldOnlyInbox) return;
 
-    await sendSmartNotification(
+    await _deliverPushAndLocal(
       title: title,
       body: body,
       type: type,
@@ -311,20 +327,80 @@ class NotificationService {
   static void _onNotificationTap(String payload) {
     final context = rootNavigatorKey.currentContext;
     if (context == null) return;
-    
+
     final parts = payload.split("|");
     if (parts.isEmpty) return;
-    
+
     final type = parts[0];
-    final id = parts.length > 1 && parts[1].isNotEmpty ? parts[1] : null;
+    final rawId = parts.length > 1 && parts[1].isNotEmpty ? parts[1] : null;
     unawaited(NotificationBehaviorService.recordOpened(type));
-    
-    if (type == "task" && id != null) {
-      context.push('/task-detail?id=${Uri.encodeComponent(id)}');
-    } else if (type == "deadline" && id != null) {
-      context.push('/deadline-detail?id=${Uri.encodeComponent(id)}');
-    } else if (type == "risk") {
-      context.go('/home'); // Go to Home where Risk/Analytics are visible
+
+    // Normalize reference: rawId may be prefixed (task:xxx, deadline:xxx) or bare.
+    String? taskId;
+    String? deadlineId;
+    if (rawId != null) {
+      if (rawId.startsWith('task:')) {
+        taskId = rawId.substring(5);
+      } else if (rawId.startsWith('deadline:')) {
+        deadlineId = rawId.substring(9);
+      }
+    }
+
+    switch (type) {
+      case 'due_today':
+      case 'due_tomorrow':
+      case 'overdue':
+        if (taskId != null) {
+          context.push('/task-detail?id=${Uri.encodeComponent(taskId)}');
+        } else if (deadlineId != null) {
+          context.push('/deadline-detail?id=${Uri.encodeComponent(deadlineId)}');
+        } else {
+          context.push('/tasks');
+        }
+        break;
+      case 'task':
+      case 'task_overdue':
+        final id = taskId ?? rawId;
+        if (id != null) {
+          context.push('/task-detail?id=${Uri.encodeComponent(id)}');
+        } else {
+          context.push('/tasks');
+        }
+        break;
+      case 'deadline':
+      case 'deadline_batch':
+        final id = deadlineId ?? rawId;
+        if (id != null) {
+          context.push('/deadline-detail?id=${Uri.encodeComponent(id)}');
+        } else {
+          context.push('/tasks');
+        }
+        break;
+      case 'risk':
+      case 'academic_summary':
+      case 'stress':
+        context.go('/home');
+        break;
+      case 'study_goal':
+        context.go('/home');
+        break;
+      case 'mood':
+      case 'mood_check':
+        context.go('/home');
+        break;
+      default:
+        context.go('/home');
+    }
+  }
+
+  static Future<void> _handleInitialMessage() async {
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      final type = initialMessage.data['type'];
+      final id = initialMessage.data['id'];
+      if (type != null) {
+        _onNotificationTap("$type|${id ?? ''}");
+      }
     }
   }
 
@@ -344,7 +420,31 @@ class NotificationService {
   static const NotificationDetails _notificationDetails =
       NotificationDetails(android: _androidDetails);
 
-  static Future<void> sendSmartNotification({
+  static Future<void> _writeInbox({
+    required String userId,
+    required String title,
+    required String body,
+    required String type,
+    String? referenceId,
+    String? semesterId,
+  }) async {
+    try {
+      final supabase = Supabase.instance.client;
+      await supabase.from('notifications').insert({
+        'user_id': userId,
+        'title': title,
+        'message': body,
+        'type': type,
+        if (referenceId != null) 'reference_id': referenceId,
+        if (semesterId != null) 'semester_id': semesterId,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Inbox write failed: $e');
+    }
+  }
+
+  static Future<void> _deliverPushAndLocal({
     required String title,
     required String body,
     required String type,
@@ -352,52 +452,24 @@ class NotificationService {
   }) async {
     await _ensurePluginInitialized(requestPermissions: false);
 
-    // 1. Anti-spam check (persistent cooldown + global rate limit)
-    final key = "${type}_${referenceId ?? 'general'}";
     final basePriority = _priorityForType(type);
     final boostPriority = await NotificationBehaviorService.userEngages(type);
     final effectivePriority = boostPriority ? Priority.high : basePriority;
-    final reduceFrequency = await NotificationBehaviorService.ignoredTooMuch(type);
-    final cooldownMultiplier = reduceFrequency ? 2 : 1;
-    final config = NotificationTypeConfig.resolve(type);
-    final adaptiveCooldown = config.cooldown * cooldownMultiplier;
-
-    if (!await NotificationBehaviorService.canSendDaily()) return;
-
-    if (effectivePriority == Priority.high && !await NotificationBehaviorService.canSendHighPriority()) {
-      return;
-    }
-
-    if (!await _canSend(key, cooldown: adaptiveCooldown)) return;
+    final details = _notificationDetailsForType(type, priorityOverride: effectivePriority);
 
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
-    final details = _notificationDetailsForType(type, priorityOverride: effectivePriority);
-    if (user != null) {
-      // 2. Save to DB (Inbox)
-      try {
-        await supabase.from('notifications').insert({
-          'user_id': user.id,
-          'title': title,
-          'message': body,
-          'type': type,
-          if (referenceId != null) 'reference_id': referenceId,
-          'created_at': DateTime.now().toUtc().toIso8601String(),
-        });
-      } catch (e) {
-        // Ignore DB save errors
-      }
 
-      // 3. Remote push (Firebase Edge Function)
+    if (user != null) {
       try {
         final userData = await supabase
             .from('users')
             .select('fcm_token')
             .eq('id', user.id)
             .maybeSingle();
-            
+
         final token = userData?['fcm_token'];
-        
+
         if (token != null) {
           final pushBody = {
             'token': token,
@@ -418,7 +490,6 @@ class NotificationService {
       }
     }
 
-    // 4. Show local push (Instant UI sync if app is open)
     final notificationId = DateTime.now().millisecondsSinceEpoch % 100000;
     await _plugin.show(
       notificationId,
@@ -426,6 +497,55 @@ class NotificationService {
       body,
       details,
       payload: "$type|${referenceId ?? ""}",
+    );
+  }
+
+  static Future<void> sendSmartNotification({
+    required String title,
+    required String body,
+    required String type,
+    String? referenceId,
+    String? semesterId,
+  }) async {
+    await _ensurePluginInitialized(requestPermissions: false);
+
+    final key = "${type}_${referenceId ?? 'general'}";
+    final basePriority = _priorityForType(type);
+    final boostPriority = await NotificationBehaviorService.userEngages(type);
+    final effectivePriority = boostPriority ? Priority.high : basePriority;
+    final reduceFrequency = await NotificationBehaviorService.ignoredTooMuch(type);
+    final cooldownMultiplier = reduceFrequency ? 2 : 1;
+    final config = NotificationTypeConfig.resolve(type);
+    final adaptiveCooldown = config.cooldown * cooldownMultiplier;
+
+    if (!await NotificationBehaviorService.canSendDaily()) return;
+
+    if (effectivePriority == Priority.high && !await NotificationBehaviorService.canSendHighPriority()) {
+      return;
+    }
+
+    if (!await _canSend(key, cooldown: adaptiveCooldown)) return;
+
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    final effectiveSemesterId = semesterId ?? await _getActiveSemesterId();
+
+    if (user != null) {
+      await _writeInbox(
+        userId: user.id,
+        title: title,
+        body: body,
+        type: type,
+        referenceId: referenceId,
+        semesterId: effectiveSemesterId,
+      );
+    }
+
+    await _deliverPushAndLocal(
+      title: title,
+      body: body,
+      type: type,
+      referenceId: referenceId,
     );
 
     await NotificationBehaviorService.recordSent(

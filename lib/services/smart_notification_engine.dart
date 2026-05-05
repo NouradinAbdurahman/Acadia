@@ -61,7 +61,7 @@ class SmartNotificationEngine {
         title: 'Academic Summary',
         body: 'You have ${parts.join(' and ')}.',
         type: 'academic_summary',
-        referenceId: 'academic_summary_${nowStamp()}',
+        referenceId: 'academic_summary:${nowStamp()}',
       );
       return;
     }
@@ -71,8 +71,8 @@ class SmartNotificationEngine {
       await NotificationService.enqueueSmartNotification(
         title: 'Deadline Tomorrow',
         body: '${task.title} is due soon.',
-        type: 'deadline',
-        referenceId: task.id,
+        type: 'due_tomorrow',
+        referenceId: 'task:${task.id}',
       );
       return;
     }
@@ -83,7 +83,7 @@ class SmartNotificationEngine {
         title: 'Task Overdue',
         body: '${task.title} is overdue.',
         type: 'overdue',
-        referenceId: task.id,
+        referenceId: 'task:${task.id}',
       );
     }
   }
@@ -95,12 +95,14 @@ class SmartNotificationEngine {
         title: "High Academic Risk",
         body: "Your risk is ${risk.toStringAsFixed(1)}. Take action now.",
         type: "risk",
+        referenceId: 'risk:${nowStamp()}',
       );
     } else if (risk >= 50) {
       await NotificationService.enqueueSmartNotification(
         title: "Moderate Risk",
         body: "Stay consistent to avoid falling behind.",
         type: "risk",
+        referenceId: 'risk:${nowStamp()}',
       );
     }
   }
@@ -112,6 +114,7 @@ class SmartNotificationEngine {
         title: "High Stress Detected",
         body: "Consider taking a break or adjusting your workload.",
         type: "stress",
+        referenceId: 'stress:${nowStamp()}',
       );
     }
   }
