@@ -202,6 +202,14 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
 
   @override
   Future<AnalyticsData> build() async {
+    ref.listen<AsyncValue<String?>>(activeSemesterProvider, (previous, next) {
+      if (previous?.value == next.value) return;
+      _lastHash = null;
+      final previousSemester = previous?.value;
+      if (previousSemester != null) _cache.remove(previousSemester);
+      ref.invalidateSelf();
+    });
+
     final user = ref.watch(currentUserProvider);
     if (user == null) return AnalyticsData.empty();
 

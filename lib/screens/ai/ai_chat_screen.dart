@@ -65,6 +65,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
   }
 
   void _submitPrompt(String text) {
+    if (ref.read(aiAssistantProvider).isLoading) return;
     final prompt = text.trim();
     if (prompt.isEmpty) return;
     FocusManager.instance.primaryFocus?.unfocus();
@@ -265,7 +266,6 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
               controller: _controller,
               isLoading: state.isLoading,
               onSend: _submitPrompt,
-              onStop: () => ref.read(aiAssistantProvider.notifier).stopResponse(),
             ),
           ],
         ),
@@ -351,10 +351,46 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
 
   Widget _buildSuggestionGrid(BuildContext context) {
     final suggestions = [
-      {'label': 'Summary', 'icon': Icons.summarize_outlined},
-      {'label': 'My Tasks', 'icon': Icons.task_alt},
-      {'label': 'Deadlines', 'icon': Icons.timer_outlined},
-      {'label': 'Academic Risk', 'icon': Icons.warning_amber_rounded},
+      {
+        'label': 'Summary',
+        'icon': Icons.summarize_outlined,
+        'prompt': 'Can you show me my summary?',
+      },
+      {
+        'label': 'Plan Today',
+        'icon': Icons.today_outlined,
+        'prompt': 'Plan today for me',
+      },
+      {
+        'label': 'Focus Now',
+        'icon': Icons.bolt,
+        'prompt': 'Focus now',
+      },
+      {
+        'label': 'Plan My Week',
+        'icon': Icons.calendar_view_week_outlined,
+        'prompt': 'Plan my week',
+      },
+      {
+        'label': 'My Tasks',
+        'icon': Icons.task_alt,
+        'prompt': 'Show me my uncompleted tasks',
+      },
+      {
+        'label': 'Deadlines',
+        'icon': Icons.timer_outlined,
+        'prompt': 'What are my upcoming deadlines?',
+      },
+      {
+        'label': 'Rank Tasks',
+        'icon': Icons.format_list_numbered_rounded,
+        'prompt': 'Rank my tasks',
+      },
+      {
+        'label': 'Academic Risk',
+        'icon': Icons.warning_amber_rounded,
+        'prompt': 'What is my academic risk?',
+      },
     ];
 
     return Wrap(
@@ -362,7 +398,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       spacing: 16,
       runSpacing: 16,
       children: suggestions.map((s) => InkWell(
-        onTap: () => _submitPrompt("Can you show me my ${s['label']}?"),
+        onTap: () => _submitPrompt(s['prompt'] as String),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1826,13 +1862,11 @@ class _InputArea extends StatelessWidget {
   final TextEditingController controller;
   final bool isLoading;
   final Function(String) onSend;
-  final VoidCallback onStop;
 
   const _InputArea({
     required this.controller,
     required this.isLoading,
     required this.onSend,
-    required this.onStop,
   });
 
   @override
@@ -1888,15 +1922,12 @@ class _InputArea extends StatelessWidget {
             valueListenable: controller,
             builder: (context, value, child) {
               final hasText = value.text.trim().isNotEmpty;
-              final isActive = hasText || isLoading;
+              final canSend = hasText && !isLoading;
+              final isActive = canSend;
               
               return GestureDetector(
                 onTap: () {
-                  if (isLoading) {
-                    onStop();
-                    return;
-                  }
-                  if (hasText) {
+                  if (canSend) {
                     onSend(value.text.trim());
                     controller.clear();
                   }
@@ -1905,15 +1936,15 @@ class _InputArea extends StatelessWidget {
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isLoading 
-                        ? AppColors.aiCard(context) 
-                        : (hasText ? AppColors.primary : AppColors.textSecondary(context).withValues(alpha: 0.1)),
+                    color: canSend
+                        ? AppColors.primary
+                        : AppColors.textSecondary(context).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: hasText || isLoading ? Colors.transparent : AppColors.border(context),
+                      color: canSend ? Colors.transparent : AppColors.border(context),
                     ),
                     boxShadow: [
-                      if (hasText && !isLoading)
+                      if (canSend)
                         BoxShadow(
                           color: AppColors.primary.withValues(alpha: 0.3),
                           blurRadius: 15,
@@ -1922,7 +1953,7 @@ class _InputArea extends StatelessWidget {
                     ],
                   ),
                   child: Icon(
-                    isLoading ? Icons.pause_rounded : Icons.arrow_upward_rounded, 
+                    Icons.arrow_upward_rounded,
                     color: isActive ? Colors.white : AppColors.textSecondary(context).withValues(alpha: 0.5), 
                     size: 22
                   ),

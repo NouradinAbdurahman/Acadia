@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/semester.dart';
 import '../repositories/semester_repository.dart';
@@ -62,7 +63,7 @@ class SemesterNotifier extends StateNotifier<AsyncValue<List<Semester>>> {
   }
 
   Future<void> loadSemesters() async {
-    state = const AsyncValue.loading();
+    state = const AsyncValue<List<Semester>>.loading().copyWithPrevious(state);
     try {
       final semesters = await _repository.getSemesters();
       if (!mounted) return;
@@ -109,14 +110,29 @@ final activeSemesterProvider = AsyncNotifierProvider<ActiveSemesterNotifier, Str
 class ActiveSemesterNotifier extends AsyncNotifier<String?> {
   SemesterStateService get _service => ref.read(semesterStateServiceProvider);
 
+  /// Survives provider rebuilds (auth token refresh, dependency changes).
+  /// Set ONLY by explicit user action in [setActiveSemester].
+  /// Cleared on logout (user == null).
+  static String? _explicitSelection;
+
   @override
   FutureOr<String?> build() async {
-    // Re-initialize this notifier if the user changes
     final user = ref.watch(currentUserProvider);
-    if (user == null) return null;
+    if (user == null) {
+      _explicitSelection = null;
+      return null;
+    }
 
-    // Single source of truth: student_profiles.active_semester_id
-    return await _service.getActiveSemesterId();
+    if (_explicitSelection != null) {
+      debugPrint(
+        '[ActiveSemester] build() → returning explicit selection: $_explicitSelection',
+      );
+      return _explicitSelection;
+    }
+
+    final fetched = await _service.getActiveSemesterId();
+    debugPrint('[ActiveSemester] build() → initial load from DB: $fetched');
+    return fetched;
   }
 
   Future<void> setActiveSemester(String semesterId) async {
@@ -130,10 +146,13 @@ class ActiveSemesterNotifier extends AsyncNotifier<String?> {
 
     ref.read(isSemesterSwitchingProvider.notifier).state = true;
     try {
+      debugPrint('[ActiveSemester] SET → $semesterId (user action)');
       final success = await _service.updateActiveSemester(semesterId);
-      if (!success) return;
-      // Update local async state immediately after DB persistence.
-      // Downstream providers already watch activeSemesterProvider and will reload.
+      if (!success) {
+        debugPrint('[ActiveSemester] DB write failed for $semesterId');
+        return;
+      }
+      _explicitSelection = semesterId;
       state = AsyncValue.data(semesterId);
     } finally {
       ref.read(isSemesterSwitchingProvider.notifier).state = false;

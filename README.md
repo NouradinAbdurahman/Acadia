@@ -9,6 +9,7 @@ Acadia is a Flutter-based academic productivity app that helps students plan cou
 - **Semester management** — Create/edit/delete semesters, set active semester as the app-wide data scope, weekly study goals per semester
 - **Course management** — CRUD courses per semester with ECTS credits, color coding, and active/inactive status
 - **Task and deadline planning** — Tasks with course/deadline linking, priority, estimated time; deadlines with type (assignment/exam/quiz/project), completion tracking
+- **Exam schedule module** — Semester-scoped exam CRUD with types (midterm/final/quiz), list + calendar + detail flows, urgency summary on Home, and local reminder scheduling
 - **Study timer** — Pomodoro (4-round cycle with breaks), Deep Work, and Review modes; audio/haptic feedback; Hive-persisted timer state across app restarts; app lifecycle recovery
 - **Mood and stress tracking** — 5-level mood selector, stress/energy sliders, factor chips (sleep, workload, health, motivation, social, exams), optional notes; daily + post-session logging; configurable reminders
 - **Analytics** — Study hours per course, GPA, task completion rate, consistency, study deficit, burnout score, risk score, weekly/semester comparison
@@ -213,13 +214,14 @@ The router also watches `GoRouterRefreshStream` on Supabase auth state changes f
 
 ## Smart Notification System
 
-Three layers working together:
+Three layers working together with a single deterministic contract:
 
 1. **WHEN to notify** (`SmartNotificationEngine`):
-   - Overdue tasks → `overdue` notification
-   - Due within 24h → `deadline` notification
-   - Multiple items → batched `academic_summary`
+   - Overdue tasks → `overdue` notification (`reference_id: task:<taskId>`)
+   - Due within 24h → `due_tomorrow` notification (`reference_id: task:<taskId>`)
+   - Multiple items → batched `academic_summary` (`reference_id: academic_summary:<yyyy-mm-dd>`)
    - Risk score ≥ 70 → `risk` alert
+   - Risk score 50–69 → moderate `risk` alert
    - Avg stress ≥ 7 → `stress` warning
 
 2. **HOW to deliver** (`NotificationService`):
@@ -227,11 +229,32 @@ Three layers working together:
    - Daily rate limit (max 5/day, max 2 high-priority)
    - Night-time suppression (7am–10pm only)
    - Behavior adaptation (ignore >3 → double cooldown; engage >50% → boost priority)
-   - Writes to Supabase inbox + sends FCM via Edge Function
+   - **Single write path**: `_writeInbox(...)` is the only inbox insert path (used by both enqueue/send flows)
+   - **Semester-scoped writes**: every inbox insert includes `semester_id` from active semester
+   - **Dual-channel delivery**: same event writes inbox and sends push/local notification in the same flow
+   - Push bridge: `send-push` Edge Function sends FCM payload with `type` + `id` (`reference_id`) for deep links
+   - Cold-start handling: terminated-app push taps are handled via `FirebaseMessaging.getInitialMessage()`
 
 3. **BACKGROUND** (`BackgroundNotificationService`):
    - Runs every 30 min (Workmanager on Android, BackgroundFetch on iOS)
    - Fetches fresh data from Supabase → evaluates → sends if conditions met
+
+### Notification Contract (single source of truth)
+
+- **Allowed DB types** (constraint + app config aligned):
+  - `deadline`, `deadline_batch`, `task_overdue`, `overdue`, `overdue_batch`
+  - `study_goal`, `system`, `due_today`, `due_tomorrow`
+  - `risk`, `stress`, `academic_summary`, `mood`, `mood_check`
+- **Reference format**:
+  - task-linked: `task:<id>`
+  - deadline-linked: `deadline:<id>`
+  - aggregate/time-keyed: `academic_summary:<date>`, `risk:<date>`, `stress:<date>`
+- **Deduplication key**: `(user_id, reference_id, type)` partial unique index
+- **Tap routing**:
+  - `task:*` → task detail
+  - `deadline:*` → deadline detail
+  - `risk` / `stress` / `academic_summary` / `study_goal` / `mood*` → home
+  - fallback → tasks/home depending on payload
 
 ## AI Assistant
 
@@ -265,6 +288,18 @@ Also on the Edge path: `email_tasks` (Resend), `get_focus`, `summarize_last`, `g
 - **Summary expanded** — summary now includes risk, deficit, due soon/overdue, stress values, and consistency in both text and summary card data payload.
 - **AI chat UX updates** — keyboard dismisses on send, auto-scroll follows the latest content at bottom while typing, empty state layout is centered/responsive, added extra empty-state action button, header now supports minimize (down arrow) and “Close & Clear Chat”.
 - **AI route animation** — opening/closing AI chat now uses a longer slide + fade transition; dismiss (minimize/close-clear) animates downward.
+- **Localization hardening for deterministic insights** — moved deterministic insight/recommendation output to l10n-backed text paths and removed mixed hardcoded fallback behavior in the active insight flow.
+- **Insight activation quality gates** — insight visibility and generation now require semester-scoped academic signal (`tasks`/`sessions`), with a minimum threshold (`>=2 tasks` or `>=2 sessions`) to avoid low-signal noisy output.
+- **Home/Analytics consistency lock** — shared `hasAcademicData` + `hasEnoughSignal` gating is applied across Home insight card, Analytics insight card, and insight generation layer for parity.
+- **Analytics fallback hint** — when insight is intentionally hidden due to missing study signal, Analytics shows a localized non-AI guidance hint instead of blank space.
+
+### Recent product updates (May 2026)
+
+- **Exam module completed** — added exam list/create/edit/detail screens, calendar view, exam-type color coding, countdowns, today/tomorrow formatting, and safer delete confirmations.
+- **Exam reminders + inbox parity** — exam reminders now schedule reliably with timezone-safe handling, write to in-app notifications inbox, and deep-link to exam detail.
+- **Semester strictness** — exam fetch/create/update paths and semester activation behavior were hardened to prevent cross-semester leakage and silent semester reversion.
+- **Home dashboard reorder** — Home card flow was reordered to action-first and urgency-first sequencing (live session, exams/deadlines, risk, insight, analytics blocks, history, quick menu).
+- **Section labeling polish** — added Home section labels for previously unlabeled cards (including Exams) and right-side “View” navigation on the Exams header to open `/exams`.
 
 ### Deploying AI changes
 
@@ -362,12 +397,13 @@ Run the SQL files in the Supabase dashboard SQL editor, in this order:
 24. `supabase/2026042101_add_users_weekly_study_goal.sql` (legacy)
 25. `supabase/2026042102_semesters_weekly_study_goal.sql`
 26. `supabase/2026042901_drop_legacy_users_weekly_goal.sql`
+27. `supabase/2026050501_notifications_type_expand.sql`
 
 These scripts create/update tables, constraints, triggers, and RPC functions.
 
 Then run:
 
-27. `lib/services/supabase/rls_policies.sql`
+28. `lib/services/supabase/rls_policies.sql`
 
 This applies the current RLS policy set used by the app (`users`, `student_profiles`, `semesters`, `courses`, `tasks`, `deadlines`).
 
@@ -439,7 +475,7 @@ flutter gen-l10n
 - Use `globalRefreshProvider` for bulk data refresh (respects dependency order).
 - When changing risk or analytics formulas, update **both** `riskProvider` / `analyticsProvider` **and** the assistant (`AiDataResolver`, optional `acadia-ai` summaries) so numbers stay aligned.
 - Timer state persists in Hive box `timer_state` — clear it in `StudyTimerNotifier.reset()` if you modify timer logic.
-- Notification deduplication relies on `(user_id, reference_id, type)` unique index — include a `referenceId` when creating notifications.
+- Notification deduplication and deep-link routing rely on `(user_id, reference_id, type)` + normalized `referenceId` format (`task:<id>`, `deadline:<id>`, etc.).
 
 ## Security and Data Access
 

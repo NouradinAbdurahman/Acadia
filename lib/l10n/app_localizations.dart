@@ -3818,6 +3818,12 @@ abstract class AppLocalizations {
   /// **'Log study sessions, add tasks, and record grades. Charts fill in as you use the app.'**
   String get analyticsSparseDataBody;
 
+  /// No description provided for @analyticsInsightNoStudyDataHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No study data yet. Start tracking to unlock insights.'**
+  String get analyticsInsightNoStudyDataHint;
+
   /// No description provided for @startTrackingYourSemester.
   ///
   /// In en, this message translates to:
@@ -6865,6 +6871,610 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{label}: '**
   String labelWithColonAndSpace(Object label);
+
+  /// No description provided for @examsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exams'**
+  String get examsTitle;
+
+  /// No description provided for @examsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load exams'**
+  String get examsLoadError;
+
+  /// No description provided for @examsAddCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Exam'**
+  String get examsAddCta;
+
+  /// No description provided for @examsUpcomingSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming exams'**
+  String get examsUpcomingSectionTitle;
+
+  /// No description provided for @examsPastSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Past exams'**
+  String get examsPastSectionTitle;
+
+  /// No description provided for @examsNoUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming exams for this semester'**
+  String get examsNoUpcoming;
+
+  /// No description provided for @examsNoUpcomingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Add Exam\" to create your schedule'**
+  String get examsNoUpcomingSubtitle;
+
+  /// No description provided for @examsNoPast.
+  ///
+  /// In en, this message translates to:
+  /// **'No past exams for this semester'**
+  String get examsNoPast;
+
+  /// No description provided for @examsTypeMidterm.
+  ///
+  /// In en, this message translates to:
+  /// **'Midterm'**
+  String get examsTypeMidterm;
+
+  /// No description provided for @examsTypeFinal.
+  ///
+  /// In en, this message translates to:
+  /// **'Final'**
+  String get examsTypeFinal;
+
+  /// No description provided for @examsTypeQuiz.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiz'**
+  String get examsTypeQuiz;
+
+  /// No description provided for @examTypeQuiz.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiz'**
+  String get examTypeQuiz;
+
+  /// No description provided for @examsLocationOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online Exam'**
+  String get examsLocationOnline;
+
+  /// No description provided for @examsLocationFaceToFace.
+  ///
+  /// In en, this message translates to:
+  /// **'Face-to-face Exam'**
+  String get examsLocationFaceToFace;
+
+  /// No description provided for @examsLocationClassroomPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Room'**
+  String get examsLocationClassroomPrefix;
+
+  /// No description provided for @examsInstructorPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructor:'**
+  String get examsInstructorPrefix;
+
+  /// No description provided for @examsCoursePrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Course:'**
+  String get examsCoursePrefix;
+
+  /// No description provided for @examsTitleField.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam title'**
+  String get examsTitleField;
+
+  /// No description provided for @examsPickDateTimeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select date and time'**
+  String get examsPickDateTimeError;
+
+  /// No description provided for @examsCreateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create exam'**
+  String get examsCreateError;
+
+  /// No description provided for @examsOptionalCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional course'**
+  String get examsOptionalCourse;
+
+  /// No description provided for @examsCourseOptionalField.
+  ///
+  /// In en, this message translates to:
+  /// **'Course (optional)'**
+  String get examsCourseOptionalField;
+
+  /// No description provided for @examsDateField.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam date'**
+  String get examsDateField;
+
+  /// No description provided for @examsTimeField.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam time'**
+  String get examsTimeField;
+
+  /// No description provided for @examsOnlineToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online exam'**
+  String get examsOnlineToggle;
+
+  /// No description provided for @examsClassroomField.
+  ///
+  /// In en, this message translates to:
+  /// **'Classroom'**
+  String get examsClassroomField;
+
+  /// No description provided for @examsInstructorField.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructor'**
+  String get examsInstructorField;
+
+  /// No description provided for @examsNotesOptionalField.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes (optional)'**
+  String get examsNotesOptionalField;
+
+  /// No description provided for @examsCreateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Exam'**
+  String get examsCreateButton;
+
+  /// No description provided for @editExam.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Exam'**
+  String get editExam;
+
+  /// No description provided for @examsUpdateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update exam'**
+  String get examsUpdateError;
+
+  /// No description provided for @examsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam not found'**
+  String get examsNotFound;
+
+  /// No description provided for @examsNoItems.
+  ///
+  /// In en, this message translates to:
+  /// **'No exams'**
+  String get examsNoItems;
+
+  /// No description provided for @examsCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam Calendar'**
+  String get examsCalendarTitle;
+
+  /// No description provided for @examsNoItemsForDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No exams this day'**
+  String get examsNoItemsForDay;
+
+  /// No description provided for @examsCalendarOpenTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Open exam calendar'**
+  String get examsCalendarOpenTooltip;
+
+  /// No description provided for @examUrgencyNoExamsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'No exams soon'**
+  String get examUrgencyNoExamsSoon;
+
+  /// No description provided for @examUrgencyUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} exams in next {days} days'**
+  String examUrgencyUpcoming(Object count, Object days);
+
+  /// No description provided for @examUrgencyHeavyWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy exam period'**
+  String get examUrgencyHeavyWeek;
+
+  /// No description provided for @examDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Exam Details'**
+  String get examDetailTitle;
+
+  /// No description provided for @examDetailDeletePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this exam?'**
+  String get examDetailDeletePrompt;
+
+  /// No description provided for @examDetailDeleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get examDetailDeleteWarning;
+
+  /// No description provided for @examDetailDeleteWarningStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently remove the exam and its reminders.'**
+  String get examDetailDeleteWarningStrong;
+
+  /// No description provided for @examsNextCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Exam'**
+  String get examsNextCardTitle;
+
+  /// No description provided for @examsInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'In {days} days'**
+  String examsInDays(int days);
+
+  /// No description provided for @aiDetRiskIncreased.
+  ///
+  /// In en, this message translates to:
+  /// **'Your risk increased by {delta}% this week.\n{core}'**
+  String aiDetRiskIncreased(Object delta, Object core);
+
+  /// No description provided for @aiDetHighStressInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Session stress is high ({stress}/10). That usually means overload or fatigue.'**
+  String aiDetHighStressInsight(Object stress);
+
+  /// No description provided for @aiDetHighStressRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: one 20-30 minute session, single topic.'**
+  String get aiDetHighStressRecoPrimary;
+
+  /// No description provided for @aiDetHighStressRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a 5-minute break before you start the next block.'**
+  String get aiDetHighStressRecoSecondary;
+
+  /// No description provided for @aiDetOverdueInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count} overdue tasks this semester - that pulls your risk up until they move.'**
+  String aiDetOverdueInsight(Object count);
+
+  /// No description provided for @aiDetOverdueRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: finish or reschedule the smallest overdue item first.'**
+  String get aiDetOverdueRecoPrimary;
+
+  /// No description provided for @aiDetOverdueRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Then pick the next smallest - estimate a time box before you start.'**
+  String get aiDetOverdueRecoSecondary;
+
+  /// No description provided for @aiDetRiskHighInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic risk is high ({score}/100). Tasks, study time, or consistency are stacking.'**
+  String aiDetRiskHighInsight(Object score);
+
+  /// No description provided for @aiDetRiskHighRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Before 18:00: tackle the top due-soon or overdue item ({dueSoon} due-soon).'**
+  String aiDetRiskHighRecoPrimary(Object dueSoon);
+
+  /// No description provided for @aiDetRiskHighRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar two 25-40 minute blocks; start the first within 2 hours.'**
+  String get aiDetRiskHighRecoSecondary;
+
+  /// No description provided for @aiDetRiskModerateInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic risk is moderate ({score}/100). Weekly progress is below target and needs recovery actions.'**
+  String aiDetRiskModerateInsight(Object score);
+
+  /// No description provided for @aiDetRiskModerateRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Start one focused session now ({minutes} min).'**
+  String aiDetRiskModerateRecoPrimary(Object minutes);
+
+  /// No description provided for @aiDetModerateSecondaryDueSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Reorder your {count} due-soon tasks by deadline tonight.'**
+  String aiDetModerateSecondaryDueSoon(Object count);
+
+  /// No description provided for @aiDetModerateSecondaryDeficitMulti.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: do {sessions} sessions ({m1} + {m2} min) to reduce deficit faster.'**
+  String aiDetModerateSecondaryDeficitMulti(
+    Object sessions,
+    Object m1,
+    Object m2,
+  );
+
+  /// No description provided for @aiDetModerateSecondaryDeficitSingle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: start one {minutes}-minute recovery session.'**
+  String aiDetModerateSecondaryDeficitSingle(Object minutes);
+
+  /// No description provided for @aiDetModerateSecondaryTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow: second 30-minute block so risk does not climb.'**
+  String get aiDetModerateSecondaryTomorrow;
+
+  /// No description provided for @aiDetDefaultInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Snapshot looks manageable: no overdue flag here and risk is not in the high band.'**
+  String get aiDetDefaultInsight;
+
+  /// No description provided for @aiDetDefaultRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: one 25-minute review session.'**
+  String get aiDetDefaultRecoPrimary;
+
+  /// No description provided for @aiDetDefaultRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Mid-week: reload deadlines and date any undated tasks.'**
+  String get aiDetDefaultRecoSecondary;
+
+  /// No description provided for @aiTaskUrgentInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'You have high-priority open work - tackle it before optional tasks.'**
+  String get aiTaskUrgentInsight;
+
+  /// No description provided for @aiTaskUrgentRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish one urgent item to completion.'**
+  String get aiTaskUrgentRecoPrimary;
+
+  /// No description provided for @aiTaskUrgentRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Then pick the next urgent line only.'**
+  String get aiTaskUrgentRecoSecondary;
+
+  /// No description provided for @aiTaskBacklogInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Large backlogs increase avoidance.'**
+  String get aiTaskBacklogInsight;
+
+  /// No description provided for @aiTaskBacklogRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: finish the two smallest tasks.'**
+  String get aiTaskBacklogRecoPrimary;
+
+  /// No description provided for @aiTaskBacklogRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'That shrinks the list you see every morning.'**
+  String get aiTaskBacklogRecoSecondary;
+
+  /// No description provided for @aiTaskQueuedInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Queued work without dates tends to slip.'**
+  String get aiTaskQueuedInsight;
+
+  /// No description provided for @aiTaskQueuedRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule the next two tasks on your calendar.'**
+  String get aiTaskQueuedRecoPrimary;
+
+  /// No description provided for @aiTaskQueuedRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Give each a start time, not only a due date.'**
+  String get aiTaskQueuedRecoSecondary;
+
+  /// No description provided for @aiTaskNoneInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'No urgent items in this view.'**
+  String get aiTaskNoneInsight;
+
+  /// No description provided for @aiTaskNoneRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Use spare time for readings or long assignments.'**
+  String get aiTaskNoneRecoPrimary;
+
+  /// No description provided for @aiTaskNoneRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the next exam date if it is not in yet.'**
+  String get aiTaskNoneRecoSecondary;
+
+  /// No description provided for @aiDetDeficitHighInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'You are about {hours}h behind your weekly study goal - missing multiple days adds up fast.'**
+  String aiDetDeficitHighInsight(Object hours);
+
+  /// No description provided for @aiDetDeficitHighRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: schedule 2-3 blocks (25-40 min each) on your calendar.'**
+  String get aiDetDeficitHighRecoPrimary;
+
+  /// No description provided for @aiDetDeficitHighRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fixed times - not \"when I feel like it.\"'**
+  String get aiDetDeficitHighRecoSecondary;
+
+  /// No description provided for @aiDetDeficitMediumInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'You are roughly {hours}h under your weekly goal.'**
+  String aiDetDeficitMediumInsight(Object hours);
+
+  /// No description provided for @aiDetDeficitMediumRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Before Sunday: add 1-2 focused sessions toward the course with the nearest deadline.'**
+  String get aiDetDeficitMediumRecoPrimary;
+
+  /// No description provided for @aiDetDeficitMediumRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the course that moves your grades most this week.'**
+  String get aiDetDeficitMediumRecoSecondary;
+
+  /// No description provided for @aiDetConsistencyLowInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency is low ({percent}%). Irregular days make every deadline feel tighter.'**
+  String aiDetConsistencyLowInsight(Object percent);
+
+  /// No description provided for @aiDetConsistencyLowRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Next 5 weekdays: same 30-minute start window (e.g. after lunch).'**
+  String get aiDetConsistencyLowRecoPrimary;
+
+  /// No description provided for @aiDetConsistencyLowRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonight: one 25-minute session to move off your current level.'**
+  String get aiDetConsistencyLowRecoSecondary;
+
+  /// No description provided for @aiDetConsistencyMidInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency is middling ({percent}%). You study, but not on a steady rhythm.'**
+  String aiDetConsistencyMidInsight(Object percent);
+
+  /// No description provided for @aiDetConsistencyMidRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: 25-35 minutes right after a habit you already have.'**
+  String get aiDetConsistencyMidRecoPrimary;
+
+  /// No description provided for @aiDetConsistencyMidRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow: repeat at the same clock time.'**
+  String get aiDetConsistencyMidRecoSecondary;
+
+  /// No description provided for @aiDetDueSoonManyInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tasks are due soon - switching between them raises stress.'**
+  String aiDetDueSoonManyInsight(Object count);
+
+  /// No description provided for @aiDetDueSoonManyRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Order by deadline: quick wins first, then the hardest task.'**
+  String get aiDetDueSoonManyRecoPrimary;
+
+  /// No description provided for @aiDetDueSoonManyRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause new optional work until these clear.'**
+  String get aiDetDueSoonManyRecoSecondary;
+
+  /// No description provided for @aiDetDueSoonSomeInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'You have coursework due soon - finishing ahead beats cramming.'**
+  String get aiDetDueSoonSomeInsight;
+
+  /// No description provided for @aiDetDueSoonSomeRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: block time for the nearest deadline first.'**
+  String get aiDetDueSoonSomeRecoPrimary;
+
+  /// No description provided for @aiDetDueSoonSomeRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'If nothing is overdue, pre-read for the next lecture or quiz.'**
+  String get aiDetDueSoonSomeRecoSecondary;
+
+  /// No description provided for @aiDetCalendarNoDeadlinesButSemesterInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'No deadlines this calendar week, but semester work is still tracked.'**
+  String get aiDetCalendarNoDeadlinesButSemesterInsight;
+
+  /// No description provided for @aiDetCalendarNoDeadlinesButSemesterRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the gap for readings or exam prep.'**
+  String get aiDetCalendarNoDeadlinesButSemesterRecoPrimary;
+
+  /// No description provided for @aiDetCalendarNoDeadlinesButSemesterRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Add dates to undated tasks so planning stays honest.'**
+  String get aiDetCalendarNoDeadlinesButSemesterRecoSecondary;
+
+  /// No description provided for @aiDetCalendarNoTasksInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks fall in this calendar-week window - deadlines may be further out.'**
+  String get aiDetCalendarNoTasksInsight;
+
+  /// No description provided for @aiDetCalendarNoTasksRecoPrimary.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance coursework or shore up weak topics.'**
+  String get aiDetCalendarNoTasksRecoPrimary;
+
+  /// No description provided for @aiDetCalendarNoTasksRecoSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank extra time before the next busy week.'**
+  String get aiDetCalendarNoTasksRecoSecondary;
 }
 
 class _AppLocalizationsDelegate

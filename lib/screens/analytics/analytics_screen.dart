@@ -30,6 +30,7 @@ import '../../providers/study_sessions_provider.dart';
 import '../../providers/tasks_provider.dart';
 import '../../providers/trend_provider.dart';
 import '../../core/utils/trend_localizer.dart';
+import '../../services/ai/academic_data_guard.dart';
 import '../../providers/mood_provider.dart';
 import '../../providers/decision_provider.dart';
 import '../../providers/adaptive_provider.dart';
@@ -661,7 +662,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
                       // 1. Study Hours by Course
                       _buildSectionTitle(theme, l10n.studyHoursByCourse,
-                          showAiHint: true),
+                          showAiHint: false),
                       Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
                       const SizedBox(height: AppSpacing.md),
                       _StudyHoursBarChart(data: data),
@@ -680,7 +681,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       KeyedSubtree(
                         key: _trendsSectionKey,
                         child: _buildSectionTitle(theme, l10n.trendAnalysis,
-                            showAiHint: true),
+                            showAiHint: false),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       _buildTrendDaysTabs(ref, theme, trendDays),
@@ -748,6 +749,45 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     DecisionResult decision,
     StudyAnalytics studyAnalytics,
   ) {
+    final activeSemesterId = ref.watch(activeSemesterProvider).valueOrNull;
+    if (activeSemesterId == null) return const SizedBox.shrink();
+    final tasks = (ref.watch(tasksProvider).valueOrNull ?? const [])
+        .where((t) => t.semesterId == activeSemesterId)
+        .toList(growable: false);
+    final sessions = (ref.watch(studySessionsProvider).valueOrNull ?? const [])
+        .where((s) => s.semesterId == activeSemesterId)
+        .toList(growable: false);
+    final hasData = hasAcademicData(tasks: tasks, sessions: sessions);
+    if (!hasData) {
+      return AppGlassCard(
+        key: const ValueKey('insight-no-data-hint'),
+        borderOnly: true,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Text(
+          l10n.analyticsInsightNoStudyDataHint,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+    final hasSignal = hasEnoughSignal(tasks: tasks, sessions: sessions);
+    if (!hasSignal) {
+      return AppGlassCard(
+        key: const ValueKey('insight-low-signal-hint'),
+        borderOnly: true,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Text(
+          l10n.analyticsInsightNoStudyDataHint,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
     final analyticsAsync = ref.watch(analyticsProvider);
     final riskState = ref.watch(riskProvider);
     final signature = decision.sortedItems
@@ -769,7 +809,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             riskTrendDelta: riskState.hasData ? riskState.trendDelta : null,
             adaptiveProfile: adaptive,
             burnoutRisk: studyAnalytics.burnoutScore,
-          ).parts
+            hasAcademicData: hasData,
+            hasEnoughSignal: hasSignal,
+          ).partsWithL10n(l10n)
         : null;
 
     final recoLines = layerParts == null

@@ -50,10 +50,12 @@ import '../../domain/decision/decision_rules.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../models/mood_log.dart';
+import '../../models/exam.dart';
 import '../../models/trend_data.dart';
 import '../../widgets/risk/risk_widgets.dart';
 import '../../providers/risk_provider.dart';
 import '../../providers/semester_provider.dart';
+import '../../providers/exams_provider.dart';
 import 'widgets/home_skeleton_screen.dart';
 import '../../widgets/mood/mood_daily_list.dart';
 import '../../providers/course_provider.dart';
@@ -69,6 +71,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   // Prevents rapid double-triggers (shake / multiple rebuild loops).
   bool _isRefreshing = false;
+  bool _isExamExpanded = false;
   // Stable scroll controller — survives provider rebuilds.
   final ScrollController _scrollController = ScrollController();
 
@@ -111,6 +114,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           'semesterId': semesterId,
         },
       );
+      if (!mounted) return;
 
       _unifiedValidationLogged = true;
 
@@ -259,6 +263,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final todayMoodAsync = ref.watch(todayMoodProvider);
     final moodLogsAsync = ref.watch(dailyMoodLogsProvider);
     final analytics = ref.watch(analyticsProvider.select((v) => v.value));
+    final nextExam = ref.watch(nextUpcomingExamProvider);
+    final upcomingExams = ref.watch(upcomingExamsProvider);
+    final examUrgency = ref.watch(examUrgencyProvider);
+    final now = DateTime.now();
+    final in3Days = now.add(Duration(days: examUrgency.windowDays));
+    final upcomingExamsInWindow = upcomingExams
+        .where((e) => e.examDateTime.isAfter(now) && e.examDateTime.isBefore(in3Days))
+        .toList();
     final decision = ref.watch(decisionProvider);
     final prediction = ref.watch(predictionProvider);
 
@@ -334,51 +346,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   !(todayMoodAsync.asData?.value ?? true))
                                 const SizedBox(height: AppSpacing.md),
 
-                              // --- SECTION 1.6: STUDY HEATMAP ---
-                              const RepaintBoundary(child: StudyHeatmap()),
-                              
-                              const SizedBox(height: AppSpacing.lg),
-                              // --- SECTION 1.8: MOOD-INFLUENCED MESSAGE ---
-                              if (analytics != null) ...[
-                                if (analytics.avgStress >= 8)
-                                  _buildCalmToneMessage(context, theme, l10n)
-                                else if (analytics.avgMood >= 4.5)
-                                  _buildEncouragementMessage(context, theme, l10n),
-                                
-                                if (analytics.avgStress >= 8 || analytics.avgMood >= 4.5)
-                                  const SizedBox(height: AppSpacing.md),
-                              ],
-
-                              // --- SECTION 2: RISK SCORE CARD ---
-                              if (ref.watch(riskProvider).hasData) ...[
-                                const RiskScoreCard(),
-                                const SizedBox(height: AppSpacing.md),
-                              ],
-
-                              // --- SECTION 2.05: AI INSIGHT (explanation — same layer as chat) ---
-                              if (analytics != null && analytics.hasData) ...[
-                                AppGlassCard(
-                                  borderOnly: true,
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: const AcademicAssistantInsightBlock(
-                                    variant: InsightDisplayVariant.full,
+                              // 2) Live Study Session
+                              if (ref.watch(studyTimerProvider.select((s) => s.isRunning || s.isPaused))) ...[
+                                Text(
+                                  l10n.liveStudySessions,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: AppSpacing.sm),
+                                const LiveStudySessionCard(),
+                                const SizedBox(height: AppSpacing.lg),
                               ],
 
-                              const LiveStudySessionCard(),
-                              const SizedBox(height: AppSpacing.lg),
-
-                              // --- SECTION 2.1: MOOD HISTORY (CONDITIONAL) ---
-                               if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
-                                  todayMoodAsync.asData?.value != null) ...[
-                                const SizedBox(height: AppSpacing.md),
+                              // 3-4) Exam Overview + Expanded List
+                              if (nextExam != null) ...[
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      l10n.dailyMoodHistory,
+                                      l10n.examsTitle,
                                       style: theme.textTheme.labelMedium?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -387,7 +375,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     GestureDetector(
                                       onTap: () {
                                         Haptics.vibrate(HapticsType.selection);
-                                        context.push('/mood/history');
+                                        context.push('/exams');
                                       },
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -404,27 +392,90 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
+                                _ExamOverviewCard(
+                                  exam: nextExam,
+                                  summary: examUrgency,
+                                  isExpanded: _isExamExpanded && examUrgency.count > 1,
+                                  onTap: () {
+                                    if (examUrgency.count <= 1) {
+                                      context.push('/exam-detail?id=${Uri.encodeComponent(nextExam.id)}');
+                                      return;
+                                    }
+                                    setState(() => _isExamExpanded = !_isExamExpanded);
+                                  },
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                if (_isExamExpanded && examUrgency.count > 1) ...[
+                                  const SizedBox(height: AppSpacing.xs),
+                                  _ExpandedExamList(
+                                    exams: upcomingExamsInWindow,
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                ],
+                              ],
+
+                              // 5) Upcoming Deadlines
+                              _buildUpcomingDeadlines(context, theme, l10n, data),
+                              const SizedBox(height: AppSpacing.xl),
+
+                              // 6) Academic Risk
+                              if (ref.watch(riskProvider).hasData) ...[
+                                const RiskScoreCard(),
+                                const SizedBox(height: AppSpacing.md),
+                              ],
+
+                              // 7) AI Insight
+                              if (analytics != null && analytics.hasData) ...[
                                 AppGlassCard(
                                   borderOnly: true,
                                   padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: MoodDailyList(
-                                    moodLogsAsync: moodLogsAsync,
-                                    days: 7,
-                                    showDate: false,
-                                    isFixed: true,
+                                  child: const AcademicAssistantInsightBlock(
+                                    variant: InsightDisplayVariant.full,
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: AppSpacing.md),
                               ],
 
+                              // 8) Mood Influenced Message
+                              if (analytics != null) ...[
+                                if (analytics.avgStress >= 8)
+                                  _buildCalmToneMessage(context, theme, l10n)
+                                else if (analytics.avgMood >= 4.5)
+                                  _buildEncouragementMessage(context, theme, l10n),
+                                if (analytics.avgStress >= 8 || analytics.avgMood >= 4.5)
+                                  const SizedBox(height: AppSpacing.md),
+                              ],
 
+                              // 9) Study Heatmap
+                              Text(
+                                l10n.activity,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              const RepaintBoundary(child: StudyHeatmap()),
+                              const SizedBox(height: AppSpacing.lg),
 
-                              // --- SECTION 3: OVERVIEW & EMPTY STATE ---
+                              // 10) Study Stats
+                              Text(
+                                l10n.overview,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildStudyStatsCard(context, ref, theme, l10n, data),
+                              const SizedBox(height: AppSpacing.xl),
+
+                              // --- SECTION 3: OVERVIEW & EMPTY STATE (11-12 helpers) ---
                               Builder(builder: (context) {
                                 final coursesAsync = ref.watch(courseProvider);
-                                final isRefreshing = coursesAsync.isLoading;
+                                final isFirstCourseLoad = coursesAsync.isLoading && !coursesAsync.hasValue;
 
-                                if (isRefreshing && data!.topCourses.isEmpty) {
+                                if (isFirstCourseLoad && data!.topCourses.isEmpty) {
                                   return const SizedBox.shrink();
                                 }
 
@@ -475,36 +526,89 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       ).animate().fade().slideY(begin: 0.1)
                                     : const SizedBox.shrink();
                               }),
-                              if (data!.topCourses.isNotEmpty || ref.watch(courseProvider).isLoading) ...[
-                                if (!ref.watch(courseProvider).isLoading || data.topCourses.isNotEmpty)
+                              if (data!.topCourses.isNotEmpty || (ref.watch(courseProvider).isLoading && !ref.watch(courseProvider).hasValue)) ...[
+                                if (data.topCourses.isNotEmpty)
+                                  // 11) Status Panel
                                   _StatusPanel(data: data),
 
                                 const SizedBox(height: AppSpacing.lg),
 
-                                // --- SECTION 4: PROGRESS OVERVIEW ---
+                                // 12) Progress Overview
                                 _ProgressOverviewCard(trendAsync: trendAsync),
 
                               ],
 
                               const SizedBox(height: AppSpacing.lg),
 
-                              // --- SECTION 5: QUICK MENU STRIP ---
-                              _buildQuickMenuStrip(context, theme, l10n),
-
-                              const SizedBox(height: AppSpacing.lg),
-
-                              // --- SECTION 6: STUDY STATS CARD ---
-                              _buildStudyStatsCard(context, ref, theme, l10n, data),
-
-                              const SizedBox(height: AppSpacing.xl),
-
-                              // --- SECTION 7: UPCOMING DEADLINES ---
-                              _buildUpcomingDeadlines(context, theme, l10n, data),
-
-                              const SizedBox(height: AppSpacing.xl),
-
-                              // --- SECTION 8: COURSE ACTIVITY ---
+                              // 13) Course Activity
+                              Text(
+                                l10n.activity,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
                               _buildCourseActivity(context, theme, l10n, data),
+                              const SizedBox(height: AppSpacing.xl),
+
+                              // 14) Mood History
+                               if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
+                                  todayMoodAsync.asData?.value != null) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      l10n.dailyMoodHistory,
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Haptics.vibrate(HapticsType.selection);
+                                        context.push('/mood/history');
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                        child: Text(
+                                          l10n.view,
+                                          style: theme.textTheme.labelMedium?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                AppGlassCard(
+                                  borderOnly: true,
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  child: MoodDailyList(
+                                    moodLogsAsync: moodLogsAsync,
+                                    days: 7,
+                                    showDate: false,
+                                    isFixed: true,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.lg),
+                              ],
+
+                              // 15) Quick Menu Strip
+                              Text(
+                                l10n.quickMenu,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildQuickMenuStrip(context, theme, l10n),
 
                               const SizedBox(height: 120),
                             ],
@@ -966,6 +1070,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         icon: HeroIcons.academicCap,
         title: l10n.myCourses,
         route: '/courses',
+      ),
+      _DashboardQuickMenuItem(
+        icon: HeroIcons.clipboardDocumentList,
+        title: l10n.examsTitle,
+        route: '/exams',
       ),
       _DashboardQuickMenuItem(
         icon: HeroIcons.chartBar,
@@ -2687,6 +2796,197 @@ class _CourseActivityCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ExamOverviewCard extends StatelessWidget {
+  const _ExamOverviewCard({
+    required this.exam,
+    required this.summary,
+    required this.isExpanded,
+    required this.onTap,
+  });
+
+  final ExamModel exam;
+  final ExamUrgencySummary summary;
+  final bool isExpanded;
+  final VoidCallback onTap;
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  String _formatExamTime(BuildContext context, DateTime dt) {
+    final l10n = AppLocalizations.of(context)!;
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    final now = DateTime.now();
+    final tomorrow = now.add(const Duration(days: 1));
+    final time = DateFormat('HH:mm', localeTag).format(dt);
+    if (_isSameDay(dt, now)) return '${l10n.today} • $time';
+    if (_isSameDay(dt, tomorrow)) return '${l10n.tomorrow} • $time';
+    return '${DateFormat.MMMd(localeTag).format(dt)} • $time';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    final dateText = DateFormat('EEE, MMM d', localeTag).format(exam.examDateTime);
+    final relativeTimeText = _formatExamTime(context, exam.examDateTime);
+
+    final isTurkish = Localizations.localeOf(context).languageCode.toLowerCase().startsWith('tr');
+    final count = summary.count;
+    final summaryLabel = isTurkish
+        ? 'Sonraki ${summary.windowDays} gunde $count sinav'
+        : '$count exam${count == 1 ? '' : 's'} in next ${summary.windowDays} days';
+    final dotColor = switch (summary.level) {
+      ExamUrgencyLevel.high => Colors.red,
+      ExamUrgencyLevel.medium => Colors.orange,
+      ExamUrgencyLevel.low => Colors.green,
+    };
+    final typeLabel = switch (exam.typeEnum) {
+      ExamType.midterm => l10n.examsTypeMidterm,
+      ExamType.finalExam => l10n.examsTypeFinal,
+      ExamType.quiz => l10n.examsTypeQuiz,
+    };
+
+    return AnimatedPressable(
+      onTap: onTap,
+      child: AppGlassCard(
+        borderOnly: true,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    summaryLabel,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+                if (summary.count > 1) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    size: 18,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ],
+              ],
+            ),
+            if (!isExpanded) ...[
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                '${exam.title} ($typeLabel)',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                relativeTimeText,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                dateText,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpandedExamList extends StatelessWidget {
+  const _ExpandedExamList({required this.exams});
+
+  final List<ExamModel> exams;
+
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  String _formatExamTime(BuildContext context, DateTime dt) {
+    final l10n = AppLocalizations.of(context)!;
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    final now = DateTime.now();
+    final tomorrow = now.add(const Duration(days: 1));
+    final time = DateFormat('HH:mm', localeTag).format(dt);
+    if (_isSameDay(dt, now)) return '${l10n.today} • $time';
+    if (_isSameDay(dt, tomorrow)) return '${l10n.tomorrow} • $time';
+    return '${DateFormat.MMMd(localeTag).format(dt)} • $time';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      children: exams.map((exam) {
+        final examTypeLabel = switch (exam.typeEnum) {
+          ExamType.midterm => l10n.examsTypeMidterm,
+          ExamType.finalExam => l10n.examsTypeFinal,
+          ExamType.quiz => l10n.examsTypeQuiz,
+        };
+        return AnimatedPressable(
+          onTap: () => context.push('/exam-detail?id=${Uri.encodeComponent(exam.id)}'),
+          child: AppGlassCard(
+            borderOnly: true,
+            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                const Icon(Icons.school, color: Colors.indigo, size: 18),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${exam.title} ($examTypeLabel)',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _formatExamTime(context, exam.examDateTime),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

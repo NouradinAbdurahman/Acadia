@@ -10,6 +10,7 @@ import '../../core/design/app_icons.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/course_provider.dart';
+import '../../providers/exams_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../components/app_glass_card.dart';
@@ -19,14 +20,15 @@ import '../../models/notification.dart';
 
 enum _NotificationGroup {
   today,
-  tomorrow,
-  earlier,
+  upcoming,
+  past,
 }
 
 enum _NotificationCategory {
   all,
   tasks,
   deadlines,
+  exams,
   mood,
   academic,
 }
@@ -78,7 +80,25 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     await ref.read(notificationsProvider.notifier).loadNotifications();
   }
 
-  _NotificationGroup _groupForNotification(NotificationModel notification) {
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  _NotificationGroup _groupForNotification(
+    NotificationModel notification, {
+    required DateTime now,
+    required Map<String, DateTime> examTimeByRef,
+  }) {
+    if (notification.type == 'exam') {
+      final refId = notification.referenceId ?? '';
+      final examTime = examTimeByRef[refId];
+      if (examTime != null) {
+        if (_isSameDay(examTime, now)) return _NotificationGroup.today;
+        if (examTime.isAfter(now)) return _NotificationGroup.upcoming;
+        return _NotificationGroup.past;
+      }
+    }
+
     switch (notification.type) {
       case 'due_today':
       case 'risk':
@@ -89,11 +109,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       case 'mood_check':
         return _NotificationGroup.today;
       case 'due_tomorrow':
-        return _NotificationGroup.tomorrow;
+        return _NotificationGroup.upcoming;
       case 'overdue':
       case 'overdue_batch':
       case 'task_overdue':
-        return _NotificationGroup.earlier;
+        return _NotificationGroup.past;
       default:
         return _NotificationGroup.today;
     }
@@ -103,10 +123,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     switch (group) {
       case _NotificationGroup.today:
         return l10n.today;
-      case _NotificationGroup.tomorrow:
-        return l10n.tomorrow;
-      case _NotificationGroup.earlier:
-        return l10n.earlier;
+      case _NotificationGroup.upcoming:
+        return l10n.examsUpcomingSectionTitle;
+      case _NotificationGroup.past:
+        return l10n.examsPastSectionTitle;
     }
   }
 
@@ -127,6 +147,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         return HeroIcons.faceSmile;
       case 'study_goal':
         return HeroIcons.trophy;
+      case 'exam':
+        return HeroIcons.academicCap;
       case 'deadline':
       case 'deadline_batch':
       case 'due_today':
@@ -150,6 +172,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         return theme.colorScheme.primary;
       case 'due_tomorrow':
         return theme.colorScheme.secondary;
+      case 'exam':
+        return Colors.indigo;
       case 'mood':
       case 'mood_check':
         return Colors.orange;
@@ -181,6 +205,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         return refId.startsWith('deadline:') ||
             type == 'deadline' ||
             type == 'deadline_batch';
+      case _NotificationCategory.exams:
+        return type == 'exam' || refId.startsWith('exam:');
       case _NotificationCategory.mood:
         return type == 'mood' ||
             type == 'mood_check' ||
@@ -213,6 +239,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       return;
     }
 
+    if (referenceId != null && referenceId.startsWith('exam:')) {
+      final examId = referenceId.substring(5);
+      context.push('/exam-detail?id=${Uri.encodeComponent(examId)}');
+      return;
+    }
+
     switch (notification.type) {
       case 'due_today':
       case 'due_tomorrow':
@@ -222,6 +254,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       case 'deadline_batch':
       case 'overdue_batch':
         context.push('/tasks');
+        return;
+      case 'exam':
+        context.push('/exams');
         return;
       case 'risk':
       case 'academic_summary':
@@ -246,8 +281,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         : theme.colorScheme.surface;
     final notificationsAsync = ref.watch(notificationsProvider);
     final courses = ref.watch(courseProvider).value ?? [];
+    final exams = ref.watch(examsProvider).value ?? [];
     final courseColorByName = <String, Color>{
       for (final course in courses) course.courseName: course.uiColor,
+    };
+    final examTimeByRef = <String, DateTime>{
+      for (final exam in exams) 'exam:${exam.id}': exam.examDateTime,
     };
 
     return Scaffold(
@@ -311,18 +350,23 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
                     final grouped = <_NotificationGroup, List<NotificationModel>>{
                       _NotificationGroup.today: [],
-                      _NotificationGroup.tomorrow: [],
-                      _NotificationGroup.earlier: [],
+                      _NotificationGroup.upcoming: [],
+                      _NotificationGroup.past: [],
                     };
 
+                    final now = DateTime.now();
                     for (final notification in filtered) {
-                      grouped[_groupForNotification(notification)]!.add(notification);
+                      grouped[_groupForNotification(
+                        notification,
+                        now: now,
+                        examTimeByRef: examTimeByRef,
+                      )]!.add(notification);
                     }
 
                     final orderedGroups = [
                       _NotificationGroup.today,
-                      _NotificationGroup.tomorrow,
-                      _NotificationGroup.earlier,
+                      _NotificationGroup.upcoming,
+                      _NotificationGroup.past,
                     ];
 
                     return RefreshIndicator(
@@ -437,6 +481,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           catChip(_NotificationCategory.all, l10n.all),
           catChip(_NotificationCategory.tasks, l10n.tasks),
           catChip(_NotificationCategory.deadlines, l10n.deadlines),
+          catChip(_NotificationCategory.exams, l10n.examsTitle),
           catChip(_NotificationCategory.mood, l10n.mood),
           catChip(_NotificationCategory.academic, l10n.academic),
           const SizedBox(width: AppSpacing.xs),

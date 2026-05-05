@@ -20,10 +20,15 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../providers/course_provider.dart';
 
 class CreateTaskScreen extends ConsumerStatefulWidget {
-  const CreateTaskScreen({super.key, this.initialDeadlineId});
+  const CreateTaskScreen({
+    super.key,
+    this.initialDeadlineId,
+    this.initialCourseId,
+  });
 
   /// When set (e.g. from deadline detail), pre-fills link and due date.
   final String? initialDeadlineId;
+  final String? initialCourseId;
 
   @override
   ConsumerState<CreateTaskScreen> createState() => _CreateTaskScreenState();
@@ -43,6 +48,13 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
 
   bool _isSubmitting = false;
   bool _initialDeadlineSynced = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final courseId = widget.initialCourseId;
+    _selectedCourseId = (courseId == null || courseId.isEmpty) ? null : courseId;
+  }
 
   @override
   void dispose() {
@@ -170,6 +182,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
     _initialDeadlineSynced = true;
     setState(() {
       _linkedDeadlineId = match!.id;
+      _selectedCourseId = match.courseId;
       _deadline ??= DateTime(
         match.deadlineDate.year,
         match.deadlineDate.month,
@@ -177,6 +190,25 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
       );
       _deadlineController.text = _formatDeadline(context);
     });
+  }
+
+  String _capitalizeFirstLetter(String input) {
+    if (input.isEmpty) return input;
+    final first = input[0].toUpperCase();
+    final rest = input.length > 1 ? input.substring(1) : '';
+    return '$first$rest';
+  }
+
+  void _handleTitleChanged(String value) {
+    final normalized = _capitalizeFirstLetter(value);
+    if (normalized == value) return;
+    final oldSelection = _titleController.selection;
+    final extent = oldSelection.extentOffset.clamp(0, normalized.length);
+    final base = oldSelection.baseOffset.clamp(0, normalized.length);
+    _titleController.value = TextEditingValue(
+      text: normalized,
+      selection: TextSelection(baseOffset: base, extentOffset: extent),
+    );
   }
 
   @override
@@ -219,6 +251,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
                         controller: _titleController,
                         labelText: AppLocalizations.of(context)!.taskTitle,
                         prefixIcon: HeroIcons.documentText,
+                        onChanged: _handleTitleChanged,
                         validator: (value) =>
                             value == null || value.trim().isEmpty
                             ? AppLocalizations.of(context)!.titleRequired
@@ -362,6 +395,22 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
           options: options,
           onChanged: (v) => setState(() {
             _linkedDeadlineId = v.isEmpty ? null : v;
+            if (_linkedDeadlineId == null) return;
+            Deadline? selectedDeadline;
+            for (final deadline in useList) {
+              if (deadline.id == _linkedDeadlineId) {
+                selectedDeadline = deadline;
+                break;
+              }
+            }
+            if (selectedDeadline == null) return;
+            _selectedCourseId = selectedDeadline.courseId;
+            _deadline = DateTime(
+              selectedDeadline.deadlineDate.year,
+              selectedDeadline.deadlineDate.month,
+              selectedDeadline.deadlineDate.day,
+            );
+            _deadlineController.text = _formatDeadline(context);
           }),
           emptyText: l10n.noDeadlinesYet,
         );

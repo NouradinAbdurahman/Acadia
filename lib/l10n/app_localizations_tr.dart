@@ -2065,6 +2065,10 @@ class AppLocalizationsTr extends AppLocalizations {
       'Çalışma oturumu kaydedin, görev ekleyin ve notlarınızı girin. Uygulamayı kullandıkça grafikler dolacak.';
 
   @override
+  String get analyticsInsightNoStudyDataHint =>
+      'Henüz çalışma verisi yok. İçgörülerin açılması için takibe başlayın.';
+
+  @override
   String get startTrackingYourSemester => 'Döneminizi takip etmeye başlayın';
 
   @override
@@ -3927,4 +3931,380 @@ class AppLocalizationsTr extends AppLocalizations {
   String labelWithColonAndSpace(Object label) {
     return '$label: ';
   }
+
+  @override
+  String get examsTitle => 'Sinavlar';
+
+  @override
+  String get examsLoadError => 'Sinavlar yuklenemedi';
+
+  @override
+  String get examsAddCta => 'Sinav Ekle';
+
+  @override
+  String get examsUpcomingSectionTitle => 'Yaklasan sinavlar';
+
+  @override
+  String get examsPastSectionTitle => 'Gecmis sinavlar';
+
+  @override
+  String get examsNoUpcoming => 'Bu donem icin yaklasan sinav yok';
+
+  @override
+  String get examsNoUpcomingSubtitle =>
+      'Programinizi olusturmak icin \"Sinav Ekle\"ye dokunun';
+
+  @override
+  String get examsNoPast => 'Bu donem icin gecmis sinav yok';
+
+  @override
+  String get examsTypeMidterm => 'Vize';
+
+  @override
+  String get examsTypeFinal => 'Final';
+
+  @override
+  String get examsTypeQuiz => 'Quiz';
+
+  @override
+  String get examTypeQuiz => 'Quiz';
+
+  @override
+  String get examsLocationOnline => 'Online Sinav';
+
+  @override
+  String get examsLocationFaceToFace => 'Yuz yuze Sinav';
+
+  @override
+  String get examsLocationClassroomPrefix => 'Oda';
+
+  @override
+  String get examsInstructorPrefix => 'Ogretim Gorevlisi:';
+
+  @override
+  String get examsCoursePrefix => 'Ders:';
+
+  @override
+  String get examsTitleField => 'Sinav basligi';
+
+  @override
+  String get examsPickDateTimeError => 'Lutfen tarih ve saat sec';
+
+  @override
+  String get examsCreateError => 'Sinav olusturulamadi';
+
+  @override
+  String get examsOptionalCourse => 'Istege bagli ders';
+
+  @override
+  String get examsCourseOptionalField => 'Ders (istege bagli)';
+
+  @override
+  String get examsDateField => 'Sinav tarihi';
+
+  @override
+  String get examsTimeField => 'Sinav saati';
+
+  @override
+  String get examsOnlineToggle => 'Online sinav';
+
+  @override
+  String get examsClassroomField => 'Sinif';
+
+  @override
+  String get examsInstructorField => 'Ogretim gorevlisi';
+
+  @override
+  String get examsNotesOptionalField => 'Notlar (istege bagli)';
+
+  @override
+  String get examsCreateButton => 'Sinav Olustur';
+
+  @override
+  String get editExam => 'Sinavi Duzenle';
+
+  @override
+  String get examsUpdateError => 'Sinav guncellenemedi';
+
+  @override
+  String get examsNotFound => 'Sinav bulunamadi';
+
+  @override
+  String get examsNoItems => 'Sinav yok';
+
+  @override
+  String get examsCalendarTitle => 'Sinav Takvimi';
+
+  @override
+  String get examsNoItemsForDay => 'Bu gun sinav yok';
+
+  @override
+  String get examsCalendarOpenTooltip => 'Sinav takvimini ac';
+
+  @override
+  String get examUrgencyNoExamsSoon => 'Yakin zamanda sinav yok';
+
+  @override
+  String examUrgencyUpcoming(Object count, Object days) {
+    return 'Sonraki $days gunde $count sinav';
+  }
+
+  @override
+  String get examUrgencyHeavyWeek => 'Yogun sinav donemi';
+
+  @override
+  String get examDetailTitle => 'Sinav Detayi';
+
+  @override
+  String get examDetailDeletePrompt => 'Bu sinav silinsin mi?';
+
+  @override
+  String get examDetailDeleteWarning => 'Bu islem geri alinamaz.';
+
+  @override
+  String get examDetailDeleteWarningStrong =>
+      'Bu islem sinavi ve hatirlaticilarini kalici olarak siler.';
+
+  @override
+  String get examsNextCardTitle => 'Siradaki Sinav';
+
+  @override
+  String examsInDays(int days) {
+    return '$days gun sonra';
+  }
+
+  @override
+  String aiDetRiskIncreased(Object delta, Object core) {
+    return 'Risk puanin bu hafta %$delta artti.\n$core';
+  }
+
+  @override
+  String aiDetHighStressInsight(Object stress) {
+    return 'Oturum stresi yuksek ($stress/10). Bu genelde asiri yuklenme veya yorgunluk demektir.';
+  }
+
+  @override
+  String get aiDetHighStressRecoPrimary =>
+      'Bugun: tek konu icin 20-30 dakikalik bir oturum.';
+
+  @override
+  String get aiDetHighStressRecoSecondary =>
+      'Sonraki bloga baslamadan once 5 dakika mola ver.';
+
+  @override
+  String aiDetOverdueInsight(Object count) {
+    return 'Bu donemde gecikmis $count gorevin var - bunlar ilerleyene kadar riski yukseltiyor.';
+  }
+
+  @override
+  String get aiDetOverdueRecoPrimary =>
+      'Bugun: once en kucuk gecikmis gorevi bitir veya yeniden planla.';
+
+  @override
+  String get aiDetOverdueRecoSecondary =>
+      'Sonra bir sonrakine gec; baslamadan once sure kutusu belirle.';
+
+  @override
+  String aiDetRiskHighInsight(Object score) {
+    return 'Akademik risk yuksek ($score/100). Gorevler, calisma suresi veya duzenlilik ust uste biniyor.';
+  }
+
+  @override
+  String aiDetRiskHighRecoPrimary(Object dueSoon) {
+    return '18:00\'dan once: en acil/yaklasan goreve odaklan ($dueSoon yaklasan).';
+  }
+
+  @override
+  String get aiDetRiskHighRecoSecondary =>
+      'Takvime iki adet 25-40 dakikalik blok ekle; ilkini 2 saat icinde baslat.';
+
+  @override
+  String aiDetRiskModerateInsight(Object score) {
+    return 'Akademik risk orta seviyede ($score/100). Haftalik ilerleme hedefin altinda ve toparlama adimi gerekiyor.';
+  }
+
+  @override
+  String aiDetRiskModerateRecoPrimary(Object minutes) {
+    return 'Simdi bir odak oturumu baslat ($minutes dk).';
+  }
+
+  @override
+  String aiDetModerateSecondaryDueSoon(Object count) {
+    return 'Bu aksam $count yaklasan gorevini son tarihe gore yeniden sirala.';
+  }
+
+  @override
+  String aiDetModerateSecondaryDeficitMulti(
+    Object sessions,
+    Object m1,
+    Object m2,
+  ) {
+    return 'Bugun: acigi daha hizli kapatmak icin $sessions oturum yap ($m1 + $m2 dk).';
+  }
+
+  @override
+  String aiDetModerateSecondaryDeficitSingle(Object minutes) {
+    return 'Bugun: $minutes dakikalik bir toparlama oturumu baslat.';
+  }
+
+  @override
+  String get aiDetModerateSecondaryTomorrow =>
+      'Yarin: risk artmasin diye ikinci bir 30 dakikalik blok ekle.';
+
+  @override
+  String get aiDetDefaultInsight =>
+      'Gorunum yonetilebilir: burada gecikme sinyali yok ve risk yuksek bantta degil.';
+
+  @override
+  String get aiDetDefaultRecoPrimary =>
+      'Bugun: 25 dakikalik bir tekrar oturumu yap.';
+
+  @override
+  String get aiDetDefaultRecoSecondary =>
+      'Hafta ortasi: son tarihleri yenile ve tarihsiz gorevlere tarih ekle.';
+
+  @override
+  String get aiTaskUrgentInsight =>
+      'Yuksek oncelikli acik islerin var - once bunlari tamamla.';
+
+  @override
+  String get aiTaskUrgentRecoPrimary => 'Bir acil isi tamamen bitir.';
+
+  @override
+  String get aiTaskUrgentRecoSecondary =>
+      'Sonra sadece bir sonraki acil ise gec.';
+
+  @override
+  String get aiTaskBacklogInsight =>
+      'Buyuk bekleyen listeleri ertelemeyi artirir.';
+
+  @override
+  String get aiTaskBacklogRecoPrimary => 'Bugun en kucuk iki gorevi bitir.';
+
+  @override
+  String get aiTaskBacklogRecoSecondary =>
+      'Bu, her sabah gordugun listeyi kucultur.';
+
+  @override
+  String get aiTaskQueuedInsight => 'Tarihsiz siradaki isler genelde sarkar.';
+
+  @override
+  String get aiTaskQueuedRecoPrimary =>
+      'Sonraki iki gorevi takvimine yerlestir.';
+
+  @override
+  String get aiTaskQueuedRecoSecondary =>
+      'Sadece son tarih degil, baslangic saati de ver.';
+
+  @override
+  String get aiTaskNoneInsight => 'Bu gorunumde acil oge yok.';
+
+  @override
+  String get aiTaskNoneRecoPrimary =>
+      'Bos zamani okuma veya uzun odevler icin kullan.';
+
+  @override
+  String get aiTaskNoneRecoSecondary =>
+      'Henuz eklenmediyse sonraki sinav tarihini ekle.';
+
+  @override
+  String aiDetDeficitHighInsight(Object hours) {
+    return 'Haftalik calisma hedefinin yaklasik $hours saat gerisindesin - birden fazla gun kacirmak hizla birikir.';
+  }
+
+  @override
+  String get aiDetDeficitHighRecoPrimary =>
+      'Bugun: takvimine 2-3 blok ekle (her biri 25-40 dk).';
+
+  @override
+  String get aiDetDeficitHighRecoSecondary =>
+      'Sabit saat kullan - \"canim isterse\" degil.';
+
+  @override
+  String aiDetDeficitMediumInsight(Object hours) {
+    return 'Haftalik hedefinin yaklasik $hours saat altindasin.';
+  }
+
+  @override
+  String get aiDetDeficitMediumRecoPrimary =>
+      'Pazardan once: en yakin son tarihli derse 1-2 odak oturumu ekle.';
+
+  @override
+  String get aiDetDeficitMediumRecoSecondary =>
+      'Bu hafta notunu en cok etkileyen dersi sec.';
+
+  @override
+  String aiDetConsistencyLowInsight(Object percent) {
+    return 'Duzenlilik dusuk (%$percent). Duzensiz gunler son teslimleri daha baskili hale getirir.';
+  }
+
+  @override
+  String get aiDetConsistencyLowRecoPrimary =>
+      'Sonraki 5 is gunu: ayni 30 dakikalik baslangic penceresi (orn. ogle yemegi sonrasi).';
+
+  @override
+  String get aiDetConsistencyLowRecoSecondary =>
+      'Bu aksam: mevcut seviyeden cikmak icin bir 25 dakikalik oturum yap.';
+
+  @override
+  String aiDetConsistencyMidInsight(Object percent) {
+    return 'Duzenlilik orta seviyede (%$percent). Calisiyorsun ama ritim sabit degil.';
+  }
+
+  @override
+  String get aiDetConsistencyMidRecoPrimary =>
+      'Bugun: mevcut bir aliskanligindan hemen sonra 25-35 dakika calis.';
+
+  @override
+  String get aiDetConsistencyMidRecoSecondary =>
+      'Yarin: ayni saatte tekrar et.';
+
+  @override
+  String aiDetDueSoonManyInsight(Object count) {
+    return '$count gorevin yakinda teslim - aralarinda sik gecis stresi artirir.';
+  }
+
+  @override
+  String get aiDetDueSoonManyRecoPrimary =>
+      'Son tarihe gore sirala: once hizli kazanclar, sonra en zor gorev.';
+
+  @override
+  String get aiDetDueSoonManyRecoSecondary =>
+      'Bunlar temizlenene kadar yeni opsiyonel isleri durdur.';
+
+  @override
+  String get aiDetDueSoonSomeInsight =>
+      'Yakinda teslim edilmesi gereken ders islerin var - onceden bitirmek son dakika calismasindan iyidir.';
+
+  @override
+  String get aiDetDueSoonSomeRecoPrimary =>
+      'Bugun: once en yakin son tarih icin zaman blogu ayir.';
+
+  @override
+  String get aiDetDueSoonSomeRecoSecondary =>
+      'Geciken yoksa sonraki ders/quiz icin on okuma yap.';
+
+  @override
+  String get aiDetCalendarNoDeadlinesButSemesterInsight =>
+      'Bu takvim haftasinda son tarih yok, ama donem calismalari izlenmeye devam ediyor.';
+
+  @override
+  String get aiDetCalendarNoDeadlinesButSemesterRecoPrimary =>
+      'Bu boslugu okuma veya sinav hazirligi icin kullan.';
+
+  @override
+  String get aiDetCalendarNoDeadlinesButSemesterRecoSecondary =>
+      'Tarihsiz gorevlere tarih ekle ki plan gercekci kalsin.';
+
+  @override
+  String get aiDetCalendarNoTasksInsight =>
+      'Bu takvim haftasi penceresinde gorev yok - son tarihler daha ileride olabilir.';
+
+  @override
+  String get aiDetCalendarNoTasksRecoPrimary =>
+      'Ders calismasini one cek veya zayif konulari guclendir.';
+
+  @override
+  String get aiDetCalendarNoTasksRecoSecondary =>
+      'Sonraki yogun haftadan once ekstra zaman biriktir.';
 }

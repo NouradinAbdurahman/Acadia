@@ -6,20 +6,27 @@ class ExamRepository {
 
   ExamRepository(this._examService);
 
-  Future<List<ExamModel>> getExams() async {
-    final data = await _examService.getExams();
+  Future<List<ExamModel>> getExams({
+    required String userId,
+    required String semesterId,
+  }) async {
+    final data = await _examService.getExams(
+      userId: userId,
+      semesterId: semesterId,
+    );
     return data.map((json) => ExamModel.fromJson(json)).toList();
   }
 
   Future<ExamModel> createExam(ExamModel exam) async {
-    final data = exam.toJson();
-    data.remove('id');
+    final data = exam.toJson()
+      ..remove('id')
+      ..remove('created_at');
     final response = await _examService.createExam(data);
     return ExamModel.fromJson(response);
   }
 
-  Future<ExamModel> updateExam(ExamModel exam) async {
-    final response = await _examService.updateExam(exam.id, exam.toJson());
+  Future<ExamModel> updateExam(String id, Map<String, dynamic> patch) async {
+    final response = await _examService.updateExam(id, patch);
     return ExamModel.fromJson(response);
   }
 

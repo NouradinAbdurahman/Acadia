@@ -1,14 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:go_router/go_router.dart';
 import '../main.dart'; // import rootNavigatorKey
+import '../models/exam.dart';
 import 'notification_config.dart';
 import 'notification_behavior_service.dart';
 
@@ -16,6 +19,7 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   static bool _pluginInitialized = false;
+  static bool _isLocalPermissionGranted = false;
       
   // In-memory cache mirrored to SharedPreferences so cooldown survives restarts.
   static final Map<String, DateTime> _lastSent = {};
@@ -24,6 +28,7 @@ class NotificationService {
   static const String _lastSentPrefix = 'notif_last_sent_';
   static const String _dailyCountPrefix = 'notif_daily_count_';
   static const int _dailyLimit = 5;
+  static String? _pendingTapPayload;
 
   static Future<void> init({
     bool requestPermissions = true,
@@ -34,8 +39,35 @@ class NotificationService {
 
     await _ensurePluginInitialized(requestPermissions: requestPermissions);
 
+    // Explicit iOS local notification permissions (required for reliable delivery).
+    if (requestPermissions) {
+      final iosImplementation = _plugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>();
+      final granted = await iosImplementation?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      if (iosImplementation != null) {
+        _isLocalPermissionGranted = granted ?? false;
+        debugPrint('[Notification] iOS local permission granted: $_isLocalPermissionGranted');
+      } else {
+        // Non-iOS platforms rely on their own runtime permission flow.
+        _isLocalPermissionGranted = true;
+      }
+
+    }
+
     // 1. Initialize timezones
     tz.initializeTimeZones();
+    try {
+      final timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      debugPrint('[Notification] Local timezone set: ${tz.local.name}');
+    } catch (e) {
+      debugPrint('[Notification] Failed to set device timezone: $e');
+    }
 
     // 4. Request permissions
     if (requestPermissions) {
@@ -111,6 +143,8 @@ class NotificationService {
 
       // 10. Handle cold-start (app was terminated, user tapped push)
       await _handleInitialMessage();
+      // 11. Handle cold-start from local notification tap.
+      await _handleInitialLocalNotificationLaunch();
     }
   }
 
@@ -233,6 +267,11 @@ class NotificationService {
         enableVibration: true,
         fullScreenIntent: type == 'risk' || type == 'overdue' || type == 'overdue_batch',
       ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
   }
 
@@ -326,7 +365,11 @@ class NotificationService {
 
   static void _onNotificationTap(String payload) {
     final context = rootNavigatorKey.currentContext;
-    if (context == null) return;
+    if (context == null) {
+      _pendingTapPayload = payload;
+      Future<void>.delayed(const Duration(milliseconds: 800), _flushPendingTapIfAny);
+      return;
+    }
 
     final parts = payload.split("|");
     if (parts.isEmpty) return;
@@ -338,11 +381,14 @@ class NotificationService {
     // Normalize reference: rawId may be prefixed (task:xxx, deadline:xxx) or bare.
     String? taskId;
     String? deadlineId;
+    String? examId;
     if (rawId != null) {
       if (rawId.startsWith('task:')) {
         taskId = rawId.substring(5);
       } else if (rawId.startsWith('deadline:')) {
         deadlineId = rawId.substring(9);
+      } else if (rawId.startsWith('exam:')) {
+        examId = rawId.substring(5);
       }
     }
 
@@ -388,9 +434,25 @@ class NotificationService {
       case 'mood_check':
         context.go('/home');
         break;
+      case 'exam':
+        if (examId != null) {
+          context.push('/exam-detail?id=${Uri.encodeComponent(examId)}');
+        } else {
+          context.push('/exams');
+        }
+        break;
       default:
         context.go('/home');
     }
+  }
+
+  static void _flushPendingTapIfAny() {
+    final payload = _pendingTapPayload;
+    if (payload == null) return;
+    final context = rootNavigatorKey.currentContext;
+    if (context == null) return;
+    _pendingTapPayload = null;
+    _onNotificationTap(payload);
   }
 
   static Future<void> _handleInitialMessage() async {
@@ -400,6 +462,16 @@ class NotificationService {
       final id = initialMessage.data['id'];
       if (type != null) {
         _onNotificationTap("$type|${id ?? ''}");
+      }
+    }
+  }
+
+  static Future<void> _handleInitialLocalNotificationLaunch() async {
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      final payload = launchDetails?.notificationResponse?.payload;
+      if (payload != null && payload.isNotEmpty) {
+        _onNotificationTap(payload);
       }
     }
   }
@@ -624,5 +696,193 @@ class NotificationService {
 
   static Future<void> cancelDailyMoodReminder() async {
     await _plugin.cancel(1001);
+  }
+
+  static int _examReminderId(String examId, int slot) {
+    final base = examId.hashCode.abs() & 0x7fffffff;
+    final offset = switch (slot) {
+      24 => 1,
+      2 => 2,
+      0 => 3, // exact exam-time reminder
+      -1 => 4, // near-time fallback reminder
+      _ => 5,
+    };
+    return (base + offset) & 0x7fffffff;
+  }
+
+  static Future<void> _recordExamNotification({
+    required String examId,
+    required String title,
+    required DateTime examAt,
+    required bool isTurkish,
+    required String locationText,
+  }) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    final semesterId = await _getActiveSemesterId();
+    final formattedTime = '${examAt.hour.toString().padLeft(2, '0')}:${examAt.minute.toString().padLeft(2, '0')}';
+
+    // Keep one up-to-date exam notification row per exam reminder source.
+    try {
+      await Supabase.instance.client
+          .from('notifications')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('type', 'exam')
+          .eq('reference_id', 'exam:$examId');
+    } catch (_) {
+      // Best-effort cleanup; continue with insert.
+    }
+
+    await _writeInbox(
+      userId: user.id,
+      title: title,
+      body: isTurkish
+          ? '$formattedTime • $locationText'
+          : 'Starts at $formattedTime • $locationText',
+      type: 'exam',
+      referenceId: 'exam:$examId',
+      semesterId: semesterId,
+    );
+  }
+
+  static Future<void> scheduleExamReminders({
+    required String examId,
+    required String title,
+    required String examType,
+    required DateTime examDateTime,
+    required bool isOnline,
+    String? classroom,
+  }) async {
+    await _ensurePluginInitialized(requestPermissions: false);
+    debugPrint('[Notification] scheduleExamReminders called for examId=$examId');
+    if (!_isLocalPermissionGranted) {
+      debugPrint('[Notification] Skipped scheduling exam reminders - local permission not granted');
+      return;
+    }
+
+    // iOS can briefly reject scheduling right after permission grant (Error 4097).
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    final now = tz.TZDateTime.now(tz.local);
+    final examAt = tz.TZDateTime.from(examDateTime.toLocal(), tz.local);
+    debugPrint(
+      '[Notification] Timezone=${tz.local.name} now=$now examAt=$examAt source=${examDateTime.toIso8601String()} isUtc=${examDateTime.isUtc} offset=${examDateTime.timeZoneOffset}',
+    );
+    if (examAt.isBefore(now)) {
+      debugPrint('[Notification] Skipped - exam time is in the past');
+      return;
+    }
+    final isTurkish = ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase().startsWith('tr');
+    final time = '${examAt.hour.toString().padLeft(2, '0')}:${examAt.minute.toString().padLeft(2, '0')}';
+    final parsedType = ExamType.fromDb(examType);
+    final examTypeLabel = isTurkish
+        ? switch (parsedType) {
+            ExamType.midterm => 'Vize',
+            ExamType.finalExam => 'Final',
+            ExamType.quiz => 'Quiz',
+          }
+        : switch (parsedType) {
+            ExamType.midterm => 'Midterm',
+            ExamType.finalExam => 'Final',
+            ExamType.quiz => 'Quiz',
+          };
+    final locationText = isOnline
+        ? (isTurkish ? 'Online Sinav' : 'Online')
+        : ((classroom == null || classroom.trim().isEmpty)
+              ? (isTurkish ? 'Sinif' : 'Classroom')
+              : (isTurkish ? 'Oda ${classroom.trim()}' : 'Room ${classroom.trim()}'));
+
+    await _recordExamNotification(
+      examId: examId,
+      title: title,
+      examAt: examAt.toLocal(),
+      isTurkish: isTurkish,
+      locationText: locationText,
+    );
+
+    final oneDayBefore = examAt.subtract(const Duration(hours: 24));
+    debugPrint('[Notification] oneDayBefore=$oneDayBefore');
+    if (oneDayBefore.isAfter(now)) {
+      debugPrint('[Notification] Scheduling 24h reminder at: $oneDayBefore');
+      await _plugin.zonedSchedule(
+        _examReminderId(examId, 24),
+        isTurkish ? 'Sinav YarIn' : 'Exam Tomorrow',
+        isTurkish
+            ? 'Yarin: $title $examTypeLabel\n$time • $locationText'
+            : 'Tomorrow: $title $examTypeLabel\n$time • $locationText',
+        oneDayBefore,
+        _notificationDetailsForType('deadline'),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'exam|exam:$examId',
+      );
+    } else {
+      debugPrint('[Notification] Skipped 24h reminder - time is in the past');
+    }
+
+    final twoHoursBefore = examAt.subtract(const Duration(hours: 2));
+    debugPrint('[Notification] twoHoursBefore=$twoHoursBefore');
+    if (twoHoursBefore.isAfter(now)) {
+      debugPrint('[Notification] Scheduling 2h reminder at: $twoHoursBefore');
+      await _plugin.zonedSchedule(
+        _examReminderId(examId, 2),
+        isTurkish ? 'Sinav Yakinda' : 'Exam Soon',
+        isTurkish
+            ? '2 saat sonra: $title $examTypeLabel\nOdagini koru'
+            : 'In 2 hours: $title $examTypeLabel\nStay focused',
+        twoHoursBefore,
+        _notificationDetailsForType('deadline'),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'exam|exam:$examId',
+      );
+    } else {
+      debugPrint('[Notification] Skipped 2h reminder - time is in the past');
+    }
+
+    // Always schedule exact exam-time reminder when exam is still upcoming.
+    if (examAt.isAfter(now)) {
+      debugPrint('[Notification] Scheduling exam-time reminder at: $examAt');
+      await _plugin.zonedSchedule(
+        _examReminderId(examId, 0),
+        isTurkish ? 'Sinav Simdi' : 'Exam Now',
+        isTurkish
+            ? '$title $examTypeLabel simdi basliyor\n$time • $locationText'
+            : '$title $examTypeLabel is starting now\n$time • $locationText',
+        examAt,
+        _notificationDetailsForType('deadline'),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'exam|exam:$examId',
+      );
+    } else {
+      // Safety: if exam is very near and TZ jitter made it slightly in the past.
+      final immediate = now.add(const Duration(seconds: 10));
+      debugPrint('[Notification] Scheduling immediate fallback reminder at: $immediate');
+      await _plugin.zonedSchedule(
+        _examReminderId(examId, -1),
+        isTurkish ? 'Sinav Yakinda' : 'Exam Soon',
+        isTurkish
+            ? '$title $examTypeLabel cok yakinda\n$time • $locationText'
+            : '$title $examTypeLabel is coming up\n$time • $locationText',
+        immediate,
+        _notificationDetailsForType('deadline'),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: 'exam|exam:$examId',
+      );
+    }
+  }
+
+  static Future<void> cancelExamReminders(String examId) async {
+    await _plugin.cancel(_examReminderId(examId, 24));
+    await _plugin.cancel(_examReminderId(examId, 2));
+    await _plugin.cancel(_examReminderId(examId, 0));
+    await _plugin.cancel(_examReminderId(examId, -1));
   }
 }

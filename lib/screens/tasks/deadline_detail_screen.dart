@@ -285,8 +285,15 @@ class DeadlineDetailScreen extends ConsumerWidget {
                                 AppButton(
                                   onPressed: () {
                                     Haptics.vibrate(HapticsType.selection);
+                                    final deadlineParam = Uri.encodeComponent(
+                                      deadline.id,
+                                    );
+                                    final courseParam = deadline.courseId;
+                                    final query = courseParam == null
+                                        ? 'deadlineId=$deadlineParam'
+                                        : 'deadlineId=$deadlineParam&courseId=${Uri.encodeComponent(courseParam)}';
                                     context.push(
-                                      '/create-task?deadlineId=${deadline.id}',
+                                      '/create-task?$query',
                                     );
                                   },
                                   text: l10n.addTaskToThisDeadline,

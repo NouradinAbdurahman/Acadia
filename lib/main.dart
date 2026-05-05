@@ -27,6 +27,11 @@ import 'screens/tasks/deadline_detail_screen.dart';
 import 'screens/tasks/edit_task_screen.dart';
 import 'screens/tasks/create_deadline_screen.dart';
 import 'screens/tasks/edit_deadline_screen.dart';
+import 'screens/exams/exams_screen.dart';
+import 'screens/exams/exams_calendar_screen.dart';
+import 'screens/exams/exam_detail_screen.dart';
+import 'screens/exams/create_exam_screen.dart';
+import 'screens/exams/edit_exam_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/onboarding/academic_onboarding_screen.dart';
 import 'screens/app/app_shell.dart';
@@ -201,11 +206,38 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/create-task',
         builder: (context, state) => CreateTaskScreen(
           initialDeadlineId: state.uri.queryParameters['deadlineId'],
+          initialCourseId: state.uri.queryParameters['courseId'],
         ),
       ),
       GoRoute(
         path: '/create-deadline',
         builder: (context, state) => const CreateDeadlineScreen(),
+      ),
+      GoRoute(
+        path: '/exams',
+        builder: (context, state) => const ExamsScreen(),
+      ),
+      GoRoute(
+        path: '/exams-calendar',
+        builder: (context, state) => const ExamsCalendarScreen(),
+      ),
+      GoRoute(
+        path: '/exam-detail',
+        builder: (context, state) {
+          final id = state.uri.queryParameters['id'] ?? '';
+          return ExamDetailScreen(examId: id);
+        },
+      ),
+      GoRoute(
+        path: '/create-exam',
+        builder: (context, state) => const CreateExamScreen(),
+      ),
+      GoRoute(
+        path: '/edit-exam',
+        builder: (context, state) {
+          final id = state.uri.queryParameters['id'] ?? '';
+          return EditExamScreen(examId: id);
+        },
       ),
       GoRoute(
         path: '/task-detail',

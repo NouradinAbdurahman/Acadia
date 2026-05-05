@@ -2065,6 +2065,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Log study sessions, add tasks, and record grades. Charts fill in as you use the app.';
 
   @override
+  String get analyticsInsightNoStudyDataHint =>
+      'No study data yet. Start tracking to unlock insights.';
+
+  @override
   String get startTrackingYourSemester => 'Start tracking your semester';
 
   @override
@@ -3944,4 +3948,379 @@ class AppLocalizationsEn extends AppLocalizations {
   String labelWithColonAndSpace(Object label) {
     return '$label: ';
   }
+
+  @override
+  String get examsTitle => 'Exams';
+
+  @override
+  String get examsLoadError => 'Could not load exams';
+
+  @override
+  String get examsAddCta => 'Add Exam';
+
+  @override
+  String get examsUpcomingSectionTitle => 'Upcoming exams';
+
+  @override
+  String get examsPastSectionTitle => 'Past exams';
+
+  @override
+  String get examsNoUpcoming => 'No upcoming exams for this semester';
+
+  @override
+  String get examsNoUpcomingSubtitle =>
+      'Tap \"Add Exam\" to create your schedule';
+
+  @override
+  String get examsNoPast => 'No past exams for this semester';
+
+  @override
+  String get examsTypeMidterm => 'Midterm';
+
+  @override
+  String get examsTypeFinal => 'Final';
+
+  @override
+  String get examsTypeQuiz => 'Quiz';
+
+  @override
+  String get examTypeQuiz => 'Quiz';
+
+  @override
+  String get examsLocationOnline => 'Online Exam';
+
+  @override
+  String get examsLocationFaceToFace => 'Face-to-face Exam';
+
+  @override
+  String get examsLocationClassroomPrefix => 'Room';
+
+  @override
+  String get examsInstructorPrefix => 'Instructor:';
+
+  @override
+  String get examsCoursePrefix => 'Course:';
+
+  @override
+  String get examsTitleField => 'Exam title';
+
+  @override
+  String get examsPickDateTimeError => 'Please select date and time';
+
+  @override
+  String get examsCreateError => 'Could not create exam';
+
+  @override
+  String get examsOptionalCourse => 'Optional course';
+
+  @override
+  String get examsCourseOptionalField => 'Course (optional)';
+
+  @override
+  String get examsDateField => 'Exam date';
+
+  @override
+  String get examsTimeField => 'Exam time';
+
+  @override
+  String get examsOnlineToggle => 'Online exam';
+
+  @override
+  String get examsClassroomField => 'Classroom';
+
+  @override
+  String get examsInstructorField => 'Instructor';
+
+  @override
+  String get examsNotesOptionalField => 'Notes (optional)';
+
+  @override
+  String get examsCreateButton => 'Create Exam';
+
+  @override
+  String get editExam => 'Edit Exam';
+
+  @override
+  String get examsUpdateError => 'Could not update exam';
+
+  @override
+  String get examsNotFound => 'Exam not found';
+
+  @override
+  String get examsNoItems => 'No exams';
+
+  @override
+  String get examsCalendarTitle => 'Exam Calendar';
+
+  @override
+  String get examsNoItemsForDay => 'No exams this day';
+
+  @override
+  String get examsCalendarOpenTooltip => 'Open exam calendar';
+
+  @override
+  String get examUrgencyNoExamsSoon => 'No exams soon';
+
+  @override
+  String examUrgencyUpcoming(Object count, Object days) {
+    return '$count exams in next $days days';
+  }
+
+  @override
+  String get examUrgencyHeavyWeek => 'Heavy exam period';
+
+  @override
+  String get examDetailTitle => 'Exam Details';
+
+  @override
+  String get examDetailDeletePrompt => 'Delete this exam?';
+
+  @override
+  String get examDetailDeleteWarning => 'This action cannot be undone.';
+
+  @override
+  String get examDetailDeleteWarningStrong =>
+      'This will permanently remove the exam and its reminders.';
+
+  @override
+  String get examsNextCardTitle => 'Next Exam';
+
+  @override
+  String examsInDays(int days) {
+    return 'In $days days';
+  }
+
+  @override
+  String aiDetRiskIncreased(Object delta, Object core) {
+    return 'Your risk increased by $delta% this week.\n$core';
+  }
+
+  @override
+  String aiDetHighStressInsight(Object stress) {
+    return 'Session stress is high ($stress/10). That usually means overload or fatigue.';
+  }
+
+  @override
+  String get aiDetHighStressRecoPrimary =>
+      'Today: one 20-30 minute session, single topic.';
+
+  @override
+  String get aiDetHighStressRecoSecondary =>
+      'Take a 5-minute break before you start the next block.';
+
+  @override
+  String aiDetOverdueInsight(Object count) {
+    return 'You have $count overdue tasks this semester - that pulls your risk up until they move.';
+  }
+
+  @override
+  String get aiDetOverdueRecoPrimary =>
+      'Today: finish or reschedule the smallest overdue item first.';
+
+  @override
+  String get aiDetOverdueRecoSecondary =>
+      'Then pick the next smallest - estimate a time box before you start.';
+
+  @override
+  String aiDetRiskHighInsight(Object score) {
+    return 'Academic risk is high ($score/100). Tasks, study time, or consistency are stacking.';
+  }
+
+  @override
+  String aiDetRiskHighRecoPrimary(Object dueSoon) {
+    return 'Before 18:00: tackle the top due-soon or overdue item ($dueSoon due-soon).';
+  }
+
+  @override
+  String get aiDetRiskHighRecoSecondary =>
+      'Calendar two 25-40 minute blocks; start the first within 2 hours.';
+
+  @override
+  String aiDetRiskModerateInsight(Object score) {
+    return 'Academic risk is moderate ($score/100). Weekly progress is below target and needs recovery actions.';
+  }
+
+  @override
+  String aiDetRiskModerateRecoPrimary(Object minutes) {
+    return 'Start one focused session now ($minutes min).';
+  }
+
+  @override
+  String aiDetModerateSecondaryDueSoon(Object count) {
+    return 'Reorder your $count due-soon tasks by deadline tonight.';
+  }
+
+  @override
+  String aiDetModerateSecondaryDeficitMulti(
+    Object sessions,
+    Object m1,
+    Object m2,
+  ) {
+    return 'Today: do $sessions sessions ($m1 + $m2 min) to reduce deficit faster.';
+  }
+
+  @override
+  String aiDetModerateSecondaryDeficitSingle(Object minutes) {
+    return 'Today: start one $minutes-minute recovery session.';
+  }
+
+  @override
+  String get aiDetModerateSecondaryTomorrow =>
+      'Tomorrow: second 30-minute block so risk does not climb.';
+
+  @override
+  String get aiDetDefaultInsight =>
+      'Snapshot looks manageable: no overdue flag here and risk is not in the high band.';
+
+  @override
+  String get aiDetDefaultRecoPrimary => 'Today: one 25-minute review session.';
+
+  @override
+  String get aiDetDefaultRecoSecondary =>
+      'Mid-week: reload deadlines and date any undated tasks.';
+
+  @override
+  String get aiTaskUrgentInsight =>
+      'You have high-priority open work - tackle it before optional tasks.';
+
+  @override
+  String get aiTaskUrgentRecoPrimary => 'Finish one urgent item to completion.';
+
+  @override
+  String get aiTaskUrgentRecoSecondary =>
+      'Then pick the next urgent line only.';
+
+  @override
+  String get aiTaskBacklogInsight => 'Large backlogs increase avoidance.';
+
+  @override
+  String get aiTaskBacklogRecoPrimary =>
+      'Today: finish the two smallest tasks.';
+
+  @override
+  String get aiTaskBacklogRecoSecondary =>
+      'That shrinks the list you see every morning.';
+
+  @override
+  String get aiTaskQueuedInsight => 'Queued work without dates tends to slip.';
+
+  @override
+  String get aiTaskQueuedRecoPrimary =>
+      'Schedule the next two tasks on your calendar.';
+
+  @override
+  String get aiTaskQueuedRecoSecondary =>
+      'Give each a start time, not only a due date.';
+
+  @override
+  String get aiTaskNoneInsight => 'No urgent items in this view.';
+
+  @override
+  String get aiTaskNoneRecoPrimary =>
+      'Use spare time for readings or long assignments.';
+
+  @override
+  String get aiTaskNoneRecoSecondary =>
+      'Add the next exam date if it is not in yet.';
+
+  @override
+  String aiDetDeficitHighInsight(Object hours) {
+    return 'You are about ${hours}h behind your weekly study goal - missing multiple days adds up fast.';
+  }
+
+  @override
+  String get aiDetDeficitHighRecoPrimary =>
+      'Today: schedule 2-3 blocks (25-40 min each) on your calendar.';
+
+  @override
+  String get aiDetDeficitHighRecoSecondary =>
+      'Use fixed times - not \"when I feel like it.\"';
+
+  @override
+  String aiDetDeficitMediumInsight(Object hours) {
+    return 'You are roughly ${hours}h under your weekly goal.';
+  }
+
+  @override
+  String get aiDetDeficitMediumRecoPrimary =>
+      'Before Sunday: add 1-2 focused sessions toward the course with the nearest deadline.';
+
+  @override
+  String get aiDetDeficitMediumRecoSecondary =>
+      'Pick the course that moves your grades most this week.';
+
+  @override
+  String aiDetConsistencyLowInsight(Object percent) {
+    return 'Consistency is low ($percent%). Irregular days make every deadline feel tighter.';
+  }
+
+  @override
+  String get aiDetConsistencyLowRecoPrimary =>
+      'Next 5 weekdays: same 30-minute start window (e.g. after lunch).';
+
+  @override
+  String get aiDetConsistencyLowRecoSecondary =>
+      'Tonight: one 25-minute session to move off your current level.';
+
+  @override
+  String aiDetConsistencyMidInsight(Object percent) {
+    return 'Consistency is middling ($percent%). You study, but not on a steady rhythm.';
+  }
+
+  @override
+  String get aiDetConsistencyMidRecoPrimary =>
+      'Today: 25-35 minutes right after a habit you already have.';
+
+  @override
+  String get aiDetConsistencyMidRecoSecondary =>
+      'Tomorrow: repeat at the same clock time.';
+
+  @override
+  String aiDetDueSoonManyInsight(Object count) {
+    return '$count tasks are due soon - switching between them raises stress.';
+  }
+
+  @override
+  String get aiDetDueSoonManyRecoPrimary =>
+      'Order by deadline: quick wins first, then the hardest task.';
+
+  @override
+  String get aiDetDueSoonManyRecoSecondary =>
+      'Pause new optional work until these clear.';
+
+  @override
+  String get aiDetDueSoonSomeInsight =>
+      'You have coursework due soon - finishing ahead beats cramming.';
+
+  @override
+  String get aiDetDueSoonSomeRecoPrimary =>
+      'Today: block time for the nearest deadline first.';
+
+  @override
+  String get aiDetDueSoonSomeRecoSecondary =>
+      'If nothing is overdue, pre-read for the next lecture or quiz.';
+
+  @override
+  String get aiDetCalendarNoDeadlinesButSemesterInsight =>
+      'No deadlines this calendar week, but semester work is still tracked.';
+
+  @override
+  String get aiDetCalendarNoDeadlinesButSemesterRecoPrimary =>
+      'Use the gap for readings or exam prep.';
+
+  @override
+  String get aiDetCalendarNoDeadlinesButSemesterRecoSecondary =>
+      'Add dates to undated tasks so planning stays honest.';
+
+  @override
+  String get aiDetCalendarNoTasksInsight =>
+      'No tasks fall in this calendar-week window - deadlines may be further out.';
+
+  @override
+  String get aiDetCalendarNoTasksRecoPrimary =>
+      'Advance coursework or shore up weak topics.';
+
+  @override
+  String get aiDetCalendarNoTasksRecoSecondary =>
+      'Bank extra time before the next busy week.';
 }

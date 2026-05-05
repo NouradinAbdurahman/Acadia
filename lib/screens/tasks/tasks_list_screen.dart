@@ -251,6 +251,16 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.md),
+            _CreateOptionCard(
+              title: l10n.examsTitle,
+              icon: HeroIcons.academicCap,
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/exams');
+              },
+              color: theme.colorScheme.tertiary,
+            ),
             const SizedBox(height: AppSpacing.xl),
           ],
         ),

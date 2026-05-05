@@ -6,6 +6,7 @@ import 'course_provider.dart';
 import 'course_results_provider.dart';
 import 'dashboard_provider.dart';
 import 'deadlines_provider.dart';
+import 'exams_provider.dart';
 import 'risk_provider.dart';
 import 'semester_provider.dart';
 import 'student_profile_provider.dart';
@@ -23,9 +24,13 @@ final globalRefreshProvider = Provider<Future<void> Function()>((ref) {
     final semesterId = ref.read(activeSemesterProvider).value;
 
     await Future.wait<void>([
-      ref.read(courseProvider.notifier).loadCourses(),
+      ref.read(courseProvider.notifier).loadCourses(
+            semesterId: semesterId,
+            force: true,
+          ),
       ref.read(tasksProvider.notifier).refresh(),
       ref.read(deadlinesProvider.notifier).refresh(),
+      ref.read(examsProvider.notifier).refresh(),
       ref.read(studySessionsProvider.notifier).refresh(),
       ref.read(studentProfileProvider.notifier).loadProfile(),
       if (semesterId != null)

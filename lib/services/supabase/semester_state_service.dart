@@ -29,8 +29,18 @@ class SemesterStateService {
 
       await _supabase
           .from('student_profiles')
-          .update({'active_semester_id': semesterId})
-          .eq('user_id', user.id);
+          .upsert({
+            'user_id': user.id,
+            'active_semester_id': semesterId,
+          }, onConflict: 'user_id');
+
+      final persisted = await getActiveSemesterId();
+      if (persisted != semesterId) {
+        debugPrint(
+          'Active semester persistence mismatch. expected=$semesterId actual=$persisted',
+        );
+        return false;
+      }
 
       return true;
     } catch (e) {

@@ -1018,6 +1018,7 @@
   "dashboardViewDetailedAnalysis": "Detaylı analizi görüntüle ->",
   "analyticsSparseDataTitle": "Analizleriniz oluşuyor",
   "analyticsSparseDataBody": "Çalışma oturumu kaydedin, görev ekleyin ve notlarınızı girin. Uygulamayı kullandıkça grafikler dolacak.",
+  "analyticsInsightNoStudyDataHint": "Henüz çalışma verisi yok. İçgörülerin açılması için takibe başlayın.",
   "startTrackingYourSemester": "Döneminizi takip etmeye başlayın",
   "whatYouCanTrack": "Neleri takip edebilirsiniz",
   "trackTasks": "Görevler",
@@ -2302,6 +2303,64 @@
   "consistencyPercentage": "Süreklilik: %{score}",
   "labelWithColon": "{label}:",
   "labelWithColonAndSpace": "{label}: ",
+  "examsTitle": "Sinavlar",
+  "examsLoadError": "Sinavlar yuklenemedi",
+  "examsAddCta": "Sinav Ekle",
+  "examsUpcomingSectionTitle": "Yaklasan sinavlar",
+  "examsPastSectionTitle": "Gecmis sinavlar",
+  "examsNoUpcoming": "Bu donem icin yaklasan sinav yok",
+  "examsNoUpcomingSubtitle": "Programinizi olusturmak icin \"Sinav Ekle\"ye dokunun",
+  "examsNoPast": "Bu donem icin gecmis sinav yok",
+  "examsTypeMidterm": "Vize",
+  "examsTypeFinal": "Final",
+  "examsTypeQuiz": "Quiz",
+  "examTypeQuiz": "Quiz",
+  "examsLocationOnline": "Online Sinav",
+  "examsLocationFaceToFace": "Yuz yuze Sinav",
+  "examsLocationClassroomPrefix": "Oda",
+  "examsInstructorPrefix": "Ogretim Gorevlisi:",
+  "examsCoursePrefix": "Ders:",
+  "examsTitleField": "Sinav basligi",
+  "examsPickDateTimeError": "Lutfen tarih ve saat sec",
+  "examsCreateError": "Sinav olusturulamadi",
+  "examsOptionalCourse": "Istege bagli ders",
+  "examsCourseOptionalField": "Ders (istege bagli)",
+  "examsDateField": "Sinav tarihi",
+  "examsTimeField": "Sinav saati",
+  "examsOnlineToggle": "Online sinav",
+  "examsClassroomField": "Sinif",
+  "examsInstructorField": "Ogretim gorevlisi",
+  "examsNotesOptionalField": "Notlar (istege bagli)",
+  "examsCreateButton": "Sinav Olustur",
+  "editExam": "Sinavi Duzenle",
+  "examsUpdateError": "Sinav guncellenemedi",
+  "examsNotFound": "Sinav bulunamadi",
+  "examsNoItems": "Sinav yok",
+  "examsCalendarTitle": "Sinav Takvimi",
+  "examsNoItemsForDay": "Bu gun sinav yok",
+  "examsCalendarOpenTooltip": "Sinav takvimini ac",
+  "examUrgencyNoExamsSoon": "Yakin zamanda sinav yok",
+  "examUrgencyUpcoming": "Sonraki {days} gunde {count} sinav",
+  "@examUrgencyUpcoming": {
+    "placeholders": {
+      "count": {},
+      "days": {}
+    }
+  },
+  "examUrgencyHeavyWeek": "Yogun sinav donemi",
+  "examDetailTitle": "Sinav Detayi",
+  "examDetailDeletePrompt": "Bu sinav silinsin mi?",
+  "examDetailDeleteWarning": "Bu islem geri alinamaz.",
+  "examDetailDeleteWarningStrong": "Bu islem sinavi ve hatirlaticilarini kalici olarak siler.",
+  "examsNextCardTitle": "Siradaki Sinav",
+  "examsInDays": "{days} gun sonra",
+  "@examsInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "hideDetails": "Detayları gizle",
   "viewFullAnalysis": "Tam analizi görüntüle",
   "unknown": "Bilinmiyor",
@@ -2349,5 +2408,138 @@
       }
     }
   },
-  "smartAiInsights": "AI içgörüsü"
+  "smartAiInsights": "AI içgörüsü",
+  "aiDetRiskIncreased": "Risk puanin bu hafta %{delta} artti.\n{core}",
+  "@aiDetRiskIncreased": {
+    "placeholders": {
+      "delta": {},
+      "core": {}
+    }
+  },
+  "aiDetHighStressInsight": "Oturum stresi yuksek ({stress}/10). Bu genelde asiri yuklenme veya yorgunluk demektir.",
+  "@aiDetHighStressInsight": {
+    "placeholders": {
+      "stress": {}
+    }
+  },
+  "aiDetHighStressRecoPrimary": "Bugun: tek konu icin 20-30 dakikalik bir oturum.",
+  "aiDetHighStressRecoSecondary": "Sonraki bloga baslamadan once 5 dakika mola ver.",
+  "aiDetOverdueInsight": "Bu donemde gecikmis {count} gorevin var - bunlar ilerleyene kadar riski yukseltiyor.",
+  "@aiDetOverdueInsight": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "aiDetOverdueRecoPrimary": "Bugun: once en kucuk gecikmis gorevi bitir veya yeniden planla.",
+  "aiDetOverdueRecoSecondary": "Sonra bir sonrakine gec; baslamadan once sure kutusu belirle.",
+  "aiDetRiskHighInsight": "Akademik risk yuksek ({score}/100). Gorevler, calisma suresi veya duzenlilik ust uste biniyor.",
+  "@aiDetRiskHighInsight": {
+    "placeholders": {
+      "score": {}
+    }
+  },
+  "aiDetRiskHighRecoPrimary": "18:00'dan once: en acil/yaklasan goreve odaklan ({dueSoon} yaklasan).",
+  "@aiDetRiskHighRecoPrimary": {
+    "placeholders": {
+      "dueSoon": {}
+    }
+  },
+  "aiDetRiskHighRecoSecondary": "Takvime iki adet 25-40 dakikalik blok ekle; ilkini 2 saat icinde baslat.",
+  "aiDetRiskModerateInsight": "Akademik risk orta seviyede ({score}/100). Haftalik ilerleme hedefin altinda ve toparlama adimi gerekiyor.",
+  "@aiDetRiskModerateInsight": {
+    "placeholders": {
+      "score": {}
+    }
+  },
+  "aiDetRiskModerateRecoPrimary": "Simdi bir odak oturumu baslat ({minutes} dk).",
+  "@aiDetRiskModerateRecoPrimary": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "aiDetModerateSecondaryDueSoon": "Bu aksam {count} yaklasan gorevini son tarihe gore yeniden sirala.",
+  "@aiDetModerateSecondaryDueSoon": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "aiDetModerateSecondaryDeficitMulti": "Bugun: acigi daha hizli kapatmak icin {sessions} oturum yap ({m1} + {m2} dk).",
+  "@aiDetModerateSecondaryDeficitMulti": {
+    "placeholders": {
+      "sessions": {},
+      "m1": {},
+      "m2": {}
+    }
+  },
+  "aiDetModerateSecondaryDeficitSingle": "Bugun: {minutes} dakikalik bir toparlama oturumu baslat.",
+  "@aiDetModerateSecondaryDeficitSingle": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "aiDetModerateSecondaryTomorrow": "Yarin: risk artmasin diye ikinci bir 30 dakikalik blok ekle.",
+  "aiDetDefaultInsight": "Gorunum yonetilebilir: burada gecikme sinyali yok ve risk yuksek bantta degil.",
+  "aiDetDefaultRecoPrimary": "Bugun: 25 dakikalik bir tekrar oturumu yap.",
+  "aiDetDefaultRecoSecondary": "Hafta ortasi: son tarihleri yenile ve tarihsiz gorevlere tarih ekle.",
+  "aiTaskUrgentInsight": "Yuksek oncelikli acik islerin var - once bunlari tamamla.",
+  "aiTaskUrgentRecoPrimary": "Bir acil isi tamamen bitir.",
+  "aiTaskUrgentRecoSecondary": "Sonra sadece bir sonraki acil ise gec.",
+  "aiTaskBacklogInsight": "Buyuk bekleyen listeleri ertelemeyi artirir.",
+  "aiTaskBacklogRecoPrimary": "Bugun en kucuk iki gorevi bitir.",
+  "aiTaskBacklogRecoSecondary": "Bu, her sabah gordugun listeyi kucultur.",
+  "aiTaskQueuedInsight": "Tarihsiz siradaki isler genelde sarkar.",
+  "aiTaskQueuedRecoPrimary": "Sonraki iki gorevi takvimine yerlestir.",
+  "aiTaskQueuedRecoSecondary": "Sadece son tarih degil, baslangic saati de ver.",
+  "aiTaskNoneInsight": "Bu gorunumde acil oge yok.",
+  "aiTaskNoneRecoPrimary": "Bos zamani okuma veya uzun odevler icin kullan.",
+  "aiTaskNoneRecoSecondary": "Henuz eklenmediyse sonraki sinav tarihini ekle.",
+  "aiDetDeficitHighInsight": "Haftalik calisma hedefinin yaklasik {hours} saat gerisindesin - birden fazla gun kacirmak hizla birikir.",
+  "@aiDetDeficitHighInsight": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "aiDetDeficitHighRecoPrimary": "Bugun: takvimine 2-3 blok ekle (her biri 25-40 dk).",
+  "aiDetDeficitHighRecoSecondary": "Sabit saat kullan - \"canim isterse\" degil.",
+  "aiDetDeficitMediumInsight": "Haftalik hedefinin yaklasik {hours} saat altindasin.",
+  "@aiDetDeficitMediumInsight": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "aiDetDeficitMediumRecoPrimary": "Pazardan once: en yakin son tarihli derse 1-2 odak oturumu ekle.",
+  "aiDetDeficitMediumRecoSecondary": "Bu hafta notunu en cok etkileyen dersi sec.",
+  "aiDetConsistencyLowInsight": "Duzenlilik dusuk (%{percent}). Duzensiz gunler son teslimleri daha baskili hale getirir.",
+  "@aiDetConsistencyLowInsight": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "aiDetConsistencyLowRecoPrimary": "Sonraki 5 is gunu: ayni 30 dakikalik baslangic penceresi (orn. ogle yemegi sonrasi).",
+  "aiDetConsistencyLowRecoSecondary": "Bu aksam: mevcut seviyeden cikmak icin bir 25 dakikalik oturum yap.",
+  "aiDetConsistencyMidInsight": "Duzenlilik orta seviyede (%{percent}). Calisiyorsun ama ritim sabit degil.",
+  "@aiDetConsistencyMidInsight": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "aiDetConsistencyMidRecoPrimary": "Bugun: mevcut bir aliskanligindan hemen sonra 25-35 dakika calis.",
+  "aiDetConsistencyMidRecoSecondary": "Yarin: ayni saatte tekrar et.",
+  "aiDetDueSoonManyInsight": "{count} gorevin yakinda teslim - aralarinda sik gecis stresi artirir.",
+  "@aiDetDueSoonManyInsight": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "aiDetDueSoonManyRecoPrimary": "Son tarihe gore sirala: once hizli kazanclar, sonra en zor gorev.",
+  "aiDetDueSoonManyRecoSecondary": "Bunlar temizlenene kadar yeni opsiyonel isleri durdur.",
+  "aiDetDueSoonSomeInsight": "Yakinda teslim edilmesi gereken ders islerin var - onceden bitirmek son dakika calismasindan iyidir.",
+  "aiDetDueSoonSomeRecoPrimary": "Bugun: once en yakin son tarih icin zaman blogu ayir.",
+  "aiDetDueSoonSomeRecoSecondary": "Geciken yoksa sonraki ders/quiz icin on okuma yap.",
+  "aiDetCalendarNoDeadlinesButSemesterInsight": "Bu takvim haftasinda son tarih yok, ama donem calismalari izlenmeye devam ediyor.",
+  "aiDetCalendarNoDeadlinesButSemesterRecoPrimary": "Bu boslugu okuma veya sinav hazirligi icin kullan.",
+  "aiDetCalendarNoDeadlinesButSemesterRecoSecondary": "Tarihsiz gorevlere tarih ekle ki plan gercekci kalsin.",
+  "aiDetCalendarNoTasksInsight": "Bu takvim haftasi penceresinde gorev yok - son tarihler daha ileride olabilir.",
+  "aiDetCalendarNoTasksRecoPrimary": "Ders calismasini one cek veya zayif konulari guclendir.",
+  "aiDetCalendarNoTasksRecoSecondary": "Sonraki yogun haftadan once ekstra zaman biriktir."
 }

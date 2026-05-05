@@ -1032,6 +1032,7 @@
   "dashboardViewDetailedAnalysis": "View detailed analysis ->",
   "analyticsSparseDataTitle": "Building your analytics",
   "analyticsSparseDataBody": "Log study sessions, add tasks, and record grades. Charts fill in as you use the app.",
+  "analyticsInsightNoStudyDataHint": "No study data yet. Start tracking to unlock insights.",
   "startTrackingYourSemester": "Start tracking your semester",
   "whatYouCanTrack": "What you can track",
   "trackTasks": "Tasks",
@@ -2396,5 +2397,196 @@
   "burnoutBehaviorMentalOverload": "Cognitive load exceeding typical recovery rates.",
   "consistencyPercentage": "Consistency: {score}%",
   "labelWithColon": "{label}:",
-  "labelWithColonAndSpace": "{label}: "
+  "labelWithColonAndSpace": "{label}: ",
+  "examsTitle": "Exams",
+  "examsLoadError": "Could not load exams",
+  "examsAddCta": "Add Exam",
+  "examsUpcomingSectionTitle": "Upcoming exams",
+  "examsPastSectionTitle": "Past exams",
+  "examsNoUpcoming": "No upcoming exams for this semester",
+  "examsNoUpcomingSubtitle": "Tap \"Add Exam\" to create your schedule",
+  "examsNoPast": "No past exams for this semester",
+  "examsTypeMidterm": "Midterm",
+  "examsTypeFinal": "Final",
+  "examsTypeQuiz": "Quiz",
+  "examTypeQuiz": "Quiz",
+  "examsLocationOnline": "Online Exam",
+  "examsLocationFaceToFace": "Face-to-face Exam",
+  "examsLocationClassroomPrefix": "Room",
+  "examsInstructorPrefix": "Instructor:",
+  "examsCoursePrefix": "Course:",
+  "examsTitleField": "Exam title",
+  "examsPickDateTimeError": "Please select date and time",
+  "examsCreateError": "Could not create exam",
+  "examsOptionalCourse": "Optional course",
+  "examsCourseOptionalField": "Course (optional)",
+  "examsDateField": "Exam date",
+  "examsTimeField": "Exam time",
+  "examsOnlineToggle": "Online exam",
+  "examsClassroomField": "Classroom",
+  "examsInstructorField": "Instructor",
+  "examsNotesOptionalField": "Notes (optional)",
+  "examsCreateButton": "Create Exam",
+  "editExam": "Edit Exam",
+  "examsUpdateError": "Could not update exam",
+  "examsNotFound": "Exam not found",
+  "examsNoItems": "No exams",
+  "examsCalendarTitle": "Exam Calendar",
+  "examsNoItemsForDay": "No exams this day",
+  "examsCalendarOpenTooltip": "Open exam calendar",
+  "examUrgencyNoExamsSoon": "No exams soon",
+  "examUrgencyUpcoming": "{count} exams in next {days} days",
+  "@examUrgencyUpcoming": {
+    "placeholders": {
+      "count": {},
+      "days": {}
+    }
+  },
+  "examUrgencyHeavyWeek": "Heavy exam period",
+  "examDetailTitle": "Exam Details",
+  "examDetailDeletePrompt": "Delete this exam?",
+  "examDetailDeleteWarning": "This action cannot be undone.",
+  "examDetailDeleteWarningStrong": "This will permanently remove the exam and its reminders.",
+  "examsNextCardTitle": "Next Exam",
+  "examsInDays": "In {days} days",
+  "@examsInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "aiDetRiskIncreased": "Your risk increased by {delta}% this week.\n{core}",
+  "@aiDetRiskIncreased": {
+    "placeholders": {
+      "delta": {},
+      "core": {}
+    }
+  },
+  "aiDetHighStressInsight": "Session stress is high ({stress}/10). That usually means overload or fatigue.",
+  "@aiDetHighStressInsight": {
+    "placeholders": {
+      "stress": {}
+    }
+  },
+  "aiDetHighStressRecoPrimary": "Today: one 20-30 minute session, single topic.",
+  "aiDetHighStressRecoSecondary": "Take a 5-minute break before you start the next block.",
+  "aiDetOverdueInsight": "You have {count} overdue tasks this semester - that pulls your risk up until they move.",
+  "@aiDetOverdueInsight": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "aiDetOverdueRecoPrimary": "Today: finish or reschedule the smallest overdue item first.",
+  "aiDetOverdueRecoSecondary": "Then pick the next smallest - estimate a time box before you start.",
+  "aiDetRiskHighInsight": "Academic risk is high ({score}/100). Tasks, study time, or consistency are stacking.",
+  "@aiDetRiskHighInsight": {
+    "placeholders": {
+      "score": {}
+    }
+  },
+  "aiDetRiskHighRecoPrimary": "Before 18:00: tackle the top due-soon or overdue item ({dueSoon} due-soon).",
+  "@aiDetRiskHighRecoPrimary": {
+    "placeholders": {
+      "dueSoon": {}
+    }
+  },
+  "aiDetRiskHighRecoSecondary": "Calendar two 25-40 minute blocks; start the first within 2 hours.",
+  "aiDetRiskModerateInsight": "Academic risk is moderate ({score}/100). Weekly progress is below target and needs recovery actions.",
+  "@aiDetRiskModerateInsight": {
+    "placeholders": {
+      "score": {}
+    }
+  },
+  "aiDetRiskModerateRecoPrimary": "Start one focused session now ({minutes} min).",
+  "@aiDetRiskModerateRecoPrimary": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "aiDetModerateSecondaryDueSoon": "Reorder your {count} due-soon tasks by deadline tonight.",
+  "@aiDetModerateSecondaryDueSoon": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "aiDetModerateSecondaryDeficitMulti": "Today: do {sessions} sessions ({m1} + {m2} min) to reduce deficit faster.",
+  "@aiDetModerateSecondaryDeficitMulti": {
+    "placeholders": {
+      "sessions": {},
+      "m1": {},
+      "m2": {}
+    }
+  },
+  "aiDetModerateSecondaryDeficitSingle": "Today: start one {minutes}-minute recovery session.",
+  "@aiDetModerateSecondaryDeficitSingle": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
+  "aiDetModerateSecondaryTomorrow": "Tomorrow: second 30-minute block so risk does not climb.",
+  "aiDetDefaultInsight": "Snapshot looks manageable: no overdue flag here and risk is not in the high band.",
+  "aiDetDefaultRecoPrimary": "Today: one 25-minute review session.",
+  "aiDetDefaultRecoSecondary": "Mid-week: reload deadlines and date any undated tasks.",
+  "aiTaskUrgentInsight": "You have high-priority open work - tackle it before optional tasks.",
+  "aiTaskUrgentRecoPrimary": "Finish one urgent item to completion.",
+  "aiTaskUrgentRecoSecondary": "Then pick the next urgent line only.",
+  "aiTaskBacklogInsight": "Large backlogs increase avoidance.",
+  "aiTaskBacklogRecoPrimary": "Today: finish the two smallest tasks.",
+  "aiTaskBacklogRecoSecondary": "That shrinks the list you see every morning.",
+  "aiTaskQueuedInsight": "Queued work without dates tends to slip.",
+  "aiTaskQueuedRecoPrimary": "Schedule the next two tasks on your calendar.",
+  "aiTaskQueuedRecoSecondary": "Give each a start time, not only a due date.",
+  "aiTaskNoneInsight": "No urgent items in this view.",
+  "aiTaskNoneRecoPrimary": "Use spare time for readings or long assignments.",
+  "aiTaskNoneRecoSecondary": "Add the next exam date if it is not in yet.",
+  "aiDetDeficitHighInsight": "You are about {hours}h behind your weekly study goal - missing multiple days adds up fast.",
+  "@aiDetDeficitHighInsight": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "aiDetDeficitHighRecoPrimary": "Today: schedule 2-3 blocks (25-40 min each) on your calendar.",
+  "aiDetDeficitHighRecoSecondary": "Use fixed times - not \"when I feel like it.\"",
+  "aiDetDeficitMediumInsight": "You are roughly {hours}h under your weekly goal.",
+  "@aiDetDeficitMediumInsight": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
+  "aiDetDeficitMediumRecoPrimary": "Before Sunday: add 1-2 focused sessions toward the course with the nearest deadline.",
+  "aiDetDeficitMediumRecoSecondary": "Pick the course that moves your grades most this week.",
+  "aiDetConsistencyLowInsight": "Consistency is low ({percent}%). Irregular days make every deadline feel tighter.",
+  "@aiDetConsistencyLowInsight": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "aiDetConsistencyLowRecoPrimary": "Next 5 weekdays: same 30-minute start window (e.g. after lunch).",
+  "aiDetConsistencyLowRecoSecondary": "Tonight: one 25-minute session to move off your current level.",
+  "aiDetConsistencyMidInsight": "Consistency is middling ({percent}%). You study, but not on a steady rhythm.",
+  "@aiDetConsistencyMidInsight": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+  "aiDetConsistencyMidRecoPrimary": "Today: 25-35 minutes right after a habit you already have.",
+  "aiDetConsistencyMidRecoSecondary": "Tomorrow: repeat at the same clock time.",
+  "aiDetDueSoonManyInsight": "{count} tasks are due soon - switching between them raises stress.",
+  "@aiDetDueSoonManyInsight": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "aiDetDueSoonManyRecoPrimary": "Order by deadline: quick wins first, then the hardest task.",
+  "aiDetDueSoonManyRecoSecondary": "Pause new optional work until these clear.",
+  "aiDetDueSoonSomeInsight": "You have coursework due soon - finishing ahead beats cramming.",
+  "aiDetDueSoonSomeRecoPrimary": "Today: block time for the nearest deadline first.",
+  "aiDetDueSoonSomeRecoSecondary": "If nothing is overdue, pre-read for the next lecture or quiz.",
+  "aiDetCalendarNoDeadlinesButSemesterInsight": "No deadlines this calendar week, but semester work is still tracked.",
+  "aiDetCalendarNoDeadlinesButSemesterRecoPrimary": "Use the gap for readings or exam prep.",
+  "aiDetCalendarNoDeadlinesButSemesterRecoSecondary": "Add dates to undated tasks so planning stays honest.",
+  "aiDetCalendarNoTasksInsight": "No tasks fall in this calendar-week window - deadlines may be further out.",
+  "aiDetCalendarNoTasksRecoPrimary": "Advance coursework or shore up weak topics.",
+  "aiDetCalendarNoTasksRecoSecondary": "Bank extra time before the next busy week."
 }

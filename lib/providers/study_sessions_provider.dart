@@ -509,7 +509,7 @@ class StudySessionsNotifier
       return;
     }
     try {
-      state = const AsyncValue.loading();
+      state = const AsyncValue<List<StudySession>>.loading().copyWithPrevious(state);
       final list = await studyRepository.getSessions(userId: userId, semesterId: semesterId) as List<StudySession>;
       
       debugPrint('[StudySessionsProvider] Loading for Semester: $semesterId | Data Count: ${list.length}');

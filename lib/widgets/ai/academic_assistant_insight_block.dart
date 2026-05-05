@@ -8,7 +8,11 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/adaptive_provider.dart';
 import '../../providers/risk_provider.dart';
+import '../../providers/semester_provider.dart';
+import '../../providers/tasks_provider.dart';
+import '../../providers/study_sessions_provider.dart';
 import '../../services/ai/academic_insight_layer.dart';
+import '../../services/ai/academic_data_guard.dart';
 import 'insight_card.dart';
 import 'insight_display_variant.dart';
 import 'recommendation_card.dart';
@@ -29,7 +33,25 @@ class AcademicAssistantInsightBlock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final activeSemesterAsync = ref.watch(activeSemesterProvider);
+    final activeSemesterId = activeSemesterAsync.valueOrNull;
+    if (activeSemesterId == null) {
+      return const SizedBox.shrink();
+    }
+
     final analyticsAsync = ref.watch(analyticsProvider);
+    final tasks = (ref.watch(tasksProvider).valueOrNull ?? const [])
+        .where((t) => t.semesterId == activeSemesterId)
+        .toList(growable: false);
+    final sessions = (ref.watch(studySessionsProvider).valueOrNull ?? const [])
+        .where((s) => s.semesterId == activeSemesterId)
+        .toList(growable: false);
+    if (!hasAcademicData(tasks: tasks, sessions: sessions)) {
+      return const SizedBox.shrink();
+    }
+    if (!hasEnoughSignal(tasks: tasks, sessions: sessions)) {
+      return const SizedBox.shrink();
+    }
 
     return analyticsAsync.when(
       data: (analytics) {
@@ -37,6 +59,7 @@ class AcademicAssistantInsightBlock extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
+        final l10n = AppLocalizations.of(context)!;
         final risk = ref.watch(riskProvider);
         final adaptive = ref.watch(adaptiveProfileProvider);
         final studyAnalytics = ref.watch(studyAnalyticsProvider);
@@ -49,8 +72,13 @@ class AcademicAssistantInsightBlock extends ConsumerWidget {
           riskTrendDelta: risk.hasData ? risk.trendDelta : null,
           adaptiveProfile: adaptive,
           burnoutRisk: studyAnalytics.burnoutScore,
+          hasAcademicData: hasAcademicData(tasks: tasks, sessions: sessions),
+          hasEnoughSignal: hasEnoughSignal(tasks: tasks, sessions: sessions),
         );
-        final parts = input.parts;
+        final parts = input.partsWithL10n(l10n);
+        if (parts.insight.trim().isEmpty || parts.recommendation.trim().isEmpty) {
+          return const SizedBox.shrink();
+        }
 
         final overdue = analytics.overdueTasks;
         final deficit = analytics.studyDeficit;
@@ -64,7 +92,6 @@ class AcademicAssistantInsightBlock extends ConsumerWidget {
           consistency01: consistency,
         );
 
-        final l10n = AppLocalizations.of(context)!;
         final theme = Theme.of(context);
         final compact = variant == InsightDisplayVariant.compact;
 

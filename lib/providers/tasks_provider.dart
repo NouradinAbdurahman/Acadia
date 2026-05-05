@@ -141,8 +141,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     }
     try {
       debugPrint("[TasksNotifier] Loading tasks for user: $userId, semester: $semesterId");
-      // Strict reset on semester load to prevent cross-semester leaks.
-      state = const AsyncValue<List<Task>>.loading();
+      state = const AsyncValue<List<Task>>.loading().copyWithPrevious(state);
       final list = await taskRepository.getTasks(userId: userId, semesterId: semesterId) as List<Task>;
       
       debugPrint('[TasksNotifier] Load complete. Semester: $semesterId | Data Count: ${list.length}');

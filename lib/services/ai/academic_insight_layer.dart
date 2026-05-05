@@ -1,8 +1,11 @@
 import 'dart:math' as math;
+import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
 
 import '../../domain/risk/risk_input.dart';
 import '../../domain/adaptive/adaptive_profile.dart';
 import '../../domain/decision/decision_rules.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/analytics_data.dart';
 
 /// Deterministic interpretation + recommendations for AI messages.
@@ -27,6 +30,8 @@ class AcademicInsightInput {
     this.riskTrendDelta,
     this.adaptiveProfile = const AdaptiveProfile.defaults(),
     this.burnoutRisk = 0,
+    this.hasAcademicData = true,
+    this.hasEnoughSignal = true,
   });
 
   final int overdueTasks;
@@ -44,6 +49,8 @@ class AcademicInsightInput {
   final int? riskTrendDelta;
   final AdaptiveProfile adaptiveProfile;
   final double burnoutRisk;
+  final bool hasAcademicData;
+  final bool hasEnoughSignal;
 
   factory AcademicInsightInput.fromAnalytics({
     required AnalyticsData data,
@@ -51,6 +58,8 @@ class AcademicInsightInput {
     int? riskTrendDelta,
     AdaptiveProfile adaptiveProfile = const AdaptiveProfile.defaults(),
     double burnoutRisk = 0,
+    bool hasAcademicData = true,
+    bool hasEnoughSignal = true,
   }) {
     final rs = riskScoreOverride ?? data.riskScore;
     return AcademicInsightInput(
@@ -68,6 +77,8 @@ class AcademicInsightInput {
       riskTrendDelta: riskTrendDelta,
       adaptiveProfile: adaptiveProfile,
       burnoutRisk: burnoutRisk,
+      hasAcademicData: hasAcademicData,
+      hasEnoughSignal: hasEnoughSignal,
     );
   }
 
@@ -93,61 +104,83 @@ class AcademicInsightInput {
 }
 
 extension AcademicInsightInputAppendix on AcademicInsightInput {
-  ({String insight, String recommendation}) get parts => _pickInsight(this);
+  ({String insight, String recommendation}) get parts => _pickInsight(this, _aiL10n());
+
+  ({String insight, String recommendation}) partsWithL10n(AppLocalizations l10n) =>
+      _pickInsight(this, l10n);
 
   String buildAppendix() {
-    final r = parts;
-    return '\n\nInsight:\n${r.insight}\n\nRecommendation:\n${r.recommendation}\n';
+    return buildAppendixWithL10n(_aiL10n());
+  }
+
+  String buildAppendixWithL10n(AppLocalizations l10n) {
+    final r = _pickInsight(this, l10n);
+    return '\n\n${l10n.aiInsightTitle}:\n${r.insight}\n\n${l10n.aiRecommendationTitle}:\n${r.recommendation}\n';
   }
 }
 
 String _reco(String primary, String secondary) => '$primary\n$secondary';
 
-({String insight, String recommendation}) _pickInsight(AcademicInsightInput i) {
-  final core = _pickInsightCore(i);
+AppLocalizations _aiL10n() {
+  final locale = Intl.getCurrentLocale();
+  final languageCode = locale.split(RegExp('[-_]')).first;
+  return lookupAppLocalizations(Locale(languageCode));
+}
+
+({String insight, String recommendation}) _pickInsight(
+  AcademicInsightInput i,
+  AppLocalizations l10n,
+) {
+  debugPrint('[AI Insight] hasData=${i.hasAcademicData} hasSignal=${i.hasEnoughSignal}');
+  if (!i.hasAcademicData) {
+    return (insight: '', recommendation: '');
+  }
+  if (!i.hasEnoughSignal) {
+    return (insight: '', recommendation: '');
+  }
+  final core = _pickInsightCore(i, l10n);
   final td = i.riskTrendDelta;
   if (td != null && td > 0) {
     return (
-      insight:
-          'Your risk increased by $td% this week.\n${core.insight}',
+      insight: l10n.aiDetRiskIncreased(td, core.insight),
       recommendation: core.recommendation,
     );
   }
   return core;
 }
 
-({String insight, String recommendation}) _pickInsightCore(AcademicInsightInput i) {
+({String insight, String recommendation}) _pickInsightCore(
+  AcademicInsightInput i,
+  AppLocalizations l10n,
+) {
   final stress = i.avgSessionStress;
 
   if (stress != null && stress >= 7.0) {
     return (
-      insight:
-          'Session stress is high (${stress.toStringAsFixed(1)}/10). That usually means overload or fatigue.',
+      insight: l10n.aiDetHighStressInsight(stress.toStringAsFixed(1)),
       recommendation: _reco(
-        'Today: one 20–30 minute session, single topic.',
-        'Take a 5-minute break before you start the next block.',
+        l10n.aiDetHighStressRecoPrimary,
+        l10n.aiDetHighStressRecoSecondary,
       ),
     );
   }
 
   if (i.overdueTasks > 0) {
     return (
-      insight:
-          'You have ${i.overdueTasks} overdue task${i.overdueTasks > 1 ? 's' : ''} this semester — that pulls your risk up until they move.',
+      insight: l10n.aiDetOverdueInsight(i.overdueTasks),
       recommendation: _reco(
-        'Today: finish or reschedule the smallest overdue item first.',
-        'Then pick the next smallest — estimate a time box before you start.',
+        l10n.aiDetOverdueRecoPrimary,
+        l10n.aiDetOverdueRecoSecondary,
       ),
     );
   }
 
   if (i.riskScore0to100 >= 60) {
     return (
-      insight:
-          'Academic risk is high (${i.riskScore0to100.toStringAsFixed(0)}/100). Tasks, study time, or consistency are stacking.',
+      insight: l10n.aiDetRiskHighInsight(i.riskScore0to100.toStringAsFixed(0)),
       recommendation: _reco(
-        'Before 18:00: tackle the top due-soon or overdue item (${i.dueSoonTasks} due-soon).',
-        'Calendar two 25–40 minute blocks; start the first within 2 hours.',
+        l10n.aiDetRiskHighRecoPrimary(i.dueSoonTasks),
+        l10n.aiDetRiskHighRecoSecondary,
       ),
     );
   }
@@ -163,17 +196,20 @@ String _reco(String primary, String secondary) => '$primary\n$secondary';
       i.studyDeficitHours,
     );
     final secondary = i.dueSoonTasks > 0
-        ? 'Reorder your ${i.dueSoonTasks} due-soon task${i.dueSoonTasks > 1 ? 's' : ''} by deadline tonight.'
+        ? l10n.aiDetModerateSecondaryDueSoon(i.dueSoonTasks)
         : (i.studyDeficitHours >= 2
             ? (dailySessions > 1
-                ? 'Today: do $dailySessions sessions (${recommendedMinutes} + ${math.max(10, recommendedMinutes - 5)} min) to reduce deficit faster.'
-                : 'Today: start one ${recommendedMinutes}-minute recovery session.')
-            : 'Tomorrow: second 30-minute block so risk does not climb.');
+                ? l10n.aiDetModerateSecondaryDeficitMulti(
+                    dailySessions,
+                    recommendedMinutes,
+                    math.max(10, recommendedMinutes - 5),
+                  )
+                : l10n.aiDetModerateSecondaryDeficitSingle(recommendedMinutes))
+            : l10n.aiDetModerateSecondaryTomorrow);
     return (
-      insight:
-          'Academic risk is moderate (${i.riskScore0to100.toStringAsFixed(0)}/100). Weekly progress is below target and needs recovery actions.',
+      insight: l10n.aiDetRiskModerateInsight(i.riskScore0to100.toStringAsFixed(0)),
       recommendation: _reco(
-        'Start one focused session now ($recommendedMinutes min).',
+        l10n.aiDetRiskModerateRecoPrimary(recommendedMinutes),
         secondary,
       ),
     );
@@ -181,66 +217,60 @@ String _reco(String primary, String secondary) => '$primary\n$secondary';
 
   if (i.studyDeficitHours > 10) {
     return (
-      insight:
-          'You are about ${i.studyDeficitHours.toStringAsFixed(1)}h behind your weekly study goal — missing multiple days adds up fast.',
+      insight: l10n.aiDetDeficitHighInsight(i.studyDeficitHours.toStringAsFixed(1)),
       recommendation: _reco(
-        'Today: schedule 2–3 blocks (25–40 min each) on your calendar.',
-        'Use fixed times — not “when I feel like it.”',
+        l10n.aiDetDeficitHighRecoPrimary,
+        l10n.aiDetDeficitHighRecoSecondary,
       ),
     );
   }
 
   if (i.studyDeficitHours > 5) {
     return (
-      insight:
-          'You are roughly ${i.studyDeficitHours.toStringAsFixed(1)}h under your weekly goal.',
+      insight: l10n.aiDetDeficitMediumInsight(i.studyDeficitHours.toStringAsFixed(1)),
       recommendation: _reco(
-        'Before Sunday: add 1–2 focused sessions toward the course with the nearest deadline.',
-        'Pick the course that moves your grades most this week.',
+        l10n.aiDetDeficitMediumRecoPrimary,
+        l10n.aiDetDeficitMediumRecoSecondary,
       ),
     );
   }
 
   if (i.consistency01 < 0.35) {
     return (
-      insight:
-          'Consistency is low (${(i.consistency01 * 100).toStringAsFixed(0)}%). Irregular days make every deadline feel tighter.',
+      insight: l10n.aiDetConsistencyLowInsight((i.consistency01 * 100).toStringAsFixed(0)),
       recommendation: _reco(
-        'Next 5 weekdays: same 30-minute start window (e.g. after lunch).',
-        'Tonight: one 25-minute session to move off ${(i.consistency01 * 100).toStringAsFixed(0)}%.',
+        l10n.aiDetConsistencyLowRecoPrimary,
+        l10n.aiDetConsistencyLowRecoSecondary,
       ),
     );
   }
 
   if (i.consistency01 < 0.55) {
     return (
-      insight:
-          'Consistency is middling (${(i.consistency01 * 100).toStringAsFixed(0)}%). You study, but not on a steady rhythm.',
+      insight: l10n.aiDetConsistencyMidInsight((i.consistency01 * 100).toStringAsFixed(0)),
       recommendation: _reco(
-        'Today: 25–35 minutes right after a habit you already have.',
-        'Tomorrow: repeat at the same clock time.',
+        l10n.aiDetConsistencyMidRecoPrimary,
+        l10n.aiDetConsistencyMidRecoSecondary,
       ),
     );
   }
 
   if (i.dueSoonTasks >= 3) {
     return (
-      insight:
-          '${i.dueSoonTasks} tasks are due soon — switching between them raises stress.',
+      insight: l10n.aiDetDueSoonManyInsight(i.dueSoonTasks),
       recommendation: _reco(
-        'Order by deadline: quick wins first, then the hardest task.',
-        'Pause new optional work until these clear.',
+        l10n.aiDetDueSoonManyRecoPrimary,
+        l10n.aiDetDueSoonManyRecoSecondary,
       ),
     );
   }
 
   if (i.dueSoonTasks >= 1) {
     return (
-      insight:
-          'You have coursework due soon — finishing ahead beats cramming.',
+      insight: l10n.aiDetDueSoonSomeInsight,
       recommendation: _reco(
-        'Today: block time for the nearest deadline first.',
-        'If nothing is overdue, pre-read for the next lecture or quiz.',
+        l10n.aiDetDueSoonSomeRecoPrimary,
+        l10n.aiDetDueSoonSomeRecoSecondary,
       ),
     );
   }
@@ -252,32 +282,29 @@ String _reco(String primary, String secondary) => '$primary\n$secondary';
       semTotal != null &&
       semTotal > 0) {
     return (
-      insight:
-          'No deadlines this calendar week, but semester work is still tracked.',
+      insight: l10n.aiDetCalendarNoDeadlinesButSemesterInsight,
       recommendation: _reco(
-        'Use the gap for readings or exam prep.',
-        'Add dates to undated tasks so planning stays honest.',
+        l10n.aiDetCalendarNoDeadlinesButSemesterRecoPrimary,
+        l10n.aiDetCalendarNoDeadlinesButSemesterRecoSecondary,
       ),
     );
   }
 
   if (calendarWeekTotal != null && calendarWeekTotal == 0) {
     return (
-      insight:
-          'No tasks fall in this calendar-week window — deadlines may be further out.',
+      insight: l10n.aiDetCalendarNoTasksInsight,
       recommendation: _reco(
-        'Advance coursework or shore up weak topics.',
-        'Bank extra time before the next busy week.',
+        l10n.aiDetCalendarNoTasksRecoPrimary,
+        l10n.aiDetCalendarNoTasksRecoSecondary,
       ),
     );
   }
 
   return (
-    insight:
-        'Snapshot looks manageable: no overdue flag here and risk is not in the high band.',
+    insight: l10n.aiDetDefaultInsight,
     recommendation: _reco(
-      'Today: one 25-minute review session.',
-      'Mid-week: reload deadlines and date any undated tasks.',
+      l10n.aiDetDefaultRecoPrimary,
+      l10n.aiDetDefaultRecoSecondary,
     ),
   );
 }
@@ -287,30 +314,15 @@ String buildTaskListInsightAppendix({
   required int urgentCount,
   required int pendingCount,
 }) {
+  final l10n = _aiL10n();
   if (urgentCount > 0) {
-    return '\n\nInsight:\n'
-        'You have high-priority open work — tackle it before optional tasks.\n\n'
-        'Recommendation:\n'
-        'Finish one urgent item to completion.\n'
-        'Then pick the next urgent line only.\n';
+    return '\n\nInsight:\n${l10n.aiTaskUrgentInsight}\n\nRecommendation:\n${l10n.aiTaskUrgentRecoPrimary}\n${l10n.aiTaskUrgentRecoSecondary}\n';
   }
   if (pendingCount >= 5) {
-    return '\n\nInsight:\n'
-        'Large backlogs increase avoidance.\n\n'
-        'Recommendation:\n'
-        'Today: finish the two smallest tasks.\n'
-        'That shrinks the list you see every morning.\n';
+    return '\n\nInsight:\n${l10n.aiTaskBacklogInsight}\n\nRecommendation:\n${l10n.aiTaskBacklogRecoPrimary}\n${l10n.aiTaskBacklogRecoSecondary}\n';
   }
   if (pendingCount >= 1) {
-    return '\n\nInsight:\n'
-        'Queued work without dates tends to slip.\n\n'
-        'Recommendation:\n'
-        'Schedule the next two tasks on your calendar.\n'
-        'Give each a start time, not only a due date.\n';
+    return '\n\nInsight:\n${l10n.aiTaskQueuedInsight}\n\nRecommendation:\n${l10n.aiTaskQueuedRecoPrimary}\n${l10n.aiTaskQueuedRecoSecondary}\n';
   }
-  return '\n\nInsight:\n'
-      'No urgent items in this view.\n\n'
-      'Recommendation:\n'
-      'Use spare time for readings or long assignments.\n'
-      'Add the next exam date if it is not in yet.\n';
+  return '\n\nInsight:\n${l10n.aiTaskNoneInsight}\n\nRecommendation:\n${l10n.aiTaskNoneRecoPrimary}\n${l10n.aiTaskNoneRecoSecondary}\n';
 }

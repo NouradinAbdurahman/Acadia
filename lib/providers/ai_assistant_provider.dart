@@ -200,6 +200,7 @@ class AiAssistantNotifier extends StateNotifier<AiAssistantState> {
   }
 
   Future<void> sendMessage(String message) async {
+    if (state.isLoading) return;
     final trimmed = message.trim();
     if (trimmed.isEmpty) {
       state = state.copyWith(error: AiAssistantError.emptyMessage);

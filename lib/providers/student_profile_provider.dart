@@ -20,8 +20,9 @@ class StudentProfileNotifier extends StateNotifier<AsyncValue<StudentProfile?>> 
   }
 
   Future<void> loadProfile() async {
-    state = const AsyncValue.loading();
+    state = const AsyncValue<StudentProfile?>.loading().copyWithPrevious(state);
     final profile = await _service.getProfile();
+    if (!mounted) return;
     state = AsyncValue.data(profile);
   }
 

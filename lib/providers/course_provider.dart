@@ -47,7 +47,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
         !force) {
       return;
     }
-    state = const AsyncValue<List<Course>>.loading();
+    state = const AsyncValue<List<Course>>.loading().copyWithPrevious(state);
     try {
       final courses = await _repository.getCourses(semesterId: semesterId);
       

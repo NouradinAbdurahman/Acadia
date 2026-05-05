@@ -544,6 +544,15 @@ class NotificationsNotifier
 
   Future<void> markAsRead(String id) async {
     if (!mounted) return;
+    final currentNotifications = state.valueOrNull;
+    if (currentNotifications != null) {
+      // Optimistic UI update so NEW badge clears immediately.
+      state = AsyncValue.data(
+        currentNotifications
+            .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
+            .toList(),
+      );
+    }
     try {
       final updated =
           await notificationRepository.markAsRead(id) as NotificationModel;
@@ -552,7 +561,9 @@ class NotificationsNotifier
         (items) => items.map((n) => n.id == updated.id ? updated : n).toList(),
       );
     } catch (_) {
-      // Keep current state unchanged on mark-as-read transient failures.
+      // Roll back from server if mark-as-read fails.
+      if (!mounted) return;
+      loadNotifications();
     }
   }
 

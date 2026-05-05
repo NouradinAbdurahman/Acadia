@@ -476,8 +476,8 @@ A piece of the grading breakdown — like "Midterm: 75/30%".
 ### NotificationModel
 An in-app notification.
 - `title`, `message` — what it says
-- `type` — "deadline", "task_overdue", "study_goal", "system", "due_today", "due_tomorrow", "overdue"
-- `referenceId` — points to the entity this notification is about (a task ID, deadline ID, etc.)
+- `type` — one of: "deadline", "deadline_batch", "task_overdue", "overdue", "overdue_batch", "study_goal", "system", "due_today", "due_tomorrow", "risk", "stress", "academic_summary", "mood", "mood_check"
+- `referenceId` — points to the entity this notification is about (contract format: `task:<id>`, `deadline:<id>`, `risk:<date>`, etc.)
 - `semesterId` — which semester
 - `isRead` — whether the user has seen it
 
@@ -652,13 +652,14 @@ Services are the lowest layer that actually makes API calls. They don't know any
 - `uploadAvatar(file)` — uploads to the `avatars` Supabase Storage bucket, gets the public URL, and updates `avatar_url` in the `users` table
 
 **NotificationService** (root level) — The big notification orchestrator.
-- `init()` — sets up local notification channels, FCM permissions, foreground listener, background-tap handler
-- `sendSmartNotification(...)` — the main send method. Runs anti-spam checks, adapts priority based on user behavior, writes to Supabase inbox, calls the `send-push` Edge Function, and shows the local notification
-- `enqueueSmartNotification(...)` — higher-level entry point that also writes to the Supabase inbox first
+- `init()` — sets up local channels, FCM permissions, foreground listener, background tap handling, and **cold-start tap handling** via `getInitialMessage()`
+- `sendSmartNotification(...)` — full path: anti-spam checks + behavior adaptation + **single inbox write path** (`_writeInbox`) + push bridge (`send-push`) + local display
+- `enqueueSmartNotification(...)` — higher-level path that writes inbox first, then delegates push/local delivery (without duplicate inbox inserts)
 - `scheduleCompletion(...)` — schedules a "Session Complete" notification at a future time
 - `scheduleDailyMoodReminder(time)` / `cancelDailyMoodReminder()` — for the daily mood reminder
 - `isNightTime()` — returns true if before 7am or after 10pm
-- Has anti-spam logic: cooldown timers per notification type, daily rate limits (max 5/day, max 2 high-priority)
+- Has anti-spam logic: cooldown timers per type, daily rate limits (max 5/day, max 2 high-priority), adaptive cooldown multiplier
+- Every inbox write carries `semester_id` so semester-scoped inbox screens always show matching entries
 
 **NotificationConfig** — Per-type notification settings.
 - Predefined configs: `risk` (6h cooldown, critical, night OK), `overdue` (4h, critical, night OK), `deadline` (12h, non-critical), `academic_summary` (24h, silent), `stress` (12h, non-critical)
@@ -1124,7 +1125,7 @@ The detailed academic profile.
 ### notifications
 - `user_id`, `semester_id` — required
 - `title`, `message`, `type` — content
-- `type` — must be one of: 'deadline', 'task_overdue', 'study_goal', 'system', 'due_today', 'due_tomorrow', 'overdue'
+- `type` — must be one of: 'deadline', 'deadline_batch', 'task_overdue', 'overdue', 'overdue_batch', 'study_goal', 'system', 'due_today', 'due_tomorrow', 'risk', 'stress', 'academic_summary', 'mood', 'mood_check'
 - `reference_id` — for deduplication (points to the entity the notification is about)
 - `is_read` — boolean
 - Partial unique index on `(user_id, reference_id, type) WHERE reference_id IS NOT NULL` — prevents duplicate notifications for the same event
@@ -1258,22 +1259,22 @@ This one's simpler. It receives a push notification request and sends it via Fir
 
 ## 16. The Smart Notification System
 
-This is one of the more sophisticated parts of the app. It's a 3-layer system designed to send you helpful notifications without being annoying.
+This is one of the more sophisticated parts of the app. It's a 3-layer system designed to send useful notifications without spam, and now uses a single deterministic contract across trigger, storage, push, and tap routing.
 
 ### Layer 1: When to Notify (SmartNotificationEngine)
 
-This is the brain. It evaluates your current academic situation and decides if you need a nudge:
+This is the brain. It evaluates academic state and emits normalized notification events:
 
-- **Overdue tasks** — If you have tasks that are past their deadline, it sends an `overdue` notification
-- **Due within 24 hours** — If something's due today or tomorrow, it sends a `deadline` notification
-- **Multiple items** — If there are several things going on, it batches them into an `academic_summary` instead of sending 5 separate notifications
+- **Overdue tasks** — sends `overdue` with `reference_id = task:<taskId>`
+- **Due within 24 hours** — sends `due_tomorrow` with `reference_id = task:<taskId>`
+- **Multiple items** — sends one `academic_summary` with `reference_id = academic_summary:<yyyy-mm-dd>`
 - **High risk** — If your risk score is >= 70, it sends a `risk` alert
 - **Moderate risk** — If risk score is >= 50, it sends a lower-priority `risk` notification
-- **High stress** — If your average stress is >= 7, it sends a `stress` notification
+- **High stress** — If your average stress is >= 7, it sends a `stress` notification (`reference_id = stress:<yyyy-mm-dd>`)
 
 ### Layer 2: How to Deliver (NotificationService)
 
-This handles the actual delivery with anti-spam protections:
+This handles delivery with anti-spam protections and synchronized channels:
 
 - **Cooldown per type** — Each notification type has a cooldown (4h for overdue, 6h for risk, 12h for deadline/stress, 24h for academic_summary). If you already got an "overdue" notification 2 hours ago, you won't get another one for 2 more hours.
 - **Daily rate limit** — Max 5 notifications per day total, max 2 high-priority ones. This prevents notification spam on busy days.
@@ -1281,7 +1282,14 @@ This handles the actual delivery with anti-spam protections:
 - **Behavior adaptation** — The `NotificationBehaviorService` tracks how you interact with notifications:
   - If you ignore more than 3 of a certain type, the cooldown doubles. The app learns that you don't care about that type and backs off.
   - If you open more than 50% of a certain type, the priority gets boosted. The app learns that you find those helpful and makes them more visible.
-- **Delivery flow**: Write to Supabase inbox → check cooldown/rate limits → adapt priority → call `send-push` Edge Function for FCM → show local notification
+- **Single write path** — `_writeInbox(...)` is the only DB insert point for notification rows
+- **Delivery flow**:
+  - `enqueueSmartNotification(...)`: inbox write first, then push/local delivery
+  - `sendSmartNotification(...)`: cooldown/rate-limit checks, then inbox write, then push/local delivery
+  - both avoid duplicate inbox inserts
+- **Semester-safe inbox visibility** — every inbox insert includes `semester_id` from active semester
+- **Same-event dual delivery** — one event writes inbox + sends push/local in the same flow
+- **Cold-start support** — terminated-launch push taps are handled through `FirebaseMessaging.getInitialMessage()`
 
 ### Layer 3: Background Evaluation (BackgroundNotificationService)
 
@@ -1294,7 +1302,12 @@ The background task runs in an isolated context, not the main app. That's why it
 
 ### Notification Deduplication
 
-The `notifications` table has a partial unique index on `(user_id, reference_id, type) WHERE reference_id IS NOT NULL`. This means you can't have two "overdue" notifications for the same task. When the system tries to create a duplicate, it silently fails (the insert is ignored). This is important because the background worker and the foreground evaluator could both try to notify about the same overdue task at the same time.
+The `notifications` table has a partial unique index on `(user_id, reference_id, type) WHERE reference_id IS NOT NULL`. This means you can't have two identical event rows for the same object/state key.
+
+The system contract is:
+- `type` must be in the expanded DB constraint set (deadline/deadline_batch/task_overdue/overdue/overdue_batch/study_goal/system/due_today/due_tomorrow/risk/stress/academic_summary/mood/mood_check)
+- `reference_id` must use normalized prefixes (`task:`, `deadline:`, etc.)
+- tap routing uses this normalized id to deep-link correctly
 
 ---
 
@@ -1363,6 +1376,33 @@ The Edge Function also supports special intents that the local path doesn't:
    - Empty-state layout is centered and responsive; extra empty-state action button added.
    - Header behavior updated: down-arrow minimize action, and three-dots menu action `Close & Clear Chat` that clears current-semester conversation.
    - AI chat open/close transition updated to longer slide+fade, with downward dismiss effect.
+
+7. **Deterministic insight localization hardening**
+   - The active deterministic insight flow now resolves through localization-backed strings, removing mixed runtime language fallback behavior in Home/Analytics insight output.
+
+8. **Insight quality gates (signal-based)**
+   - Insight visibility/generation now requires semester-scoped academic signal from tasks/sessions.
+   - Exam-only and mood-only states no longer trigger insight.
+   - Minimum signal threshold was added: at least 2 tasks or 2 sessions before showing deterministic insight.
+
+9. **Home/Analytics parity lock**
+   - Home and Analytics now share the same gate helpers (`hasAcademicData`, `hasEnoughSignal`) and pass the same flags into insight generation.
+   - This removed the earlier mismatch where one screen hid insight while the other still rendered it.
+
+10. **Analytics no-signal fallback UX**
+   - In Analytics, when insight is intentionally gated off due to low/no signal, a localized helper hint is shown instead of empty space.
+
+11. **Exam module rollout**
+   - Added complete exam experience: list/create/edit/detail, calendar view, exam urgency summary on Home, expandable exam list, exam type badges/colors, live countdown text, and safer delete confirmation dialogs.
+   - Exam module is strictly semester-scoped at DB/app layers.
+
+12. **Exam notification reliability**
+   - Local exam reminders were hardened with timezone-safe scheduling and iOS permission/timing safeguards.
+   - Exam reminders now persist to the in-app notifications inbox and support deep-link navigation to exam detail.
+
+13. **Home information architecture update**
+   - Home card order was re-sequenced to action-first and urgency-first blocks.
+   - Section labels were added for previously unlabeled cards (including Exams), and the Exams section now includes a right-side “View” action to open the full exams screen.
 
 ### Typing Animation
 
@@ -1804,7 +1844,7 @@ Edge Functions also need these secrets (set via `supabase functions secrets set`
 
 ## 29. Migration History
 
-We've gone through 23 database migrations so far. Here's what each one did:
+We've gone through 27 database migrations so far. Here's what each one did:
 
 In addition to migrations, we keep a reusable runtime policy script at `lib/services/supabase/rls_policies.sql` for reapplying core RLS policies during environment setup/recovery.
 
@@ -1836,6 +1876,7 @@ In addition to migrations, we keep a reusable runtime policy script at `lib/serv
 | 24 | `2026042101_add_users_weekly_study_goal` | Added `weekly_study_goal` to users table (legacy) |
 | 25 | `2026042102_semesters_weekly_study_goal` | Added `weekly_study_goal` to semesters table (canonical source) |
 | 26 | `2026042901_drop_legacy_users_weekly_goal` | Removed legacy `users.weekly_study_goal` column |
+| 27 | `2026050501_notifications_type_expand` | Expanded notifications `type` CHECK constraint to match all emitted app notification types |
 
 The key theme across migrations is **semester isolation** — we progressively made `semester_id` a required NOT NULL foreign key on almost every table. Early versions of the app didn't have semester scoping, so a lot of data was just floating around without a semester context. The migrations fixed that.
 
@@ -2133,7 +2174,7 @@ There are two mood models. `MoodModel` is the old one with string-based mood val
 The study timer state is persisted in Hive. If you modify the timer logic (like changing round counts or durations), old saved state might be incompatible. Call `StudyTimerNotifier.reset()` or manually clear the `timer_state` Hive box to fix this.
 
 ### 7. Notification Deduplication
-The notifications table has a partial unique index on `(user_id, reference_id, type)`. When creating notifications, always include a `referenceId` that uniquely identifies the event (like the task ID or deadline ID). Without it, you can get duplicate notifications.
+The notifications table has a partial unique index on `(user_id, reference_id, type)`. Always include a normalized `referenceId` (`task:<id>`, `deadline:<id>`, `risk:<date>`, etc.) so deduplication and deep-link routing stay deterministic.
 
 ### 8. The Router Redirect Runs on Every Navigation
 Any time you call `context.go()` or `context.push()`, the redirect function in `main.dart` runs. If you're adding a new route, make sure the redirect logic handles it correctly. Otherwise, users might get unexpectedly redirected.
