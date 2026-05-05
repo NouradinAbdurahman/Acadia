@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/deadline.dart';
+import '../models/task.dart';
+import '../services/smart_notification_engine.dart';
 import 'app_providers.dart';
 import 'semester_provider.dart';
 
@@ -112,6 +114,7 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
       state = state.whenData(
         (items) => items.map((d) => d.id == id ? updated : d).toList(),
       );
+      await _completeLinkedTasksWhenDeadlineMarkedDone(id);
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
@@ -133,6 +136,7 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
 
     final previous = state;
     try {
+      final willComplete = !existing.isCompleted;
       final updated =
           await deadlineRepository.markDeadlineCompleted(
                 id: id,
@@ -142,9 +146,36 @@ class DeadlinesNotifier extends StateNotifier<AsyncValue<List<Deadline>>> {
       state = state.whenData(
         (items) => items.map((d) => d.id == id ? updated : d).toList(),
       );
+      if (willComplete) {
+        await _completeLinkedTasksWhenDeadlineMarkedDone(id);
+      }
     } catch (e, st) {
       state = previous;
       Error.throwWithStackTrace(e, st);
+    }
+  }
+
+  /// Completing a deadline means the whole milestone is handled — linked tasks must not stay pending.
+  /// Un-completing a deadline does **not** revert tasks (would destroy honest per-task completions).
+  Future<void> _completeLinkedTasksWhenDeadlineMarkedDone(String deadlineId) async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    final semesterId = _ref.read(activeSemesterProvider).value;
+    if (userId == null || semesterId == null) return;
+
+    final taskRepo = _ref.read(taskRepositoryProvider);
+    await taskRepo.completeAllTasksForDeadline(
+      userId: userId,
+      semesterId: semesterId,
+      deadlineId: deadlineId,
+    );
+    await _ref.read(tasksProvider.notifier).refresh();
+    if (!mounted) return;
+    try {
+      await SmartNotificationEngine.evaluateTaskChanges(
+        _ref.read(tasksProvider).valueOrNull ?? const <Task>[],
+      );
+    } catch (_) {
+      // Same as TasksNotifier: notifications are non-critical.
     }
   }
 }

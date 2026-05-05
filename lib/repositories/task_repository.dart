@@ -47,4 +47,15 @@ class TaskRepository {
   Future<void> deleteTask(String taskId) async {
     await _taskService.deleteTask(taskId);
   }
+
+  Future<void> completeAllTasksForDeadline({
+    required String userId,
+    required String semesterId,
+    required String deadlineId,
+  }) =>
+      _taskService.completeAllTasksForDeadline(
+        userId: userId,
+        semesterId: semesterId,
+        deadlineId: deadlineId,
+      );
 }

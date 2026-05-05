@@ -14,6 +14,7 @@ import 'package:haptic_feedback/haptic_feedback.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../l10n/l10n_extension.dart';
+import 'quick_menu_nav_items.dart';
 import 'quick_menu_screen.dart';
 import 'widgets/study_heatmap.dart';
 import '../study/widgets/live_study_session_card.dart';
@@ -29,7 +30,6 @@ import '../../widgets/semester/semester_comparison_card.dart';
 import '../../widgets/ai/academic_assistant_insight_block.dart';
 import '../../widgets/ai/insight_display_variant.dart';
 import '../../widgets/ai/passive_ai_risk_listener.dart';
-import '../../widgets/ai/ai_sparkle_hint.dart';
 import '../../providers/student_profile_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../services/smart_notification_engine.dart';
@@ -418,13 +418,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _buildUpcomingDeadlines(context, theme, l10n, data),
                               const SizedBox(height: AppSpacing.xl),
 
-                              // 6) Academic Risk
+                              // 6) Quick Menu — after time-critical blocks so users can jump fast without scrolling past analytics
+                              Text(
+                                l10n.quickMenu,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildQuickMenuStrip(context, theme, l10n),
+                              const SizedBox(height: AppSpacing.xl),
+
+                              // 7) Academic Risk
                               if (ref.watch(riskProvider).hasData) ...[
                                 const RiskScoreCard(),
                                 const SizedBox(height: AppSpacing.md),
                               ],
 
-                              // 7) AI Insight
+                              // 8) AI Insight
                               if (analytics != null && analytics.hasData) ...[
                                 AppGlassCard(
                                   borderOnly: true,
@@ -436,7 +448,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 const SizedBox(height: AppSpacing.md),
                               ],
 
-                              // 8) Mood Influenced Message
+                              // 9) Mood Influenced Message
                               if (analytics != null) ...[
                                 if (analytics.avgStress >= 8)
                                   _buildCalmToneMessage(context, theme, l10n)
@@ -446,7 +458,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   const SizedBox(height: AppSpacing.md),
                               ],
 
-                              // 9) Study Heatmap
+                              // 10) Study Heatmap
                               Text(
                                 l10n.activity,
                                 style: theme.textTheme.labelMedium?.copyWith(
@@ -458,7 +470,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const RepaintBoundary(child: StudyHeatmap()),
                               const SizedBox(height: AppSpacing.lg),
 
-                              // 10) Study Stats
+                              // 11) Study Stats
                               Text(
                                 l10n.overview,
                                 style: theme.textTheme.labelMedium?.copyWith(
@@ -470,7 +482,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _buildStudyStatsCard(context, ref, theme, l10n, data),
                               const SizedBox(height: AppSpacing.xl),
 
-                              // --- SECTION 3: OVERVIEW & EMPTY STATE (11-12 helpers) ---
+                              // --- SECTION 3: OVERVIEW & EMPTY STATE (12–13 helpers) ---
                               Builder(builder: (context) {
                                 final coursesAsync = ref.watch(courseProvider);
                                 final isFirstCourseLoad = coursesAsync.isLoading && !coursesAsync.hasValue;
@@ -528,19 +540,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               }),
                               if (data!.topCourses.isNotEmpty || (ref.watch(courseProvider).isLoading && !ref.watch(courseProvider).hasValue)) ...[
                                 if (data.topCourses.isNotEmpty)
-                                  // 11) Status Panel
+                                  // 12) Status Panel
                                   _StatusPanel(data: data),
 
                                 const SizedBox(height: AppSpacing.lg),
 
-                                // 12) Progress Overview
+                                // 13) Progress Overview
                                 _ProgressOverviewCard(trendAsync: trendAsync),
 
                               ],
 
                               const SizedBox(height: AppSpacing.lg),
 
-                              // 13) Course Activity
+                              // 14) Course Activity
                               Text(
                                 l10n.activity,
                                 style: theme.textTheme.labelMedium?.copyWith(
@@ -552,7 +564,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _buildCourseActivity(context, theme, l10n, data),
                               const SizedBox(height: AppSpacing.xl),
 
-                              // 14) Mood History
+                              // 15) Mood History
                                if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
                                   todayMoodAsync.asData?.value != null) ...[
                                 const SizedBox(height: AppSpacing.md),
@@ -598,17 +610,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
                               ],
-
-                              // 15) Quick Menu Strip
-                              Text(
-                                l10n.quickMenu,
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              _buildQuickMenuStrip(context, theme, l10n),
 
                               const SizedBox(height: 120),
                             ],
@@ -793,23 +794,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        AppIcon(
-                          HeroIcons.cursorArrowRays,
-                          size: 18,
-                          color: theme.colorScheme.primary,
-                          solid: true,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          l10n.studyGoal,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const AiSparkleHint(size: 14),
-                      ],
+                    Text(
+                      l10n.studyGoal,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -1065,83 +1054,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<_DashboardQuickMenuItem> _dashboardQuickMenuItems(
     AppLocalizations l10n,
   ) {
-    return <_DashboardQuickMenuItem>[
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.academicCap,
-        title: l10n.myCourses,
-        route: '/courses',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.clipboardDocumentList,
-        title: l10n.examsTitle,
-        route: '/exams',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.chartBar,
-        title: l10n.examResults,
-        route: '/course-results',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.calendar,
-        title: l10n.manageSemesters,
-        route: '/semesters',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.bookOpen,
-        title: l10n.academicHistory,
-        route: '/academic-history',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.plusCircle,
-        title: l10n.addCourse,
-        route: '/create-course',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.checkCircle,
-        title: l10n.createTask,
-        route: '/create-task',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.clock,
-        title: l10n.createDeadline,
-        route: '/create-deadline',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.faceSmile,
-        title: l10n.logMoodTitle,
-        route: '/mood/log',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.clock,
-        title: l10n.moodHistoryTitle,
-        route: '/mood/history',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.bell,
-        title: l10n.notifications,
-        route: '/notifications',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.userCircle,
-        title: l10n.editProfile,
-        route: '/profile/edit',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.adjustmentsHorizontal,
-        title: l10n.studyPreferences,
-        route: '/profile/study-preferences',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.cog6Tooth,
-        title: l10n.moodSettingsTitle,
-        route: '/settings/mood-stress',
-      ),
-      _DashboardQuickMenuItem(
-        icon: HeroIcons.lockClosed,
-        title: l10n.changePassword,
-        route: '/profile/change-password',
-      ),
-    ];
+    return buildQuickMenuNavItems(l10n)
+        .map(
+          (e) => _DashboardQuickMenuItem(
+            icon: e.icon,
+            title: e.title,
+            route: e.route,
+          ),
+        )
+        .toList();
   }
 
   Widget _buildMoodEntryCard(
@@ -1879,11 +1800,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.upcomingDeadlines,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.upcomingDeadlines,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            AppButton(
+              onPressed: () =>
+                  context.push('/tasks?filter=deadlines&source=dashboard'),
+              variant: AppButtonVariant.text,
+              text: l10n.all,
+            ),
+          ],
         ),
         const SizedBox(height: AppSpacing.md),
         if (data.upcomingDeadlines.isEmpty)
@@ -1899,7 +1831,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               .map(
                 (deadline) => Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: _DeadlineListItem(deadline: deadline),
+                  child: _DeadlineListItem(
+                    deadline: deadline,
+                    onTap: () {
+                      final id = deadline.id.toString();
+                      if (id.isEmpty) return;
+                      context.push('/deadline-detail?id=${Uri.encodeComponent(id)}');
+                    },
+                  ),
                 ),
               ),
       ],
@@ -2615,7 +2554,8 @@ class _StatusPanel extends StatelessWidget {
 
 class _DeadlineListItem extends StatelessWidget {
   final dynamic deadline;
-  const _DeadlineListItem({required this.deadline});
+  final VoidCallback? onTap;
+  const _DeadlineListItem({required this.deadline, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -2624,56 +2564,59 @@ class _DeadlineListItem extends StatelessWidget {
     final diff = deadline.deadlineDate.difference(DateTime.now()).inDays;
     final isDark = theme.brightness == Brightness.dark;
 
-    return AppGlassCard(
-      borderOnly: true,
-      child: Row(
-        children: [
-          Container(
-            width: 8,
-            height: 54,
-            decoration: BoxDecoration(
-              color: diff <= 2 ? AppColors.error : theme.colorScheme.primary,
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(AppRadius.sm),
+    return AnimatedPressable(
+      onTap: onTap ?? () {},
+      child: AppGlassCard(
+        borderOnly: true,
+        child: Row(
+          children: [
+            Container(
+              width: 8,
+              height: 54,
+              decoration: BoxDecoration(
+                color: diff <= 2 ? AppColors.error : theme.colorScheme.primary,
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(AppRadius.sm),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  deadline.course,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(
-                      alpha: isDark ? 0.76 : 0.82,
-                    ),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  deadline.title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface.withValues(
-                      alpha: isDark ? 0.96 : 0.92,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    deadline.course,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: isDark ? 0.76 : 0.82,
+                      ),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-                Text(
-                  diff <= 0 ? l10n.dueToday : l10n.dueInDays(diff),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: diff <= 2
-                        ? AppColors.error
-                        : theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+                  Text(
+                    deadline.title,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: isDark ? 0.96 : 0.92,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  Text(
+                    diff <= 0 ? l10n.dueToday : l10n.dueInDays(diff),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: diff <= 2
+                          ? AppColors.error
+                          : theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

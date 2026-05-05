@@ -133,8 +133,13 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     state = const AsyncValue.data(<Task>[]);
   }
 
-  Future<void> loadTasks({required String userId, String? semesterId}) async {
-    if (semesterId != null &&
+  Future<void> loadTasks({
+    required String userId,
+    String? semesterId,
+    bool force = false,
+  }) async {
+    if (!force &&
+        semesterId != null &&
         _lastLoadedSemesterId == semesterId &&
         state.hasValue) {
       return;
@@ -158,7 +163,7 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     final userId = supabaseClient.auth.currentUser?.id;
     final semesterId = _ref.read(activeSemesterProvider).value;
     if (userId != null) {
-      await loadTasks(userId: userId, semesterId: semesterId);
+      await loadTasks(userId: userId, semesterId: semesterId, force: true);
     }
   }
 

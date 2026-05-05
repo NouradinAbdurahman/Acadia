@@ -8,6 +8,7 @@ import '../../core/design/app_icons.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../l10n/app_localizations.dart';
+import 'quick_menu_nav_items.dart';
 
 class QuickMenuScreen extends StatelessWidget {
   const QuickMenuScreen({super.key});
@@ -28,73 +29,15 @@ class QuickMenuScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final viewPadding = MediaQuery.of(context).viewPadding;
 
-    final items = <_QuickMenuItem>[
-      _QuickMenuItem(
-        icon: HeroIcons.academicCap,
-        title: l10n.myCourses,
-        route: '/courses',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.chartBar,
-        title: l10n.examResults,
-        route: '/course-results',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.calendar,
-        title: l10n.manageSemesters,
-        route: '/semesters',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.plusCircle,
-        title: l10n.addCourse,
-        route: '/create-course',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.checkCircle,
-        title: l10n.createTask,
-        route: '/create-task',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.clock,
-        title: l10n.createDeadline,
-        route: '/create-deadline',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.faceSmile,
-        title: l10n.logMoodTitle,
-        route: '/mood/log',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.clock,
-        title: l10n.moodHistoryTitle,
-        route: '/mood/history',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.bell,
-        title: l10n.notifications,
-        route: '/notifications',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.userCircle,
-        title: l10n.editProfile,
-        route: '/profile/edit',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.adjustmentsHorizontal,
-        title: l10n.studyPreferences,
-        route: '/profile/study-preferences',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.cog6Tooth,
-        title: l10n.moodSettingsTitle,
-        route: '/settings/mood-stress',
-      ),
-      _QuickMenuItem(
-        icon: HeroIcons.lockClosed,
-        title: l10n.changePassword,
-        route: '/profile/change-password',
-      ),
-    ];
+    final items = buildQuickMenuNavItems(l10n)
+        .map(
+          (e) => _QuickMenuItem(
+            icon: e.icon,
+            title: e.title,
+            route: e.route,
+          ),
+        )
+        .toList();
 
     return Padding(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 60),

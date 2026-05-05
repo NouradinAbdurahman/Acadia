@@ -59,4 +59,23 @@ class TaskService {
   Future<void> deleteTask(String id) async {
     await _supabase.from('tasks').delete().eq('id', id);
   }
+
+  /// Marks every non-completed task linked to [deadlineId] as completed.
+  /// Used when the parent academic deadline is completed so progress counts stay aligned.
+  Future<void> completeAllTasksForDeadline({
+    required String userId,
+    required String semesterId,
+    required String deadlineId,
+  }) async {
+    await _supabase
+        .from('tasks')
+        .update({
+          'status': 'completed',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', userId)
+        .eq('semester_id', semesterId)
+        .eq('deadline_id', deadlineId)
+        .neq('status', 'completed');
+  }
 }
