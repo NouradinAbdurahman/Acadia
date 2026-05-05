@@ -1,5 +1,9 @@
 import '../../core/theme/app_colors.dart';
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -22,7 +26,10 @@ import '../../core/design/app_radius.dart';
 import '../../components/app_glass_card.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../widgets/semester/semester_comparison_card.dart';
-import '../../widgets/semester/smart_insights_card.dart';
+import '../../widgets/ai/academic_assistant_insight_block.dart';
+import '../../widgets/ai/insight_display_variant.dart';
+import '../../widgets/ai/passive_ai_risk_listener.dart';
+import '../../widgets/ai/ai_sparkle_hint.dart';
 import '../../providers/student_profile_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../services/smart_notification_engine.dart';
@@ -34,6 +41,7 @@ import '../../providers/global_refresh_provider.dart';
 import '../../providers/trend_provider.dart';
 import '../../providers/analytics_provider.dart';
 import '../../providers/decision_provider.dart';
+import '../../providers/adaptive_provider.dart';
 import '../../providers/study_sessions_provider.dart';
 import '../../providers/prediction_provider.dart';
 import '../../domain/decision/decision_result.dart';
@@ -63,6 +71,135 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isRefreshing = false;
   // Stable scroll controller — survives provider rebuilds.
   final ScrollController _scrollController = ScrollController();
+
+  /// Step 1 only: one-shot unified-analytics vs client comparison (debug builds).
+  bool _unifiedValidationLogged = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kDebugMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _logUnifiedVsClientValidationOnce();
+      });
+    }
+  }
+
+  Future<void> _logUnifiedVsClientValidationOnce() async {
+    if (!kDebugMode || _unifiedValidationLogged || !mounted) return;
+
+    String? semesterId;
+    for (var i = 0; i < 12; i++) {
+      semesterId = ref.read(activeSemesterProvider).value;
+      if (semesterId != null) break;
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+    }
+    if (semesterId == null) {
+      debugPrint(
+        '[UnifiedValidation] skipped: no active semester after waiting',
+      );
+      _unifiedValidationLogged = true;
+      return;
+    }
+
+    try {
+      final unifiedResponse = await Supabase.instance.client.functions.invoke(
+        'acadia-ai',
+        body: <String, dynamic>{
+          'debug': 'get_unified_analytics',
+          'semesterId': semesterId,
+        },
+      );
+
+      _unifiedValidationLogged = true;
+
+      final raw = unifiedResponse.data;
+      final unifiedRoot = raw is Map
+          ? Map<String, dynamic>.from(raw)
+          : <String, dynamic>{};
+      final unifiedData = unifiedRoot['unified'];
+
+      if (unifiedData is Map) {
+        final u = Map<String, dynamic>.from(unifiedData);
+        debugPrint('=== UNIFIED STUDY ===');
+        debugPrint(jsonEncode(u['study']));
+        debugPrint('=== UNIFIED TASKS ===');
+        debugPrint(jsonEncode(u['tasks']));
+        debugPrint('=== UNIFIED RISK ===');
+        debugPrint(jsonEncode(u['risk']));
+        debugPrint('=== UNIFIED MOOD ===');
+        debugPrint(jsonEncode(u['mood']));
+      } else {
+        debugPrint(
+          '[UnifiedValidation] unexpected unified payload: $unifiedData',
+        );
+      }
+
+      final analytics = ref.read(analyticsProvider).valueOrNull;
+      final unifiedMoodMap = (unifiedData is Map)
+          ? (Map<String, dynamic>.from(unifiedData)['mood'] as Map?)
+          : null;
+      final unifiedBurnout =
+          unifiedMoodMap != null ? (unifiedMoodMap['burnoutScore'] as num?) : null;
+      debugPrint('=== CLIENT STUDY ===');
+      debugPrint(
+        jsonEncode(<String, Object?>{
+          // AnalyticsData uses [studyHours] for current-week total (not named thisWeekHours)
+          'thisWeekHours': analytics?.studyHours,
+          'studyDeficit': analytics?.studyDeficit,
+          'consistency': analytics?.consistency,
+          'avgDailyStress': analytics?.avgDailyStress,
+          'avgSessionStress': analytics?.avgSessionStress,
+          'burnoutScore': analytics?.burnoutScore,
+        }),
+      );
+
+      final clientBurnout = analytics?.burnoutScore;
+      if (clientBurnout != null && unifiedBurnout != null) {
+        final delta = (clientBurnout - unifiedBurnout.toDouble()).abs();
+        if (delta > 0.1) {
+          throw Exception('Burnout mismatch between layers');
+        }
+      }
+
+      debugPrint(
+        '=== CLIENT ANALYTICS task metrics (tasks + deadlines merged in repo) ===',
+      );
+      debugPrint(
+        jsonEncode(<String, Object?>{
+          'totalThisCalendarWeek': analytics?.totalTasks,
+          'completedThisCalendarWeek': analytics?.completedTasks,
+          'overdueSemesterScope': analytics?.overdueTasks,
+        }),
+      );
+
+      final tasksRows = ref.read(tasksProvider).valueOrNull ?? <Task>[];
+      debugPrint('=== CLIENT tasksProvider (task table rows, semester) ===');
+      debugPrint(jsonEncode(<String, Object?>{'count': tasksRows.length}));
+
+      final risk = ref.read(riskProvider);
+      debugPrint('=== CLIENT RISK ===');
+      debugPrint(
+        jsonEncode(<String, Object?>{
+          'score': risk.result.totalScore,
+          'level': risk.result.riskLevel,
+          'overdueTasks': risk.input.overdueTasks,
+          'upcomingTasks': risk.input.upcomingTasks,
+          'studyDeficit': risk.input.studyDeficit,
+          'consistency': risk.input.consistency,
+        }),
+      );
+    } catch (e, st) {
+      debugPrint('[UnifiedValidation] FAILED: $e');
+      if (e is FunctionException) {
+        debugPrint('  status: ${e.status}');
+        debugPrint('  details: ${e.details}');
+        debugPrint('  reasonPhrase: ${e.reasonPhrase}');
+      }
+      debugPrint('$st');
+    }
+  }
 
   @override
   void dispose() {
@@ -134,6 +271,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           bottom: false,
           child: Stack(
             children: [
+              const PassiveAiRiskListener(),
               RefreshIndicator(
                 onRefresh: _onRefresh,
                 child: AnimatedSwitcher(
@@ -200,9 +338,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const RepaintBoundary(child: StudyHeatmap()),
                               
                               const SizedBox(height: AppSpacing.lg),
-                              const LiveStudySessionCard(),
-                              const SizedBox(height: AppSpacing.md),
-
                               // --- SECTION 1.8: MOOD-INFLUENCED MESSAGE ---
                               if (analytics != null) ...[
                                 if (analytics.avgStress >= 8)
@@ -217,8 +352,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               // --- SECTION 2: RISK SCORE CARD ---
                               if (ref.watch(riskProvider).hasData) ...[
                                 const RiskScoreCard(),
-                                const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: AppSpacing.md),
                               ],
+
+                              // --- SECTION 2.05: AI INSIGHT (explanation — same layer as chat) ---
+                              if (analytics != null && analytics.hasData) ...[
+                                AppGlassCard(
+                                  borderOnly: true,
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  child: const AcademicAssistantInsightBlock(
+                                    variant: InsightDisplayVariant.full,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                              ],
+
+                              const LiveStudySessionCard(),
+                              const SizedBox(height: AppSpacing.lg),
 
                               // --- SECTION 2.1: MOOD HISTORY (CONDITIONAL) ---
                                if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
@@ -334,8 +484,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 // --- SECTION 4: PROGRESS OVERVIEW ---
                                 _ProgressOverviewCard(trendAsync: trendAsync),
 
-                                const SizedBox(height: AppSpacing.md),
-                                const SmartInsightsCard(),
                               ],
 
                               const SizedBox(height: AppSpacing.lg),
@@ -451,7 +599,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             _NotificationButton(unreadCount: unreadNotifications),
             const SizedBox(width: AppSpacing.md),
-            const _AiAssistantButton(),
+            const _AiAssistantButtonBadge(),
           ],
         ),
       ],
@@ -556,6 +704,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const AiSparkleHint(size: 14),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -1145,7 +1294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              text: l10n.startNow,
+              text: 'Start ${_resolvedDecisionMinutes(ref, decision.suggestedSessionMinutes)} min session',
               onPressed: () => _startNowFromDecision(
                 context,
                 ref,
@@ -1349,8 +1498,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetRef ref,
     int? suggestedMinutes,
   ) {
-    final analytics = ref.read(analyticsProvider).value;
-    final minutes = suggestedMinutes ?? DecisionRules.getRecommendedSessionLength(analytics?.avgSessionStress ?? 0.0);
+    final minutes = _resolvedDecisionMinutes(ref, suggestedMinutes);
     final timerState = ref.read(studyTimerProvider);
     final timer = ref.read(studyTimerProvider.notifier);
 
@@ -1359,6 +1507,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       timer.start();
     }
     ref.read(bottomNavProvider.notifier).state = 2;
+  }
+
+  int _resolvedDecisionMinutes(WidgetRef ref, int? _) {
+    final analytics = ref.read(analyticsProvider).valueOrNull;
+    final studyAnalytics = ref.read(studyAnalyticsProvider);
+    final adaptive = ref.read(adaptiveProfileProvider);
+    return DecisionRules.getFinalRecommendedMinutes(
+      consistency: analytics?.consistency ?? 1.0,
+      stress: analytics?.avgSessionStress ?? 0.0,
+      profile: adaptive,
+      burnoutRisk: studyAnalytics.burnoutScore,
+    );
   }
 
   Widget _buildPredictedStressCard(
@@ -1922,7 +2082,7 @@ class _ProgressOverviewCard extends ConsumerWidget {
                 _progressLine(
                   context: context,
                   l10n: l10n,
-                  label: l10n.tasks,
+                  label: l10n.taskStatTrendChartPeriod,
                   value: l10n.trendPercentCompleted(taskPercent),
                   color: taskColor,
                 ),
@@ -2064,13 +2224,19 @@ class _NotificationButton extends StatelessWidget {
   }
 }
 
-class _AiAssistantButton extends StatelessWidget {
-  const _AiAssistantButton();
+class _AiAssistantButtonBadge extends ConsumerWidget {
+  const _AiAssistantButtonBadge();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final analytics = ref.watch(analyticsProvider).valueOrNull;
+    final risk = ref.watch(riskProvider);
+    final overdue = analytics?.overdueTasks ??
+        (risk.hasData ? risk.input.overdueTasks : 0);
+    final showDot = overdue > 0;
+
     return AnimatedPressable(
       onTap: () {
         Navigator.of(context).push(
@@ -2100,22 +2266,44 @@ class _AiAssistantButton extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.16),
-            width: 1,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.14 : 0.16),
+                width: 1,
+              ),
+            ),
+            child: AppIcon(
+              HeroIcons.sparkles,
+              size: 24,
+              solid: true,
+              color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.96 : 0.88),
+            ),
           ),
-        ),
-        child: AppIcon(
-          HeroIcons.sparkles, 
-          size: 24, 
-          solid: true,
-          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.96 : 0.88),
-        ),
+          if (showDot)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.error,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.colorScheme.surface,
+                    width: 1.5,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

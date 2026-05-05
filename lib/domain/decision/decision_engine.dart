@@ -6,6 +6,7 @@ import '../../models/mood_log.dart';
 import '../../models/study_session.dart';
 import '../../models/task.dart';
 import '../../models/deadline.dart';
+import '../adaptive/adaptive_engine.dart';
 import 'decision_result.dart';
 import 'decision_insights.dart';
 import 'decision_rules.dart';
@@ -45,6 +46,10 @@ class DecisionEngine {
     final avgSessionStress = analytics.avgSessionStress;
     final isStressRising = analytics.isStressRising;
     final consistency = analytics.consistency;
+    final adaptiveProfile = AdaptiveEngine.build(
+      recentSessions,
+      consistency: consistency,
+    );
 
     final now = DateTime.now();
     final hour = now.hour;
@@ -78,7 +83,12 @@ class DecisionEngine {
       stressDeviation = (sumSq / scores.length);
     }
 
-    int suggestedSessionMinutes = DecisionRules.getRecommendedSessionLength(avgSessionStress);
+    int suggestedSessionMinutes = DecisionRules.getFinalRecommendedMinutes(
+      consistency: consistency,
+      stress: avgSessionStress,
+      profile: adaptiveProfile,
+      burnoutRisk: burnoutScore,
+    );
     final isHighStress = DecisionRules.isHighStress(avgSessionStress);
 
     // --- UNIFIED SMART DECISION LOGIC (STRICT PRIORITY) ---
@@ -111,7 +121,12 @@ class DecisionEngine {
         ),
       );
     } else if (avgDailyStress >= 6.5 && isStressRising) {
-      suggestedSessionMinutes = DecisionRules.getRecommendedSessionLength(7.0);
+      suggestedSessionMinutes = DecisionRules.getFinalRecommendedMinutes(
+        consistency: consistency,
+        stress: 7.0,
+        profile: adaptiveProfile,
+        burnoutRisk: burnoutScore,
+      );
       items.add(
         DecisionItem(
           title: l10n.decisionRisingStressTitle,

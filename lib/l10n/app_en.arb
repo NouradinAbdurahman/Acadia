@@ -9,6 +9,31 @@
     }
   },
   "academicOverview": "Your academic overview",
+  "aiInsightTitle": "Insight",
+  "aiInsightSectionTitle": "AI Insight",
+  "aiInsightPrimaryReasonLabel": "Why",
+  "aiInsightWhatToDoLabel": "Action",
+  "aiInsightConfidenceHeading": "Confidence",
+  "confidenceWordHigh": "High",
+  "confidenceWordMedium": "Medium",
+  "confidenceWordLow": "Low",
+  "aiInsightConfidenceLine": "Confidence: {level}",
+  "@aiInsightConfidenceLine": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "aiRecommendationTitle": "Recommendation",
+  "aiActionStartStudy": "Start study session",
+  "aiActionAddTask": "Add task",
+  "aiActionViewTasks": "View tasks",
+  "aiActionOpenAnalytics": "Open analytics",
+  "aiPassiveRiskSpike": "Academic risk changed noticeably. Consider a quick check-in.",
+  "aiPassiveOpenAssistant": "Open assistant",
+  "aiPassiveReviewTasksNow": "Review tasks now",
+  "aiPassiveViewAnalytics": "View analytics",
   "academicRisk": "Academic Risk",
   "lowRisk": "Low Risk",
   "score": "Score",
@@ -186,6 +211,9 @@
   "analytics": "Analytics",
   "studyHours": "Study hours",
   "taskCompletionRate": "Task completion rate",
+  "taskStatThisWeekByDeadline": "This week (by deadline)",
+  "taskStatThisSemester": "This semester",
+  "taskStatTrendChartPeriod": "Tasks (chart period)",
   "stressTrends": "Stress trends",
   "academicReport": "Academic Report",
   "academicHistory": "Academic History",
@@ -563,7 +591,7 @@
   "deepFlow": "Deep Flow",
   "building": "Building",
   "studyHoursByCourse": "Study Hours by Course",
-  "weeklyTaskCompletion": "Weekly Task Completion",
+  "weeklyTaskCompletion": "This week (by deadline)",
   "dailyInsight": "Daily Insight",
   "focusOnStudies": "Focus on your studies today.",
   "thisWeekLabel": "This Week",
@@ -680,7 +708,23 @@
       }
     }
   },
-  "riskTrendStable": "No change",
+  "riskTrendStable": "Stable",
+  "riskTrendWorseningDelta": "Worsening · +{delta}",
+  "@riskTrendWorseningDelta": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendImprovingDelta": "Improving · −{delta}",
+  "@riskTrendImprovingDelta": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
   "riskTrendNew": "New",
   "riskNoData": "No active risk factors",
   "overviewTitle": "Overview",
@@ -730,7 +774,7 @@
       }
     }
   },
-  "tasksCompletedThisWeek": "Tasks due this week: {completed} of {total} completed",
+  "tasksCompletedThisWeek": "This week (by deadline): {completed} of {total} completed",
   "@tasksCompletedThisWeek": {
     "placeholders": {
       "completed": {
@@ -1929,7 +1973,7 @@
   "moodTrendNeedsData": "Keep logging your mood to see your personal emotional trend chart.",
   "dailyMoodHistory": "Daily Mood History",
   "olderLabel": "Older",
-  "decisionSmartInsights": "Smart Insights",
+  "decisionSmartInsights": "AI Insight",
   "decisionHighStress": "High stress detected",
   "decisionShortSessions": "Use shorter sessions today",
   "decisionDeepWork": "You are in a strong state for deep work",
@@ -2342,7 +2386,7 @@
       }
     }
   },
-  "smartAiInsights": "Smart AI Insights",
+  "smartAiInsights": "AI Insight",
   "burnoutExplanationFallingBehind": "You are showing signs of mental fatigue and irregular study habits.",
   "burnoutBehaviorHighFatigue": "Elevated mental fatigue levels detected.",
   "burnoutBehaviorMoodInstability": "Increasing mood variability impacting focus.",

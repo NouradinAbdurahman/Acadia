@@ -43,7 +43,7 @@ class AiAssistantService {
         if (moodContext != null) 'moodContext': moodContext,
         if (clientContext != null) 'context': clientContext,
       },
-    ).timeout(const Duration(seconds: 30));
+    ).timeout(const Duration(seconds: 12));
 
     if (response.status != 200) {
       final raw = response.data;

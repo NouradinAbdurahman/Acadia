@@ -9,6 +9,31 @@
     }
   },
   "academicOverview": "Akademik genel bakışınız",
+  "aiInsightTitle": "İçgörü",
+  "aiInsightSectionTitle": "AI içgörüsü",
+  "aiInsightPrimaryReasonLabel": "Neden",
+  "aiInsightWhatToDoLabel": "Eylem",
+  "aiInsightConfidenceHeading": "Güven",
+  "confidenceWordHigh": "Yüksek",
+  "confidenceWordMedium": "Orta",
+  "confidenceWordLow": "Düşük",
+  "aiInsightConfidenceLine": "Güven: {level}",
+  "@aiInsightConfidenceLine": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "aiRecommendationTitle": "Öneri",
+  "aiActionStartStudy": "Çalışma oturumu başlat",
+  "aiActionAddTask": "Görev ekle",
+  "aiActionViewTasks": "Görevlere git",
+  "aiActionOpenAnalytics": "Analizleri aç",
+  "aiPassiveRiskSpike": "Akademik risk belirgin şekilde değişti. Kısa bir kontrol düşünün.",
+  "aiPassiveOpenAssistant": "Asistanı aç",
+  "aiPassiveReviewTasksNow": "Görevleri şimdi gözden geçir",
+  "aiPassiveViewAnalytics": "Analizleri görüntüle",
   "academicRisk": "Akademik Risk",
   "lowRisk": "Düşük Risk",
   "score": "Skor",
@@ -186,6 +211,9 @@
   "analytics": "Analiz",
   "studyHours": "Çalışma saatleri",
   "taskCompletionRate": "Görev tamamlama oranı",
+  "taskStatThisWeekByDeadline": "Bu hafta (son tarihe göre)",
+  "taskStatThisSemester": "Bu dönem",
+  "taskStatTrendChartPeriod": "Görevler (grafik dönemi)",
   "stressTrends": "Stres eğilimleri",
   "academicReport": "Akademik Rapor",
   "academicHistory": "Akademik Geçmiş",
@@ -559,7 +587,7 @@
     }
   },
   "studyHoursByCourse": "Derse Göre Çalışma Saatleri",
-  "weeklyTaskCompletion": "Haftalık Görev Tamamlama",
+  "weeklyTaskCompletion": "Bu hafta (son tarihe göre)",
   "academicLoad": "Akademik İş Yükü",
   "studyDemand": "Çalışma Talebi",
   "workloadIntensity": "İş Yükü Yoğunluğu",
@@ -669,7 +697,23 @@
       }
     }
   },
-  "riskTrendStable": "Değişim yok",
+  "riskTrendStable": "Stabil",
+  "riskTrendWorseningDelta": "Kötüleşiyor · +{delta}",
+  "@riskTrendWorseningDelta": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
+  "riskTrendImprovingDelta": "İyileşiyor · −{delta}",
+  "@riskTrendImprovingDelta": {
+    "placeholders": {
+      "delta": {
+        "type": "int"
+      }
+    }
+  },
   "riskTrendNew": "Yeni",
   "riskNoData": "Aktif risk faktörü yok",
   "overviewTitle": "Genel Bakış",
@@ -719,7 +763,7 @@
       }
     }
   },
-  "tasksCompletedThisWeek": "Bu haftaki görevler: {completed}/{total} tamamlandı",
+  "tasksCompletedThisWeek": "Bu hafta (son tarihe göre): {completed}/{total} tamamlandı",
   "@tasksCompletedThisWeek": {
     "placeholders": {
       "completed": {
@@ -1906,7 +1950,7 @@
   "moodTrendNeedsData": "Kişisel duygusal eğilim grafiğinizi görmek için ruh halinizi kaydetmeye devam edin.",
   "dailyMoodHistory": "Günlük Ruh Hali Geçmişi",
   "olderLabel": "Daha Eski",
-  "decisionSmartInsights": "Akıllı İçgörüler",
+  "decisionSmartInsights": "AI içgörüsü",
   "decisionHighStress": "Yüksek stres tespit edildi",
   "decisionShortSessions": "Bugün daha kısa çalışma yap",
   "decisionDeepWork": "Derin çalışma için iyi durumdasın",
@@ -2305,5 +2349,5 @@
       }
     }
   },
-  "smartAiInsights": "Yapay Zeka İçgörüleri"
+  "smartAiInsights": "AI içgörüsü"
 }

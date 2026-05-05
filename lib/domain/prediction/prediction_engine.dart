@@ -17,7 +17,8 @@ class PredictionEngine {
     required List<Task> tasks,
     required List<Deadline> deadlines,
   }) {
-    final pendingTasks = (analytics.totalTasks - analytics.completedTasks).clamp(0, 9999);
+    final calendarWeekIncompleteDeadlineTaskCount =
+        (analytics.totalTasks - analytics.completedTasks).clamp(0, 9999);
     final consistency = studyAnalytics.consistency;
 
     final dailyStress = analytics.avgDailyStress;
@@ -52,15 +53,15 @@ class PredictionEngine {
     }).length;
 
     final hasDeadlinesSoon = upcomingDeadlinesCount > 0;
-    final hasPendingTaskPressure = pendingTasks >= 5;
+    final hasPendingTaskPressure = calendarWeekIncompleteDeadlineTaskCount >= 5;
     
     // Threshold-based workload reason (as requested)
-    final hasUpcomingWorkload = upcomingDeadlinesCount >= 2 || pendingTasks >= 5;
+    final hasUpcomingWorkload = upcomingDeadlinesCount >= 2 || calendarWeekIncompleteDeadlineTaskCount >= 5;
     if (hasUpcomingWorkload) {
       if (upcomingDeadlinesCount >= 2) {
         stressReasons.add(l10n.predictionReasonUpcomingWorkload(upcomingDeadlinesCount));
       } else {
-        stressReasons.add(l10n.predictionReasonTasksPending(pendingTasks));
+        stressReasons.add(l10n.predictionReasonTasksPending(calendarWeekIncompleteDeadlineTaskCount));
       }
     }
 
@@ -74,7 +75,7 @@ class PredictionEngine {
       explanationKeys.add(l10n.predictionReasonLowConsistencyDetail((consistency * 100).toStringAsFixed(0)));
     }
     if (hasPendingTaskPressure) {
-      explanationKeys.add(l10n.predictionReasonTasksPending(pendingTasks));
+      explanationKeys.add(l10n.predictionReasonTasksPending(calendarWeekIncompleteDeadlineTaskCount));
     }
     if (hasDeadlinesSoon) {
       explanationKeys.add(l10n.predictionReasonDeadlinesSoon(upcomingDeadlinesCount));
@@ -108,7 +109,7 @@ class PredictionEngine {
       studyAnalytics: studyAnalytics,
       suggestedMinutes: decision.suggestedSessionMinutes,
       sessionsCount: studyAnalytics.trackedSessionCount,
-      pendingTasks: pendingTasks,
+      calendarWeekIncompleteDeadlineTaskCount: calendarWeekIncompleteDeadlineTaskCount,
     );
 
     final filteredReasons = confidence >= 0.35 ? stressReasons : stressReasons.take(1).toList();
@@ -213,7 +214,7 @@ class PredictionEngine {
     required StudyAnalytics studyAnalytics,
     required int? suggestedMinutes,
     required int sessionsCount,
-    required int pendingTasks,
+    required int calendarWeekIncompleteDeadlineTaskCount,
   }) {
     var confidence = decisionConfidence.clamp(0.0, 1.0);
 
@@ -237,7 +238,7 @@ class PredictionEngine {
       }
     }
 
-    if (pendingTasks >= 8) {
+    if (calendarWeekIncompleteDeadlineTaskCount >= 8) {
       confidence -= 0.05;
     }
 

@@ -17,6 +17,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get academicOverview => 'Your academic overview';
 
   @override
+  String get aiInsightTitle => 'Insight';
+
+  @override
+  String get aiInsightSectionTitle => 'AI Insight';
+
+  @override
+  String get aiInsightPrimaryReasonLabel => 'Why';
+
+  @override
+  String get aiInsightWhatToDoLabel => 'Action';
+
+  @override
+  String get aiInsightConfidenceHeading => 'Confidence';
+
+  @override
+  String get confidenceWordHigh => 'High';
+
+  @override
+  String get confidenceWordMedium => 'Medium';
+
+  @override
+  String get confidenceWordLow => 'Low';
+
+  @override
+  String aiInsightConfidenceLine(String level) {
+    return 'Confidence: $level';
+  }
+
+  @override
+  String get aiRecommendationTitle => 'Recommendation';
+
+  @override
+  String get aiActionStartStudy => 'Start study session';
+
+  @override
+  String get aiActionAddTask => 'Add task';
+
+  @override
+  String get aiActionViewTasks => 'View tasks';
+
+  @override
+  String get aiActionOpenAnalytics => 'Open analytics';
+
+  @override
+  String get aiPassiveRiskSpike =>
+      'Academic risk changed noticeably. Consider a quick check-in.';
+
+  @override
+  String get aiPassiveOpenAssistant => 'Open assistant';
+
+  @override
+  String get aiPassiveReviewTasksNow => 'Review tasks now';
+
+  @override
+  String get aiPassiveViewAnalytics => 'View analytics';
+
+  @override
   String get academicRisk => 'Academic Risk';
 
   @override
@@ -407,6 +464,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskCompletionRate => 'Task completion rate';
+
+  @override
+  String get taskStatThisWeekByDeadline => 'This week (by deadline)';
+
+  @override
+  String get taskStatThisSemester => 'This semester';
+
+  @override
+  String get taskStatTrendChartPeriod => 'Tasks (chart period)';
 
   @override
   String get stressTrends => 'Stress trends';
@@ -1277,7 +1343,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get studyHoursByCourse => 'Study Hours by Course';
 
   @override
-  String get weeklyTaskCompletion => 'Weekly Task Completion';
+  String get weeklyTaskCompletion => 'This week (by deadline)';
 
   @override
   String get dailyInsight => 'Daily Insight';
@@ -1500,7 +1566,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get riskTrendStable => 'No change';
+  String get riskTrendStable => 'Stable';
+
+  @override
+  String riskTrendWorseningDelta(int delta) {
+    return 'Worsening · +$delta';
+  }
+
+  @override
+  String riskTrendImprovingDelta(int delta) {
+    return 'Improving · −$delta';
+  }
 
   @override
   String get riskTrendNew => 'New';
@@ -1547,7 +1623,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tasksCompletedThisWeek(int completed, int total) {
-    return 'Tasks due this week: $completed of $total completed';
+    return 'This week (by deadline): $completed of $total completed';
   }
 
   @override
@@ -3265,7 +3341,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get olderLabel => 'Older';
 
   @override
-  String get decisionSmartInsights => 'Smart Insights';
+  String get decisionSmartInsights => 'AI Insight';
 
   @override
   String get decisionHighStress => 'High stress detected';
@@ -3824,7 +3900,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get smartAiInsights => 'Smart AI Insights';
+  String get smartAiInsights => 'AI Insight';
 
   @override
   String get burnoutExplanationFallingBehind =>

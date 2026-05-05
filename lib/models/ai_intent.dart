@@ -1,4 +1,8 @@
 enum AiIntentType {
+  planWeek,
+  planToday,
+  rankTasks,
+  focusNow,
   getTasksByTimeRange,
   getCompletedTasks,
   getUpcomingDeadlines,

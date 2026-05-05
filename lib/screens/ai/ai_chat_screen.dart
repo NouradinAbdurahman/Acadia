@@ -3,11 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../providers/ai_assistant_provider.dart';
+import '../../providers/analytics_provider.dart';
+import '../../providers/risk_provider.dart';
 import '../../providers/tasks_provider.dart';
 import '../../providers/semester_provider.dart';
+import '../../providers/study_sessions_provider.dart';
 import '../../models/ai_message.dart';
 import '../../theme/app_colors.dart';
 import '../../core/design/app_spacing.dart';
+import '../../widgets/ai/ai_insight_text_utils.dart';
+import '../../widgets/ai/insight_card.dart';
+import '../../widgets/ai/recommendation_card.dart';
+import '../../widgets/ai/recommendation_action_utils.dart';
 
 class AIChatScreen extends ConsumerStatefulWidget {
   const AIChatScreen({super.key});
@@ -303,10 +310,11 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.auto_awesome,
-                      color: AppColors.primary,
-                      size: isCompact ? 34 : 40,
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: isCompact ? 56 : 64,
+                      height: isCompact ? 56 : 64,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   SizedBox(height: isCompact ? 18 : 24),
@@ -314,7 +322,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
                     'How can I help with your studies today?',
                     style: TextStyle(
                       color: AppColors.textPrimary(context),
-                      fontSize: isCompact ? 28 : 22,
+                      fontSize: isCompact ? 22 : 18,
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
                     ),
@@ -350,7 +358,9 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     ];
 
     return Wrap(
-      spacing: 12,
+      alignment: WrapAlignment.center,
+      spacing: 16,
+      runSpacing: 16,
       children: suggestions.map((s) => InkWell(
         onTap: () => _submitPrompt("Can you show me my ${s['label']}?"),
         borderRadius: BorderRadius.circular(12),
@@ -442,29 +452,48 @@ class _MessageBubble extends ConsumerWidget {
   }
 
   Widget _buildUserMessage(BuildContext context) {
+    final timeLabel =
+        DateFormat.jm().format(message.timestamp.toLocal());
     return Align(
       alignment: Alignment.centerRight,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 260),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Text(
+                message.text,
+                style: TextStyle(
+                  color: AppColors.textPrimary(context),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.left,
+              ),
             ),
-          ),
-          child: Text(
-            message.text,
-            style: TextStyle(
-              color: AppColors.textPrimary(context),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              height: 1.4,
+            Padding(
+              padding: const EdgeInsets.only(top: 4, right: 4),
+              child: Text(
+                timeLabel,
+                style: TextStyle(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
-            textAlign: TextAlign.left,
-          ),
+          ],
         ),
       ),
     );
@@ -472,68 +501,89 @@ class _MessageBubble extends ConsumerWidget {
 
   Widget _buildAiResponseBlock(BuildContext context, WidgetRef ref) {
     final isFinished = message.displayedText.length == message.text.length;
+    final timeLabel =
+        DateFormat.jm().format(message.timestamp.toLocal());
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 400),
       opacity: 1.0,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.aiCard(context),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border(context)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 40,
-              offset: const Offset(0, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.aiCard(context),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border(context)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 40,
+                  offset: const Offset(0, 12),
+                ),
+              ],
             ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: TextStyle(
-                        color: AppColors.textPrimary(context),
-                        fontSize: 15,
-                        height: 1.6,
-                      ),
-                      children: [
-                        TextSpan(text: message.displayedText),
-                        if (!isFinished)
-                          TextSpan(
-                            text: ' █',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 14,
-                            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: AppColors.textPrimary(context),
+                            fontSize: 15,
+                            height: 1.6,
                           ),
-                      ],
-                    ),
+                          children: [
+                            TextSpan(text: aiAssistantMainBubbleText(message)),
+                            if (!isFinished)
+                              TextSpan(
+                                text: ' █',
+                                style: const TextStyle(
+                                  color: AppColors.primary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (message.type != 'text' && isFinished)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: _StructuredDataWidget(type: message.type, data: message.data),
+                        ),
+                      if (isFinished)
+                        _InsightRecommendationStrip(message: message),
+                      if (isFinished)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: _buildActionChips(context, ref),
+                        ),
+                    ],
                   ),
-                  if (message.type != 'text' && isFinished)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: _StructuredDataWidget(type: message.type, data: message.data),
-                    ),
-                  if (isFinished)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: _buildActionChips(context, ref),
-                    ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          if (isFinished)
+            Padding(
+              padding: const EdgeInsets.only(left: 6, top: 6),
+              child: Text(
+                timeLabel,
+                style: TextStyle(
+                  color: AppColors.textSecondary(context),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -670,6 +720,61 @@ class _ActionChipState extends State<_ActionChip> {
   }
 }
 
+class _InsightRecommendationStrip extends ConsumerWidget {
+  final AiMessage message;
+
+  const _InsightRecommendationStrip({required this.message});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = message.data;
+    if (data is! Map) return const SizedBox.shrink();
+    final insight = data['insight'];
+    final rec = data['recommendation'];
+    if (insight is! String || rec is! String) return const SizedBox.shrink();
+    if (insight.trim().isEmpty || rec.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final analytics = ref.watch(analyticsProvider).valueOrNull;
+    final risk = ref.watch(riskProvider);
+    final overdue = analytics?.overdueTasks ??
+        (risk.hasData ? risk.input.overdueTasks : 0);
+    final deficit = analytics?.studyDeficit ?? 0.0;
+    final consistency = analytics?.consistency ?? 1.0;
+
+    final kind = inferRecommendationActionKind(
+      recommendation: rec,
+      insight: insight,
+      overdueTasks: overdue,
+      studyDeficitHours: deficit,
+      consistency01: consistency,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InsightCard(text: insight),
+          const SizedBox(height: 12),
+          RecommendationCard(
+            text: rec,
+            actionKind: kind,
+            onAction: kind == null
+                ? null
+                : () => invokeRecommendationAction(
+                      kind: kind,
+                      context: context,
+                      ref: ref,
+                    ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StructuredDataWidget extends StatelessWidget {
   final String type;
   final dynamic data;
@@ -697,6 +802,12 @@ class _StructuredDataWidget extends StatelessWidget {
         return _PlanDashboard(data: data);
       case 'focus':
         return _FocusCard(task: data);
+      case 'focus_session':
+        return _FocusCard(task: data);
+      case 'daily_plan':
+        return _DailyPlanCard(data: data);
+      case 'daily_plan_empty':
+        return _DailyPlanCard(data: data);
       case 'details':
         return _DetailsViewer(data: data);
       default:
@@ -897,6 +1008,137 @@ class _TodayPlanCard extends StatelessWidget {
   }
 }
 
+class _DailyPlanCard extends ConsumerWidget {
+  final dynamic data;
+  const _DailyPlanCard({required this.data});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final map = (data is Map<String, dynamic>)
+        ? data as Map<String, dynamic>
+        : <String, dynamic>{};
+    final sessions = (map['sessions'] as List?)?.cast<Map<String, dynamic>>() ?? const <Map<String, dynamic>>[];
+    if (sessions.isEmpty) {
+      final duration = (map['duration'] as num?)?.toInt() ?? 30;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.nestedCard(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border(context)),
+        ),
+        child: Text(
+          "You have no tasks for today.\nStart a $duration-minute general study session.",
+          style: TextStyle(color: AppColors.textPrimary(context), fontSize: 13),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "TODAY PLAN",
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 10),
+        ...sessions.map((session) {
+          final taskId = session['taskId']?.toString();
+          final courseId = session['courseId']?.toString();
+          final title = (session['title'] ?? 'Study session').toString();
+          final duration = (session['duration'] as num?)?.toInt() ?? 30;
+          final slot = (session['slot'] ?? 'Today').toString();
+          final reasons = (session['reasons'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              const <String>[];
+          return Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.nestedCard(context),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.border(context)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: AppColors.textPrimary(context),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "$duration min • $slot",
+                  style: TextStyle(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final timer = ref.read(studyTimerProvider.notifier);
+                      timer.setDuration(Duration(minutes: duration));
+                      timer.setIntent(
+                        taskId != null
+                            ? "focus_now:$taskId|source:plan_today"
+                            : "focus_now|source:plan_today",
+                      );
+                      if (courseId != null && courseId.isNotEmpty) {
+                        timer.setCourseId(courseId);
+                      }
+                      timer.start();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Started $duration min planned session")),
+                      );
+                    },
+                    child: const Text("Start"),
+                  ),
+                ),
+                if (reasons.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    "Why:",
+                    style: TextStyle(
+                      color: AppColors.textPrimary(context),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  ...reasons.map(
+                    (r) => Text(
+                      "• $r",
+                      style: TextStyle(
+                        color: AppColors.textSecondary(context),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
 class _FocusCard extends ConsumerWidget {
   final dynamic task;
   const _FocusCard({required this.task});
@@ -905,11 +1147,25 @@ class _FocusCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (task == null) return const SizedBox.shrink();
 
-    final deadline = task['deadline'] != null 
-        ? DateFormat('MMM d, h:mm a').format(DateTime.parse(task['deadline']))
-        : 'No deadline';
-
-    final taskId = task['id'];
+    final map = (task is Map<String, dynamic>)
+        ? task as Map<String, dynamic>
+        : <String, dynamic>{};
+    final taskId = map['taskId'] ?? map['id'];
+    final source = map['source']?.toString();
+    final taskTitle = (map['taskTitle'] ?? map['title'] ?? 'Focus session').toString();
+    final duration = (map['duration'] as num?)?.toInt() ?? 45;
+    final courseId = map['courseId']?.toString();
+    final reasons = (map['reasons'] is Map<String, dynamic>)
+        ? (map['reasons'] as Map<String, dynamic>)
+        : <String, dynamic>{};
+    final taskReasons = (reasons['task'] as List?)?.map((e) => e.toString()).toList() ?? const <String>[];
+    final durationReasons = (reasons['duration'] as List?)?.map((e) => e.toString()).toList() ?? const <String>[];
+    final deadlineRaw = map['deadline'];
+    final deadline = deadlineRaw is String
+        ? DateFormat('MMM d, h:mm a').format(DateTime.parse(deadlineRaw))
+        : deadlineRaw is DateTime
+            ? DateFormat('MMM d, h:mm a').format(deadlineRaw)
+            : 'No deadline';
 
     return Container(
       width: double.infinity,
@@ -948,7 +1204,7 @@ class _FocusCard extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            task['title'] ?? 'Untitled Task',
+            taskTitle,
             style: TextStyle(
               color: AppColors.textPrimary(context),
               fontSize: 22,
@@ -959,20 +1215,77 @@ class _FocusCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            "Due $deadline",
+            "Duration: $duration min${deadline != 'No deadline' ? ' • Due $deadline' : ''}",
             style: TextStyle(
               color: AppColors.textSecondary(context),
               fontSize: 13,
               decoration: TextDecoration.none,
             ),
           ),
+          if (taskReasons.isNotEmpty || durationReasons.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            if (taskReasons.isNotEmpty) ...[
+              Text(
+                "Why this task:",
+                style: TextStyle(
+                  color: AppColors.textPrimary(context),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const SizedBox(height: 4),
+              ...taskReasons.map(
+                (reason) => Text(
+                  "• $reason",
+                  style: TextStyle(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 12,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            ],
+            if (durationReasons.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                "Why $duration min:",
+                style: TextStyle(
+                  color: AppColors.textPrimary(context),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              const SizedBox(height: 4),
+              ...durationReasons.map(
+                (reason) => Text(
+                  "• $reason",
+                  style: TextStyle(
+                    color: AppColors.textSecondary(context),
+                    fontSize: 12,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            ],
+          ],
           const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    // Logic for starting session can go here
+                    final timer = ref.read(studyTimerProvider.notifier);
+                    timer.setDuration(Duration(minutes: duration));
+                    timer.setIntent(taskId != null ? "focus_now:$taskId" : "focus_now");
+                    if (courseId != null && courseId.isNotEmpty) {
+                      timer.setCourseId(courseId);
+                    }
+                    timer.start();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Started $duration min focus session")),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -981,10 +1294,10 @@ class _FocusCard extends ConsumerWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
-                  child: const Text("Start now", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  child: const Text("Start Session", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                 ),
               ),
-              if (taskId != null) ...[
+              if (taskId != null && source == 'task') ...[
                 const SizedBox(width: 12),
                 IconButton.filled(
                   onPressed: () {
@@ -1247,7 +1560,7 @@ class _SummaryDashboard extends StatelessWidget {
             width: 84,
             child: _StatItem(
               label: "Risk",
-              value: riskScore == null ? "-" : (riskScore as num).toStringAsFixed(1),
+              value: riskScore == null ? "-" : (riskScore as num).round().toString(),
               icon: Icons.warning_amber_rounded,
               color: AppColors.urgent,
             ),

@@ -245,7 +245,20 @@ Also on the Edge path: `email_tasks` (Resend), `get_focus`, `summarize_last`, `g
 
 ### Recent AI updates (May 2026)
 
+- **Smart Planning (Step 1)** — Added deterministic weekly planning (`planWeek`) with round-robin session distribution, urgency boost for today, priority assignment for near-term deadlines, and empty-day suppression.
+- **Priority Ranking (Step 2)** — Added deterministic `rankTasks` intent with scored top priorities across both pending tasks and unlinked deadlines (deduped), including due-date-aware output.
+- **Focus Mode (Step 3)** — Added `focusNow` action flow that selects the top-ranked task, returns structured `focus_session` payload, and starts study sessions directly from chat/UI.
+- **Explainability Layer (Step 4)** — Added deterministic reasons for task choice and session duration (`why this task`, `why this duration`) rendered in focus and planning surfaces.
+- **Smart Daily Plan (Step 5)** — Added `planToday` with 2–4 executable sessions, time-slot labeling, 150-minute cap, deficit recovery block, and per-session start actions.
+- **Adaptive Learning Layer (Step 6)** — Added behavior-aware duration adaptation using `AdaptiveProfile` (completion rate, actual/planned ratio, average actual minutes, consistency) and unified adaptive minutes across Home/Study/Analytics/Chat.
+- **Risk + Burnout ownership unified** — Burnout now flows from analytics/unified data contracts into decision rules and assistant contexts; final recommendations consistently apply burnout-aware caps through a single final duration rule.
 - **Truth-value parity fixed** — AI summary/progress uses the same `analyticsProvider` snapshot as UI; risk uses `riskProvider` `RiskState` values, so chat text/cards and Home/Analytics show the same score.
+- **Unified AI decision layer finalized** — Home, Study, Analytics, and Chat all use `AcademicInsightInput` (`academic_insight_layer.dart` / `academic_insights.ts`) with the same rule order, trend-priority behavior, and two-line recommendation format.
+- **Deterministic risk override locked** — resolver/debug/edge appendix generation now pins `riskScoreOverride` to the same analytics-aligned score source to prevent `31 vs 33` drift and remove consistency warnings caused by mixed risk sources.
+- **Intent consistency hardened** — for task/deadline intents, when `analytics.hasData`, resolver always appends the unified insight block; fallback task-only heuristics are used only when analytics data is unavailable.
+- **Analytics-task parity improved** — `AnalyticsRepository.computeFromPreloaded(...)` now accepts `deadlines` and merges task + deadline workload for weekly totals, due-soon, and overdue metrics so assistant and analytics scopes stay aligned.
+- **Risk input parity improved** — `riskProvider` now includes `academic_deadlines` in overdue/upcoming computations and core-data readiness checks, reducing deadline-only semester mismatches.
+- **AI UX hierarchy polished** — Home flow is now action-first (`PassiveAiHomeNudge`) → state (`RiskScoreCard`) → explanation (`AcademicAssistantInsightBlock`), with duplicate insight panels removed from key surfaces.
 - **Flexible email sending** — phrases like “send this to email”, “email my risk/summary/deadlines/courses/profile” are routed to Edge email flow (not just tasks). Sender is required from env/secret: `RESEND_FROM` (no hardcoded fallback).
 - **Exact time/month filtering** — local intent parsing now supports explicit month ranges (e.g. “in April”, “April 2026”) and resolver enforces exact date windows instead of broad matches.
 - **Task fallback improved** — if `tasks` table has no items for a request, assistant falls back to `academic_deadlines` and still returns actionable task-like results.

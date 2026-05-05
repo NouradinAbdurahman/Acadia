@@ -110,6 +110,114 @@ abstract class AppLocalizations {
   /// **'Your academic overview'**
   String get academicOverview;
 
+  /// No description provided for @aiInsightTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Insight'**
+  String get aiInsightTitle;
+
+  /// No description provided for @aiInsightSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Insight'**
+  String get aiInsightSectionTitle;
+
+  /// No description provided for @aiInsightPrimaryReasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Why'**
+  String get aiInsightPrimaryReasonLabel;
+
+  /// No description provided for @aiInsightWhatToDoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get aiInsightWhatToDoLabel;
+
+  /// No description provided for @aiInsightConfidenceHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence'**
+  String get aiInsightConfidenceHeading;
+
+  /// No description provided for @confidenceWordHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get confidenceWordHigh;
+
+  /// No description provided for @confidenceWordMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get confidenceWordMedium;
+
+  /// No description provided for @confidenceWordLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get confidenceWordLow;
+
+  /// No description provided for @aiInsightConfidenceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Confidence: {level}'**
+  String aiInsightConfidenceLine(String level);
+
+  /// No description provided for @aiRecommendationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation'**
+  String get aiRecommendationTitle;
+
+  /// No description provided for @aiActionStartStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Start study session'**
+  String get aiActionStartStudy;
+
+  /// No description provided for @aiActionAddTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Add task'**
+  String get aiActionAddTask;
+
+  /// No description provided for @aiActionViewTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'View tasks'**
+  String get aiActionViewTasks;
+
+  /// No description provided for @aiActionOpenAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Open analytics'**
+  String get aiActionOpenAnalytics;
+
+  /// No description provided for @aiPassiveRiskSpike.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic risk changed noticeably. Consider a quick check-in.'**
+  String get aiPassiveRiskSpike;
+
+  /// No description provided for @aiPassiveOpenAssistant.
+  ///
+  /// In en, this message translates to:
+  /// **'Open assistant'**
+  String get aiPassiveOpenAssistant;
+
+  /// No description provided for @aiPassiveReviewTasksNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Review tasks now'**
+  String get aiPassiveReviewTasksNow;
+
+  /// No description provided for @aiPassiveViewAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'View analytics'**
+  String get aiPassiveViewAnalytics;
+
   /// No description provided for @academicRisk.
   ///
   /// In en, this message translates to:
@@ -859,6 +967,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Task completion rate'**
   String get taskCompletionRate;
+
+  /// No description provided for @taskStatThisWeekByDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'This week (by deadline)'**
+  String get taskStatThisWeekByDeadline;
+
+  /// No description provided for @taskStatThisSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'This semester'**
+  String get taskStatThisSemester;
+
+  /// No description provided for @taskStatTrendChartPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks (chart period)'**
+  String get taskStatTrendChartPeriod;
 
   /// No description provided for @stressTrends.
   ///
@@ -2477,7 +2603,7 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyTaskCompletion.
   ///
   /// In en, this message translates to:
-  /// **'Weekly Task Completion'**
+  /// **'This week (by deadline)'**
   String get weeklyTaskCompletion;
 
   /// No description provided for @dailyInsight.
@@ -2843,8 +2969,20 @@ abstract class AppLocalizations {
   /// No description provided for @riskTrendStable.
   ///
   /// In en, this message translates to:
-  /// **'No change'**
+  /// **'Stable'**
   String get riskTrendStable;
+
+  /// No description provided for @riskTrendWorseningDelta.
+  ///
+  /// In en, this message translates to:
+  /// **'Worsening · +{delta}'**
+  String riskTrendWorseningDelta(int delta);
+
+  /// No description provided for @riskTrendImprovingDelta.
+  ///
+  /// In en, this message translates to:
+  /// **'Improving · −{delta}'**
+  String riskTrendImprovingDelta(int delta);
 
   /// No description provided for @riskTrendNew.
   ///
@@ -2915,7 +3053,7 @@ abstract class AppLocalizations {
   /// No description provided for @tasksCompletedThisWeek.
   ///
   /// In en, this message translates to:
-  /// **'Tasks due this week: {completed} of {total} completed'**
+  /// **'This week (by deadline): {completed} of {total} completed'**
   String tasksCompletedThisWeek(int completed, int total);
 
   /// No description provided for @noStudyDataThisWeek.
@@ -5747,7 +5885,7 @@ abstract class AppLocalizations {
   /// No description provided for @decisionSmartInsights.
   ///
   /// In en, this message translates to:
-  /// **'Smart Insights'**
+  /// **'AI Insight'**
   String get decisionSmartInsights;
 
   /// No description provided for @decisionHighStress.
@@ -6665,7 +6803,7 @@ abstract class AppLocalizations {
   /// No description provided for @smartAiInsights.
   ///
   /// In en, this message translates to:
-  /// **'Smart AI Insights'**
+  /// **'AI Insight'**
   String get smartAiInsights;
 
   /// No description provided for @burnoutExplanationFallingBehind.

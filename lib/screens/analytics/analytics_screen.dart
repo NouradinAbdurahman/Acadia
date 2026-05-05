@@ -32,6 +32,7 @@ import '../../providers/trend_provider.dart';
 import '../../core/utils/trend_localizer.dart';
 import '../../providers/mood_provider.dart';
 import '../../providers/decision_provider.dart';
+import '../../providers/adaptive_provider.dart';
 import '../../providers/prediction_provider.dart';
 import '../../models/analytics_data.dart';
 import '../../models/course.dart';
@@ -43,6 +44,10 @@ import '../../domain/prediction/prediction_result.dart';
 import '../../widgets/analytics/decision_cards.dart';
 import '../../widgets/common/weekly_activity_card.dart';
 import '../../widgets/risk/risk_widgets.dart';
+import '../../widgets/ai/academic_assistant_insight_block.dart';
+import '../../widgets/ai/ai_sparkle_hint.dart';
+import '../../services/ai/academic_insight_layer.dart';
+import '../../widgets/ai/insight_display_variant.dart';
 import '../../providers/risk_provider.dart';
 import '../../widgets/mood/mood_daily_list.dart';
 
@@ -342,6 +347,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
                     if (hasData) ...[
                       const SemesterComparisonCard(),
+                      if (!decision.hasContent &&
+                          !ref.watch(riskProvider).hasData) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        AppGlassCard(
+                          borderOnly: true,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: const AcademicAssistantInsightBlock(
+                            variant: InsightDisplayVariant.full,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.lg),
                     ],
                     // -------------------------
@@ -464,6 +480,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         _buildSectionTitle(theme, l10n.academicRisk),
                         const SizedBox(height: AppSpacing.md),
                         const RiskBreakdownCard(),
+                        if (!decision.hasContent) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          AppGlassCard(
+                            borderOnly: true,
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: const AcademicAssistantInsightBlock(
+                              variant: InsightDisplayVariant.full,
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: AppSpacing.xl),
                       ],
 
@@ -634,7 +660,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ],
 
                       // 1. Study Hours by Course
-                      _buildSectionTitle(theme, l10n.studyHoursByCourse),
+                      _buildSectionTitle(theme, l10n.studyHoursByCourse,
+                          showAiHint: true),
                       Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
                       const SizedBox(height: AppSpacing.md),
                       _StudyHoursBarChart(data: data),
@@ -652,7 +679,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       // 4. Trend Analysis
                       KeyedSubtree(
                         key: _trendsSectionKey,
-                        child: _buildSectionTitle(theme, l10n.trendAnalysis),
+                        child: _buildSectionTitle(theme, l10n.trendAnalysis,
+                            showAiHint: true),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       _buildTrendDaysTabs(ref, theme, trendDays),
@@ -721,6 +749,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     StudyAnalytics studyAnalytics,
   ) {
     final analyticsAsync = ref.watch(analyticsProvider);
+    final riskState = ref.watch(riskProvider);
     final signature = decision.sortedItems
         .map((item) => '${item.priority}:${item.title}')
         .join('|');
@@ -728,6 +757,28 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     if (primary == null) {
       return const SizedBox.shrink();
     }
+
+    final analyticsData = analyticsAsync.valueOrNull;
+    final adaptive = ref.read(adaptiveProfileProvider);
+    final layerParts = (analyticsData != null && analyticsData.hasData)
+        ? AcademicInsightInput.fromAnalytics(
+            data: analyticsData,
+            riskScoreOverride: riskState.hasData
+                ? riskState.result.totalScore
+                : analyticsData.riskScore,
+            riskTrendDelta: riskState.hasData ? riskState.trendDelta : null,
+            adaptiveProfile: adaptive,
+            burnoutRisk: studyAnalytics.burnoutScore,
+          ).parts
+        : null;
+
+    final recoLines = layerParts == null
+        ? const <String>[]
+        : layerParts.recommendation
+            .split('\n')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
 
     return AppGlassCard(
       key: ValueKey('decision-$signature'),
@@ -748,90 +799,80 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          _buildPrimaryDecisionBlock(context, theme, l10n, primary),
-          
-          // WHY THIS RECOMMENDATION (RANKED)
-          if (decision.signals.isNotEmpty) ...[
+          if (layerParts != null) ...[
+            Text(
+              l10n.aiInsightPrimaryReasonLabel,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              layerParts.insight,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(
-                l10n.predictionWhyTitle,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
+            Text(
+              l10n.aiInsightWhatToDoLabel,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
               ),
             ),
-            const SizedBox(height: 8),
-            // RANKED MAIN FACTOR
-            _buildRankedFactorRow(
-              theme, 
-              l10n, 
-              l10n.studyProfileMainFactor(decision.signals.first),
-              isMain: true,
-            ),
-            if (decision.signals.length > 1) ...[
-              const SizedBox(height: 6),
-              _buildRankedFactorRow(
-                theme, 
-                l10n, 
-                l10n.studyProfileSecondaryFactor(decision.signals[1]),
+            const SizedBox(height: 4),
+            if (recoLines.isNotEmpty)
+              Text(
+                recoLines.first,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                ),
+              ),
+            if (recoLines.length > 1) ...[
+              const SizedBox(height: 4),
+              Text(
+                recoLines[1],
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                  height: 1.35,
+                ),
               ),
             ],
-            const SizedBox(height: AppSpacing.md),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _buildStatBadge(
-                  theme, 
-                  "${l10n.historicalConsistency}: ${(100 - studyAnalytics.timeInconsistencyScore).round()}% (${l10n.translateTrend(studyAnalytics.consistencyTrendLabel)})",
-                  isWarning: studyAnalytics.timeInconsistencyScore >= 50,
-                ),
-                _buildStatBadge(
-                  theme, 
-                  "✓ ${l10n.completion}: ${(studyAnalytics.successRate * 100).round()}%",
-                  isWarning: studyAnalytics.successRate < 0.6,
-                ),
-                _buildStatBadge(
-                  theme, 
-                  "${l10n.dailyBaseline}: ${decision.avgDailyStress.toStringAsFixed(1)}/10",
-                  isWarning: decision.avgDailyStress >= 6.5,
-                ),
-                _buildStatBadge(
-                  theme, 
-                  "${l10n.studySessions}: ${decision.avgSessionStress.toStringAsFixed(1)}/10",
-                  isWarning: decision.avgSessionStress >= 7,
-                ),
-              ],
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.aiInsightConfidenceHeading,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+              ),
             ),
+            const SizedBox(height: 2),
+            Text(
+              l10n.decisionConfidenceWord(decision.confidence),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+              ),
+            ),
+            Text(
+              l10n.basedOnSessions(studyAnalytics.trackedSessionCount),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                fontSize: 10,
+              ),
+            ),
+          ] else ...[
+            _buildPrimaryDecisionBlock(context, theme, l10n, primary),
           ],
-          
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-               _buildStatBadge(
-                  theme, 
-                  l10n.getConfidenceLabel(decision.confidence),
-                  isWarning: decision.confidence < 0.4,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  l10n.basedOnSessions(studyAnalytics.trackedSessionCount),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    fontSize: 9,
-                  ),
-                ),
-            ],
-          ),
-          
           const SizedBox(height: AppSpacing.md),
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              text: l10n.startNow,
+              text: 'Start ${_resolvedDecisionMinutes(ref, decision.suggestedSessionMinutes)} min session',
               onPressed: () => _startNowFromDecision(
                 context,
                 ref,
@@ -840,7 +881,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               icon: const AppIcon(HeroIcons.play, size: 16, color: Colors.white),
             ),
           ),
-
           if (decision.suggestedSessionMinutes != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
@@ -851,33 +891,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.sm),
-
-          Row(
-            children: [
-              _buildSmallMetricBadge(
-                theme,
-                l10n.analyticsMoodLabel(
-                  l10n.mood,
-                  decision.avgMood.toStringAsFixed(1),
-                  DecisionInsights.isMoodTrendDecliningFromSessions(studyAnalytics.recentSessions) ? '↓' : '↑',
-                ),
-                decision.avgMood >= 3.5 ? Colors.green : (decision.avgMood <= 2.5 ? Colors.orange : Colors.blue),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _buildSmallMetricBadge(
-                theme,
-                l10n.analyticsStressLabel(
-                  l10n.dailyBaseline,
-                  decision.avgDailyStress.toStringAsFixed(1),
-                  decision.avgDailyStress >= 6.5 && (analyticsAsync.value?.isStressRising ?? false) ? '↑' : '↓',
-                ),
-                decision.avgDailyStress >= 6.5 ? Colors.red : (decision.avgDailyStress >= 5.0 ? Colors.orange : Colors.green),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-
         ],
       ),
     ).animate().scaleXY(begin: 0.98, end: 1.0, duration: 260.ms).fadeIn();
@@ -1117,8 +1130,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     WidgetRef ref,
     int? suggestedMinutes,
   ) {
-    final analytics = ref.read(analyticsProvider).valueOrNull;
-    final minutes = suggestedMinutes ?? DecisionRules.getRecommendedSessionLength(analytics?.avgSessionStress ?? 0.0);
+    final minutes = _resolvedDecisionMinutes(ref, suggestedMinutes);
     final timerState = ref.read(studyTimerProvider);
     final timer = ref.read(studyTimerProvider.notifier);
 
@@ -1136,6 +1148,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       'duration': minutes,
       'source': 'analytics',
     });
+  }
+
+  int _resolvedDecisionMinutes(WidgetRef ref, int? _) {
+    final analytics = ref.read(analyticsProvider).valueOrNull;
+    final studyAnalytics = ref.read(studyAnalyticsProvider);
+    final adaptive = ref.read(adaptiveProfileProvider);
+    return DecisionRules.getFinalRecommendedMinutes(
+      consistency: analytics?.consistency ?? 1.0,
+      stress: analytics?.avgSessionStress ?? 0.0,
+      profile: adaptive,
+      burnoutRisk: studyAnalytics.burnoutScore,
+    );
   }
 
   Widget _buildPredictedStressCard(
@@ -1338,10 +1362,24 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     return DateFormat.EEEE(Localizations.localeOf(context).languageCode).format(date);
   }
 
-  Widget _buildSectionTitle(ThemeData theme, String title) {
-    return Text(
-      title,
-      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+  Widget _buildSectionTitle(ThemeData theme, String title,
+      {bool showAiHint = false}) {
+    if (!showAiHint) {
+      return Text(
+        title,
+        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+      );
+    }
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+        ),
+        const AiSparkleHint(size: 15),
+      ],
     );
   }
 
@@ -3415,7 +3453,8 @@ class _StudyProfileCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           _ProfileRow(
             icon: HeroIcons.clock,
-            text: l10n.studyProfileOptimalDuration(profile['optimalMin'], profile['optimalMax']),
+            text:
+                "${l10n.studyProfileOptimalDuration(profile['optimalMin'], profile['optimalMax'])} (adaptive)",
           ),
           const SizedBox(height: AppSpacing.sm),
           _ProfileRow(

@@ -17,6 +17,63 @@ class AppLocalizationsTr extends AppLocalizations {
   String get academicOverview => 'Akademik genel bakışınız';
 
   @override
+  String get aiInsightTitle => 'İçgörü';
+
+  @override
+  String get aiInsightSectionTitle => 'AI içgörüsü';
+
+  @override
+  String get aiInsightPrimaryReasonLabel => 'Neden';
+
+  @override
+  String get aiInsightWhatToDoLabel => 'Eylem';
+
+  @override
+  String get aiInsightConfidenceHeading => 'Güven';
+
+  @override
+  String get confidenceWordHigh => 'Yüksek';
+
+  @override
+  String get confidenceWordMedium => 'Orta';
+
+  @override
+  String get confidenceWordLow => 'Düşük';
+
+  @override
+  String aiInsightConfidenceLine(String level) {
+    return 'Güven: $level';
+  }
+
+  @override
+  String get aiRecommendationTitle => 'Öneri';
+
+  @override
+  String get aiActionStartStudy => 'Çalışma oturumu başlat';
+
+  @override
+  String get aiActionAddTask => 'Görev ekle';
+
+  @override
+  String get aiActionViewTasks => 'Görevlere git';
+
+  @override
+  String get aiActionOpenAnalytics => 'Analizleri aç';
+
+  @override
+  String get aiPassiveRiskSpike =>
+      'Akademik risk belirgin şekilde değişti. Kısa bir kontrol düşünün.';
+
+  @override
+  String get aiPassiveOpenAssistant => 'Asistanı aç';
+
+  @override
+  String get aiPassiveReviewTasksNow => 'Görevleri şimdi gözden geçir';
+
+  @override
+  String get aiPassiveViewAnalytics => 'Analizleri görüntüle';
+
+  @override
   String get academicRisk => 'Akademik Risk';
 
   @override
@@ -407,6 +464,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get taskCompletionRate => 'Görev tamamlama oranı';
+
+  @override
+  String get taskStatThisWeekByDeadline => 'Bu hafta (son tarihe göre)';
+
+  @override
+  String get taskStatThisSemester => 'Bu dönem';
+
+  @override
+  String get taskStatTrendChartPeriod => 'Görevler (grafik dönemi)';
 
   @override
   String get stressTrends => 'Stres eğilimleri';
@@ -1280,7 +1346,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get studyHoursByCourse => 'Derse Göre Çalışma Saatleri';
 
   @override
-  String get weeklyTaskCompletion => 'Haftalık Görev Tamamlama';
+  String get weeklyTaskCompletion => 'Bu hafta (son tarihe göre)';
 
   @override
   String get dailyInsight => 'Daily Insight';
@@ -1496,7 +1562,17 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get riskTrendStable => 'Değişim yok';
+  String get riskTrendStable => 'Stabil';
+
+  @override
+  String riskTrendWorseningDelta(int delta) {
+    return 'Kötüleşiyor · +$delta';
+  }
+
+  @override
+  String riskTrendImprovingDelta(int delta) {
+    return 'İyileşiyor · −$delta';
+  }
 
   @override
   String get riskTrendNew => 'Yeni';
@@ -1543,7 +1619,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String tasksCompletedThisWeek(int completed, int total) {
-    return 'Bu haftaki görevler: $completed/$total tamamlandı';
+    return 'Bu hafta (son tarihe göre): $completed/$total tamamlandı';
   }
 
   @override
@@ -3256,7 +3332,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get olderLabel => 'Daha Eski';
 
   @override
-  String get decisionSmartInsights => 'Akıllı İçgörüler';
+  String get decisionSmartInsights => 'AI içgörüsü';
 
   @override
   String get decisionHighStress => 'Yüksek stres tespit edildi';
@@ -3807,7 +3883,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get smartAiInsights => 'Yapay Zeka İçgörüleri';
+  String get smartAiInsights => 'AI içgörüsü';
 
   @override
   String get burnoutExplanationFallingBehind =>

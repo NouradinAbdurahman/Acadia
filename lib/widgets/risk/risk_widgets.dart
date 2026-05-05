@@ -70,7 +70,7 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                    Text(
-                    risk.totalScore.toInt().toString(),
+                    risk.totalScore.round().toString(),
                     style: theme.textTheme.displayMedium?.copyWith(
                       fontSize: 52,
                       fontWeight: FontWeight.w900,
@@ -126,7 +126,10 @@ class _RiskScoreCardState extends ConsumerState<RiskScoreCard> {
 
         ],
       ),
-    ).animate().fade(delay: 50.ms).slideY(begin: 0.08);
+    )
+        .animate()
+        .fade(delay: 50.ms)
+        .slideY(begin: 0.08);
   }
 
   Color _colorForLevel(String level) {
@@ -173,7 +176,8 @@ class _TrendBadge extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    if (delta == null) {
+    final d = delta;
+    if (d == null) {
       return _buildContainer(
         theme,
         l10n.riskTrendNew,
@@ -182,22 +186,22 @@ class _TrendBadge extends StatelessWidget {
       );
     }
 
-    if (delta == 0) {
+    if (d == 0) {
       return _buildContainer(
         theme,
         l10n.riskTrendStable,
-        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        theme.colorScheme.onSurface.withValues(alpha: 0.55),
         null,
       );
     }
 
-    final isUp = delta! > 0;
+    final isUp = d > 0;
     // For academic risk, going UP is BAD (red), going DOWN is GOOD (green)
     final color = isUp ? const Color(0xFFEF4444) : const Color(0xFF22C55E);
     final icon = isUp ? HeroIcons.arrowTrendingUp : HeroIcons.arrowTrendingDown;
-    final text = isUp 
-        ? l10n.riskTrendUp(delta!) 
-        : l10n.riskTrendDown(delta!.abs());
+    final text = isUp
+        ? l10n.riskTrendWorseningDelta(d)
+        : l10n.riskTrendImprovingDelta(d.abs());
 
     return _buildContainer(theme, text, color, icon);
   }
@@ -231,7 +235,10 @@ class _TrendBadge extends StatelessWidget {
 
 /// Detailed risk breakdown panel used in the Analytics screen.
 class RiskBreakdownCard extends ConsumerStatefulWidget {
-  const RiskBreakdownCard({super.key});
+  const RiskBreakdownCard({super.key, this.footer});
+
+  /// Optional deterministic AI strip — merged into this card to avoid duplicate panels.
+  final Widget? footer;
 
   @override
   ConsumerState<RiskBreakdownCard> createState() => _RiskBreakdownCardState();
@@ -271,7 +278,7 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
-                '${risk.totalScore.toInt()} / 100',
+                '${risk.totalScore.round()} / 100',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: color,
                   fontWeight: FontWeight.w800,
@@ -332,6 +339,15 @@ class _RiskBreakdownCardState extends ConsumerState<RiskBreakdownCard> {
               fontWeight: FontWeight.w600,
             ),
           ),
+          if (widget.footer != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Divider(
+              height: 1,
+              color: theme.colorScheme.outline.withValues(alpha: 0.12),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            widget.footer!,
+          ],
         ],
       ),
     ).animate().fade(delay: 150.ms).slideY(begin: 0.08);

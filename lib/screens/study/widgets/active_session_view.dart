@@ -20,7 +20,11 @@ class ActiveSessionView extends ConsumerWidget {
     final courses = ref.watch(courseProvider).value ?? [];
     final course = courses.where((c) => c.id == timerState.courseId).firstOrNull;
 
-    final typeColor = _getTypeColor(timerState.sessionType, timerState.isBreak);
+    final typeColor = _getTypeColor(
+      timerState.sessionType,
+      timerState.isBreak,
+      timerState.intent,
+    );
     final label = _getSessionLabel(context, timerState);
     final progress = timerState.targetDuration.inSeconds > 0
         ? timerState.elapsed.inSeconds / timerState.targetDuration.inSeconds
@@ -180,8 +184,13 @@ class ActiveSessionView extends ConsumerWidget {
     return "$minutes:$seconds";
   }
 
-  Color _getTypeColor(StudyType type, bool isBreak) {
+  Color _getTypeColor(StudyType type, bool isBreak, String? intent) {
     if (isBreak) return const Color(0xFF4ADE80);
+    final normalized = (intent ?? '').trim();
+    if (normalized.contains('source:plan_today')) return const Color(0xFF8B5CF6);
+    if (normalized.startsWith('plan_today')) return const Color(0xFF8B5CF6);
+    if (normalized == 'analytics_recommendation') return const Color(0xFFF59E0B);
+    if (normalized.startsWith('focus_now')) return const Color(0xFF3B82F6);
     switch (type) {
       case StudyType.pomodoro: return const Color(0xFFFACC15);
       case StudyType.deepWork: return const Color(0xFF3B82F6);
@@ -192,6 +201,11 @@ class ActiveSessionView extends ConsumerWidget {
   String _getSessionLabel(BuildContext context, StudyTimerState state) {
     final l10n = AppLocalizations.of(context)!;
     if (state.isBreak) return l10n.breakLabel;
+    final intent = (state.intent ?? '').trim();
+    if (intent.contains('source:plan_today')) return 'Planned Session';
+    if (intent.startsWith('plan_today')) return 'Planned Session';
+    if (intent.startsWith('focus_now')) return 'Focus';
+    if (intent == 'analytics_recommendation') return 'Recommended Session';
     
     switch (state.sessionType) {
       case StudyType.pomodoro:
@@ -207,6 +221,13 @@ class ActiveSessionView extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     if (state.isPaused) return l10n.sessionPaused;
     if (state.isBreak) return l10n.refreshYourself;
+    final intent = (state.intent ?? '').trim();
+    if (intent.contains('source:plan_today')) return 'Follow your plan. Stay consistent.';
+    if (intent.startsWith('plan_today')) return 'Follow your plan. Stay consistent.';
+    if (intent.startsWith('focus_now')) return 'Stay focused. No distractions.';
+    if (intent == 'analytics_recommendation') {
+      return 'This session closes your gap. Keep going.';
+    }
     
     final messages = [
       l10n.stayFocused,

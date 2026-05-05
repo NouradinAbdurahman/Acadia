@@ -3,11 +3,27 @@ import OpenAI from "npm:openai@4.68.0";
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import { riskEngineCalculate } from "./unified_analytics.ts";
+import {
+  buildAcademicInsightAppendix,
+  buildTaskListInsightAppendix,
+} from "./academic_insights.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+/** BigInt in PostgREST rows breaks JSON.stringify — gateway often surfaces as 520. */
+function jsonResponse(body: unknown, status = 200) {
+  const json = JSON.stringify(body, (_key, value) =>
+    typeof value === "bigint" ? value.toString() : value
+  );
+  return new Response(json, {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 type Intent =
   | "get_tasks"
@@ -208,6 +224,7 @@ function buildTasksEmail(userName: string, groups: any) {
   return `
   <div style="background:#0f172a;color:white;padding:20px;border-radius:16px">
     <h2>Hi ${userName}</h2>
+    <p style="color:#94a3b8;font-size:13px;margin:0 0 12px">Tasks for this semester</p>
     ${buildTasksEmailInner(groups)}
   </div>
   `;
@@ -282,12 +299,12 @@ function detectEmailKind(lower: string, context: any): EmailKind {
 
 function summaryDataToHtml(d: any) {
   return `<ul style="line-height:1.7">
-    <li>Tasks: ${d.completed} completed of ${d.total} total</li>
-    <li>This week: ${d.weeklyCompleted} / ${d.weeklyTotal} tasks (${d.completionRate}%)</li>
-    <li>Study this week: ${d.hours}h (goal ${d.studyGoal}h, deficit ${d.studyDeficit}h)</li>
-    <li>Weekly average: ${d.weeklyAvg}h</li>
-    <li>Consistency: ${d.consistency}%</li>
-    <li>Overdue tasks: ${d.overdue}</li>
+    <li>This semester — tasks: ${d.completed} completed of ${d.total} total</li>
+    <li>This week (by deadline) — tasks: ${d.weeklyCompleted} / ${d.weeklyTotal} (${d.completionRate}% of those due this week)</li>
+    <li>This week (study sessions) — ${d.hours}h (goal ${d.studyGoal}h, deficit ${d.studyDeficit}h)</li>
+    <li>This semester (average) — ${d.weeklyAvg}h / week</li>
+    <li>Rolling consistency (last 7 days): ${d.consistency}%</li>
+    <li>Overdue (this semester): ${d.overdue}</li>
   </ul>`;
 }
 
@@ -322,6 +339,44 @@ async function computeSummaryData(supabase: any, userId: string, semesterId: str
     return new Date(t.deadline) < sumTodayStart;
   }).length;
 
+  const sumDueSoonEnd = new Date(sumTodayStart);
+  sumDueSoonEnd.setDate(sumDueSoonEnd.getDate() + 3);
+  const sumDueSoon = summaryTasks.all.filter((t: any) => {
+    if (t.status === "completed") return false;
+    if (!t.deadline) return false;
+    const dl = new Date(t.deadline);
+    return dl >= sumTodayStart && dl < sumDueSoonEnd;
+  }).length;
+
+  const summaryRisk = riskEngineCalculate({
+    overdueTasks: sumOverdue,
+    dueSoonTasks: sumDueSoon,
+    studyDeficitHours: studyStats.studyDeficit,
+    stressLevel: 5,
+    consistency: studyStats.consistency,
+    hasStressData: false,
+  });
+  const summaryRiskOverride =
+    typeof mood?.riskDetail?.score === "number"
+      ? mood.riskDetail.score
+      : typeof mood?.risk === "number"
+        ? mood.risk
+        : summaryRisk.score;
+
+  const insightAppendix = buildAcademicInsightAppendix({
+    overdueTasks: sumOverdue,
+    dueSoonTasks: sumDueSoon,
+    studyDeficitHours: studyStats.studyDeficit,
+    weeklyStudyGoalHours: studyStats.studyGoal,
+    consistency01: studyStats.consistency,
+    riskScore0to100: summaryRiskOverride,
+    calendarWeekTotal: sumWeeklyTotal,
+    calendarWeekCompleted: sumWeeklyCompleted,
+    semesterTaskTotal: total,
+    avgSessionStress: null,
+    burnoutScore: typeof mood?.burnout === "number" ? mood.burnout : null,
+  });
+
   const data = {
     total,
     completed,
@@ -338,8 +393,9 @@ async function computeSummaryData(supabase: any, userId: string, semesterId: str
 
   const reply =
     total === 0
-      ? "You don't have any tasks yet."
-      : `You've completed ${sumWeeklyCompleted} out of ${sumWeeklyTotal} tasks this week (${sumCompletionRate.toFixed(0)}%). You've studied ${studyStats.thisWeekHours.toFixed(1)}h this week (goal: ${studyStats.studyGoal}h).${sumOverdue > 0 ? ` ${sumOverdue} task${sumOverdue > 1 ? "s are" : " is"} overdue.` : ""}`;
+      ? "This semester, you don't have any tasks yet." + insightAppendix
+      : `This semester: ${completed} of ${total} tasks completed. This week (by deadline): ${sumWeeklyCompleted} of ${sumWeeklyTotal} (${sumCompletionRate.toFixed(0)}% of those due this week). This week (study sessions): ${studyStats.thisWeekHours.toFixed(1)}h (goal: ${studyStats.studyGoal}h).${sumOverdue > 0 ? ` Overdue (this semester): ${sumOverdue} task${sumOverdue > 1 ? "s" : ""}.` : ""}` +
+        insightAppendix;
 
   return { data, reply };
 }
@@ -410,16 +466,18 @@ async function aiReply(client: OpenAI, model: string, messages: any[], contextDa
     const systemPrompt = contextData
       ? `You are Acadia, a helpful academic assistant. You have full access to the student's real-time academic data below. Use these exact numbers when answering questions - never make up data.
 
-STUDENT DATA:
-- Study this week: ${contextData.studyHours}h (Goal: ${contextData.studyGoal}h)
-- Study deficit: ${contextData.studyDeficit}h
-- Weekly average: ${contextData.weeklyAvg}h
-- Consistency: ${(contextData.consistency * 100).toFixed(0)}%
-- Tasks: ${contextData.completedTasks} completed / ${contextData.totalTasks} total (this week: ${contextData.weeklyCompleted}/${contextData.weeklyTotal})
-- Overdue tasks: ${contextData.overdue}
-- Completion rate (weekly): ${contextData.completionRate}%
+STUDENT DATA (always state the scope when you cite a number — "this semester" vs "this week (by deadline)" vs "this week (study sessions)"):
 
-Speak naturally like a real human. Always use the data above to give precise answers.`
+- This week (study sessions): ${contextData.studyHours}h logged (weekly goal: ${contextData.studyGoal}h)
+- Study deficit (this week vs goal): ${contextData.studyDeficit}h
+- This semester (average study): ${contextData.weeklyAvg}h / week
+- Rolling consistency (last 7 days): ${(contextData.consistency * 100).toFixed(0)}%
+- This semester — tasks completed: ${contextData.completedTasks} / ${contextData.totalTasks} total
+- This week (by deadline) — tasks: ${contextData.weeklyCompleted} completed / ${contextData.weeklyTotal} with a deadline in the current calendar week
+- Completion rate for this week (by deadline): ${contextData.completionRate}%
+- Overdue (this semester): ${contextData.overdue}
+
+Speak naturally like a real human. Never mix scopes in one sentence without labeling them. Always use the exact numbers above.`
       : "You are Acadia, a helpful academic assistant. Speak naturally like a real human. You have full access to structured academic data. You can summarize, analyze, prioritize, and explain in detail. Always use the data provided to give precise answers.";
 
     const res = await client.chat.completions.create({
@@ -449,7 +507,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { messages, semesterId, context: clientContext, moodContext } = await req.json();
+    const body = await req.json();
 
     const token = req.headers.get("Authorization")?.split(" ")[1];
     const { data: { user } } = await supabase.auth.getUser(token);
@@ -463,6 +521,55 @@ serve(async (req) => {
       .select("full_name, active_semester_id")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    // Step 1 validation only — compare unified contract vs Flutter (no AI path)
+    if (body?.debug === "get_unified_analytics") {
+      const resolvedSemesterId =
+        body.semesterId || profile?.active_semester_id;
+      if (!resolvedSemesterId) {
+        return jsonResponse(
+          {
+            error: "missing_semester",
+            message: "Provide semesterId in body or set student_profiles.active_semester_id",
+          },
+          400,
+        );
+      }
+      try {
+        // Dynamic import: keeps main AI path from loading this module; errors return 500 + message (not blank 520)
+        const { getUnifiedAnalytics } = await import("./unified_analytics.ts");
+        const unified = await getUnifiedAnalytics(
+          supabase,
+          user.id,
+          resolvedSemesterId,
+        );
+        return jsonResponse({
+          debug: "get_unified_analytics",
+          unified,
+        });
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        const stack = e instanceof Error ? e.stack : undefined;
+        console.error("get_unified_analytics failed:", message, stack);
+        return jsonResponse(
+          {
+            error: "unified_analytics_failed",
+            message,
+            stack,
+          },
+          500,
+        );
+      }
+    }
+
+    const { messages, semesterId, context: clientContext, moodContext } = body;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "messages_required", message: "Non-debug calls must include messages[]" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const resolvedSemesterId =
       semesterId || profile?.active_semester_id;
@@ -518,12 +625,16 @@ serve(async (req) => {
         const totalTasksCount = responseData.all.length;
         reply =
           totalTasksCount === 0
-            ? "You don't have any tasks yet."
-            : `You have ${totalTasksCount} tasks. ${
+            ? "This semester, you don't have any tasks yet."
+            : `This semester, you have ${totalTasksCount} tasks in total. ${
                 responseData.urgent.length > 0
                   ? "Start with " + responseData.urgent[0].title
                   : "You're doing well. Keep going."
-              }`;
+              }` +
+            buildTaskListInsightAppendix(
+              responseData.urgent.length,
+              responseData.pending.length,
+            );
         break;
 
       case "get_deadlines":
@@ -557,7 +668,14 @@ serve(async (req) => {
         }
 
         responseType = "deadlines";
-        reply = responseData.length ? `You have ${responseData.length} upcoming deadlines.` : "No deadlines found for this semester.";
+        reply = responseData.length
+          ? `For this semester, you have ${responseData.length} upcoming deadlines.` +
+              (responseData.length >= 6
+                ? `\n\nInsight:\nYou have many parallel deadlines. Competing dates raise context-switch cost.\n\nRecommendation:\nWork backward from each date; protect deep-focus blocks for the two hardest items.\n`
+                : responseData.length >= 3
+                  ? `\n\nInsight:\nSeveral deadlines are lined up; small slips compound.\n\nRecommendation:\nConfirm dates on your calendar and set reminders a few days before each.\n`
+                  : `\n\nInsight:\nYour upcoming deadline count looks manageable.\n\nRecommendation:\nStay one session ahead on prep so reviews are not last-minute.\n`)
+          : "No deadlines found for this semester.";
         break;
 
       case "get_summary": {
@@ -577,7 +695,9 @@ serve(async (req) => {
         const t = await getTasks(supabase, user.id, resolvedSemesterId);
         responseData = t.urgent[0] || t.pending[0] || null;
         responseType = "focus";
-        reply = responseData ? `Focus on ${responseData.title} right now.` : "No urgent tasks. Want to plan your week?";
+        reply = responseData
+          ? `For this semester, focus on ${responseData.title} right now.`
+          : "No urgent tasks this semester. Want to plan your week?";
         break;
 
       case "email_tasks": {
@@ -632,15 +752,15 @@ serve(async (req) => {
               `<p style="font-size:28px;font-weight:700;margin:0;color:#f8fafc">${Number(d.score).toFixed(1)}<span style="font-size:14px">/100</span></p>
               <p>Level: <strong>${escapeHtml(String(d.level ?? ""))}</strong></p>
               <ul style="line-height:1.7">
-                <li>Overdue tasks: ${d.overdueTasks ?? "—"}</li>
-                <li>Due soon: ${d.upcomingTasks ?? "—"}</li>
-                <li>Study deficit: ${
+                <li>Overdue (this semester): ${d.overdueTasks ?? "—"}</li>
+                <li>Due soon (this semester): ${d.upcomingTasks ?? "—"}</li>
+                <li>Study deficit (this week vs goal): ${
   typeof d.studyDeficit === "number" ? d.studyDeficit.toFixed(1) + "h" : "—"
 }</li>
                 <li>Session stress: ${
   typeof d.avgSessionStress === "number" ? d.avgSessionStress.toFixed(1) : "—"
 }</li>
-                <li>Task completion: ${
+                <li>Consistency (risk input): ${
   typeof d.consistency === "number" ? (d.consistency * 100).toFixed(0) + "%" : "—"
 }</li>
                 ${
@@ -883,13 +1003,39 @@ serve(async (req) => {
           const dd = new Date(tk.deadline);
           return dd >= aiWeekStart && dd < aiEndOfWeek;
         });
-        const aiWeeklyCompleted = aiWeeklyTasks.filter((tk: any) => tk.status === "completed").length;
+        const aiWeeklyCompleted = aiWeeklyTasks.filter(
+          (tk: any) => tk.status === "completed" || tk.is_completed === true,
+        ).length;
         const aiOverdue = aiTasks.all.filter((tk: any) => {
           if (tk.status === "completed") return false;
+          if (tk.is_completed === true) return false;
           if (!tk.deadline) return false;
           return new Date(tk.deadline) < aiTodayStart;
         }).length;
+        const aiDueSoonEnd = new Date(aiTodayStart);
+        aiDueSoonEnd.setDate(aiDueSoonEnd.getDate() + 3);
+        const aiDueSoonCount = aiTasks.all.filter((tk: any) => {
+          if (tk.status === "completed" || tk.is_completed === true) return false;
+          if (!tk.deadline) return false;
+          const dl = new Date(tk.deadline);
+          return dl >= aiTodayStart && dl < aiDueSoonEnd;
+        }).length;
         const aiCompletionRate = aiWeeklyTasks.length === 0 ? 0 : ((aiWeeklyCompleted / aiWeeklyTasks.length) * 100);
+
+        const aiRiskSnap = riskEngineCalculate({
+          overdueTasks: aiOverdue,
+          dueSoonTasks: aiDueSoonCount,
+          studyDeficitHours: aiStudyStats.studyDeficit,
+          stressLevel: 5,
+          consistency: aiStudyStats.consistency,
+          hasStressData: false,
+        });
+        const aiRiskOverride =
+          typeof mood?.riskDetail?.score === "number"
+            ? mood.riskDetail.score
+            : typeof mood?.risk === "number"
+              ? mood.risk
+              : aiRiskSnap.score;
 
         const contextData = {
           studyHours: aiStudyStats.thisWeekHours.toFixed(1),
@@ -905,7 +1051,21 @@ serve(async (req) => {
           completionRate: aiCompletionRate.toFixed(1),
         };
 
-        reply = await aiReply(client, model, messages, contextData);
+        reply =
+          (await aiReply(client, model, messages, contextData)) +
+          buildAcademicInsightAppendix({
+            overdueTasks: aiOverdue,
+            dueSoonTasks: aiDueSoonCount,
+            studyDeficitHours: aiStudyStats.studyDeficit,
+            weeklyStudyGoalHours: aiStudyStats.studyGoal,
+            consistency01: aiStudyStats.consistency,
+            riskScore0to100: aiRiskOverride,
+            calendarWeekTotal: aiWeeklyTasks.length,
+            calendarWeekCompleted: aiWeeklyCompleted,
+            semesterTaskTotal: aiTasks.all.length,
+            avgSessionStress: null,
+            burnoutScore: typeof mood?.burnout === "number" ? mood.burnout : null,
+          });
         break;
     }
 
@@ -929,9 +1089,7 @@ serve(async (req) => {
       }
     );
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: corsHeaders,
-    });
+    const message = e instanceof Error ? e.message : String(e);
+    return jsonResponse({ error: "internal_error", message }, 500);
   }
 });

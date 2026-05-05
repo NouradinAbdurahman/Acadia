@@ -178,7 +178,7 @@ class _SemesterHistoryItem extends ConsumerWidget {
                       ),
                       _CompactStat(
                         icon: HeroIcons.checkBadge,
-                        label: l10n.completed,
+                        label: l10n.taskStatThisWeekByDeadline,
                         value: '${(data.taskCompletionRate * 100).round()}%',
                       ),
                       _CompactStat(

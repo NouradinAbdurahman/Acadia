@@ -18,6 +18,7 @@ import 'mood_provider.dart';
 import 'student_profile_provider.dart';
 import 'semester_provider.dart';
 import '../domain/decision/decision_rules.dart';
+import '../domain/adaptive/adaptive_engine.dart';
 
 
 final analyticsJumpToTrendsTokenProvider = StateProvider<int>((ref) => 0);
@@ -237,10 +238,10 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
     // 4. Compute stable hash for this data snapshot.
     // Include lengths of all datasets that affect the final report.
     final currentHash = Object.hash(
-      semesterId, 
-      sessions.length, 
-      tasks.length, 
-      moods.length, 
+      semesterId,
+      sessions.length,
+      tasks.length,
+      moods.length,
       deadlines.length,
     );
 
@@ -278,6 +279,7 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
       sessions: sessions,
       tasks: tasks,
       moodLogs: moods,
+      deadlines: deadlines,
     );
 
     _lastHash = currentHash;
@@ -305,8 +307,9 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
 
     try {
       final sessions = ref.read(studySessionsProvider).value ?? <StudySession>[];
-      final tasks    = ref.read(tasksProvider).value ?? <Task>[];
-      final moods    = ref.read(moodLogsProvider).value ?? <MoodLog>[];
+      final tasks = ref.read(tasksProvider).value ?? <Task>[];
+      final moods = ref.read(moodLogsProvider).value ?? <MoodLog>[];
+      final deadlines = ref.read(deadlinesProvider).value ?? <Deadline>[];
 
       final data = await ref.read(analyticsRepositoryProvider).computeFromPreloaded(
         userId: user.id,
@@ -314,8 +317,15 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
         sessions: sessions,
         tasks: tasks,
         moodLogs: moods,
+        deadlines: deadlines,
       );
-      final hash = Object.hash(semesterId, sessions.length, tasks.length, moods.length);
+      final hash = Object.hash(
+        semesterId,
+        sessions.length,
+        tasks.length,
+        moods.length,
+        deadlines.length,
+      );
       _lastHash = hash;
       _cache[semesterId] = (hash: hash, data: data);
       state = AsyncValue.data(data);
@@ -336,6 +346,7 @@ class StudyAnalytics {
   final double avgDailyStress;
   final double avgSessionStress;
   final bool hasMoodTrendDown;
+  final double burnoutScoreValue;
   // Removed final consistency field to use getter instead
 
   StudyAnalytics(
@@ -347,6 +358,7 @@ class StudyAnalytics {
     this.avgDailyStress = 0.0,
     this.avgSessionStress = 0.0,
     this.hasMoodTrendDown = false,
+    this.burnoutScoreValue = 0.0,
   });
 
   double get consistency => (activeDaysThisWeek / 7.0).clamp(0.0, 1.0);
@@ -535,7 +547,18 @@ class StudyAnalytics {
     return (base + timeAdjustment).clamp(20, 60);
   }
 
-  int get suggestedDuration => DecisionRules.getRecommendedSessionLength(avgSessionStress);
+  int get suggestedDuration {
+    final profile = AdaptiveEngine.build(
+      sessions,
+      consistency: consistency,
+    );
+    return DecisionRules.getFinalRecommendedMinutes(
+      consistency: consistency,
+      stress: avgSessionStress,
+      profile: profile,
+      burnoutRisk: burnoutScore,
+    );
+  }
 
   int suggestedDurationForMode(AdaptationMode mode) {
     final slot = mode == AdaptationMode.followBehavior && hasReliableBehaviorSignal
@@ -1053,33 +1076,7 @@ class StudyAnalytics {
   }
 
   double get burnoutScore {
-    double score = 0;
-    
-    // 1. Deficit Ratio (40 pts max, capped at 25 for truth-consistency)
-    final deficitRatio = (weeklyDeficitHours / 24.0).clamp(0.0, 1.0);
-    score += (deficitRatio * 40.0).clamp(0.0, 25.0);
-    
-    // 2. Study Pressure (25 pts)
-    // Truth-Consistency Fix: High burnout requires sustained high stress
-    final stressDays = sessions.where((s) => (s.stress ?? 0) >= 7).map((s) => _burnoutDayKey(s.createdAt)).toSet().length;
-    
-    if (avgSessionStress >= 7 && stressDays >= 3) {
-      score += 25.0;
-    } else if (avgSessionStress >= 6 || stressDays >= 1) {
-      score += 15.0;
-    }
-    
-    // 3. Consistency (20 pts)
-    if (consistency < 0.6) {
-      score += (1.0 - consistency) * 20.0;
-    }
-    
-    // 4. Mood Trend (10 pts)
-    if (hasMoodTrendDown) {
-      score += 10.0;
-    }
-    
-    return score.clamp(0.0, 100.0);
+    return burnoutScoreValue.clamp(0.0, 100.0);
   }
 
   BurnoutLevel get burnoutLevel {
@@ -1229,14 +1226,14 @@ class StudyAnalytics {
       }
     });
 
-    // CONSTRAIN: Profile must never contradict decision engine wildly
-    if (optimalMin > 60) {
-      optimalMin = 45;
-      optimalMax = 60;
+    // Constrain profile range to adaptive system envelope (10-45 min).
+    if (optimalMin > 45) {
+      optimalMin = 35;
+      optimalMax = 45;
     }
-    if (optimalMin < 20) {
-      optimalMin = 20;
-      optimalMax = 30;
+    if (optimalMin < 10) {
+      optimalMin = 10;
+      optimalMax = 20;
     }
 
     // 2. Stress Threshold
@@ -1307,6 +1304,7 @@ final studyAnalyticsProvider = Provider<StudyAnalytics>((ref) {
       avgDailyStress: analyticsData?.avgDailyStress ?? 0.0,
       avgSessionStress: analyticsData?.avgSessionStress ?? 0.0,
       hasMoodTrendDown: (analyticsData?.dailyMoodTrend ?? 'stable') == 'down',
+      burnoutScoreValue: analyticsData?.burnoutScore ?? 0.0,
     ),
     orElse: () => StudyAnalytics(
       [],
@@ -1317,6 +1315,7 @@ final studyAnalyticsProvider = Provider<StudyAnalytics>((ref) {
       avgDailyStress: analyticsData?.avgDailyStress ?? 0.0,
       avgSessionStress: analyticsData?.avgSessionStress ?? 0.0,
       hasMoodTrendDown: (analyticsData?.dailyMoodTrend ?? 'stable') == 'down',
+      burnoutScoreValue: analyticsData?.burnoutScore ?? 0.0,
     ),
   );
 

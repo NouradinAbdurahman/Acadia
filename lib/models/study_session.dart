@@ -23,6 +23,10 @@ class StudySession {
   final int? totalCycles;
   final double? mood;
   final double? stress;
+  final int? plannedMinutes;
+  final int? actualMinutes;
+  final DateTime? startedAt;
+  final DateTime? endedAt;
 
 
   StudySession({
@@ -46,6 +50,10 @@ class StudySession {
     this.totalCycles,
     this.mood,
     this.stress,
+    this.plannedMinutes,
+    this.actualMinutes,
+    this.startedAt,
+    this.endedAt,
   });
 
   factory StudySession.fromJson(Map<String, dynamic> json) {
@@ -91,6 +99,16 @@ class StudySession {
       totalCycles: json['total_cycles'] as int?,
       mood: (json['mood'] as num?)?.toDouble(),
       stress: (json['stress'] as num?)?.toDouble(),
+      plannedMinutes: (json['planned_minutes'] as num?)?.toInt(),
+      actualMinutes: (json['actual_minutes'] as num?)?.toInt() ?? durationMinutes,
+      startedAt: json['started_at'] != null
+          ? DateTime.tryParse(json['started_at'] as String)
+          : DateTime.parse(json['created_at'] as String),
+      endedAt: json['ended_at'] != null
+          ? DateTime.tryParse(json['ended_at'] as String)
+          : DateTime.parse(json['created_at'] as String).add(
+              Duration(minutes: durationMinutes),
+            ),
     );
   }
 
@@ -115,6 +133,10 @@ class StudySession {
       if (totalCycles != null) 'total_cycles': totalCycles,
       if (mood != null) 'mood': mood,
       if (stress != null) 'stress': stress,
+      if (plannedMinutes != null) 'planned_minutes': plannedMinutes,
+      if (actualMinutes != null) 'actual_minutes': actualMinutes,
+      if (startedAt != null) 'started_at': startedAt!.toIso8601String(),
+      if (endedAt != null) 'ended_at': endedAt!.toIso8601String(),
     };
   }
 
@@ -138,6 +160,10 @@ class StudySession {
     int? totalCycles,
     double? mood,
     double? stress,
+    int? plannedMinutes,
+    int? actualMinutes,
+    DateTime? startedAt,
+    DateTime? endedAt,
   }) {
     return StudySession(
       id: id ?? this.id,
@@ -159,6 +185,10 @@ class StudySession {
       totalCycles: totalCycles ?? this.totalCycles,
       mood: mood ?? this.mood,
       stress: stress ?? this.stress,
+      plannedMinutes: plannedMinutes ?? this.plannedMinutes,
+      actualMinutes: actualMinutes ?? this.actualMinutes,
+      startedAt: startedAt ?? this.startedAt,
+      endedAt: endedAt ?? this.endedAt,
     );
   }
 }

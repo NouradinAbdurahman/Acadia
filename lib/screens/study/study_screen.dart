@@ -28,6 +28,7 @@ import '../../providers/mood_provider.dart';
 import '../../providers/student_profile_provider.dart';
 import '../../providers/decision_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
+import '../../providers/adaptive_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../domain/decision/decision_rules.dart';
 import 'study_history_screen.dart';
@@ -158,9 +159,15 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   }
 
   int _recommendedDurationForMode(StudyAnalytics analytics, AdaptationMode mode, WidgetRef ref) {
-    final stress = ref.read(analyticsProvider).value?.avgSessionStress ?? 0.0;
+    final a = ref.read(analyticsProvider).valueOrNull;
+    final adaptive = ref.read(adaptiveProfileProvider);
     if (mode == AdaptationMode.followBehavior) {
-      return DecisionRules.getRecommendedSessionLength(stress);
+      return DecisionRules.getFinalRecommendedMinutes(
+        consistency: a?.consistency ?? 1.0,
+        stress: a?.avgSessionStress ?? 0.0,
+        profile: adaptive,
+        burnoutRisk: analytics.burnoutScore,
+      );
     }
     return 60;
   }
@@ -187,6 +194,16 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final weekday = DateTime.now().weekday.clamp(1, 7);
     final expectedMinutes = (analytics.weeklyGoalMinutes * (weekday / 7.0));
     return expectedMinutes / 60.0;
+  }
+
+  String _displayIntentLabel(String? rawIntent) {
+    final intent = (rawIntent ?? '').trim();
+    if (intent.isEmpty) return '';
+    if (intent.contains('source:plan_today')) return 'Plan today session';
+    if (intent.startsWith('focus_now')) return 'Focus session';
+    if (intent.startsWith('plan_today')) return 'Plan today session';
+    if (intent == 'analytics_recommendation') return 'Analytics recommendation';
+    return intent.replaceAll('_', ' ');
   }
 
   @override
@@ -220,8 +237,15 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         final extra = routeState.extra as Map<String, dynamic>?;
         if (extra != null && extra['source'] == 'analytics') {
           _handledAnalyticsArgs = true; // Mark as handled
-          final stress = ref.read(analyticsProvider).value?.avgSessionStress ?? 0.0;
-          final suggested = (extra['duration'] as int?) ?? DecisionRules.getRecommendedSessionLength(stress);
+          final a = ref.read(analyticsProvider).valueOrNull;
+          final adaptive = ref.read(adaptiveProfileProvider);
+          final suggested = (extra['duration'] as int?) ??
+              DecisionRules.getFinalRecommendedMinutes(
+                consistency: a?.consistency ?? 1.0,
+                stress: a?.avgSessionStress ?? 0.0,
+                profile: adaptive,
+                burnoutRisk: analytics.burnoutScore,
+              );
           if (isIdle && timerState.targetDuration.inMinutes != suggested) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
@@ -369,6 +393,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     final adaptationMode = ref.watch(studyAdaptationModeProvider);
     final profile = ref.watch(studentProfileProvider).valueOrNull;
     final decision = ref.watch(decisionProvider);
+    final analyticsData = ref.watch(analyticsProvider).valueOrNull;
     final suggestedMinutes = decision.suggestedSessionMinutes ?? _recommendedDurationForMode(analytics, adaptationMode, ref);
     final followBehavior = adaptationMode == AdaptationMode.followBehavior;
     final dominantSlot = analytics.dominantStudyTime;
@@ -377,10 +402,6 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
       adaptationMode == AdaptationMode.followBehavior && hasStableSignal
         ? (dominantSlot ?? profile?.preferredStudyTime)
         : profile?.preferredStudyTime;
-    final dailyTargetHours = _dailyTargetHours(analytics);
-    final weekHours = _currentWeekHours(analytics);
-    final expectedHours = _expectedHoursByToday(analytics);
-    final isBehindGoal = weekHours < expectedHours;
     final adaptiveHintTime = analytics.adaptiveHintStudyTime;
     final morningCount = analytics.sessionsForSlot('morning');
     final afternoonCount = analytics.sessionsForSlot('afternoon');
@@ -435,197 +456,174 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        AppGlassCard(
-          borderOnly: true,
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.recommendedForYouTitle,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: theme.brightness == Brightness.dark
-                      ? Colors.white.withValues(alpha: 0.06)
-                      : theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+        if (analyticsData == null || !analyticsData.hasData)
+          AppGlassCard(
+            borderOnly: true,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.recommendedForYouTitle,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    _buildRecommendedModeTab(
-                      context: context,
-                      label: l10n.keepMyPreference,
-                      selected: adaptationMode == AdaptationMode.keepPreference,
-                      onTap: () {
-                        final next = AdaptationMode.keepPreference;
-                        Haptics.vibrate(HapticsType.selection);
-                        ref.read(studyAdaptationModeProvider.notifier).setMode(next);
-                        ref
-                            .read(studyTimerProvider.notifier)
-                            .setDuration(
-                              Duration(
-                                minutes: _recommendedDurationForMode(analytics, next, ref),
-                              ),
-                            );
-                      },
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
                     ),
-                    _buildRecommendedModeTab(
-                      context: context,
-                      label: l10n.followActualBehavior,
-                      selected: adaptationMode == AdaptationMode.followBehavior,
-                      onTap: () {
-                        final next = AdaptationMode.followBehavior;
-                        Haptics.vibrate(HapticsType.selection);
-                        ref.read(studyAdaptationModeProvider.notifier).setMode(next);
-                        ref
-                            .read(studyTimerProvider.notifier)
-                            .setDuration(
-                              Duration(
-                                minutes: _recommendedDurationForMode(analytics, next, ref),
-                              ),
-                            );
-                      },
-                    ),
-                  ],
+                  ),
+                  child: Row(
+                    children: [
+                      _buildRecommendedModeTab(
+                        context: context,
+                        label: l10n.keepMyPreference,
+                        selected: adaptationMode == AdaptationMode.keepPreference,
+                        onTap: () {
+                          final next = AdaptationMode.keepPreference;
+                          Haptics.vibrate(HapticsType.selection);
+                          ref.read(studyAdaptationModeProvider.notifier).setMode(next);
+                          ref
+                              .read(studyTimerProvider.notifier)
+                              .setDuration(
+                                Duration(
+                                  minutes: _recommendedDurationForMode(analytics, next, ref),
+                                ),
+                              );
+                        },
+                      ),
+                      _buildRecommendedModeTab(
+                        context: context,
+                        label: l10n.followActualBehavior,
+                        selected: adaptationMode == AdaptationMode.followBehavior,
+                        onTap: () {
+                          final next = AdaptationMode.followBehavior;
+                          Haptics.vibrate(HapticsType.selection);
+                          ref.read(studyAdaptationModeProvider.notifier).setMode(next);
+                          ref
+                              .read(studyTimerProvider.notifier)
+                              .setDuration(
+                                Duration(
+                                  minutes: _recommendedDurationForMode(analytics, next, ref),
+                                ),
+                              );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                l10n.bestStudyTimeBullet(_preferredTimeLabel(l10n, recommendedSlot)),
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                followBehavior
-                    ? l10n.suggestedShorterSessionsToday
-                    : l10n.suggestedFlexibleSessionsToday,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              if (decision.avgSessionStress >= 7)
+                const SizedBox(height: AppSpacing.sm),
                 Text(
-                  l10n.recoveryMessageStressHigh,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
-                  ),
-                )
-              else if (isBehindGoal)
-                Text(
-                  l10n.needHoursTodayToStayOnTrack(
-                    '~${dailyTargetHours.toStringAsFixed(1)}',
-                  ),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.primary,
-                  ),
-                )
-              else
-                Text(
-                  l10n.dailyTargetNeededBullet(dailyTargetHours.toStringAsFixed(1)),
+                  l10n.bestStudyTimeBullet(_preferredTimeLabel(l10n, recommendedSlot)),
                   style: theme.textTheme.bodyMedium,
                 ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.burnoutInputsHumanized(
-                  weeklyDeficitHours.toStringAsFixed(1),
-                  inconsistencyScore,
-                ),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
-              ),
-              if (irregularPattern)
+                const SizedBox(height: 4),
                 Text(
-                  l10n.patternIrregularThisWeek,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.error.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              if (adaptiveHintTime != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  l10n.adaptiveHintRecentStudyTime(
-                    _preferredTimeLabel(l10n, adaptiveHintTime),
-                  ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.85),
+                  followBehavior
+                      ? l10n.suggestedShorterSessionsToday
+                      : l10n.suggestedFlexibleSessionsToday,
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  l10n.weekSessionsBreakdown(morningCount, afternoonCount, nightCount),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.confidenceBreakdown(
-                    behaviorConfidence,
-                    preferenceConfidence,
-                    dominantSlot != null
-                        ? l10n.trendDeltaVsLastWeek(
-                            analytics.slotTrendDelta(dominantSlot) >= 0
-                                ? '+${analytics.slotTrendDelta(dominantSlot)}'
-                                : analytics.slotTrendDelta(dominantSlot).toString(),
-                          )
-                        : '',
+                  l10n.burnoutInputsHumanized(
+                    weeklyDeficitHours.toStringAsFixed(1),
+                    inconsistencyScore,
                   ),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
-              ],
-              if (recoveryDetected) ...[
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF22C55E).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    border: Border.all(
-                      color: const Color(0xFF22C55E).withValues(alpha: 0.18),
+                if (irregularPattern)
+                  Text(
+                    l10n.patternIrregularThisWeek,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error.withValues(alpha: 0.85),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  child: Text(
-                    l10n.recoveryImprovingThisWeek,
+                if (adaptiveHintTime != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.adaptiveHintRecentStudyTime(
+                      _preferredTimeLabel(l10n, adaptiveHintTime),
+                    ),
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF22C55E),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.85),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-              ] else ...[
-                const SizedBox(height: 8),
-                Text(
-                  hasBurnoutTrendHistory
-                      ? l10n.noRecoveryTrendDetectedYet
-                      : l10n.notEnoughDataTrendYet,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                    fontStyle: FontStyle.italic,
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.weekSessionsBreakdown(morningCount, afternoonCount, nightCount),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.confidenceBreakdown(
+                      behaviorConfidence,
+                      preferenceConfidence,
+                      dominantSlot != null
+                          ? l10n.trendDeltaVsLastWeek(
+                              analytics.slotTrendDelta(dominantSlot) >= 0
+                                  ? '+${analytics.slotTrendDelta(dominantSlot)}'
+                                  : analytics.slotTrendDelta(dominantSlot).toString(),
+                            )
+                          : '',
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                    ),
+                  ),
+                ],
+                if (recoveryDetected) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(
+                        color: const Color(0xFF22C55E).withValues(alpha: 0.18),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.recoveryImprovingThisWeek,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF22C55E),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    hasBurnoutTrendHistory
+                        ? l10n.noRecoveryTrendDetectedYet
+                        : l10n.notEnoughDataTrendYet,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
         const SizedBox(height: AppSpacing.md),
 
         decisionAsync.when(
@@ -2102,7 +2100,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    state.intent!,
+                    _displayIntentLabel(state.intent),
                     style: theme.textTheme.bodySmall,
                     overflow: TextOverflow.ellipsis,
                   ),

@@ -4,6 +4,12 @@ class AnalyticsData {
   final double taskCompletionRate;
   final int completedTasks;
   final int totalTasks;
+
+  /// Same values as [totalTasks] / [completedTasks] / [taskCompletionRate] —
+  /// calendar-week scope (deadline in current week). Explicit names for clarity.
+  final int calendarWeekDeadlineTaskCount;
+  final int calendarWeekDeadlineCompletedTaskCount;
+  final double calendarWeekDeadlineTaskCompletionFraction;
   final double averageGPA;
   final double weeklyAverageStudyHours;
   final int totalECTS;
@@ -36,6 +42,7 @@ class AnalyticsData {
   final double weeklyConsistency;
   final int totalTrackedSessions;
   final double studyGoal;
+  final double burnoutScore;
 
   AnalyticsData({
     required this.studyHoursPerCourse,
@@ -43,6 +50,9 @@ class AnalyticsData {
     required this.taskCompletionRate,
     required this.completedTasks,
     required this.totalTasks,
+    int? explicitCalendarWeekDeadlineTaskCount,
+    int? explicitCalendarWeekDeadlineCompletedTaskCount,
+    double? explicitCalendarWeekDeadlineTaskCompletionFraction,
     this.averageGPA = 0.0,
     this.weeklyAverageStudyHours = 0.0,
     this.totalECTS = 0,
@@ -74,7 +84,14 @@ class AnalyticsData {
     this.weeklyConsistency = 0.0,
     this.totalTrackedSessions = 0,
     this.studyGoal = 15.0,
-  });
+    this.burnoutScore = 0.0,
+  })  : calendarWeekDeadlineTaskCount =
+            explicitCalendarWeekDeadlineTaskCount ?? totalTasks,
+        calendarWeekDeadlineCompletedTaskCount =
+            explicitCalendarWeekDeadlineCompletedTaskCount ?? completedTasks,
+        calendarWeekDeadlineTaskCompletionFraction =
+            explicitCalendarWeekDeadlineTaskCompletionFraction ??
+                taskCompletionRate;
 
   factory AnalyticsData.empty() {
     return AnalyticsData(
@@ -96,6 +113,11 @@ class AnalyticsData {
       'taskCompletionRate': taskCompletionRate,
       'completedTasks': completedTasks,
       'totalTasks': totalTasks,
+      'calendarWeekDeadlineTaskCount': calendarWeekDeadlineTaskCount,
+      'calendarWeekDeadlineCompletedTaskCount':
+          calendarWeekDeadlineCompletedTaskCount,
+      'calendarWeekDeadlineTaskCompletionFraction':
+          calendarWeekDeadlineTaskCompletionFraction,
       'averageGPA': averageGPA,
       'weeklyAverageStudyHours': weeklyAverageStudyHours,
       'totalECTS': totalECTS,
@@ -126,6 +148,7 @@ class AnalyticsData {
       'weeklyConsistency': weeklyConsistency,
       'totalTrackedSessions': totalTrackedSessions,
       'studyGoal': studyGoal,
+      'burnoutScore': burnoutScore,
     };
   }
 }

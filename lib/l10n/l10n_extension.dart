@@ -172,4 +172,11 @@ extension LocalizationHelper on AppLocalizations {
     if (confidence >= 0.4) return confidenceMedium;
     return confidenceLow;
   }
+
+  /// Short label for analytics AI block (no "Confidence:" prefix — use [aiInsightConfidenceHeading]).
+  String decisionConfidenceWord(double confidence) {
+    if (confidence >= 0.7) return confidenceWordHigh;
+    if (confidence >= 0.4) return confidenceWordMedium;
+    return confidenceWordLow;
+  }
 }

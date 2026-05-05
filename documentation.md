@@ -691,8 +691,19 @@ Services are the lowest layer that actually makes API calls. They don't know any
 **AiDataResolver** (in `services/ai/`) — Executes resolved intents.
 - `resolve(intent, userId, semesterId, { analyticsSnapshot, riskSnapshot })` — dispatches based on intent type
 - **Tasks / deadlines** — still fetched via `TaskRepository` / `DeadlineRepository` (same tables as the rest of the app)
-- **Study summary / progress** — uses the `AnalyticsData` passed in from `analyticsProvider` (the same object the Analytics screens compute via `AnalyticsRepository.computeFromPreloaded`), not `AnalyticsRepository.getAnalyticsData()` in isolation
-- **Academic risk** — uses the `RiskState` passed in from `riskProvider` (same `totalScore` and inputs as Home + Analytics “Risk Breakdown”). It does **not** re-call `RiskEngine` with `AnalyticsData.avgStress` / `AnalyticsData.consistency`, because those fields mean different things than `RiskInput.avgSessionStress` / task-completion ratio
+- **Unified appendix rule** — if `analyticsSnapshot.hasData`, all chat intents that append insight/recommendation use `_unifiedInsightInput(...).buildAppendix()` (same deterministic layer as UI). Task-only fallback appendix is only used when analytics data is missing.
+- **Study summary / progress** — uses the `AnalyticsData` passed in from `analyticsProvider` (the same object the Analytics screens compute via `AnalyticsRepository.computeFromPreloaded`), not `AnalyticsRepository.getAnalyticsData()` in isolation.
+- **Academic risk** — appendix input uses the same analytics-aligned risk source (`riskScoreOverride`) end-to-end to prevent drift between chat and cards.
+- **Consistency debug** — `ai_consistency_debug.dart` compares message output to the same analytics-based reference input and is disabled outside debug mode (`if (!kDebugMode) return;`).
+
+**AI Decision Engine feature set (current)**
+- **Smart planning** (`planWeek`) — deterministic weekly plan generation with capped session count, round-robin spread, urgency boost, deadline-aware priority lines, and empty-day suppression.
+- **Priority ranking** (`rankTasks`) — deterministic top-3 ranking over pending tasks plus unlinked deadlines using unified scoring and deduplication.
+- **Focus mode** (`focusNow`) — immediate action mode that picks the top-ranked task, returns `focus_session` structured data, and starts timer flow directly.
+- **Explainability** — structured deterministic reason blocks for both task selection and chosen session duration.
+- **Smart daily plan** (`planToday`) — 2–4 executable sessions with slots, capped total minutes, due-soon prioritization, and deficit-aware recovery blocks.
+- **Adaptive learning** — duration is adjusted by real behavior (`AdaptiveProfile`: completion rate, completion ratio, average actual duration, consistency), then capped via burnout-aware final rules.
+- **Risk prediction + consistency architecture** — same final recommendation context is shared across Home, Analytics, Study, Chat, and Edge fallback; risk/burnout are passed as owned analytics values (no UI-side recompute paths).
 
 ---
 
@@ -722,7 +733,8 @@ The `AnalyticsRepository` is worth talking about more because it's the most comp
 
 1. **`getAnalyticsData(userId, semesterId)`** — Full fetch from the database. Has a 10-second TTL cache per semester ID and deduplication of parallel fetches (if two providers ask for the same semester's analytics at the same time, only one DB call happens).
 
-2. **`computeFromPreloaded({userId, semesterId, sessions, tasks, moodLogs})`** — This one's smart. It takes already-loaded typed Dart models (which the providers already fetched) and only hits the DB for the remaining data (courses, results, settings, semester). This avoids making duplicate queries when the data is already in memory.
+2. **`computeFromPreloaded({userId, semesterId, sessions, tasks, moodLogs, deadlines})`** — This one's smart. It takes already-loaded typed Dart models (which the providers already fetched) and only hits the DB for the remaining data (courses, results, settings, semester). This avoids making duplicate queries when the data is already in memory.
+   - Recent parity update: weekly totals/completion, overdue, and due-soon analytics now merge both `tasks` and `academic_deadlines` so chat/analytics/risk surfaces remain consistent for deadline-heavy workflows.
 
 Both paths produce the same `AnalyticsData` model with the same ~25 computed fields. The only difference is where the input data comes from.
 
@@ -753,7 +765,7 @@ This is the biggest provider file at about 1,386 lines. It contains:
 
 - **`studyAnalyticsProvider`** — A derived provider that computes study-specific metrics:
   - `focusScore` — how focused the user's sessions are
-  - `burnoutScore` / `burnoutLevel` — burnout indicator (low/medium/high/critical)
+  - `burnoutScore` / `burnoutLevel` — burnout indicator (low/medium/high/critical), with score sourced from analytics snapshots for parity with assistant/edge flows
   - `currentStreak` — consecutive days with study sessions
   - `weeklyConsistency` — how consistently they study each week
   - `pomodoroStats` — Pomodoro-specific statistics

@@ -40,10 +40,11 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
   }
 
 
-  Future<void> loadCourses({String? semesterId}) async {
+  Future<void> loadCourses({String? semesterId, bool force = false}) async {
     if (semesterId != null &&
         _lastLoadedSemesterId == semesterId &&
-        state.hasValue) {
+        state.hasValue &&
+        !force) {
       return;
     }
     state = const AsyncValue<List<Course>>.loading();
@@ -88,7 +89,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
       if (semesterId == null) return;
       final courseWithSemester = course.copyWith(semesterId: semesterId);
       await _repository.createCourse(courseWithSemester);
-      await loadCourses(semesterId: semesterId);
+      await loadCourses(semesterId: semesterId, force: true);
     } catch (e) {
       // Handle error
     }
@@ -100,7 +101,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
       final semesterId = ref?.read(activeSemesterProvider).value;
       if (semesterId == null) return;
       await _repository.updateCourse(course.copyWith(semesterId: semesterId));
-      await loadCourses(semesterId: semesterId);
+      await loadCourses(semesterId: semesterId, force: true);
     } catch (e) {
       // Handle error
     }
@@ -111,7 +112,7 @@ class CourseNotifier extends StateNotifier<AsyncValue<List<Course>>> {
       final semesterId = ref?.read(activeSemesterProvider).value;
       await _repository.deleteCourse(id);
       if (semesterId == null) return;
-      await loadCourses(semesterId: semesterId);
+      await loadCourses(semesterId: semesterId, force: true);
     } catch (e) {
       // Handle error
     }

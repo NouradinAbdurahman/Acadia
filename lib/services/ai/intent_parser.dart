@@ -16,17 +16,77 @@ class AiIntentParser {
     // 1. Identify Intent Type
     AiIntentType type = AiIntentType.unknown;
     
-    if (_matches(lower, [r'\btask', r'\btodo', r'\bwork', r'\bassignment', r'\bdo\b'])) {
-      if (_matches(lower, [r'completed', r'done', r'finished', r'already did'])) {
+    bool? completionFilter;
+    if (_matches(lower, [r'plan my week', r'weekly plan', r'plan this week'])) {
+      type = AiIntentType.planWeek;
+    } else if (_matches(lower, [
+      r'plan today',
+      r'plan_today',
+      r'today plan',
+      r'what should i study today',
+    ])) {
+      type = AiIntentType.planToday;
+    } else if (_matches(lower, [
+      r'focus now',
+      r'focus_now',
+      r'start focus',
+      r'start session',
+      r'study now',
+    ])) {
+      type = AiIntentType.focusNow;
+    } else if (_matches(lower, [
+      r'what should i do first',
+      r'priority tasks',
+      r'rank my tasks',
+      r'most important tasks',
+    ])) {
+      type = AiIntentType.rankTasks;
+    } else if (_matches(lower, [r'focus_now', r'focus now', r'\bsummary\b'])) {
+      type = AiIntentType.getStudySummary;
+    } else if (_matches(lower, [r'\btask', r'\btodo', r'\bwork', r'\bassignment', r'\bdo\b'])) {
+      final wantsIncomplete = _matches(lower, [
+        r'uncompleted',
+        r'incomplete',
+        r'not done',
+        r'not completed',
+        r'pending',
+        r'open tasks?',
+        r'unfinished',
+      ]);
+      final wantsCompleted = _matches(lower, [
+        r'completed',
+        r'\bcomplete\b',
+        r'done',
+        r'finished',
+        r'already did',
+      ]);
+
+      if (wantsIncomplete) {
+        type = AiIntentType.getTasksByTimeRange;
+        completionFilter = false;
+      } else if (wantsCompleted) {
         type = AiIntentType.getCompletedTasks;
+        completionFilter = true;
       } else {
         type = AiIntentType.getTasksByTimeRange;
+        completionFilter = null; // generic tasks query => include all
       }
     } else if (_matches(lower, [r'deadline', r'due', r'upcoming', r'when is'])) {
       type = AiIntentType.getUpcomingDeadlines;
     } else if (_matches(lower, [r'summary', r'recap', r'how am i doing', r'dashboard'])) {
       type = AiIntentType.getStudySummary;
-    } else if (_matches(lower, [r'progress', r'stats', r'grades', r'results', r'performance'])) {
+    } else if (_matches(lower, [
+      r'progress',
+      r'stats',
+      r'grade',
+      r'grades',
+      r'gpa',
+      r'gba',
+      r'cgpa',
+      r'result',
+      r'results',
+      r'performance'
+    ])) {
       type = AiIntentType.getProgress;
     } else if (_matches(lower, [r'risk', r'fail', r'struggling', r'warning', r'danger'])) {
       type = AiIntentType.getRiskStatus;
@@ -67,7 +127,7 @@ class AiIntentParser {
       type: type,
       filter: AiFilter(
         timeRange: timeRange,
-        isCompleted: type == AiIntentType.getCompletedTasks,
+        isCompleted: completionFilter,
         course: course,
         startDate: startDate,
         endDate: endDate,

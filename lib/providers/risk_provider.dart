@@ -98,17 +98,32 @@ final riskInputProvider = Provider<RiskInput?>((ref) {
   final in3Days = startOfToday.add(const Duration(days: 3));
   final sevenDaysAgo = now.subtract(const Duration(days: 7));
 
-  // Task metrics
-  final overdue = filteredTasks.where((t) => 
-    t.status != 'completed' && t.deadline != null && t.deadline!.isBefore(startOfToday)
-  ).length;
+  // Task metrics (tasks table + academic_deadlines — parity with analytics/chat)
+  final overdueFromTasks = filteredTasks.where((t) =>
+      t.status != 'completed' &&
+      t.deadline != null &&
+      t.deadline!.isBefore(startOfToday)).length;
 
-  final upcoming = filteredTasks.where((t) => 
-    t.status != 'completed' && 
-    t.deadline != null &&
-    t.deadline!.isAfter(startOfToday) && 
-    t.deadline!.isBefore(in3Days)
-  ).length;
+  final upcomingFromTasks = filteredTasks.where((t) =>
+      t.status != 'completed' &&
+      t.deadline != null &&
+      t.deadline!.isAfter(startOfToday) &&
+      t.deadline!.isBefore(in3Days)).length;
+
+  final overdueFromDeadlines = filteredDeadlines.where((d) {
+    if (d.isCompleted) return false;
+    final day = DateTime(d.deadlineDate.year, d.deadlineDate.month, d.deadlineDate.day);
+    return day.isBefore(startOfToday);
+  }).length;
+
+  final upcomingFromDeadlines = filteredDeadlines.where((d) {
+    if (d.isCompleted) return false;
+    final day = DateTime(d.deadlineDate.year, d.deadlineDate.month, d.deadlineDate.day);
+    return day.isAfter(startOfToday) && day.isBefore(in3Days);
+  }).length;
+
+  final overdue = overdueFromTasks + overdueFromDeadlines;
+  final upcoming = upcomingFromTasks + upcomingFromDeadlines;
 
   // Study metrics
   final thisWeekSessions = filteredSessions.where((s) => s.createdAt.isAfter(sevenDaysAgo)).toList();
@@ -135,7 +150,10 @@ final riskInputProvider = Provider<RiskInput?>((ref) {
   final hasAcademicContent = filteredCourses.isNotEmpty || filteredTasks.isNotEmpty || filteredDeadlines.isNotEmpty;
   
   // Strict validation: Do we have ANY core data to calculate for?
-  final hasCoreData = filteredTasks.isNotEmpty || filteredSessions.isNotEmpty || filteredMoods.isNotEmpty;
+  final hasCoreData = filteredTasks.isNotEmpty ||
+      filteredSessions.isNotEmpty ||
+      filteredMoods.isNotEmpty ||
+      filteredDeadlines.isNotEmpty;
 
   if (!hasCoreData) {
     return RiskInput.empty();

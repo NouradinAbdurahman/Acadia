@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:math';
 import '../models/analytics_data.dart';
+import '../models/deadline.dart';
 import '../models/study_session.dart';
 import '../models/task.dart';
 import '../models/mood_log.dart';
@@ -61,6 +62,7 @@ class AnalyticsRepository {
     required List<StudySession> sessions,
     required List<Task> tasks,
     required List<MoodLog> moodLogs,
+    List<Deadline> deadlines = const [],
   }) async {
     // Bust the per-semester cache so stale data is never returned.
     _cache.remove(semesterId);
@@ -84,7 +86,10 @@ class AnalyticsRepository {
 
     // ── Compute from typed Dart models ─────────────────────────────────────
 
-    final hasData = sessions.isNotEmpty || tasks.isNotEmpty || moodLogs.isNotEmpty;
+    final hasData = sessions.isNotEmpty ||
+        tasks.isNotEmpty ||
+        moodLogs.isNotEmpty ||
+        deadlines.isNotEmpty;
 
     // ── Mood stats — split by source to match UI expectations ──────────────
     // The analytics screen reads dailyMoodLogCount/sessionMoodLogCount etc.
@@ -159,27 +164,56 @@ class AnalyticsRepository {
       weeklyAvg = totalHistoricalHours / weeks;
     }
 
-    // Task stats (this week only for completion rate)
+    // Task stats (this week only for completion rate) — include academic_deadlines
+    // so counts match chat/unified analytics when work lives only on deadlines.
     final weeklyTasks = tasks.where((t) {
       if (t.deadline == null) return false;
       final d = DateTime(t.deadline!.year, t.deadline!.month, t.deadline!.day);
       return !d.isBefore(startOfWeek) && d.isBefore(endOfWeek);
     }).toList();
-    final totalTasks = weeklyTasks.length;
-    final completedTasks = weeklyTasks.where((t) => t.status == 'completed').length;
+    final weeklyDeadlinesInWindow = deadlines.where((dl) {
+      final d = DateTime(
+        dl.deadlineDate.year,
+        dl.deadlineDate.month,
+        dl.deadlineDate.day,
+      );
+      return !d.isBefore(startOfWeek) && d.isBefore(endOfWeek);
+    }).toList();
+    final totalTasks = weeklyTasks.length + weeklyDeadlinesInWindow.length;
+    final completedTasks = weeklyTasks.where((t) => t.status == 'completed').length +
+        weeklyDeadlinesInWindow.where((dl) => dl.isCompleted).length;
     final rate = totalTasks == 0 ? 0.0 : completedTasks / totalTasks.toDouble();
 
-    // Overdue / due soon
+    // Overdue / due soon (tasks + deadlines)
     final overdueTasksCount = tasks.where((t) {
       if (t.status == 'completed') return false;
       return t.deadline != null && t.deadline!.isBefore(startOfToday);
-    }).length;
+    }).length +
+        deadlines.where((dl) {
+          if (dl.isCompleted) return false;
+          final day = DateTime(
+            dl.deadlineDate.year,
+            dl.deadlineDate.month,
+            dl.deadlineDate.day,
+          );
+          return day.isBefore(startOfToday);
+        }).length;
     final dueSoonTasksCount = tasks.where((t) {
       if (t.status == 'completed') return false;
       if (t.deadline == null) return false;
       return t.deadline!.isAfter(startOfToday) &&
           t.deadline!.isBefore(startOfToday.add(const Duration(days: 3)));
-    }).length;
+    }).length +
+        deadlines.where((dl) {
+          if (dl.isCompleted) return false;
+          final day = DateTime(
+            dl.deadlineDate.year,
+            dl.deadlineDate.month,
+            dl.deadlineDate.day,
+          );
+          return day.isAfter(startOfToday) &&
+              day.isBefore(startOfToday.add(const Duration(days: 3)));
+        }).length;
 
     // GPA
     double totalGradePoints = 0.0;
@@ -208,6 +242,11 @@ class AnalyticsRepository {
       stressLevel: avgStressVal,
       consistency: consistency,
       hasStressData: hasStressData,
+    );
+    final burnoutScore = _computeBurnoutScore(
+      avgStress: avgSessionStressVal,
+      studyDeficit: studyDeficitHours,
+      consistency: consistency,
     );
 
     return AnalyticsData(
@@ -244,6 +283,7 @@ class AnalyticsRepository {
       stressTrend: stressTrend,
       studyGoal: studyGoal,
       totalTrackedSessions: sessions.length,
+      burnoutScore: burnoutScore,
     );
   }
 
@@ -427,6 +467,11 @@ class AnalyticsRepository {
         consistency: consistency,
         hasStressData: hasStressData,
       );
+      final burnoutScore = _computeBurnoutScore(
+        avgStress: avgStress,
+        studyDeficit: studyDeficitHours,
+        consistency: consistency,
+      );
 
       // Stress Trend (Simple slope of last 7 days)
       double stressTrend = 0.0;
@@ -469,6 +514,7 @@ class AnalyticsRepository {
         stressTrend: stressTrend,
         studyGoal: studyGoal,
         hasStressData: hasStressData,
+        burnoutScore: burnoutScore,
       );
     } catch (_) {
       rethrow;
@@ -492,6 +538,20 @@ class AnalyticsRepository {
       hasStressData: hasStressData,
     );
     return result.score;
+  }
+
+  double _computeBurnoutScore({
+    required double avgStress,
+    required double studyDeficit,
+    required double consistency,
+  }) {
+    final stressFactor = (avgStress / 10.0).clamp(0.0, 1.0);
+    final deficitFactor = (studyDeficit / 24.0).clamp(0.0, 1.0);
+    final consistencyFactor = (1.0 - consistency).clamp(0.0, 1.0);
+    final score =
+        (stressFactor * 0.4 + deficitFactor * 0.4 + consistencyFactor * 0.2) *
+            100.0;
+    return score.clamp(0.0, 100.0);
   }
 
   double? _gradeToValue(String code) {

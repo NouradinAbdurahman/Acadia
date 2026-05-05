@@ -78,13 +78,13 @@ class SemesterComparisonCard extends ConsumerWidget {
                     subtitle: l10n.studyHours,
                   ),
                   _ComparisonMetric(
-                    label: l10n.taskCompletionRate,
+                    label: l10n.taskStatThisWeekByDeadline,
                     delta: compDelta,
                     deltaText: '$compDeltaText%',
                     color: compDeltaColor,
                     icon: PhosphorIcons.checkCircle,
                     iconStyle: PhosphorIconsStyle.regular,
-                    subtitle: l10n.completed,
+                    subtitle: l10n.taskCompletionRate,
                   ),
                   if (comp.hasValidGpaComparison)
                     _ComparisonMetric(
