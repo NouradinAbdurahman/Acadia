@@ -79,7 +79,8 @@ final riskInputProvider = Provider<RiskInput?>((ref) {
   // Extract values (fallback to empty list if data is null but finished loading)
   final tasks = tasksAsync.value ?? [];
   final sessions = sessionsAsync.value ?? [];
-  final moods = moodsAsync.value ?? [];
+  final moodTrackingOn = ref.watch(moodSettingsProvider).trackingEnabled;
+  final moods = moodTrackingOn ? (moodsAsync.value ?? []) : [];
   final deadlines = deadlinesAsync.value ?? [];
   final courses = coursesAsync.value ?? [];
   final results = resultsAsync.value ?? [];

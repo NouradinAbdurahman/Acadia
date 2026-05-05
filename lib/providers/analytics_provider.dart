@@ -240,7 +240,10 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
     // 3. Read provider values after readiness gate.
     final sessions = sessionsAsync.value ?? <StudySession>[];
     final tasks = tasksAsync.value ?? <Task>[];
-    final moods = moodsAsync.value ?? <MoodLog>[];
+    final moodTrackingOn = ref.watch(moodSettingsProvider).trackingEnabled;
+    final moods = moodTrackingOn
+        ? (moodsAsync.value ?? <MoodLog>[])
+        : <MoodLog>[];
     final deadlines = deadlinesAsync.value ?? <Deadline>[];
 
     // 4. Compute stable hash for this data snapshot.
@@ -316,7 +319,10 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
     try {
       final sessions = ref.read(studySessionsProvider).value ?? <StudySession>[];
       final tasks = ref.read(tasksProvider).value ?? <Task>[];
-      final moods = ref.read(moodLogsProvider).value ?? <MoodLog>[];
+      final moodOn = ref.read(moodSettingsProvider).trackingEnabled;
+      final moods = moodOn
+          ? (ref.read(moodLogsProvider).value ?? <MoodLog>[])
+          : <MoodLog>[];
       final deadlines = ref.read(deadlinesProvider).value ?? <Deadline>[];
 
       final data = await ref.read(analyticsRepositoryProvider).computeFromPreloaded(

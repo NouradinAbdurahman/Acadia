@@ -37,6 +37,7 @@ Hey there. If you're reading this, you're probably trying to understand how Acad
 29. [Migration History](#29-migration-history)
 30. [Folder Structure](#30-folder-structure)
 31. [Common Gotchas and Tips](#31-common-gotchas-and-tips)
+32. [Legal and Compliance Pages](#32-legal-and-compliance-pages)
 
 ---
 
@@ -59,6 +60,7 @@ Here's what it can do:
 - **Chat with the AI assistant** — ask it questions like "what are my upcoming deadlines?" or "how am I doing?" and it'll pull real data to answer you
 - **Get smart notifications** — the app figures out when you actually need a nudge (overdue tasks, high stress, risk alerts) and sends you push notifications without being annoying about it
 - **View your dashboard** — a home screen that shows you everything at a glance: mood, study heatmap, tasks, GPA, insights
+- **Review legal and transparency pages** — in Profile > Account Settings, users can open Privacy Policy, Terms of Service, Data & Permissions, and Contact/Support in both English and Turkish
 
 Everything is scoped to your active semester. That means when you switch from "Fall 2025" to "Spring 2026", all your data views update to show that semester's stuff. It's a pretty core concept in the app.
 
@@ -1035,13 +1037,13 @@ Here's every screen in the app, grouped by feature area:
 - **NotificationsScreen** — Lists notifications grouped by time (Today / Tomorrow / Earlier), with category filter chips (All / Tasks / Deadlines / Mood / Academic). Tap to mark as read and navigate to the relevant item (task detail, deadline detail, etc.). Pull to refresh.
 
 ### Profile (4 screens)
-- **ProfileScreen** — The settings hub. Shows avatar (tap to upload), name, email. Sections: Academic (edit profile, manage courses), Preferences (study preferences, mood settings, language picker, theme toggle), Account (AI assistant, change password, logout).
+- **ProfileScreen** — The settings hub. Shows avatar (tap to upload), name, email. Sections: Academic (edit profile, manage courses), Preferences (study preferences, mood settings, language picker, theme toggle), Account (privacy policy, terms of service, data & permissions, contact/support, change password, logout).
 - **EditAcademicProfileScreen** — Full academic profile edit: name, university, degree, major, graduation year, current semester, weekly study hours slider (5-40), preferred study time, break pattern.
 - **StudyPreferencesScreen** — Focused study preferences: weekly study hours, preferred study time, break pattern.
 - **ChangePasswordScreen** — Current password, new password with strength indicator, confirm password. Uses Supabase auth directly.
 
 ### Settings
-- **MoodSettingsScreen** — Enable/disable mood tracking, enable/disable reminders, reminder time picker (24h format), reminder type (daily/session/both), link to mood history.
+- **MoodSettingsScreen** — Minimal active controls: enable/disable mood tracking plus mood history access. Reminder logic remains in backend/provider flow, while noisy partial reminder controls are intentionally hidden from this screen.
 
 ### AI
 - **AIChatScreen** — Chat interface with the AI assistant. Shows message bubbles with typing animation. Quick-action chips at the bottom for common questions.
@@ -1403,6 +1405,23 @@ The Edge Function also supports special intents that the local path doesn't:
 13. **Home information architecture update**
    - Home card order was re-sequenced to action-first and urgency-first blocks.
    - Section labels were added for previously unlabeled cards (including Exams), and the Exams section now includes a right-side “View” action to open the full exams screen.
+
+14. **Mood tracking and reminder correctness**
+   - Mood tracking OFF now removes mood influence from analytics, risk scoring, and deterministic AI inputs.
+   - Reminder toggle/time updates are now connected to real daily reminder scheduling (`schedule` on enable/time change, `cancel` on disable).
+   - Reminder type/status UI remains intentionally out of the critical behavior path.
+
+15. **Mood settings UX simplification**
+   - Mood settings screen was reduced to active, trustworthy controls to avoid confusion in presentation mode.
+   - Hidden UI controls do not remove backend logic; reminder scheduling capabilities remain in provider/service layers.
+
+16. **Profile/account navigation cleanup**
+   - Removed assistant entry from Profile Account section to avoid duplication with Home/Quick Menu.
+   - Account section now prioritizes legal + support + security actions.
+
+17. **Legal/compliance content enrichment**
+   - Expanded Privacy/Terms/Data/Support copy to better reflect actual Acadia behavior (optional mood data handling, notification scope, AI suggestion disclaimer, support scope).
+   - Added icon-based section cards in legal screens for clearer visual hierarchy.
 
 ### Typing Animation
 
@@ -2199,6 +2218,38 @@ The `acadia-ai` Edge Function has a 30-second timeout. The LLM can sometimes tak
 
 ### 15. Course Color Is a Hex String
 The `Course.color` field is stored as a hex string like "#FF5733". The `Course.uiColor` getter converts it to a Flutter `Color` object. If you're setting a course color, make sure it's in hex format.
+
+---
+
+## 32. Legal and Compliance Pages
+
+Acadia now includes an in-app legal/compliance layer under Profile > Account Settings. This is intentionally simple and honest: it explains what data is used, how it is used, and what permissions are required for app features.
+
+### Included screens
+
+- **Privacy Policy** (`/profile/privacy-policy`)
+  - Data categories: account, academic, optional mood data
+  - Usage scope: analytics, AI suggestions, and core app functionality
+  - Storage note: Supabase-backed persistence
+  - AI disclaimer: insights are suggestions, not professional advice
+- **Terms of Service** (`/profile/terms-of-service`)
+  - Educational-use framing
+  - No guarantee of analytics/AI accuracy
+  - User responsibility for entered data and resulting decisions
+- **Data & Permissions** (`/profile/data-permissions`)
+  - Notifications are used for reminders
+  - Explicit "not collected" list (no location, no contacts, no tracking)
+  - Avatar permission note: gallery/camera access only when user explicitly changes avatar
+- **Contact / Support** (`/profile/contact-support`)
+  - Support entry point for account, data, and behavior issues
+
+### Localization
+
+All legal page content is backed by ARB localization keys in:
+- `lib/l10n/app_en.arb`
+- `lib/l10n/app_tr.arb`
+
+This keeps legal text consistent with the rest of the app's EN/TR localization architecture.
 
 ---
 

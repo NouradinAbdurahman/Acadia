@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../providers/app_providers.dart';
 import '../../providers/student_profile_provider.dart';
-import '../ai/ai_chat_screen.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../l10n/app_localizations.dart';
@@ -435,42 +434,24 @@ class ProfileScreen extends ConsumerWidget {
                   title: l10n.accountSettings,
                   children: [
                     buildItem(
-                      icon: HeroIcons.sparkles,
-                      title: 'Acadia Assistant',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (_, animation, secondaryAnimation) =>
-                                const AIChatScreen(),
-                            transitionDuration: const Duration(milliseconds: 420),
-                            reverseTransitionDuration: const Duration(milliseconds: 380),
-                            transitionsBuilder:
-                                (context, animation, secondaryAnimation, child) {
-                                  final offset = Tween<Offset>(
-                                    begin: const Offset(0, 1),
-                                    end: Offset.zero,
-                                  ).animate(
-                                    CurvedAnimation(
-                                      parent: animation,
-                                      curve: Curves.easeOutCubic,
-                                      reverseCurve: Curves.easeInCubic,
-                                    ),
-                                  );
-                                  final fade = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
-                  return FadeTransition(
-                    opacity: fade,
-                    child: SlideTransition(position: offset, child: child),
-                  );
-                                },
-                          ),
-                        );
-                      },
-                    ),
-                    buildItem(
                       icon: HeroIcons.shieldCheck,
                       title: l10n.privacyPolicy,
-                      onTap: () {},
+                      onTap: () => context.push('/profile/privacy-policy'),
+                    ),
+                    buildItem(
+                      icon: HeroIcons.documentText,
+                      title: l10n.termsOfService,
+                      onTap: () => context.push('/profile/terms-of-service'),
+                    ),
+                    buildItem(
+                      icon: HeroIcons.lockClosed,
+                      title: l10n.dataPermissionsTitle,
+                      onTap: () => context.push('/profile/data-permissions'),
+                    ),
+                    buildItem(
+                      icon: HeroIcons.envelope,
+                      title: l10n.contactSupportTitle,
+                      onTap: () => context.push('/profile/contact-support'),
                     ),
                     buildItem(
                       icon: HeroIcons.lockClosed,

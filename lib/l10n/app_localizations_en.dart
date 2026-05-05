@@ -4323,4 +4323,151 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiDetCalendarNoTasksRecoSecondary =>
       'Bank extra time before the next busy week.';
+
+  @override
+  String get dataPermissionsTitle => 'Data & Permissions';
+
+  @override
+  String get contactSupportTitle => 'Contact / Support';
+
+  @override
+  String get privacyPolicyIntro =>
+      'This policy explains what data Acadia uses and why.';
+
+  @override
+  String get privacyPolicyEffectiveDate => 'Effective date: May 2026';
+
+  @override
+  String get privacyPolicyCollectedTitle => 'We collect';
+
+  @override
+  String get privacyPolicyCollectedAccount =>
+      'Account information (name, email)';
+
+  @override
+  String get privacyPolicyCollectedAcademic =>
+      'Academic data (tasks, exams, study sessions)';
+
+  @override
+  String get privacyPolicyCollectedMood =>
+      'Mood data only when mood tracking is enabled';
+
+  @override
+  String get privacyPolicyUseTitle => 'We use your data to';
+
+  @override
+  String get privacyPolicyUseAnalytics =>
+      'Provide analytics and progress insights';
+
+  @override
+  String get privacyPolicyUseAi => 'Generate AI study suggestions';
+
+  @override
+  String get privacyPolicyUseFeatures =>
+      'Enable app functionality across your courses and tasks';
+
+  @override
+  String get privacyPolicyStorageTitle => 'Storage';
+
+  @override
+  String get privacyPolicyStorageSupabase =>
+      'Your data is stored securely using Supabase';
+
+  @override
+  String get privacyPolicyStorageRetention =>
+      'Data is retained while your account is active and used to power your semester history';
+
+  @override
+  String get privacyPolicyNotificationsTitle => 'Notifications';
+
+  @override
+  String get privacyPolicyNotificationsLocalOnly =>
+      'Reminders are local notifications used for study/mood reminders only';
+
+  @override
+  String get privacyPolicyControlTitle => 'Your control';
+
+  @override
+  String get privacyPolicyControlMood =>
+      'You can disable mood tracking at any time';
+
+  @override
+  String get privacyPolicyControlDelete =>
+      'You can request deletion of your account data through support';
+
+  @override
+  String get privacyPolicyNoSell =>
+      'We do not sell your data and we do not share it with third parties for advertising.';
+
+  @override
+  String get privacyPolicyThirdParty =>
+      'Acadia uses trusted infrastructure providers (Supabase, Firebase, and Resend for optional email delivery) only to operate core app features.';
+
+  @override
+  String get privacyPolicyAiDisclaimer =>
+      'AI-generated insights are suggestions and are not professional advice.';
+
+  @override
+  String get termsIntro =>
+      'These terms describe your responsibilities and Acadia\'s service boundaries.';
+
+  @override
+  String get termsLine1 =>
+      'This app is provided for educational and productivity purposes.';
+
+  @override
+  String get termsLine2 =>
+      'We do not guarantee the accuracy of analytics, reminders, or AI insights.';
+
+  @override
+  String get termsLine3 =>
+      'You are responsible for the data you enter and the decisions you make using the app.';
+
+  @override
+  String get termsLine4 =>
+      'Mood tracking is optional and only used within app features.';
+
+  @override
+  String get termsLine5 => 'We may update or modify features at any time.';
+
+  @override
+  String get termsLine6 => 'By using Acadia, you agree to these terms.';
+
+  @override
+  String get dataPermissionsNotificationsTitle => 'Notifications';
+
+  @override
+  String get dataPermissionsNotificationsUsage =>
+      'Used for study and mood reminder alerts.';
+
+  @override
+  String get dataPermissionsNotCollectedTitle => 'We do not collect';
+
+  @override
+  String get dataPermissionsNoTracking => 'No device tracking data';
+
+  @override
+  String get dataPermissionsNoLocation => 'No location data';
+
+  @override
+  String get dataPermissionsNoContacts => 'No contacts data';
+
+  @override
+  String get dataPermissionsNoCameraTracking =>
+      'No camera recording or background camera access';
+
+  @override
+  String get dataPermissionsAvatarNote =>
+      'Photo library/camera permission is only requested when you manually change your profile avatar.';
+
+  @override
+  String get contactSupportIntro =>
+      'For support, feedback, or data requests, contact us at:';
+
+  @override
+  String get contactSupportTopics =>
+      'Support can help with account access, data requests, notification issues, and incorrect app behavior.';
+
+  @override
+  String get legalContactLine => 'Email: support@acadia.app';
 }

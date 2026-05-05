@@ -18,7 +18,7 @@ Acadia is a Flutter-based academic productivity app that helps students plan cou
 - **AI assistant** — Regex intent parser → local answers use the **same Riverpod snapshots as the UI** (`analyticsProvider` for summaries/progress, `riskProvider` for academic risk so scores match Home/Analytics). Unknown intents → Supabase `acadia-ai` Edge Function (NVIDIA NIM) with server-side summary math aligned to the app’s week/study logic
 - **Smart notifications** — Context-aware push alerts (overdue, deadline, risk, stress, batched academic summary) with anti-spam cooldowns, daily rate limits, behavior adaptation, night-time suppression, and background evaluation
 - **Dashboard** — Greeting, mood card, study heatmap, live session card, tasks preview, GPA cards, semester comparison, smart insights, quick-action FAB
-- **Profile and settings** — Avatar upload, academic profile editing, study preferences, mood settings, theme (light/dark/system), language (EN/TR), change password
+- **Profile and settings** — Avatar upload, academic profile editing, study preferences, mood settings, theme (light/dark/system), language (EN/TR), change password, and legal/compliance pages (Privacy Policy, Terms of Service, Data & Permissions, Contact/Support)
 - **Supabase Realtime** — Live sync for tasks, deadlines, study sessions, course results, and courses with 250ms debounced provider invalidation
 
 ## Tech Stack
@@ -300,6 +300,10 @@ Also on the Edge path: `email_tasks` (Resend), `get_focus`, `summarize_last`, `g
 - **Semester strictness** — exam fetch/create/update paths and semester activation behavior were hardened to prevent cross-semester leakage and silent semester reversion.
 - **Home dashboard reorder** — Home card flow was reordered to action-first and urgency-first sequencing (live session, exams/deadlines, risk, insight, analytics blocks, history, quick menu).
 - **Section labeling polish** — added Home section labels for previously unlabeled cards (including Exams) and right-side “View” navigation on the Exams header to open `/exams`.
+- **Legal/compliance layer completed** — added in-app Privacy Policy, Terms of Service, Data & Permissions, and Contact/Support screens with EN/TR localization and profile routing for publication readiness.
+- **Legal content expansion + visual polish** — legal pages now include more explicit Acadia data-handling details (optional mood data, AI disclaimer, notifications scope, third-party infrastructure notes) and icon-based section cards for clearer readability.
+- **Mood logic correctness hardening** — when mood tracking is disabled, mood data is excluded from analytics/risk/AI inputs; reminder toggle and time changes now schedule/cancel daily local reminders through the notifier path.
+- **Settings/profile UX simplification** — Mood Settings UI was reduced to active controls only (tracking + mood history), and Profile Account navigation was cleaned to remove assistant duplication while exposing legal/support entries.
 
 ### Deploying AI changes
 

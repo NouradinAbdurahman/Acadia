@@ -4307,4 +4307,151 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get aiDetCalendarNoTasksRecoSecondary =>
       'Sonraki yogun haftadan once ekstra zaman biriktir.';
+
+  @override
+  String get dataPermissionsTitle => 'Veri ve Izinler';
+
+  @override
+  String get contactSupportTitle => 'Iletisim / Destek';
+
+  @override
+  String get privacyPolicyIntro =>
+      'Bu politika, Acadia\'nin hangi verileri neden kullandigini aciklar.';
+
+  @override
+  String get privacyPolicyEffectiveDate => 'Yururluk tarihi: Mayis 2026';
+
+  @override
+  String get privacyPolicyCollectedTitle => 'Topladigimiz veriler';
+
+  @override
+  String get privacyPolicyCollectedAccount => 'Hesap bilgileri (ad, e-posta)';
+
+  @override
+  String get privacyPolicyCollectedAcademic =>
+      'Akademik veriler (gorevler, sinavlar, calisma oturumlari)';
+
+  @override
+  String get privacyPolicyCollectedMood =>
+      'Ruh hali verileri yalnizca ruh hali takibi aciksa';
+
+  @override
+  String get privacyPolicyUseTitle => 'Verilerinizi su amaclarla kullaniriz';
+
+  @override
+  String get privacyPolicyUseAnalytics =>
+      'Analiz ve ilerleme icgoruleri sunmak';
+
+  @override
+  String get privacyPolicyUseAi => 'YZ calisma onerileri uretmek';
+
+  @override
+  String get privacyPolicyUseFeatures =>
+      'Ders ve gorev ozelliklerini calistirmak';
+
+  @override
+  String get privacyPolicyStorageTitle => 'Depolama';
+
+  @override
+  String get privacyPolicyStorageSupabase =>
+      'Verileriniz Supabase ile guvenli sekilde saklanir';
+
+  @override
+  String get privacyPolicyStorageRetention =>
+      'Verileriniz hesabiniz aktif oldugu surece saklanir ve donem gecmisi ozelliklerinde kullanilir';
+
+  @override
+  String get privacyPolicyNotificationsTitle => 'Bildirimler';
+
+  @override
+  String get privacyPolicyNotificationsLocalOnly =>
+      'Hatirlaticilar yalnizca ders/ruh hali icin yerel bildirimlerdir';
+
+  @override
+  String get privacyPolicyControlTitle => 'Kontrol sizde';
+
+  @override
+  String get privacyPolicyControlMood =>
+      'Ruh hali takibini istediginiz zaman kapatabilirsiniz';
+
+  @override
+  String get privacyPolicyControlDelete =>
+      'Hesap verilerinizin silinmesini destek uzerinden talep edebilirsiniz';
+
+  @override
+  String get privacyPolicyNoSell =>
+      'Verilerinizi satmiyoruz ve reklam icin ucuncu taraflarla paylasmiyoruz.';
+
+  @override
+  String get privacyPolicyThirdParty =>
+      'Acadia, temel uygulama ozelliklerini calistirmak icin yalnizca guvenilir altyapi saglayicilarini (Supabase, Firebase ve istege bagli e-posta icin Resend) kullanir.';
+
+  @override
+  String get privacyPolicyAiDisclaimer =>
+      'YZ tarafindan uretilen icgoruler oneridir, profesyonel tavsiye degildir.';
+
+  @override
+  String get termsIntro =>
+      'Bu kosullar sizin sorumluluklarinizi ve Acadia hizmet sinirlarini aciklar.';
+
+  @override
+  String get termsLine1 => 'Bu uygulama egitim ve verimlilik amacli sunulur.';
+
+  @override
+  String get termsLine2 =>
+      'Analizlerin, hatirlaticilarin veya YZ icgorulerinin dogrulugu garanti edilmez.';
+
+  @override
+  String get termsLine3 =>
+      'Uygulamaya girdiginiz verilerden ve bu verilerle aldiginiz kararlardan siz sorumlusunuz.';
+
+  @override
+  String get termsLine4 =>
+      'Ruh hali takibi opsiyoneldir ve yalnizca uygulama ici ozelliklerde kullanilir.';
+
+  @override
+  String get termsLine5 =>
+      'Ozellikleri istedigimiz zaman guncelleyebilir veya degistirebiliriz.';
+
+  @override
+  String get termsLine6 =>
+      'Acadia\'yi kullanarak bu kosullari kabul etmis olursunuz.';
+
+  @override
+  String get dataPermissionsNotificationsTitle => 'Bildirimler';
+
+  @override
+  String get dataPermissionsNotificationsUsage =>
+      'Ders ve ruh hali hatirlatici bildirimleri icin kullanilir.';
+
+  @override
+  String get dataPermissionsNotCollectedTitle => 'Toplamadigimiz veriler';
+
+  @override
+  String get dataPermissionsNoTracking => 'Cihaz takip verisi yok';
+
+  @override
+  String get dataPermissionsNoLocation => 'Konum verisi yok';
+
+  @override
+  String get dataPermissionsNoContacts => 'Rehber verisi yok';
+
+  @override
+  String get dataPermissionsNoCameraTracking =>
+      'Kamera kaydi veya arka plan kamera erisimi yok';
+
+  @override
+  String get dataPermissionsAvatarNote =>
+      'Galeri/kamera izni yalnizca profil avatarinizi manuel olarak degistirdiginizde istenir.';
+
+  @override
+  String get contactSupportIntro =>
+      'Destek, geri bildirim veya veri talepleri icin bize ulasin:';
+
+  @override
+  String get contactSupportTopics =>
+      'Destek ekibi hesap erisimi, veri talepleri, bildirim sorunlari ve hatali uygulama davranislari konularinda yardimci olur.';
+
+  @override
+  String get legalContactLine => 'E-posta: support@acadia.app';
 }

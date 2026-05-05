@@ -91,29 +91,56 @@ class MoodSettingsNotifier extends StateNotifier<MoodSettings> {
     final next = state.copyWith(trackingEnabled: enabled);
     state = next;
     await _persist(next);
+    if (!enabled) {
+      await NotificationService.cancelDailyMoodReminder();
+    } else {
+      await _syncReminderSchedule();
+    }
   }
 
   Future<void> toggleReminders(bool enabled) async {
     final next = state.copyWith(reminderEnabled: enabled);
     state = next;
     await _persist(next);
+    if (enabled) {
+      await _syncReminderSchedule();
+    } else {
+      await NotificationService.cancelDailyMoodReminder();
+    }
   }
 
   Future<void> updateReminderType(String type) async {
     final next = state.copyWith(reminderType: type);
     state = next;
     await _persist(next);
+    await _syncReminderSchedule();
   }
 
   Future<void> updateReminderTime(String time) async {
     final next = state.copyWith(reminderTime: time);
     state = next;
     await _persist(next);
-    
-    // Update notification schedule if daily
-    if (state.trackingEnabled && state.reminderEnabled && (state.reminderType == 'daily' || state.reminderType == 'both')) {
-       // Scheduling is handled via the MoodActions or NotificationService in the UI for now
+    await _syncReminderSchedule();
+  }
+
+  Future<void> _syncReminderSchedule() async {
+    final s = state;
+    final wantsDaily = s.trackingEnabled &&
+        s.reminderEnabled &&
+        (s.reminderType == 'daily' || s.reminderType == 'both');
+    if (!wantsDaily) {
+      await NotificationService.cancelDailyMoodReminder();
+      return;
     }
+    final parts = (s.reminderTime ?? '20:00').split(':');
+    final hour = int.tryParse(parts[0]) ?? 20;
+    final minute = parts.length > 1 ? (int.tryParse(parts[1]) ?? 0) : 0;
+    await NotificationService.scheduleDailyMoodReminder(
+      hour: hour,
+      minute: minute,
+      title: 'Mood Check',
+      body: 'How are you feeling? Take a moment to log your mood.',
+    );
   }
 
   Future<void> _persist(MoodSettings settings) async {

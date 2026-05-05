@@ -7475,6 +7475,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bank extra time before the next busy week.'**
   String get aiDetCalendarNoTasksRecoSecondary;
+
+  /// No description provided for @dataPermissionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data & Permissions'**
+  String get dataPermissionsTitle;
+
+  /// No description provided for @contactSupportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact / Support'**
+  String get contactSupportTitle;
+
+  /// No description provided for @privacyPolicyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This policy explains what data Acadia uses and why.'**
+  String get privacyPolicyIntro;
+
+  /// No description provided for @privacyPolicyEffectiveDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective date: May 2026'**
+  String get privacyPolicyEffectiveDate;
+
+  /// No description provided for @privacyPolicyCollectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We collect'**
+  String get privacyPolicyCollectedTitle;
+
+  /// No description provided for @privacyPolicyCollectedAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account information (name, email)'**
+  String get privacyPolicyCollectedAccount;
+
+  /// No description provided for @privacyPolicyCollectedAcademic.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic data (tasks, exams, study sessions)'**
+  String get privacyPolicyCollectedAcademic;
+
+  /// No description provided for @privacyPolicyCollectedMood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood data only when mood tracking is enabled'**
+  String get privacyPolicyCollectedMood;
+
+  /// No description provided for @privacyPolicyUseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We use your data to'**
+  String get privacyPolicyUseTitle;
+
+  /// No description provided for @privacyPolicyUseAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Provide analytics and progress insights'**
+  String get privacyPolicyUseAnalytics;
+
+  /// No description provided for @privacyPolicyUseAi.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate AI study suggestions'**
+  String get privacyPolicyUseAi;
+
+  /// No description provided for @privacyPolicyUseFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable app functionality across your courses and tasks'**
+  String get privacyPolicyUseFeatures;
+
+  /// No description provided for @privacyPolicyStorageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get privacyPolicyStorageTitle;
+
+  /// No description provided for @privacyPolicyStorageSupabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is stored securely using Supabase'**
+  String get privacyPolicyStorageSupabase;
+
+  /// No description provided for @privacyPolicyStorageRetention.
+  ///
+  /// In en, this message translates to:
+  /// **'Data is retained while your account is active and used to power your semester history'**
+  String get privacyPolicyStorageRetention;
+
+  /// No description provided for @privacyPolicyNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get privacyPolicyNotificationsTitle;
+
+  /// No description provided for @privacyPolicyNotificationsLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders are local notifications used for study/mood reminders only'**
+  String get privacyPolicyNotificationsLocalOnly;
+
+  /// No description provided for @privacyPolicyControlTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your control'**
+  String get privacyPolicyControlTitle;
+
+  /// No description provided for @privacyPolicyControlMood.
+  ///
+  /// In en, this message translates to:
+  /// **'You can disable mood tracking at any time'**
+  String get privacyPolicyControlMood;
+
+  /// No description provided for @privacyPolicyControlDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'You can request deletion of your account data through support'**
+  String get privacyPolicyControlDelete;
+
+  /// No description provided for @privacyPolicyNoSell.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not sell your data and we do not share it with third parties for advertising.'**
+  String get privacyPolicyNoSell;
+
+  /// No description provided for @privacyPolicyThirdParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Acadia uses trusted infrastructure providers (Supabase, Firebase, and Resend for optional email delivery) only to operate core app features.'**
+  String get privacyPolicyThirdParty;
+
+  /// No description provided for @privacyPolicyAiDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-generated insights are suggestions and are not professional advice.'**
+  String get privacyPolicyAiDisclaimer;
+
+  /// No description provided for @termsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'These terms describe your responsibilities and Acadia\'s service boundaries.'**
+  String get termsIntro;
+
+  /// No description provided for @termsLine1.
+  ///
+  /// In en, this message translates to:
+  /// **'This app is provided for educational and productivity purposes.'**
+  String get termsLine1;
+
+  /// No description provided for @termsLine2.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not guarantee the accuracy of analytics, reminders, or AI insights.'**
+  String get termsLine2;
+
+  /// No description provided for @termsLine3.
+  ///
+  /// In en, this message translates to:
+  /// **'You are responsible for the data you enter and the decisions you make using the app.'**
+  String get termsLine3;
+
+  /// No description provided for @termsLine4.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood tracking is optional and only used within app features.'**
+  String get termsLine4;
+
+  /// No description provided for @termsLine5.
+  ///
+  /// In en, this message translates to:
+  /// **'We may update or modify features at any time.'**
+  String get termsLine5;
+
+  /// No description provided for @termsLine6.
+  ///
+  /// In en, this message translates to:
+  /// **'By using Acadia, you agree to these terms.'**
+  String get termsLine6;
+
+  /// No description provided for @dataPermissionsNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get dataPermissionsNotificationsTitle;
+
+  /// No description provided for @dataPermissionsNotificationsUsage.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for study and mood reminder alerts.'**
+  String get dataPermissionsNotificationsUsage;
+
+  /// No description provided for @dataPermissionsNotCollectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We do not collect'**
+  String get dataPermissionsNotCollectedTitle;
+
+  /// No description provided for @dataPermissionsNoTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'No device tracking data'**
+  String get dataPermissionsNoTracking;
+
+  /// No description provided for @dataPermissionsNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'No location data'**
+  String get dataPermissionsNoLocation;
+
+  /// No description provided for @dataPermissionsNoContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts data'**
+  String get dataPermissionsNoContacts;
+
+  /// No description provided for @dataPermissionsNoCameraTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera recording or background camera access'**
+  String get dataPermissionsNoCameraTracking;
+
+  /// No description provided for @dataPermissionsAvatarNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo library/camera permission is only requested when you manually change your profile avatar.'**
+  String get dataPermissionsAvatarNote;
+
+  /// No description provided for @contactSupportIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'For support, feedback, or data requests, contact us at:'**
+  String get contactSupportIntro;
+
+  /// No description provided for @contactSupportTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Support can help with account access, data requests, notification issues, and incorrect app behavior.'**
+  String get contactSupportTopics;
+
+  /// No description provided for @legalContactLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Email: support@acadia.app'**
+  String get legalContactLine;
 }
 
 class _AppLocalizationsDelegate
