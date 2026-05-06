@@ -80,7 +80,17 @@ void main() {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
-    await Firebase.initializeApp();
+    var isFirebaseInitialized = false;
+    try {
+      await Firebase.initializeApp();
+      isFirebaseInitialized = true;
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[Startup] Firebase init failed. Continuing without FCM. '
+        'Ensure Android Firebase config is set (google-services.json / values resources). Error: $error',
+      );
+      debugPrintStack(stackTrace: stackTrace);
+    }
 
     // Initialize Hive
     await Hive.initFlutter();
@@ -111,7 +121,9 @@ void main() {
     }
 
     // Initialize Notifications (must be after Supabase initialization)
-    await NotificationService.init();
+    await NotificationService.init(
+      attachForegroundListeners: isFirebaseInitialized,
+    );
     await BackgroundNotificationService.initialize(
       supabaseUrl: dotenv.env['SUPABASE_URL'] ?? '',
       supabaseAnonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',

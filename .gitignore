@@ -58,3 +58,6 @@ key.properties
 # Google Services
 google-services.json
 GoogleService-Info.plist
+
+# Project rules
+Rules/
