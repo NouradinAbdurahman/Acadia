@@ -5,6 +5,7 @@ import 'package:heroicons/heroicons.dart';
 import '../../components/app_button.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_back_button.dart';
+import '../../components/destructive_confirmation_dialog.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/design/app_spacing.dart';
@@ -190,26 +191,13 @@ class _SemesterCard extends ConsumerWidget {
         child: const AppIcon(HeroIcons.trash, color: Colors.white),
       ),
       confirmDismiss: (_) async {
-        return await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text(l10n.delete),
-                content: Text(l10n.deleteSemesterWarning),
-                actions: [
-                  AppButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    variant: AppButtonVariant.text,
-                    text: l10n.cancel,
-                  ),
-                  AppButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    variant: AppButtonVariant.text,
-                    text: l10n.delete,
-                  ),
-                ],
-              ),
-            ) ??
-            false;
+        return showDestructiveConfirmationDialog(
+          context: context,
+          title: l10n.delete,
+          primaryMessage: l10n.deleteSemesterWarning,
+          cancelLabel: l10n.cancel,
+          confirmLabel: l10n.delete,
+        );
       },
       onDismissed: (_) async {
         await ref.read(semesterProvider.notifier).deleteSemester(semester.id);

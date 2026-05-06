@@ -1080,6 +1080,9 @@ class AiDataResolver {
     buffer.writeln(
       "• This semester — GPA: ${data.averageGPA.toStringAsFixed(2)}",
     );
+    buffer.writeln(
+      "• Cumulative — CGPA: ${data.cumulativeGPA.toStringAsFixed(2)}",
+    );
     buffer.writeln("• This semester — total ECTS: ${data.totalECTS}");
     buffer.writeln(
       "• Rolling consistency (last 7 days): ${(data.consistency * 100).toStringAsFixed(0)}%",
@@ -1142,6 +1145,7 @@ class AiDataResolver {
         'hours': data.studyHours.toStringAsFixed(1),
         'weeklyAvg': data.weeklyAverageStudyHours.toStringAsFixed(1),
         'gpa': data.averageGPA.toStringAsFixed(2),
+        'cgpa': data.cumulativeGPA.toStringAsFixed(2),
         'ects': data.totalECTS,
         'consistency': data.consistency,
         'riskScore': effectiveRiskScore,
@@ -1186,8 +1190,16 @@ class AiDataResolver {
       buffer.writeln(
         "This semester — GPA: ${data.averageGPA.toStringAsFixed(2)}",
       );
+      buffer.writeln(
+        "Cumulative — CGPA: ${data.cumulativeGPA.toStringAsFixed(2)}",
+      );
     } else {
       buffer.writeln("This semester — GPA: no grade data yet.");
+      if (data.cumulativeGPA > 0) {
+        buffer.writeln(
+          "Cumulative — CGPA: ${data.cumulativeGPA.toStringAsFixed(2)}",
+        );
+      }
     }
 
     buffer.writeln("\nTasks — this week (by deadline):");
@@ -1240,6 +1252,7 @@ class AiDataResolver {
         'hours': data.studyHours.toStringAsFixed(1),
         'weeklyAvg': data.weeklyAverageStudyHours.toStringAsFixed(1),
         'gpa': data.averageGPA.toStringAsFixed(2),
+        'cgpa': data.cumulativeGPA.toStringAsFixed(2),
         'ects': data.totalECTS,
         'consistency': data.consistency,
         'riskScore': effectiveRisk,

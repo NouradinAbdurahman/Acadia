@@ -13,6 +13,7 @@ import '../../providers/course_provider.dart';
 import '../../providers/exams_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
+import '../../providers/mood_provider.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_back_button.dart';
 import '../../core/theme/app_colors.dart';
@@ -215,6 +216,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         return type == 'risk' ||
             type == 'academic_summary' ||
             type == 'study_goal' ||
+            type == 'due_today' ||
+            type == 'due_tomorrow' ||
+            type == 'overdue' ||
+            type == 'task_overdue' ||
+            type == 'deadline' ||
+            type == 'deadline_batch' ||
+            type == 'overdue_batch' ||
             type == 'system';
       default:
         return true;
@@ -260,10 +268,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         return;
       case 'risk':
       case 'academic_summary':
-      case 'stress':
       case 'study_goal':
+        ref.read(bottomNavProvider.notifier).state = 0;
+        context.go('/home');
+        return;
       case 'mood':
       case 'mood_check':
+        final hasTodayMood = await ref.read(todayMoodProvider.future);
+        if (!mounted) return;
+        if (!hasTodayMood) {
+          context.push('/mood/log?source=notification');
+          return;
+        }
+        context.push('/mood/history');
+        return;
+      case 'stress':
         ref.read(bottomNavProvider.notifier).state = 0;
         context.go('/home');
         return;
@@ -328,13 +347,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     AppIcon(
-                                      HeroIcons.checkCircle,
+                                      _emptyStateIconForCategory(),
                                       size: 64,
                                       color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.3),
                                     ),
                                     const SizedBox(height: AppSpacing.md),
                                     Text(
-                                      l10n.notificationsCaughtUp,
+                                      _emptyStateTitleForCategory(l10n),
                                       style: theme.textTheme.bodyLarge?.copyWith(
                                         color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                       ),
@@ -488,6 +507,28 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ],
       ),
     );
+  }
+
+  HeroIcons _emptyStateIconForCategory() {
+    switch (_selectedCategory) {
+      case _NotificationCategory.mood:
+        return HeroIcons.faceSmile;
+      case _NotificationCategory.academic:
+        return HeroIcons.academicCap;
+      default:
+        return HeroIcons.checkCircle;
+    }
+  }
+
+  String _emptyStateTitleForCategory(AppLocalizations l10n) {
+    switch (_selectedCategory) {
+      case _NotificationCategory.mood:
+        return l10n.noMoodNotificationsYet;
+      case _NotificationCategory.academic:
+        return l10n.noAcademicNotificationsYet;
+      default:
+        return l10n.notificationsCaughtUp;
+    }
   }
 
   Widget _buildNotificationCard(NotificationModel n, ThemeData theme, Map<String, Color> courseColorByName) {

@@ -144,6 +144,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Logout';
 
   @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountWarning =>
+      'This action is permanent and cannot be undone. Your account data, semester history, tasks, and analytics will be removed and you will lose access immediately. Are you sure you want to continue?';
+
+  @override
   String get notifications => 'Notifications';
 
   @override
@@ -151,6 +158,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsCaughtUp => 'You\'re all caught up';
+
+  @override
+  String get noMoodNotificationsYet => 'No mood notifications yet';
+
+  @override
+  String get noAcademicNotificationsYet => 'No academic notifications yet';
 
   @override
   String get tomorrow => 'Tomorrow';
@@ -513,6 +526,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gpaPoints => 'GPA Points';
+
+  @override
+  String get cgpaLabel => 'CGPA';
+
+  @override
+  String gpaValueLabel(String value) {
+    return 'GPA: $value';
+  }
 
   @override
   String studyTimeDeltaMsg(String action, int percent) {
@@ -3812,6 +3833,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get academic => 'Academic';
+
+  @override
+  String get moodCheckNotificationTitle => 'Mood check-in';
+
+  @override
+  String get moodCheckNotificationMessage =>
+      'How are you feeling today? Log your mood to keep insights accurate.';
 
   @override
   String get dailyBaseline => 'Daily Baseline';

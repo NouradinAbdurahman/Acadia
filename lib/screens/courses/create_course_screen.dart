@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'dart:ui';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_radius.dart';
 import '../../core/theme/app_colors.dart';
@@ -33,6 +34,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
   int? _ects;
   late String _selectedColor;
   bool _isLoading = false;
+  bool _isDeleting = false;
 
   final List<String> _availableColors = [
     '#3B82F6', // Blue
@@ -121,6 +123,153 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
     }
   }
 
+  Future<bool> _showDeleteConfirmation(AppLocalizations l10n) async {
+    final theme = Theme.of(context);
+    final confirmed = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: '',
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) => const SizedBox(),
+      transitionBuilder: (context, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.shadowColor.withValues(alpha: 0.1),
+                      blurRadius: 30,
+                      offset: const Offset(0, 15),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const AppIcon(
+                                HeroIcons.exclamationTriangle,
+                                color: Color(0xFFEF4444),
+                                size: 36,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              l10n.deleteCourse,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: theme.colorScheme.onSurface,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              l10n.examDetailDeleteWarning,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              l10n.deleteCourseWarning,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: const Color(0xFFEF4444),
+                                fontWeight: FontWeight.w700,
+                                height: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: AppButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    text: l10n.cancel,
+                                    variant: AppButtonVariant.secondary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: AppButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    text: l10n.delete,
+                                    child: Text(
+                                      l10n.delete,
+                                      style: theme.textTheme.bodyLarge?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    return confirmed ?? false;
+  }
+
+  Future<void> _deleteCourse() async {
+    final l10n = AppLocalizations.of(context)!;
+    final course = widget.courseToEdit;
+    if (course == null || _isDeleting) return;
+
+    final shouldDelete = await _showDeleteConfirmation(l10n);
+    if (!shouldDelete || !mounted) return;
+
+    setState(() => _isDeleting = true);
+    try {
+      await ref.read(courseProvider.notifier).deleteCourse(course.id);
+      Haptics.vibrate(HapticsType.error);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (_) {
+      if (!mounted) return;
+      _showError(l10n.networkError);
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
+    }
+  }
+
   void _showError(String message) {
     ScaffoldMessenger.of(
       context,
@@ -206,6 +355,28 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
                   _buildColorPicker(),
                   const SizedBox(height: AppSpacing.xl * 2),
                   _buildSaveButton(l10n),
+                  if (widget.courseToEdit != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    AppButton(
+                      onPressed: _isLoading || _isDeleting ? null : _deleteCourse,
+                      isLoading: _isDeleting,
+                      text: l10n.deleteCourse,
+                      variant: AppButtonVariant.secondary,
+                      isFullWidth: true,
+                      icon: const AppIcon(
+                        HeroIcons.trash,
+                        size: 18,
+                        color: Color(0xFFEF4444),
+                      ),
+                      child: Text(
+                        l10n.deleteCourse,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFFEF4444),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
                 ],
               ),

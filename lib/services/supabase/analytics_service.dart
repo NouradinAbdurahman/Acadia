@@ -61,9 +61,27 @@ class AnalyticsService {
   }) async {
     return await supabase
         .from('course_results')
-        .select('letter_grade')
+        .select('course_id, letter_grade, updated_at, created_at')
         .eq('user_id', userId)
         .eq('semester_id', semesterId);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllCoursesByUser({
+    required String userId,
+  }) async {
+    return await supabase
+        .from('courses')
+        .select('id, credits, ects')
+        .eq('user_id', userId);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllCourseResultsByUser({
+    required String userId,
+  }) async {
+    return await supabase
+        .from('course_results')
+        .select('course_id, letter_grade, updated_at, created_at')
+        .eq('user_id', userId);
   }
 
   Future<Map<String, dynamic>?> getSemester(String semesterId) async {

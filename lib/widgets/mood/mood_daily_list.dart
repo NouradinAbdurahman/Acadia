@@ -23,11 +23,9 @@ class MoodDailyList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return moodLogsAsync.when(
       data: (logs) {
-        if (logs.isEmpty) return const SizedBox.shrink();
-
         // Group logs by date
         final dailyMoods = <DateTime, MoodLog>{};
         final now = DateTime.now();
@@ -140,8 +138,83 @@ class MoodDailyList extends StatelessWidget {
           ),
         );
       },
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      loading: () => _buildPlaceholderDays(context),
+      error: (_, stackTrace) => _buildPlaceholderDays(context),
+    );
+  }
+
+  Widget _buildPlaceholderDays(BuildContext context) {
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final displayDates = List.generate(days, (i) {
+      final date = today.subtract(Duration(days: days - 1 - i));
+      return DateTime(date.year, date.month, date.day);
+    });
+
+    if (isFixed) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: displayDates.map((date) {
+          final locale = Localizations.localeOf(context).toString();
+          final dayName = DateFormat.E(locale).format(date);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const MoodEmojiCircle(moodLevel: null, size: 36),
+              const SizedBox(height: 6),
+              Text(
+                dayName,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      );
+    }
+
+    return SizedBox(
+      height: showDate ? 100 : 85,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        itemCount: displayDates.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final date = displayDates[index];
+          final locale = Localizations.localeOf(context).toString();
+          final dayName = DateFormat.E(locale).format(date);
+          final dateLabel = DateFormat.Md(locale).format(date);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const MoodEmojiCircle(moodLevel: null),
+              const SizedBox(height: 8),
+              Text(
+                dayName,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (showDate)
+                Text(
+                  dateLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

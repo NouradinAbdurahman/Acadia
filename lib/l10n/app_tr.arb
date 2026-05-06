@@ -70,9 +70,13 @@
   "aboutApp": "Uygulama Hakkında",
   "privacy": "Gizlilik",
   "logout": "Çıkış Yap",
+  "deleteAccountTitle": "Hesabı Sil",
+  "deleteAccountWarning": "Bu işlem kalıcıdır ve geri alınamaz. Hesap verileriniz, dönem geçmişiniz, görevleriniz ve analizleriniz silinir; erişiminiz hemen kapanır. Devam etmek istediğinize emin misiniz?",
   "notifications": "Bildirimler",
   "noNotifications": "Henüz bildirim yok",
   "notificationsCaughtUp": "Her şey yolunda",
+  "noMoodNotificationsYet": "Henüz ruh hali bildirimi yok",
+  "noAcademicNotificationsYet": "Henüz akademik bildirim yok",
   "tomorrow": "Yarın",
   "earlier": "Daha Önce",
   "home": "Ana Sayfa",
@@ -227,6 +231,15 @@
   "setUpSemester": "Dönemi Ayarla",
   "startAcademicTracking": "Akademik Takibe Başla",
   "gpaPoints": "GPA Puanı",
+  "cgpaLabel": "CGPA",
+  "gpaValueLabel": "GPA: {value}",
+  "@gpaValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "studyTimeDeltaMsg": "Haftalık çalışma süreniz %{percent} {action}",
   "@studyTimeDeltaMsg": {
     "placeholders": {
@@ -2276,6 +2289,8 @@
   "markAllAsRead": "Tümünü okundu olarak işaretle",
   "mood": "Ruh Hali",
   "academic": "Akademik",
+  "moodCheckNotificationTitle": "Ruh hali kontrolü",
+  "moodCheckNotificationMessage": "Bugün nasıl hissediyorsun? İçgörülerin doğru kalması için ruh halini kaydet.",
   "dailyBaseline": "Günlük Temel",
   "baseline": "Temel",
   "predictionPressureLikelyToIncrease": "Çalışma eksiği: {hours} sa",

@@ -42,8 +42,10 @@ class PerformanceSummaryWidget extends ConsumerWidget {
                     _PerformanceCard(
                       label: l10n.bestSemester,
                       value: summary.bestSemester!.name,
-                      caption: 'GPA: ${summary.highestGpa?.toStringAsFixed(2)}',
-                      icon: HeroIcons.sparkles,
+                      caption: l10n.gpaValueLabel(
+                        summary.highestGpa?.toStringAsFixed(2) ?? '--',
+                      ),
+                      icon: null,
                       color: Colors.amber,
                     ),
                   if (summary.mostImprovedSemester != null && (summary.improvementDelta ?? 0) > 0.1)
@@ -58,7 +60,9 @@ class PerformanceSummaryWidget extends ConsumerWidget {
                     _PerformanceCard(
                       label: l10n.requiresFocus,
                       value: summary.worstSemester!.name,
-                      caption: 'GPA: ${summary.lowestGpa?.toStringAsFixed(2)}',
+                      caption: l10n.gpaValueLabel(
+                        summary.lowestGpa?.toStringAsFixed(2) ?? '--',
+                      ),
                       icon: HeroIcons.exclamationTriangle,
                       color: Colors.orange,
                     ),
@@ -79,7 +83,7 @@ class _PerformanceCard extends StatelessWidget {
   final String label;
   final String value;
   final String caption;
-  final HeroIcons icon;
+  final HeroIcons? icon;
   final Color color;
 
   const _PerformanceCard({
@@ -104,8 +108,10 @@ class _PerformanceCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                HeroIcon(icon, size: 16, color: color),
-                const SizedBox(width: AppSpacing.xs),
+                if (icon != null) ...[
+                  HeroIcon(icon!, size: 16, color: color),
+                  const SizedBox(width: AppSpacing.xs),
+                ],
                 Text(
                   label.toUpperCase(),
                   style: theme.textTheme.labelSmall?.copyWith(

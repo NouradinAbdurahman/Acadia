@@ -26,6 +26,7 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
     final theme = Theme.of(context);
     final settings = ref.watch(moodSettingsProvider);
     final notifier = ref.read(moodSettingsProvider.notifier);
+    final todayMoodAsync = ref.watch(todayMoodProvider);
 
     return Scaffold(
       body: AuthBackgroundContainer(
@@ -55,6 +56,20 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
+                if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily)
+                  todayMoodAsync.when(
+                    data: (hasLoggedToday) {
+                      if (!hasLoggedToday) {
+                        return _buildMoodEntryCard(context, theme, l10n);
+                      }
+                      return const SizedBox.shrink();
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
+                if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
+                    !(todayMoodAsync.asData?.value ?? true))
+                  const SizedBox(height: AppSpacing.md),
                 AppGlassCard(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
@@ -123,6 +138,57 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
           onChanged: onChanged,
         ),
       ],
+    );
+  }
+
+  Widget _buildMoodEntryCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    return AppGlassCard(
+      borderOnly: true,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.moodDailyPromptTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  l10n.moodDailyPromptSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          TextButton.icon(
+            onPressed: () => context.push('/mood/log'),
+            icon: AppIcon(
+              HeroIcons.plusCircle,
+              size: 16,
+              color: theme.colorScheme.primary,
+            ),
+            label: Text(
+              l10n.logMoodTitle,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

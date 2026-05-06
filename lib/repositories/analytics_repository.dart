@@ -94,10 +94,10 @@ class AnalyticsRepository {
     // ── Mood stats — split by source to match UI expectations ──────────────
     // The analytics screen reads dailyMoodLogCount/sessionMoodLogCount etc.
     // Aggregate-only fields (avgMood, avgStress, moodLogCount) are also kept.
-    bool _isSession(MoodLog m) => m.source.trim().toLowerCase() == 'session';
+    bool isSession(MoodLog m) => m.source.trim().toLowerCase() == 'session';
 
-    final dailyMoods   = moodLogs.where((m) => !_isSession(m)).toList();
-    final sessionMoods = moodLogs.where((m) => _isSession(m)).toList();
+    final dailyMoods = moodLogs.where((m) => !isSession(m)).toList();
+    final sessionMoods = moodLogs.where((m) => isSession(m)).toList();
 
     // Diagnostics for Mood Classification
     debugPrint('[AnalyticsRepository] computeFromPreloaded Detail:');
@@ -109,17 +109,17 @@ class AnalyticsRepository {
       debugPrint('  - WARNING: All moods classified as session! Sample Source: "${moodLogs.first.source}"');
     }
 
-    double _avg(List<MoodLog> list, double Function(MoodLog) fn) =>
+    double avg(List<MoodLog> list, double Function(MoodLog) fn) =>
         list.isEmpty ? 0.0 : list.fold(0.0, (s, m) => s + fn(m)) / list.length;
 
-    final avgDailyMoodVal    = _avg(dailyMoods,   (m) => m.moodLevel.toDouble());
-    final avgDailyStressVal  = _avg(dailyMoods,   (m) => m.stressLevel.toDouble());
-    final avgSessionMoodVal  = _avg(sessionMoods, (m) => m.moodLevel.toDouble());
-    final avgSessionStressVal= _avg(sessionMoods, (m) => m.stressLevel.toDouble());
+    final avgDailyMoodVal = avg(dailyMoods, (m) => m.moodLevel.toDouble());
+    final avgDailyStressVal = avg(dailyMoods, (m) => m.stressLevel.toDouble());
+    final avgSessionMoodVal = avg(sessionMoods, (m) => m.moodLevel.toDouble());
+    final avgSessionStressVal = avg(sessionMoods, (m) => m.stressLevel.toDouble());
 
     // Aggregate across all logs for backward-compatible fields.
-    final avgMoodVal   = _avg(moodLogs, (m) => m.moodLevel.toDouble());
-    final avgStressVal = _avg(moodLogs, (m) => m.stressLevel.toDouble());
+    final avgMoodVal = avg(moodLogs, (m) => m.moodLevel.toDouble());
+    final avgStressVal = avg(moodLogs, (m) => m.stressLevel.toDouble());
     final hasStressData = moodLogs.isNotEmpty;
 
     // Stress trend (overall)
@@ -215,22 +215,16 @@ class AnalyticsRepository {
               day.isBefore(startOfToday.add(const Duration(days: 3)));
         }).length;
 
-    // GPA
-    double totalGradePoints = 0.0;
-    int gradedCount = 0;
     final gradeDistribution = <String, int>{};
-    for (final result in results) {
-      final rawGrade = (result['letter_grade'] as String? ?? '').trim().toUpperCase();
-      if (rawGrade.isEmpty) continue;
-      final code = rawGrade.split(' ').first;
-      gradeDistribution.update(code, (v) => v + 1, ifAbsent: () => 1);
-      final val = _gradeToValue(code);
-      if (val != null) {
-        totalGradePoints += val;
-        gradedCount++;
-      }
-    }
-    final averageGPA = gradedCount == 0 ? 0.0 : totalGradePoints / gradedCount;
+    final semesterGpa = _calculateGpa(
+      results: results,
+      courses: courses,
+      gradeDistributionOut: gradeDistribution,
+    );
+
+    final allCourses = await _analyticsService.getAllCoursesByUser(userId: userId);
+    final allResults = await _analyticsService.getAllCourseResultsByUser(userId: userId);
+    final cumulativeGpa = _calculateGpa(results: allResults, courses: allCourses);
 
     final totalEcts = courses.fold<int>(0, (s, c) => s + (c['ects'] as int? ?? 0));
     final studyDeficitHours = (studyGoal - thisWeekHours).clamp(0.0, double.infinity);
@@ -255,7 +249,8 @@ class AnalyticsRepository {
       taskCompletionRate: rate,
       completedTasks: completedTasks,
       totalTasks: totalTasks,
-      averageGPA: averageGPA,
+      averageGPA: semesterGpa,
+      cumulativeGPA: cumulativeGpa,
       weeklyAverageStudyHours: weeklyAvg,
       totalECTS: totalEcts,
       riskScore: riskScore,
@@ -415,25 +410,15 @@ class AnalyticsRepository {
 
       final rate = total == 0 ? 0.0 : completed / total.toDouble();
 
-      // GPA Calculation
-      double totalGradePoints = 0.0;
-      int gradedCount = 0;
       final gradeDistribution = <String, int>{};
-      
-      for (final result in results) {
-        final rawGrade = (result['letter_grade'] as String? ?? '').trim().toUpperCase();
-        if (rawGrade.isEmpty) continue;
-        final code = rawGrade.split(' ').first;
-        gradeDistribution.update(code, (value) => value + 1, ifAbsent: () => 1);
-        
-        final val = _gradeToValue(code);
-        if (val != null) {
-          totalGradePoints += val;
-          gradedCount++;
-        }
-      }
-
-      final averageGPA = gradedCount == 0 ? 0.0 : totalGradePoints / gradedCount;
+      final averageGPA = _calculateGpa(
+        results: results,
+        courses: courses,
+        gradeDistributionOut: gradeDistribution,
+      );
+      final allCourses = await _analyticsService.getAllCoursesByUser(userId: userId);
+      final allResults = await _analyticsService.getAllCourseResultsByUser(userId: userId);
+      final cumulativeGPA = _calculateGpa(results: allResults, courses: allCourses);
 
       // Risk snapshot calculation for historical comparison
       final totalEcts = courses.fold<int>(0, (sum, c) => sum + (c['ects'] as int? ?? 0));
@@ -494,6 +479,7 @@ class AnalyticsRepository {
         completedTasks: completed, 
         totalTasks: total,
         averageGPA: averageGPA,
+        cumulativeGPA: cumulativeGPA,
         weeklyAverageStudyHours: weeklyAvg,
         totalECTS: totalEcts,
         riskScore: riskScore,
@@ -560,5 +546,81 @@ class AnalyticsRepository {
       'CC': 2.0, 'DC': 1.5, 'DD': 1.0, 'FF': 0.0,
     };
     return map[code];
+  }
+
+  double _calculateGpa({
+    required List<Map<String, dynamic>> results,
+    required List<Map<String, dynamic>> courses,
+    Map<String, int>? gradeDistributionOut,
+  }) {
+    final courseCreditById = <String, int>{};
+    for (final course in courses) {
+      final courseId = (course['id'] as String?) ?? '';
+      if (courseId.isEmpty) continue;
+      final credits = (course['credits'] as int?) ?? 0;
+      if (credits > 0) courseCreditById[courseId] = credits;
+    }
+
+    // University policy: for retaken courses, only the latest attempt counts.
+    final latestResultByCourse = <String, Map<String, dynamic>>{};
+    for (final result in results) {
+      final courseId = (result['course_id'] as String?) ?? '';
+      if (courseId.isEmpty) continue;
+      final existing = latestResultByCourse[courseId];
+      if (existing == null) {
+        latestResultByCourse[courseId] = result;
+        continue;
+      }
+
+      final existingDate = _resultTimestamp(existing);
+      final nextDate = _resultTimestamp(result);
+      if (nextDate.isAfter(existingDate)) latestResultByCourse[courseId] = result;
+    }
+
+    double weightedGradePoints = 0.0;
+    int totalWeightedCredits = 0;
+    double unweightedGradePoints = 0.0;
+    int unweightedCount = 0;
+
+    for (final result in latestResultByCourse.values) {
+      final code = _normalizeGradeCode(result['letter_grade'] as String?);
+      if (code == null) continue;
+      gradeDistributionOut?.update(code, (value) => value + 1, ifAbsent: () => 1);
+      final gradeValue = _gradeToValue(code);
+      if (gradeValue == null) continue;
+
+      unweightedGradePoints += gradeValue;
+      unweightedCount++;
+
+      final courseId = (result['course_id'] as String?) ?? '';
+      final credits = courseCreditById[courseId] ?? 0;
+      if (credits <= 0) continue;
+      weightedGradePoints += gradeValue * credits;
+      totalWeightedCredits += credits;
+    }
+
+    if (totalWeightedCredits > 0) {
+      final weighted = weightedGradePoints / totalWeightedCredits;
+      if (weighted.isFinite) return weighted;
+    }
+    if (unweightedCount > 0) {
+      final fallback = unweightedGradePoints / unweightedCount;
+      if (fallback.isFinite) return fallback;
+    }
+    return 0.0;
+  }
+
+  DateTime _resultTimestamp(Map<String, dynamic> result) {
+    final updatedRaw = result['updated_at'] as String?;
+    final createdRaw = result['created_at'] as String?;
+    return DateTime.tryParse(updatedRaw ?? '') ??
+        DateTime.tryParse(createdRaw ?? '') ??
+        DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  }
+
+  String? _normalizeGradeCode(String? rawGrade) {
+    final normalized = (rawGrade ?? '').trim().toUpperCase();
+    if (normalized.isEmpty) return null;
+    return normalized.split(' ').first;
   }
 }

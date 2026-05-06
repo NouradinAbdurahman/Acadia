@@ -70,9 +70,13 @@
   "aboutApp": "About App",
   "privacy": "Privacy",
   "logout": "Logout",
+  "deleteAccountTitle": "Delete Account",
+  "deleteAccountWarning": "This action is permanent and cannot be undone. Your account data, semester history, tasks, and analytics will be removed and you will lose access immediately. Are you sure you want to continue?",
   "notifications": "Notifications",
   "noNotifications": "No notifications yet",
   "notificationsCaughtUp": "You're all caught up",
+  "noMoodNotificationsYet": "No mood notifications yet",
+  "noAcademicNotificationsYet": "No academic notifications yet",
   "tomorrow": "Tomorrow",
   "earlier": "Earlier",
   "home": "Home",
@@ -227,6 +231,15 @@
   "setUpSemester": "Set up Semester",
   "startAcademicTracking": "Start academic tracking",
   "gpaPoints": "GPA Points",
+  "cgpaLabel": "CGPA",
+  "gpaValueLabel": "GPA: {value}",
+  "@gpaValueLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "studyTimeDeltaMsg": "Your weekly study time has {action} by {percent}%",
   "@studyTimeDeltaMsg": {
     "placeholders": {
@@ -2335,6 +2348,8 @@
   "markAllAsRead": "Mark all as read",
   "mood": "Mood",
   "academic": "Academic",
+  "moodCheckNotificationTitle": "Mood check-in",
+  "moodCheckNotificationMessage": "How are you feeling today? Log your mood to keep insights accurate.",
   "dailyBaseline": "Daily Baseline",
   "studySessions": "Study Sessions",
   "notificationOverdue": "is overdue",

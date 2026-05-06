@@ -1549,6 +1549,8 @@ class _SummaryDashboard extends StatelessWidget {
     final completed = data['completed'] ?? 0;
     final hours = data['hours'] ?? 0;
     final riskScore = data['riskScore'];
+    final gpa = data['gpa'];
+    final cgpa = data['cgpa'];
     final overdue = data['overdue'] ?? 0;
     final dueSoon = data['dueSoon'] ?? 0;
     final deficit = data['studyDeficit'] ?? 0;
@@ -1599,6 +1601,24 @@ class _SummaryDashboard extends StatelessWidget {
               value: riskScore == null ? "-" : (riskScore as num).round().toString(),
               icon: Icons.warning_amber_rounded,
               color: AppColors.urgent,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "GPA",
+              value: gpa == null ? "-" : gpa.toString(),
+              icon: Icons.school_outlined,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(
+            width: 84,
+            child: _StatItem(
+              label: "CGPA",
+              value: cgpa == null ? "-" : cgpa.toString(),
+              icon: Icons.stacked_line_chart,
+              color: AppColors.primary,
             ),
           ),
           SizedBox(

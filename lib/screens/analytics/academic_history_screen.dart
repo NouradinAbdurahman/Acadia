@@ -14,6 +14,16 @@ import '../../models/analytics_data.dart';
 import '../../widgets/semester/performance_summary_widget.dart';
 import '../../l10n/app_localizations.dart';
 
+final semesterAnalyticsProvider = FutureProvider.family<AnalyticsData, String>((
+  ref,
+  semesterId,
+) async {
+  final appUser = await ref.watch(currentAppUserProvider.future);
+  if (appUser == null) return AnalyticsData.empty();
+  final repository = ref.watch(analyticsRepositoryProvider);
+  return repository.getAnalyticsData(appUser.id, semesterId: semesterId);
+});
+
 class AcademicHistoryScreen extends ConsumerWidget {
   const AcademicHistoryScreen({super.key});
 
@@ -42,8 +52,8 @@ class AcademicHistoryScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.history_edu,
+                        HeroIcon(
+                          HeroIcons.clock,
                           size: 64,
                           color: theme.colorScheme.primary.withValues(alpha: 0.3),
                         ),
@@ -65,7 +75,7 @@ class AcademicHistoryScreen extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.xl),
                         AppButton(
                           text: l10n.setUpSemester,
-                          onPressed: () => context.go('/settings'), // Assuming settings is where they manage semesters
+                          onPressed: () => context.push('/semesters'),
                         ),
                       ],
                     ),
@@ -97,7 +107,7 @@ class AcademicHistoryScreen extends ConsumerWidget {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, stack) => Center(child: Text('Error: $e')),
+            error: (_, _) => Center(child: Text(l10n.networkError)),
           ),
         ),
       ),
@@ -112,119 +122,122 @@ class _SemesterHistoryItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final repository = ref.watch(analyticsRepositoryProvider);
-    final currentUser = ref.watch(currentAppUserProvider).value;
     final activeSemesterId = ref.watch(activeSemesterProvider).value;
     final l10n = AppLocalizations.of(context)!;
+    final analyticsAsync = ref.watch(semesterAnalyticsProvider(semester.id));
 
-    return FutureBuilder<AnalyticsData>(
-      future: repository.getAnalyticsData(currentUser?.id ?? '', semesterId: semester.id),
-      builder: (context, snapshot) {
-        final data = snapshot.data;
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-        final hasSemesterData =
-            data != null &&
-            (data.totalTasks > 0 ||
-                data.studyHoursPerCourse.isNotEmpty ||
-                data.gradeDistribution.isNotEmpty);
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: AppGlassCard(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: AppGlassCard(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        semester.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                Expanded(
+                  child: Text(
+                    semester.name,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (semester.id == activeSemesterId)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: Text(
+                      l10n.activeLabel.toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (semester.id == activeSemesterId)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
-                        ),
-                        child: Text(
-                          l10n.activeLabel.toUpperCase(),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                if (isLoading)
-                  const LinearProgressIndicator()
-                else if (hasSemesterData) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _CompactStat(
-                        icon: HeroIcons.clock,
-                        label: l10n.focusLabel,
-                        value: '${data.weeklyAverageStudyHours.toStringAsFixed(1)}h',
-                      ),
-                      _CompactStat(
-                        icon: HeroIcons.checkBadge,
-                        label: l10n.taskStatThisWeekByDeadline,
-                        value: '${(data.taskCompletionRate * 100).round()}%',
-                      ),
-                      _CompactStat(
-                        icon: HeroIcons.academicCap,
-                        label: 'GPA',
-                        value: data.averageGPA == 0 ? 'N/A' : data.averageGPA.toStringAsFixed(2),
-                      ),
-                       _CompactStat(
-                        icon: HeroIcons.shieldExclamation,
-                        label: l10n.academicRisk,
-                        value: '${data.riskScore.toStringAsFixed(0)}%',
-                        color: _getRiskColor(data.riskScore),
-                      ),
-                    ],
                   ),
-                ] else ...[
-                  Text(
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            analyticsAsync.when(
+              loading: () => const LinearProgressIndicator(),
+              error: (_, _) => Text(
+                l10n.networkError,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              data: (data) {
+                final hasSemesterData =
+                    data.totalTasks > 0 ||
+                    data.studyHoursPerCourse.isNotEmpty ||
+                    data.gradeDistribution.isNotEmpty;
+                if (!hasSemesterData) {
+                  return Text(
                     l10n.noDataForSemesterYet,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                AppButton(
-                  text: l10n.switchToSemester,
-                  onPressed: () async {
-                    await ref.read(activeSemesterProvider.notifier).setActiveSemester(semester.id);
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  variant: AppButtonVariant.secondary,
-                ),
-              ],
+                  );
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _CompactStat(
+                      icon: HeroIcons.clock,
+                      label: l10n.focusLabel,
+                      value: '${data.weeklyAverageStudyHours.toStringAsFixed(1)}h',
+                    ),
+                    _CompactStat(
+                      icon: HeroIcons.checkBadge,
+                      label: l10n.taskStatThisWeekByDeadline,
+                      value: '${(data.taskCompletionRate * 100).round()}%',
+                    ),
+                    _CompactStat(
+                      icon: HeroIcons.academicCap,
+                      label: l10n.gpaPoints,
+                      value: data.averageGPA == 0 ? '--' : data.averageGPA.toStringAsFixed(2),
+                    ),
+                    _CompactStat(
+                      icon: HeroIcons.chartBar,
+                      label: l10n.cgpaLabel,
+                      value: data.cumulativeGPA == 0
+                          ? '--'
+                          : data.cumulativeGPA.toStringAsFixed(2),
+                    ),
+                    _CompactStat(
+                      icon: HeroIcons.shieldExclamation,
+                      label: l10n.academicRisk,
+                      value: '${data.riskScore.toStringAsFixed(0)}%',
+                      color: _getRiskColor(theme, data.riskScore),
+                    ),
+                  ],
+                );
+              },
             ),
-          ),
-        );
-      },
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              text: l10n.switchToSemester,
+              onPressed: () async {
+                await ref.read(activeSemesterProvider.notifier).setActiveSemester(semester.id);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+              variant: AppButtonVariant.secondary,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  Color? _getRiskColor(double score) {
-    if (score < 30) return Colors.green;
-    if (score < 60) return Colors.orange;
-    return Colors.redAccent;
+  Color _getRiskColor(ThemeData theme, double score) {
+    if (score < 30) return theme.colorScheme.primary;
+    if (score < 60) return theme.colorScheme.tertiary;
+    return theme.colorScheme.error;
   }
 }
 

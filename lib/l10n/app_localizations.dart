@@ -350,6 +350,18 @@ abstract class AppLocalizations {
   /// **'Logout'**
   String get logout;
 
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is permanent and cannot be undone. Your account data, semester history, tasks, and analytics will be removed and you will lose access immediately. Are you sure you want to continue?'**
+  String get deleteAccountWarning;
+
   /// No description provided for @notifications.
   ///
   /// In en, this message translates to:
@@ -367,6 +379,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'re all caught up'**
   String get notificationsCaughtUp;
+
+  /// No description provided for @noMoodNotificationsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No mood notifications yet'**
+  String get noMoodNotificationsYet;
+
+  /// No description provided for @noAcademicNotificationsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No academic notifications yet'**
+  String get noAcademicNotificationsYet;
 
   /// No description provided for @tomorrow.
   ///
@@ -1063,6 +1087,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'GPA Points'**
   String get gpaPoints;
+
+  /// No description provided for @cgpaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CGPA'**
+  String get cgpaLabel;
+
+  /// No description provided for @gpaValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'GPA: {value}'**
+  String gpaValueLabel(String value);
 
   /// No description provided for @studyTimeDeltaMsg.
   ///
@@ -6643,6 +6679,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Academic'**
   String get academic;
+
+  /// No description provided for @moodCheckNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood check-in'**
+  String get moodCheckNotificationTitle;
+
+  /// No description provided for @moodCheckNotificationMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you feeling today? Log your mood to keep insights accurate.'**
+  String get moodCheckNotificationMessage;
 
   /// No description provided for @dailyBaseline.
   ///

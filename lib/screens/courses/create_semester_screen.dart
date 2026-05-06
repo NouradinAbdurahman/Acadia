@@ -13,6 +13,7 @@ import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../components/app_bottom_sheet_picker.dart';
 import '../../components/app_back_button.dart';
+import '../../components/destructive_confirmation_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'semester_management_screen.dart';
 
@@ -41,6 +42,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   bool _isLoading = false;
+  bool _isDeleting = false;
   late String _selectedSeason;
   late int _selectedAcademicStartYear;
   late List<int> _academicYearOptions;
@@ -153,6 +155,36 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteSemester() async {
+    final semester = widget.semesterToEdit;
+    if (semester == null || _isDeleting) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final shouldDelete = await showDestructiveConfirmationDialog(
+      context: context,
+      title: l10n.delete,
+      primaryMessage: l10n.deleteSemesterWarning,
+      cancelLabel: l10n.cancel,
+      confirmLabel: l10n.delete,
+    );
+
+    if (!shouldDelete || !mounted) return;
+
+    setState(() => _isDeleting = true);
+    try {
+      await ref.read(semesterProvider.notifier).deleteSemester(semester.id);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.networkError)));
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
     }
   }
 
@@ -373,6 +405,28 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
                               : l10n.updateSemester),
                     isFullWidth: true,
                   ),
+                  if (widget.semesterToEdit != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    AppButton(
+                      onPressed: (_isLoading || _isDeleting) ? null : _deleteSemester,
+                      isLoading: _isDeleting,
+                      text: l10n.delete,
+                      variant: AppButtonVariant.secondary,
+                      isFullWidth: true,
+                      icon: const AppIcon(
+                        HeroIcons.trash,
+                        size: 18,
+                        color: Color(0xFFEF4444),
+                      ),
+                      child: Text(
+                        l10n.delete,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFFEF4444),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

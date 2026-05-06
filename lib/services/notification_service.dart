@@ -10,7 +10,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:go_router/go_router.dart';
-import '../main.dart'; // import rootNavigatorKey
+import '../core/navigation/navigation_keys.dart';
 import '../models/exam.dart';
 import 'notification_config.dart';
 import 'notification_behavior_service.dart';

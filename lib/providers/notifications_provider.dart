@@ -10,6 +10,7 @@ import 'app_providers.dart';
 import 'analytics_provider.dart';
 import 'semester_provider.dart';
 import 'locale_provider.dart';
+import 'mood_provider.dart';
 import '../l10n/app_localizations.dart';
 
 class _NotificationSeed {
@@ -33,6 +34,10 @@ class NotificationsNotifier
     required this.notificationRepository,
     required this.supabaseClient,
   }) : super(const AsyncValue.loading()) {
+    ref.listen<Locale>(localeProvider, (previous, next) {
+      if (previous == next) return;
+      loadNotifications();
+    });
     loadNotifications();
   }
 
@@ -218,14 +223,27 @@ class NotificationsNotifier
         .eq('user_id', userId)
         .order('created_at', ascending: false);
 
+    final dedupableTypes = <String>{
+      'due_today',
+      'due_tomorrow',
+      'overdue',
+      'task_overdue',
+      'deadline',
+      'deadline_batch',
+      'overdue_batch',
+      'mood_check',
+    };
     final seen = <String>{};
     final toDelete = <String>[];
 
     for (final row in rows) {
+      final type = (row['type'] ?? '').toString();
+      if (!dedupableTypes.contains(type)) continue;
+
       final refId = row['reference_id']?.toString();
       final key = refId != null && refId.isNotEmpty
-          ? '$refId|${row['type']}'
-          : '${(row['title'] ?? '').toString().trim().toLowerCase()}|${(row['message'] ?? '').toString().trim().toLowerCase()}|${row['type']}';
+          ? '$refId|$type'
+          : '${(row['title'] ?? '').toString().trim().toLowerCase()}|${(row['message'] ?? '').toString().trim().toLowerCase()}|$type';
 
       if (seen.contains(key)) {
         final id = row['id']?.toString();
@@ -444,6 +462,41 @@ class NotificationsNotifier
 
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
+    final moodSettings = ref.read(moodSettingsProvider);
+    final shouldCreateMoodCheck =
+        moodSettings.trackingEnabled &&
+        moodSettings.reminderEnabled &&
+        (moodSettings.reminderType == 'daily' ||
+            moodSettings.reminderType == 'both');
+
+    if (shouldCreateMoodCheck) {
+      final startOfTomorrow = startOfToday.add(const Duration(days: 1));
+      final todayMoodLog = await supabaseClient
+          .from('mood_logs')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('semester_id', semesterId)
+          .gte('created_at', startOfToday.toIso8601String())
+          .lt('created_at', startOfTomorrow.toIso8601String())
+          .limit(1)
+          .maybeSingle();
+
+      if (todayMoodLog == null) {
+        final todayKey = DateTime(
+          startOfToday.year,
+          startOfToday.month,
+          startOfToday.day,
+        ).toIso8601String();
+        await _ensureDailyNotification(
+          userId: userId,
+          semesterId: semesterId,
+          referenceId: 'mood_check:$todayKey',
+          type: 'mood_check',
+          title: l10n.moodCheckNotificationTitle,
+          message: l10n.moodCheckNotificationMessage,
+        );
+      }
+    }
 
     if (now.weekday == DateTime.sunday) {
       final weeklyGoalMinutes = (ref.read(weeklyStudyGoalHoursProvider) * 60);

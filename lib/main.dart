@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ import 'package:acadia/l10n/app_localizations.dart';
 import 'services/notification_service.dart';
 
 import 'core/config/env_validation.dart';
+import 'core/navigation/navigation_keys.dart';
 import 'core/theme/app_theme.dart';
 import 'components/app_swipe_back.dart';
 import 'screens/auth/login_screen.dart';
@@ -46,6 +48,7 @@ import 'screens/courses/course_results_screen.dart';
 import 'screens/courses/course_result_editor_screen.dart';
 import 'screens/profile/edit_academic_profile_screen.dart';
 import 'screens/profile/study_preferences_screen.dart';
+import 'screens/profile/account_settings_screen.dart';
 import 'screens/profile/change_password_screen.dart';
 import 'screens/profile/privacy_policy_screen.dart';
 import 'screens/profile/terms_of_service_screen.dart';
@@ -72,9 +75,6 @@ import 'services/background_notification_service.dart';
 import 'services/notification_intelligence_service.dart';
 
 import 'package:firebase_core/firebase_core.dart';
-
-// We declare a globally accessible navigator key to handle programmatic pushes if necessary
-final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runZonedGuarded(() async {
@@ -328,7 +328,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/settings/mood-stress',
-        builder: (context, state) => const MoodSettingsScreen(),
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const MoodSettingsScreen(),
+        ),
       ),
       GoRoute(
         path: '/courses',
@@ -350,74 +353,30 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/semesters',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const SemesterManagementScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
         path: '/create-course',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const CreateCourseScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
         path: '/course-results',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const CourseResultsScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
         path: '/academic-history',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const AcademicHistoryScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
@@ -427,151 +386,76 @@ final routerProvider = Provider<GoRouter>((ref) {
           final semesterId =
               state.uri.queryParameters['semesterId'] ??
               state.uri.queryParameters['semester'];
-          return CustomTransitionPage(
+          return CupertinoPage<void>(
             key: state.pageKey,
             child: CourseResultEditorScreen(
               resultId: resultId,
               initialSemesterId: semesterId,
             ),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return SlideTransition(
-                    position: animation.drive(
-                      Tween(
-                        begin: const Offset(0, 1),
-                        end: Offset.zero,
-                      ).chain(CurveTween(curve: Curves.easeOutCubic)),
-                    ),
-                    child: child,
-                  );
-                },
           );
         },
       ),
       GoRoute(
         path: '/profile/edit',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const EditAcademicProfileScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
+        ),
+      ),
+      GoRoute(
+        path: '/profile/courses',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const CourseManagementScreen(),
         ),
       ),
       GoRoute(
         path: '/profile/study-preferences',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const StudyPreferencesScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
+        ),
+      ),
+      GoRoute(
+        path: '/profile/account-settings',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const AccountSettingsScreen(),
         ),
       ),
       GoRoute(
         path: '/profile/change-password',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const ChangePasswordScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
         path: '/profile/privacy-policy',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const PrivacyPolicyScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
         path: '/profile/terms-of-service',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const TermsOfServiceScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
         path: '/profile/data-permissions',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const DataPermissionsScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
       GoRoute(
         path: '/profile/contact-support',
-        pageBuilder: (context, state) => CustomTransitionPage(
+        pageBuilder: (context, state) => CupertinoPage<void>(
           key: state.pageKey,
           child: const ContactSupportScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).chain(CurveTween(curve: Curves.easeOutCubic)),
-              ),
-              child: child,
-            );
-          },
         ),
       ),
     ],

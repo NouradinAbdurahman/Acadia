@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -83,6 +84,17 @@ class ProfileScreen extends ConsumerWidget {
       } catch (e) {
         debugPrint("Error picking image: $e");
       }
+    }
+
+    Future<void> clearRememberedCredentials() async {
+      final box = Hive.box('settings');
+      await box.delete('remembered_email');
+      await box.delete('remembered_password');
+    }
+
+    Future<void> handleLogout() async {
+      await clearRememberedCredentials();
+      await ref.read(authRepositoryProvider).logout();
     }
 
     Widget buildItem({
@@ -317,7 +329,12 @@ class ProfileScreen extends ConsumerWidget {
                     buildItem(
                       icon: HeroIcons.academicCap,
                       title: l10n.manageCourses,
-                      onTap: () => context.push('/courses'),
+                      onTap: () => context.push('/profile/courses'),
+                    ),
+                    buildItem(
+                      icon: HeroIcons.calendarDays,
+                      title: l10n.manageSemesters,
+                      onTap: () => context.push('/semesters'),
                     ),
                   ],
                 ),
@@ -431,38 +448,18 @@ class ProfileScreen extends ConsumerWidget {
 
                 // --- ACCOUNT SECTION ---
                 buildSection(
-                  title: l10n.accountSettings,
+                  title: l10n.account,
                   children: [
                     buildItem(
-                      icon: HeroIcons.shieldCheck,
-                      title: l10n.privacyPolicy,
-                      onTap: () => context.push('/profile/privacy-policy'),
-                    ),
-                    buildItem(
-                      icon: HeroIcons.documentText,
-                      title: l10n.termsOfService,
-                      onTap: () => context.push('/profile/terms-of-service'),
-                    ),
-                    buildItem(
-                      icon: HeroIcons.lockClosed,
-                      title: l10n.dataPermissionsTitle,
-                      onTap: () => context.push('/profile/data-permissions'),
-                    ),
-                    buildItem(
-                      icon: HeroIcons.envelope,
-                      title: l10n.contactSupportTitle,
-                      onTap: () => context.push('/profile/contact-support'),
-                    ),
-                    buildItem(
-                      icon: HeroIcons.lockClosed,
-                      title: l10n.changePassword,
-                      onTap: () => context.push('/profile/change-password'),
+                      icon: HeroIcons.cog6Tooth,
+                      title: l10n.accountSettings,
+                      onTap: () => context.push('/profile/account-settings'),
                     ),
                     buildItem(
                       icon: HeroIcons.arrowRightOnRectangle,
                       title: l10n.logout,
                       textColor: Colors.redAccent,
-                      onTap: () => ref.read(authRepositoryProvider).logout(),
+                      onTap: handleLogout,
                     ),
                   ],
                 ),

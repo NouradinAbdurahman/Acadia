@@ -11,6 +11,7 @@ class AnalyticsData {
   final int calendarWeekDeadlineCompletedTaskCount;
   final double calendarWeekDeadlineTaskCompletionFraction;
   final double averageGPA;
+  final double cumulativeGPA;
   final double weeklyAverageStudyHours;
   final int totalECTS;
   final double riskScore;
@@ -54,6 +55,7 @@ class AnalyticsData {
     int? explicitCalendarWeekDeadlineCompletedTaskCount,
     double? explicitCalendarWeekDeadlineTaskCompletionFraction,
     this.averageGPA = 0.0,
+    this.cumulativeGPA = 0.0,
     this.weeklyAverageStudyHours = 0.0,
     this.totalECTS = 0,
     this.riskScore = 0.0,
@@ -119,6 +121,7 @@ class AnalyticsData {
       'calendarWeekDeadlineTaskCompletionFraction':
           calendarWeekDeadlineTaskCompletionFraction,
       'averageGPA': averageGPA,
+      'cumulativeGPA': cumulativeGPA,
       'weeklyAverageStudyHours': weeklyAverageStudyHours,
       'totalECTS': totalECTS,
       'riskScore': riskScore,

@@ -144,6 +144,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logout => 'Çıkış Yap';
 
   @override
+  String get deleteAccountTitle => 'Hesabı Sil';
+
+  @override
+  String get deleteAccountWarning =>
+      'Bu işlem kalıcıdır ve geri alınamaz. Hesap verileriniz, dönem geçmişiniz, görevleriniz ve analizleriniz silinir; erişiminiz hemen kapanır. Devam etmek istediğinize emin misiniz?';
+
+  @override
   String get notifications => 'Bildirimler';
 
   @override
@@ -151,6 +158,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationsCaughtUp => 'Her şey yolunda';
+
+  @override
+  String get noMoodNotificationsYet => 'Henüz ruh hali bildirimi yok';
+
+  @override
+  String get noAcademicNotificationsYet => 'Henüz akademik bildirim yok';
 
   @override
   String get tomorrow => 'Yarın';
@@ -513,6 +526,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gpaPoints => 'GPA Puanı';
+
+  @override
+  String get cgpaLabel => 'CGPA';
+
+  @override
+  String gpaValueLabel(String value) {
+    return 'GPA: $value';
+  }
 
   @override
   String studyTimeDeltaMsg(String action, int percent) {
@@ -3795,6 +3816,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get academic => 'Akademik';
+
+  @override
+  String get moodCheckNotificationTitle => 'Ruh hali kontrolü';
+
+  @override
+  String get moodCheckNotificationMessage =>
+      'Bugün nasıl hissediyorsun? İçgörülerin doğru kalması için ruh halini kaydet.';
 
   @override
   String get dailyBaseline => 'Günlük Temel';

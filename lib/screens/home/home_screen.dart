@@ -44,6 +44,7 @@ import '../../providers/decision_provider.dart';
 import '../../providers/adaptive_provider.dart';
 import '../../providers/study_sessions_provider.dart';
 import '../../providers/prediction_provider.dart';
+import '../../domain/academic_deadline_task.dart';
 import '../../domain/decision/decision_result.dart';
 import '../../domain/prediction/prediction_result.dart';
 import '../../domain/decision/decision_rules.dart';
@@ -60,6 +61,7 @@ import 'widgets/home_skeleton_screen.dart';
 import '../../widgets/mood/mood_daily_list.dart';
 import '../../providers/course_provider.dart';
 import '../../widgets/semester/semester_switcher_bottom_sheet.dart';
+import '../../services/ai/academic_data_guard.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -396,6 +398,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   exam: nextExam,
                                   summary: examUrgency,
                                   isExpanded: _isExamExpanded && examUrgency.count > 1,
+                                  expandedContent: _isExamExpanded && examUrgency.count > 1
+                                      ? Padding(
+                                          padding: const EdgeInsets.only(top: AppSpacing.sm),
+                                          child: _ExpandedExamList(
+                                            exams: upcomingExamsInWindow,
+                                            insideParentCard: true,
+                                          ),
+                                        )
+                                      : null,
                                   onTap: () {
                                     if (examUrgency.count <= 1) {
                                       context.push('/exam-detail?id=${Uri.encodeComponent(nextExam.id)}');
@@ -405,39 +416,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   },
                                 ),
                                 const SizedBox(height: AppSpacing.md),
-                                if (_isExamExpanded && examUrgency.count > 1) ...[
-                                  const SizedBox(height: AppSpacing.xs),
-                                  _ExpandedExamList(
-                                    exams: upcomingExamsInWindow,
-                                  ),
-                                  const SizedBox(height: AppSpacing.md),
-                                ],
                               ],
 
                               // 5) Upcoming Deadlines
                               _buildUpcomingDeadlines(context, theme, l10n, data),
                               const SizedBox(height: AppSpacing.xl),
 
-                              // 6) Quick Menu — after time-critical blocks so users can jump fast without scrolling past analytics
-                              Text(
-                                l10n.quickMenu,
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              _buildQuickMenuStrip(context, theme, l10n),
-                              const SizedBox(height: AppSpacing.xl),
-
-                              // 7) Academic Risk
-                              if (ref.watch(riskProvider).hasData) ...[
+                              // 6) Academic Risk
+                              if (() {
+                                final riskState = ref.watch(riskProvider);
+                                final hasMeaningfulRiskData =
+                                    riskState.hasData &&
+                                    !riskState.input.hasInsufficientData &&
+                                    (riskState.result.totalScore > 0 ||
+                                        riskState.input.overdueTasks > 0 ||
+                                        riskState.input.upcomingTasks > 0 ||
+                                        riskState.input.studyHours > 0 ||
+                                        riskState.input.hasStressData);
+                                return hasMeaningfulRiskData;
+                              }()) ...[
                                 const RiskScoreCard(),
                                 const SizedBox(height: AppSpacing.md),
                               ],
 
-                              // 8) AI Insight
-                              if (analytics != null && analytics.hasData) ...[
+                              // 7) AI Insight
+                              if (() {
+                                if (analytics == null || !analytics.hasData) return false;
+
+                                final activeSemesterId =
+                                    ref.watch(activeSemesterProvider).valueOrNull;
+                                if (activeSemesterId == null) return false;
+
+                                final tasks = (ref.watch(tasksProvider).valueOrNull ?? const [])
+                                    .where((task) => task.semesterId == activeSemesterId)
+                                    .toList(growable: false);
+                                final sessions =
+                                    (ref.watch(studySessionsProvider).valueOrNull ?? const [])
+                                        .where(
+                                          (session) =>
+                                              session.semesterId == activeSemesterId,
+                                        )
+                                        .toList(growable: false);
+
+                                return hasAcademicData(tasks: tasks, sessions: sessions) &&
+                                    hasEnoughSignal(tasks: tasks, sessions: sessions);
+                              }()) ...[
                                 AppGlassCard(
                                   borderOnly: true,
                                   padding: const EdgeInsets.all(AppSpacing.md),
@@ -448,7 +471,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 const SizedBox(height: AppSpacing.md),
                               ],
 
-                              // 9) Mood Influenced Message
+                              // 8) Mood Influenced Message
                               if (analytics != null) ...[
                                 if (analytics.avgStress >= 8)
                                   _buildCalmToneMessage(context, theme, l10n)
@@ -458,7 +481,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   const SizedBox(height: AppSpacing.md),
                               ],
 
-                              // 10) Study Heatmap
+                              // 9) Study Heatmap
                               Text(
                                 l10n.activity,
                                 style: theme.textTheme.labelMedium?.copyWith(
@@ -470,7 +493,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const RepaintBoundary(child: StudyHeatmap()),
                               const SizedBox(height: AppSpacing.lg),
 
-                              // 11) Study Stats
+                              // 10) Study Stats
                               Text(
                                 l10n.overview,
                                 style: theme.textTheme.labelMedium?.copyWith(
@@ -482,7 +505,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _buildStudyStatsCard(context, ref, theme, l10n, data),
                               const SizedBox(height: AppSpacing.xl),
 
-                              // --- SECTION 3: OVERVIEW & EMPTY STATE (12–13 helpers) ---
+                              // --- SECTION 3: OVERVIEW & EMPTY STATE (11–12 helpers) ---
                               Builder(builder: (context) {
                                 final coursesAsync = ref.watch(courseProvider);
                                 final isFirstCourseLoad = coursesAsync.isLoading && !coursesAsync.hasValue;
@@ -540,19 +563,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               }),
                               if (data!.topCourses.isNotEmpty || (ref.watch(courseProvider).isLoading && !ref.watch(courseProvider).hasValue)) ...[
                                 if (data.topCourses.isNotEmpty)
-                                  // 12) Status Panel
+                                  // 11) Status Panel
                                   _StatusPanel(data: data),
 
                                 const SizedBox(height: AppSpacing.lg),
 
-                                // 13) Progress Overview
+                                // 12) Progress Overview
                                 _ProgressOverviewCard(trendAsync: trendAsync),
 
                               ],
 
                               const SizedBox(height: AppSpacing.lg),
 
-                              // 14) Course Activity
+                              // 13) Course Activity
                               Text(
                                 l10n.activity,
                                 style: theme.textTheme.labelMedium?.copyWith(
@@ -564,9 +587,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _buildCourseActivity(context, theme, l10n, data),
                               const SizedBox(height: AppSpacing.xl),
 
-                              // 15) Mood History
-                               if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
-                                  todayMoodAsync.asData?.value != null) ...[
+                              // 14) Mood History
+                               if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily) ...[
                                 const SizedBox(height: AppSpacing.md),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -610,6 +632,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 const SizedBox(height: AppSpacing.lg),
                               ],
+
+                              // 15) Quick Menu — moved to bottom under Mood Daily
+                              Text(
+                                l10n.quickMenu,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              _buildQuickMenuStrip(context, theme, l10n),
+                              const SizedBox(height: AppSpacing.xl),
 
                               const SizedBox(height: 120),
                             ],
@@ -2552,17 +2586,26 @@ class _StatusPanel extends StatelessWidget {
   }
 }
 
-class _DeadlineListItem extends StatelessWidget {
+class _DeadlineListItem extends ConsumerWidget {
   final dynamic deadline;
   final VoidCallback? onTap;
   const _DeadlineListItem({required this.deadline, this.onTap});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final diff = deadline.deadlineDate.difference(DateTime.now()).inDays;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDay = DateTime(
+      deadline.deadlineDate.year,
+      deadline.deadlineDate.month,
+      deadline.deadlineDate.day,
+    );
+    final diff = dueDay.difference(today).inDays;
     final isDark = theme.brightness == Brightness.dark;
+    final tasks = ref.watch(tasksProvider).value ?? const <Task>[];
+    final progress = deadlineTaskProgress(tasks, deadline.id.toString());
 
     return AnimatedPressable(
       onTap: onTap ?? () {},
@@ -2604,7 +2647,7 @@ class _DeadlineListItem extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    diff <= 0 ? l10n.dueToday : l10n.dueInDays(diff),
+                    diff < 0 ? l10n.overdueByDays(diff.abs()) : (diff == 0 ? l10n.dueToday : l10n.dueInDays(diff)),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: diff <= 2
                           ? AppColors.error
@@ -2612,6 +2655,21 @@ class _DeadlineListItem extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (progress.totalCount > 0) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      l10n.deadlineLinkedTasksProgress(
+                        progress.completedCount,
+                        progress.totalCount,
+                      ),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: isDark ? 0.76 : 0.82,
+                        ),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -2749,12 +2807,14 @@ class _ExamOverviewCard extends StatelessWidget {
     required this.summary,
     required this.isExpanded,
     required this.onTap,
+    this.expandedContent,
   });
 
   final ExamModel exam;
   final ExamUrgencySummary summary;
   final bool isExpanded;
   final VoidCallback onTap;
+  final Widget? expandedContent;
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -2794,76 +2854,93 @@ class _ExamOverviewCard extends StatelessWidget {
       ExamType.quiz => l10n.examsTypeQuiz,
     };
 
-    return AnimatedPressable(
-      onTap: onTap,
-      child: AppGlassCard(
-        borderOnly: true,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return AppGlassCard(
+      borderOnly: true,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AnimatedPressable(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: dotColor,
-                    shape: BoxShape.circle,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: dotColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        summaryLabel,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ),
+                    if (summary.count > 1) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Icon(
+                        isExpanded ? Icons.expand_less : Icons.expand_more,
+                        size: 18,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    summaryLabel,
+                if (!isExpanded) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    '${exam.title} ($typeLabel)',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    relativeTimeText,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
-                ),
-                if (summary.count > 1) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    size: 18,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  const SizedBox(height: 2),
+                  Text(
+                    dateText,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                 ],
               ],
             ),
-            if (!isExpanded) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                '${exam.title} ($typeLabel)',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                relativeTimeText,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                dateText,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
-              ),
-            ],
+          ),
+          if (isExpanded && expandedContent != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Divider(
+              height: 1,
+              color: theme.colorScheme.outline.withValues(alpha: 0.24),
+            ),
+            expandedContent!,
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
 class _ExpandedExamList extends StatelessWidget {
-  const _ExpandedExamList({required this.exams});
+  const _ExpandedExamList({
+    required this.exams,
+    this.insideParentCard = false,
+  });
 
   final List<ExamModel> exams;
+  final bool insideParentCard;
 
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -2884,48 +2961,66 @@ class _ExpandedExamList extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Column(
-      children: exams.map((exam) {
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: exams.asMap().entries.map((entry) {
+        final index = entry.key;
+        final exam = entry.value;
         final examTypeLabel = switch (exam.typeEnum) {
           ExamType.midterm => l10n.examsTypeMidterm,
           ExamType.finalExam => l10n.examsTypeFinal,
           ExamType.quiz => l10n.examsTypeQuiz,
         };
-        return AnimatedPressable(
-          onTap: () => context.push('/exam-detail?id=${Uri.encodeComponent(exam.id)}'),
-          child: AppGlassCard(
-            borderOnly: true,
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                const Icon(Icons.school, color: Colors.indigo, size: 18),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${exam.title} ($examTypeLabel)',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+        return SizedBox(
+          width: double.infinity,
+          child: AnimatedPressable(
+            onTap: () => context.push('/exam-detail?id=${Uri.encodeComponent(exam.id)}'),
+            child: Container(
+              margin: EdgeInsets.only(
+              bottom: insideParentCard ? 0 : AppSpacing.sm,
+              top: insideParentCard ? AppSpacing.sm : 0,
+            ),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: insideParentCard && index != exams.length - 1
+                  ? BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.18),
+                          width: 1,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _formatExamTime(context, exam.examDateTime),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    )
+                  : null,
+              child: Row(
+                children: [
+                  const Icon(Icons.school, color: Colors.indigo, size: 18),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${exam.title} ($examTypeLabel)',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          _formatExamTime(context, exam.examDateTime),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
-              ],
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ],
+              ),
             ),
           ),
         );
