@@ -130,7 +130,17 @@ class ActiveSemesterNotifier extends AsyncNotifier<String?> {
       return _explicitSelection;
     }
 
-    final fetched = await _service.getActiveSemesterId();
+    String? fetched;
+    try {
+      fetched = await _service.getActiveSemesterId().timeout(
+        const Duration(seconds: 25),
+      );
+    } on TimeoutException {
+      debugPrint(
+        '[ActiveSemester] getActiveSemesterId timed out after 25s — continuing with null',
+      );
+      fetched = null;
+    }
     debugPrint('[ActiveSemester] build() → initial load from DB: $fetched');
     return fetched;
   }

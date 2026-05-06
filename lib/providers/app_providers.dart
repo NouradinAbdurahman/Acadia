@@ -106,7 +106,16 @@ final currentAppUserProvider = FutureProvider<AppUser?>((ref) async {
   }
   
   final authRepo = ref.watch(authRepositoryProvider);
-  final appUser = await authRepo.getUserProfile(user.id);
+  // Avoid indefinite splash when Supabase hangs on poor networks.
+  final appUser = await authRepo.getUserProfile(user.id).timeout(
+    const Duration(seconds: 25),
+    onTimeout: () {
+      debugPrint(
+        '[currentAppUserProvider] getUserProfile timed out after 25s for ${user.id}',
+      );
+      return null;
+    },
+  );
   debugPrint("Fetched user: $appUser");
   return appUser;
 });

@@ -76,31 +76,59 @@ import 'services/notification_intelligence_service.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 
+/// Runs after the first frame so cold start reaches [GoRouter] before FCM /
+/// Workmanager work (avoids long splash on real Android devices).
+Future<void> _initDeferredNotificationStack(bool attachFcmListeners) async {
+  try {
+    await NotificationService.init(
+      attachForegroundListeners: attachFcmListeners,
+    );
+  } catch (e, st) {
+    debugPrint('[Startup] NotificationService.init failed: $e');
+    debugPrintStack(stackTrace: st);
+  }
+  try {
+    await BackgroundNotificationService.initialize(
+      supabaseUrl: dotenv.env['SUPABASE_URL'] ?? '',
+      supabaseAnonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    );
+  } catch (e, st) {
+    debugPrint(
+      '[Startup] BackgroundNotificationService.initialize failed: $e',
+    );
+    debugPrintStack(stackTrace: st);
+  }
+}
+
 void main() {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    debugPrint('[Startup] 1/5 — Flutter binding ready');
 
     var isFirebaseInitialized = false;
     try {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp().timeout(const Duration(seconds: 10));
       isFirebaseInitialized = true;
+      debugPrint('[Startup] 2/5 — Firebase initialized');
+    } on TimeoutException {
+      debugPrint(
+        '[Startup] 2/5 — Firebase.initializeApp timed out after 10s, continuing without FCM',
+      );
     } catch (error, stackTrace) {
       debugPrint(
-        '[Startup] Firebase init failed. Continuing without FCM. '
-        'Ensure Android Firebase config is set (google-services.json / values resources). Error: $error',
+        '[Startup] 2/5 — Firebase init failed, continuing without FCM. Error: $error',
       );
       debugPrintStack(stackTrace: stackTrace);
     }
 
-    // Initialize Hive
     await Hive.initFlutter();
     await Hive.openBox('settings');
+    debugPrint('[Startup] 3/5 — Hive ready');
 
-    // Load environment variables (create `.env` from `.env.example`; never commit secrets).
     await dotenv.load(fileName: '.env');
     validateRequiredEnv();
+    debugPrint('[Startup] 4/5 — dotenv loaded');
 
-    // PKCE is required for mobile OAuth → deep link return; matches Supabase GoTrue flow.
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!.trim(),
       anonKey: dotenv.env['SUPABASE_ANON_KEY']!.trim(),
@@ -109,6 +137,7 @@ void main() {
         detectSessionInUri: true,
       ),
     );
+    debugPrint('[Startup] 5/5 — Supabase initialized');
 
     if (kDebugMode) {
       Supabase.instance.client.auth.onAuthStateChange.listen((data) {
@@ -120,16 +149,11 @@ void main() {
       });
     }
 
-    // Initialize Notifications (must be after Supabase initialization)
-    await NotificationService.init(
-      attachForegroundListeners: isFirebaseInitialized,
-    );
-    await BackgroundNotificationService.initialize(
-      supabaseUrl: dotenv.env['SUPABASE_URL'] ?? '',
-      supabaseAnonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
-    );
-
     runApp(const ProviderScope(child: MyApp()));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_initDeferredNotificationStack(isFirebaseInitialized));
+    });
   }, (Object error, StackTrace stack) {
     // Deep-link PKCE failures call notifyException → can surface here; avoid crashing debug builds.
     if (error is AuthException) {
