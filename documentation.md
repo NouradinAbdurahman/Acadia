@@ -996,7 +996,7 @@ Here's every screen in the app, grouped by feature area:
 - **AcademicOnboardingScreen** — Multi-step wizard: name, university, degree type (Bachelor/Master/PhD), major, expected graduation year, current semester number, and then you create your first semester and courses. On completion, marks `academic_profile_completed = true` and goes to `/home`.
 
 ### Home
-- **HomeScreen** — The dashboard. Shows: greeting with avatar, mood card (or prompt to log mood), study heatmap, active session card (if timer is running), pending/overdue tasks preview, GPA and course cards, semester comparison, smart insights, and a quick-menu FAB button.
+- **HomeScreen** — The dashboard. Shows: greeting with avatar, mood card (or prompt to log mood), study heatmap, active session card (if timer is running), pending/overdue tasks preview, GPA and course cards, semester comparison, smart insights, and a quick-menu FAB button. Upcoming deadline cards also show linked-task progress (`completed / total`) and use day-normalized due labels consistent with Deadline Detail. The exams urgency card expands inline (same parent border) and each expanded row is fully tappable to open exam details.
 - **QuickMenuScreen** — A modal bottom sheet with quick-action buttons: manage courses, course results, semesters, create course/task/deadline, log mood, start studying, view analytics.
 
 ### Tasks (6 screens)
@@ -1035,6 +1035,10 @@ Here's every screen in the app, grouped by feature area:
 
 ### Notifications
 - **NotificationsScreen** — Lists notifications grouped by time (Today / Tomorrow / Earlier), with category filter chips (All / Tasks / Deadlines / Mood / Academic). Tap to mark as read and navigate to the relevant item (task detail, deadline detail, etc.). Pull to refresh.
+- **Mood notifications behavior** — Tapping `mood` / `mood_check` now opens `/mood/log?source=notification` when today's mood is not recorded; if already recorded, it opens `/mood/history`.
+- **Academic tab behavior** — Academic tab includes academic-signal notifications (`risk`, `academic_summary`, `study_goal`) and workload urgency items (`due_today`, `due_tomorrow`, `overdue`, `task_overdue`, `deadline`, `deadline_batch`, `overdue_batch`) so triggered academic items remain visible.
+- **Localization refresh** — Notification data reloads on locale change so translated titles/messages update immediately without manual pull-to-refresh.
+- **Daily mood check seeding** — A `mood_check` notification is generated once per day when mood tracking/reminders are enabled and no daily mood log exists yet.
 
 ### Profile (4 screens)
 - **ProfileScreen** — The settings hub. Shows avatar (tap to upload), name, email. Sections: Academic (edit profile, manage courses), Preferences (study preferences, mood settings, language picker, theme toggle), Account (privacy policy, terms of service, data & permissions, contact/support, change password, logout).
@@ -1565,7 +1569,8 @@ The `AnalyticsNotifier` does the following:
    - Due soon task count (due within 24 hours)
 
 4. **Computes grade metrics:**
-   - Average GPA (letter grades mapped to 4.0 scale: AA=4.0, BA=3.5, BB=3.0, CB=2.5, CC=2.0, DC=1.5, DD=1.0, FF=0.0)
+   - Semester GPA using credit-weighted formula: `sum(gradePoint * credits) / sum(credits)` (latest attempt is used for retaken courses)
+   - Cumulative GPA (CGPA) computed across all semesters with the same weighted formula
    - Grade distribution (how many of each letter grade)
    - Total ECTS
 

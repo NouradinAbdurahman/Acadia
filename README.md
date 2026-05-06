@@ -12,7 +12,7 @@ Acadia is a Flutter-based academic productivity app that helps students plan cou
 - **Exam schedule module** — Semester-scoped exam CRUD with types (midterm/final/quiz), list + calendar + detail flows, urgency summary on Home, and local reminder scheduling
 - **Study timer** — Pomodoro (4-round cycle with breaks), Deep Work, and Review modes; audio/haptic feedback; Hive-persisted timer state across app restarts; app lifecycle recovery
 - **Mood and stress tracking** — 5-level mood selector, stress/energy sliders, factor chips (sleep, workload, health, motivation, social, exams), optional notes; daily + post-session logging; configurable reminders
-- **Analytics** — Study hours per course, GPA, task completion rate, consistency, study deficit, burnout score, risk score, weekly/semester comparison
+- **Analytics** — Study hours per course, semester GPA + cumulative GPA (CGPA), task completion rate, consistency, study deficit, burnout score, risk score, weekly/semester comparison
 - **Decision engine** — Multi-factor scored priority (urgency 34%, deficit 24%, workload 16%, ECTS 16%, risk 10%) recommending which course to study and for how long
 - **Risk scoring** — `riskProvider` builds `RiskInput` from live tasks, sessions, moods, deadlines, courses, and results; `RiskCalculator` feeds `RiskEngine` (overdue, due soon, study deficit, **session** stress, **task-completion** consistency — not the analytics “study-day” consistency metric)
 - **AI assistant** — Regex intent parser → local answers use the **same Riverpod snapshots as the UI** (`analyticsProvider` for summaries/progress, `riskProvider` for academic risk so scores match Home/Analytics). Unknown intents → Supabase `acadia-ai` Edge Function (NVIDIA NIM) with server-side summary math aligned to the app’s week/study logic
@@ -253,7 +253,8 @@ Three layers working together with a single deterministic contract:
 - **Tap routing**:
   - `task:*` → task detail
   - `deadline:*` → deadline detail
-  - `risk` / `stress` / `academic_summary` / `study_goal` / `mood*` → home
+  - `risk` / `stress` / `academic_summary` / `study_goal` → home
+  - `mood*` → mood log if today not logged, otherwise mood history
   - fallback → tasks/home depending on payload
 
 ## AI Assistant
@@ -304,6 +305,11 @@ Also on the Edge path: `email_tasks` (Resend), `get_focus`, `summarize_last`, `g
 - **Legal content expansion + visual polish** — legal pages now include more explicit Acadia data-handling details (optional mood data, AI disclaimer, notifications scope, third-party infrastructure notes) and icon-based section cards for clearer readability.
 - **Mood logic correctness hardening** — when mood tracking is disabled, mood data is excluded from analytics/risk/AI inputs; reminder toggle and time changes now schedule/cancel daily local reminders through the notifier path.
 - **Settings/profile UX simplification** — Mood Settings UI was reduced to active controls only (tracking + mood history), and Profile Account navigation was cleaned to remove assistant duplication while exposing legal/support entries.
+- **Academic history + grade math alignment** — GPA now uses credit-weighted calculation (`sum(gradePoint * credits) / sum(credits)`), CGPA is computed cumulatively across semesters, and both values are shown in Academic History and AI summary surfaces.
+- **Home deadline consistency fixes** — Upcoming Deadlines now show linked-task progress (`completed / total`) and use the same day-normalized due-date math as Deadline Detail to avoid off-by-one day labels.
+- **Home exams card interaction polish** — Exams urgency card now expands inline within the same parent border, and each expanded exam row is fully tappable (entire row area) to open exam details.
+- **Notification inbox behavior hardening** — Added daily `mood_check` notification generation when mood tracking/reminders are enabled, category-specific empty states for Mood/Academic tabs, locale-change-driven notification reload, and mood notification tap routing (`/mood/log` if today is not logged, otherwise `/mood/history`).
+- **Academic tab reliability** — Academic notification filtering now includes due/overdue academic workload signals and preserves historical academic notifications by narrowing duplicate-cleanup scope to noisy repeatable types only.
 
 ### Deploying AI changes
 
