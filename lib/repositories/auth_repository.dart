@@ -164,19 +164,49 @@ class AuthRepository {
     );
   }
 
+  /// Extracts the best available display name from Supabase Auth metadata.
+  /// Handles Google (`full_name`, `name`), Apple (`full_name`, `given_name` +
+  /// `family_name`), and email signup (`full_name`).
+  String _extractDisplayName(User user) {
+    final m = user.userMetadata ?? {};
+    debugPrint('[extractName] metadata keys: ${m.keys.toList()}');
+
+    final fullName = m['full_name'] as String?;
+    if (fullName != null && fullName.trim().isNotEmpty) return fullName.trim();
+
+    final name = m['name'] as String?;
+    if (name != null && name.trim().isNotEmpty) return name.trim();
+
+    final given = (m['given_name'] as String? ?? '').trim();
+    final family = (m['family_name'] as String? ?? '').trim();
+    final composed = '$given $family'.trim();
+    if (composed.isNotEmpty) return composed;
+
+    final emailPrefix = (user.email ?? '').split('@').first;
+    if (emailPrefix.isNotEmpty) return emailPrefix;
+
+    return '';
+  }
+
   /// Ensures a `public.users` row AND a `student_profiles` row both exist for
   /// the signed-in user. Called on every `AuthChangeEvent.signedIn` so it is
   /// safe (and cheap) to call multiple times — the SELECT short-circuits when
   /// the row already exists.
+  ///
+  /// Also backfills empty display names on existing rows from OAuth metadata
+  /// (covers users who signed up before this fix).
   Future<void> ensurePublicUserRowIfMissing() async {
     final user = _supabase.auth.currentUser;
     debugPrint('[ensurePublicUser] called — user: ${user?.id ?? 'null'}');
     if (user == null) return;
 
+    final oauthName = _extractDisplayName(user);
+    debugPrint('[ensurePublicUser] extracted name: "$oauthName"');
+
     // ── 1. public.users ─────────────────────────────────────────────────────
     final existing = await _supabase
         .from('users')
-        .select('id')
+        .select('id, name')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -186,9 +216,7 @@ class AuthRepository {
         await _supabase.from('users').insert({
           'id': user.id,
           'email': user.email,
-          'name': user.userMetadata?['full_name'] ??
-              user.userMetadata?['name'] ??
-              user.email,
+          'name': oauthName.isNotEmpty ? oauthName : user.email,
           'academic_profile_completed': false,
         });
         debugPrint('[ensurePublicUser] users row inserted ✓');
@@ -197,15 +225,20 @@ class AuthRepository {
         rethrow;
       }
     } else {
-      debugPrint('[ensurePublicUser] users row already exists ✓');
+      final existingName = (existing['name'] as String? ?? '').trim();
+      if (existingName.isEmpty && oauthName.isNotEmpty) {
+        debugPrint('[ensurePublicUser] Backfilling empty users.name...');
+        await _supabase.from('users').update({
+          'name': oauthName,
+        }).eq('id', user.id);
+      }
+      debugPrint('[ensurePublicUser] users row ready ✓');
     }
 
     // ── 2. student_profiles ──────────────────────────────────────────────────
-    // Pre-create the profile row for OAuth users so that later UPDATE calls
-    // (markOnboardingComplete, updateActiveSemester) always find a row.
     final existingProfile = await _supabase
         .from('student_profiles')
-        .select('user_id')
+        .select('user_id, full_name')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -214,18 +247,22 @@ class AuthRepository {
       try {
         await _studentProfileService.upsertInitialProfile(
           userId: user.id,
-          fullName: user.userMetadata?['full_name'] ??
-              user.userMetadata?['name'] ??
-              user.email ??
-              '',
+          fullName: oauthName,
         );
         debugPrint('[ensurePublicUser] student_profiles row upserted ✓');
       } catch (e) {
         debugPrint('[ensurePublicUser] ERROR upserting student_profiles: $e');
-        // Non-fatal: onboarding screen will upsert it again on save.
       }
     } else {
-      debugPrint('[ensurePublicUser] student_profiles row already exists ✓');
+      final existingFullName = (existingProfile['full_name'] as String? ?? '').trim();
+      if (existingFullName.isEmpty && oauthName.isNotEmpty) {
+        debugPrint('[ensurePublicUser] Backfilling empty student_profiles.full_name...');
+        await _supabase.from('student_profiles').update({
+          'full_name': oauthName,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('user_id', user.id);
+      }
+      debugPrint('[ensurePublicUser] student_profiles row ready ✓');
     }
   }
 

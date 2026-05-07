@@ -922,6 +922,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get basicIdentity => 'Basic Identity';
 
   @override
+  String get universitySetup => 'University';
+
+  @override
+  String get universitySetupDesc => 'Tell us where you study.';
+
+  @override
   String get academicProgram => 'Academic Program';
 
   @override

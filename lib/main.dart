@@ -68,6 +68,7 @@ import 'providers/app_providers.dart';
 import 'providers/realtime_provider.dart';
 import 'providers/semester_goal_refresh_provider.dart';
 import 'providers/analytics_provider.dart';
+import 'providers/student_profile_provider.dart';
 import 'providers/tasks_provider.dart';
 import 'providers/semester_provider.dart';
 import 'models/task.dart';
@@ -672,6 +673,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
               debugPrint('[AuthListener] ensurePublicUserRowIfMissing failed: $e');
             }
             ref.invalidate(currentAppUserProvider);
+            ref.invalidate(studentProfileProvider);
           });
         }
       });

@@ -404,6 +404,8 @@
   "academicProfileOnboarding": "Academic Profile",
   "academicAnalyticsContext": "This information helps personalize your academic analytics and recommendations.",
   "basicIdentity": "Basic Identity",
+  "universitySetup": "University",
+  "universitySetupDesc": "Tell us where you study.",
   "academicProgram": "Academic Program",
   "currentSemesterLoad": "Current Semester",
   "learningPatternCalibration": "Learning Patterns",

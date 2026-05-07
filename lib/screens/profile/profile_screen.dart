@@ -16,6 +16,7 @@ import '../../core/design/app_spacing.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_bottom_sheet_picker.dart';
+import '../../utils/display_name_resolver.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -30,7 +31,7 @@ class ProfileScreen extends ConsumerWidget {
     final appUser = ref.watch(currentAppUserProvider).asData?.value;
     final studentProfile = ref.watch(studentProfileProvider).value;
     final avatarUrl = appUser?.avatarUrl;
-    final displayName = (studentProfile?.fullName ?? '').trim();
+    final displayName = resolveDisplayName(studentProfile, appUser, user);
     final bottomNavClearance = MediaQuery.of(context).padding.bottom + 120;
 
     Future<void> uploadAvatar(File file) async {

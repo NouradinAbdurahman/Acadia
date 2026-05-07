@@ -923,6 +923,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get basicIdentity => 'Temel Kimlik';
 
   @override
+  String get universitySetup => 'Üniversite';
+
+  @override
+  String get universitySetupDesc => 'Nerede okuduğunuzu söyleyin.';
+
+  @override
   String get academicProgram => 'Akademik Program';
 
   @override

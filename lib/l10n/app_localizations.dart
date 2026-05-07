@@ -1814,6 +1814,18 @@ abstract class AppLocalizations {
   /// **'Basic Identity'**
   String get basicIdentity;
 
+  /// No description provided for @universitySetup.
+  ///
+  /// In en, this message translates to:
+  /// **'University'**
+  String get universitySetup;
+
+  /// No description provided for @universitySetupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us where you study.'**
+  String get universitySetupDesc;
+
   /// No description provided for @academicProgram.
   ///
   /// In en, this message translates to:

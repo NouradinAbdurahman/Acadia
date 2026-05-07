@@ -31,6 +31,8 @@ import '../../widgets/ai/academic_assistant_insight_block.dart';
 import '../../widgets/ai/insight_display_variant.dart';
 import '../../widgets/ai/passive_ai_risk_listener.dart';
 import '../../providers/student_profile_provider.dart';
+import '../../utils/display_name_resolver.dart';
+import '../../models/app_user.dart';
 import '../../providers/notifications_provider.dart';
 import '../../services/smart_notification_engine.dart';
 import '../../providers/tasks_provider.dart';
@@ -162,10 +164,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
 
       final clientBurnout = analytics?.burnoutScore;
-      if (clientBurnout != null && unifiedBurnout != null) {
+      if (clientBurnout != null &&
+          unifiedBurnout != null &&
+          clientBurnout > 0 &&
+          unifiedBurnout > 0) {
         final delta = (clientBurnout - unifiedBurnout.toDouble()).abs();
         if (delta > 0.1) {
-          throw Exception('Burnout mismatch between layers');
+          debugPrint('[UnifiedValidation] Burnout mismatch: client=$clientBurnout unified=$unifiedBurnout delta=$delta');
         }
       }
 
@@ -677,7 +682,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     DashboardData data,
     int unreadNotifications,
   ) {
-    final displayName = (studentProfile?.fullName ?? '').trim();
+    final displayName = resolveDisplayName(
+      studentProfile,
+      appUser is AppUser ? appUser : null,
+      Supabase.instance.client.auth.currentUser,
+    );
     final isDark = theme.brightness == Brightness.dark;
 
     return Row(

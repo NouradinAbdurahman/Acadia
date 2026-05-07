@@ -404,6 +404,8 @@
   "academicProfileOnboarding": "Akademik Profil",
   "academicAnalyticsContext": "Bu bilgiler, akademik analizlerinizi ve önerileri kişiselleştirmeye yardımcı olur.",
   "basicIdentity": "Temel Kimlik",
+  "universitySetup": "Üniversite",
+  "universitySetupDesc": "Nerede okuduğunuzu söyleyin.",
   "academicProgram": "Akademik Program",
   "currentSemesterLoad": "Mevcut Dönem",
   "learningPatternCalibration": "Öğrenme Modelleri",

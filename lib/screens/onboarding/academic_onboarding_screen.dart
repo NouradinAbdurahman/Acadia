@@ -39,7 +39,6 @@ class _AcademicOnboardingScreenState
   final int _currentYear = DateTime.now().year;
 
   // Form Controllers
-  final _nameController = TextEditingController();
   final _universityController = TextEditingController();
   final _majorController = TextEditingController();
 
@@ -65,7 +64,6 @@ class _AcademicOnboardingScreenState
   void _prefillForm() {
     final profile = ref.read(studentProfileProvider).value;
     if (profile != null) {
-      _nameController.text = profile.fullName ?? '';
       _universityController.text = profile.universityName ?? '';
       _majorController.text = profile.major ?? '';
       _selectedDegree = profile.degreeType;
@@ -83,7 +81,6 @@ class _AcademicOnboardingScreenState
   void dispose() {
     _infoCardTimer?.cancel();
     _pageController.dispose();
-    _nameController.dispose();
     _universityController.dispose();
     _majorController.dispose();
     super.dispose();
@@ -94,8 +91,7 @@ class _AcademicOnboardingScreenState
 
     // Simple validation
     if (_currentStep == 0) {
-      if (_nameController.text.trim().isEmpty ||
-          _universityController.text.trim().isEmpty) {
+      if (_universityController.text.trim().isEmpty) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.requiredField)));
@@ -140,10 +136,11 @@ class _AcademicOnboardingScreenState
 
     Haptics.vibrate(HapticsType.success);
 
+    final existingProfile = ref.read(studentProfileProvider).value;
     final profile = StudentProfile(
       id: '', // Will be handled by upsert
       userId: '', // Will be handled by service
-      fullName: _nameController.text.trim(),
+      fullName: existingProfile?.fullName ?? '',
       universityName: _universityController.text.trim(),
       degreeType: _selectedDegree,
       major: _majorController.text.trim(),
@@ -400,18 +397,12 @@ class _AcademicOnboardingScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStepHeader(
-            l10n?.basicIdentity ?? 'Basic Identity',
-            l10n?.identityDesc ??
-                'Let\'s start with who you are and where you study.',
-            HeroIcons.identification,
+            l10n?.universitySetup ?? 'University',
+            l10n?.universitySetupDesc ??
+                'Tell us where you study.',
+            HeroIcons.academicCap,
           ),
           const SizedBox(height: AppSpacing.xl),
-          _buildTextField(
-            controller: _nameController,
-            label: l10n?.fullName ?? 'Full Name',
-            icon: HeroIcons.user,
-          ),
-          const SizedBox(height: AppSpacing.lg),
           _buildTextField(
             controller: _universityController,
             label: l10n?.universityName ?? 'University',
