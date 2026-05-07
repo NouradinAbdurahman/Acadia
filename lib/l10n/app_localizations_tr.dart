@@ -4488,4 +4488,37 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get legalContactLine => 'E-posta: support@acadia.app';
+
+  @override
+  String get moodTrackingOffBanner => 'Ruh hali takibi kapalı';
+
+  @override
+  String get moodTrackingOffBannerSubtitle =>
+      'Yeni ruh hali verisi toplanmayacak';
+
+  @override
+  String get moodTrackingOffGoToSettings => 'Ayarlar';
+
+  @override
+  String get moodTrackingStatusOff => 'Durum: Kapalı';
+
+  @override
+  String get moodTrackingStatusActive => 'Durum: Aktif';
+
+  @override
+  String get moodTrackingNowEnabled => 'Ruh hali takibi etkinleştirildi';
+
+  @override
+  String get moodTrackingNowDisabled => 'Ruh hali takibi devre dışı bırakıldı';
+
+  @override
+  String get moodTrackingHistoricalOnly =>
+      'Ruh hali takibi kapalı. Geçmiş ruh hali içgörüleri hâlâ mevcut. Yeni ruh hali ve stres verisi kaydetmek için takibi etkinleştirin.';
+
+  @override
+  String get moodTrackingOffSessionSnackbar =>
+      'Ruh hali takibi kapalı. Oturum ruh halini kaydetmek için Ayarlar\'dan etkinleştirin.';
+
+  @override
+  String get moodTrackingOffBadge => 'Takip Kapalı';
 }

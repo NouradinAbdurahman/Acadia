@@ -2599,5 +2599,15 @@
   "dataPermissionsAvatarNote": "Galeri/kamera izni yalnizca profil avatarinizi manuel olarak degistirdiginizde istenir.",
   "contactSupportIntro": "Destek, geri bildirim veya veri talepleri icin bize ulasin:",
   "contactSupportTopics": "Destek ekibi hesap erisimi, veri talepleri, bildirim sorunlari ve hatali uygulama davranislari konularinda yardimci olur.",
-  "legalContactLine": "E-posta: support@acadia.app"
+  "legalContactLine": "E-posta: support@acadia.app",
+  "moodTrackingOffBanner": "Ruh hali takibi kapalı",
+  "moodTrackingOffBannerSubtitle": "Yeni ruh hali verisi toplanmayacak",
+  "moodTrackingOffGoToSettings": "Ayarlar",
+  "moodTrackingStatusOff": "Durum: Kapalı",
+  "moodTrackingStatusActive": "Durum: Aktif",
+  "moodTrackingNowEnabled": "Ruh hali takibi etkinleştirildi",
+  "moodTrackingNowDisabled": "Ruh hali takibi devre dışı bırakıldı",
+  "moodTrackingHistoricalOnly": "Ruh hali takibi kapalı. Geçmiş ruh hali içgörüleri hâlâ mevcut. Yeni ruh hali ve stres verisi kaydetmek için takibi etkinleştirin.",
+  "moodTrackingOffSessionSnackbar": "Ruh hali takibi kapalı. Oturum ruh halini kaydetmek için Ayarlar'dan etkinleştirin.",
+  "moodTrackingOffBadge": "Takip Kapalı"
 }

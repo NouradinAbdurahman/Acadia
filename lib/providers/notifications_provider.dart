@@ -36,7 +36,13 @@ class NotificationsNotifier
   }) : super(const AsyncValue.loading()) {
     ref.listen<Locale>(localeProvider, (previous, next) {
       if (previous == next) return;
-      loadNotifications();
+      if (_isLoading) {
+        // Initial load is in flight — mark for retry so the locale change
+        // isn't silently dropped when _isLoading resets.
+        _pendingLocaleReload = true;
+      } else {
+        loadNotifications();
+      }
     });
     loadNotifications();
   }
@@ -49,6 +55,7 @@ class NotificationsNotifier
   String? _subscribedUserId;
   Timer? _reloadDebounce;
   bool _isLoading = false;
+  bool _pendingLocaleReload = false;
   int _fetchGeneration = 0;
   int _loadGeneration = 0;
 
@@ -592,6 +599,10 @@ class NotificationsNotifier
     } finally {
       if (!mounted || currentGeneration != _loadGeneration) return;
       _isLoading = false;
+      if (_pendingLocaleReload) {
+        _pendingLocaleReload = false;
+        loadNotifications();
+      }
     }
   }
 

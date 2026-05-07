@@ -7781,6 +7781,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email: support@acadia.app'**
   String get legalContactLine;
+
+  /// No description provided for @moodTrackingOffBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood tracking is off'**
+  String get moodTrackingOffBanner;
+
+  /// No description provided for @moodTrackingOffBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New mood data will not be collected'**
+  String get moodTrackingOffBannerSubtitle;
+
+  /// No description provided for @moodTrackingOffGoToSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get moodTrackingOffGoToSettings;
+
+  /// No description provided for @moodTrackingStatusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: Off'**
+  String get moodTrackingStatusOff;
+
+  /// No description provided for @moodTrackingStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: Active'**
+  String get moodTrackingStatusActive;
+
+  /// No description provided for @moodTrackingNowEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood tracking enabled'**
+  String get moodTrackingNowEnabled;
+
+  /// No description provided for @moodTrackingNowDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood tracking disabled'**
+  String get moodTrackingNowDisabled;
+
+  /// No description provided for @moodTrackingHistoricalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood tracking is off. Historical mood insights are still available. Enable tracking to record new mood and stress data.'**
+  String get moodTrackingHistoricalOnly;
+
+  /// No description provided for @moodTrackingOffSessionSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood tracking is off. Enable it in Settings to capture session mood.'**
+  String get moodTrackingOffSessionSnackbar;
+
+  /// No description provided for @moodTrackingOffBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking Off'**
+  String get moodTrackingOffBadge;
 }
 
 class _AppLocalizationsDelegate

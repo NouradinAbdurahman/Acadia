@@ -20,6 +20,10 @@ final moodPromptRequestProvider = StateProvider<MoodPromptRequest?>((ref) {
   return null;
 });
 
+/// Fires true when a session ends but mood tracking is off.
+/// Listeners show a one-shot SnackBar, then reset this to false.
+final moodTrackingOffSnackbarProvider = StateProvider<bool>((ref) => false);
+
 final moodTrendDaysProvider = StateProvider<int>((ref) => 7);
 
 final moodChartSourceProvider = StateProvider<String>((ref) => 'daily');
@@ -206,15 +210,15 @@ class MoodActions {
       );
     }
 
-    // Invalidate providers to trigger UI updates using microtask
-    Future.microtask(() {
-      ref.invalidate(moodLogsProvider);
-      ref.invalidate(dailyMoodLogsProvider);
-      ref.invalidate(sessionMoodLogsProvider);
-      ref.invalidate(todayMoodProvider);
-      ref.invalidate(analyticsProvider);
-      ref.invalidate(riskProvider);
-    });
+    // Invalidate synchronously so providers are marked stale before control
+    // returns to the caller (and before context.pop() fires navigation).
+    ref.invalidate(moodLogsProvider);
+    ref.invalidate(dailyMoodLogsProvider);
+    ref.invalidate(sessionMoodLogsProvider);
+    ref.invalidate(todayMoodProvider);
+    ref.invalidate(analyticsProvider);
+    ref.invalidate(riskProvider);
+    debugPrint('[MoodSync] Analytics invalidated after mood save (source: $source).');
   }
 
   Future<void> saveMoodSettings(MoodSettings settings) async {

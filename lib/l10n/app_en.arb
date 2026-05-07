@@ -2646,5 +2646,15 @@
   "dataPermissionsAvatarNote": "Photo library/camera permission is only requested when you manually change your profile avatar.",
   "contactSupportIntro": "For support, feedback, or data requests, contact us at:",
   "contactSupportTopics": "Support can help with account access, data requests, notification issues, and incorrect app behavior.",
-  "legalContactLine": "Email: support@acadia.app"
+  "legalContactLine": "Email: support@acadia.app",
+  "moodTrackingOffBanner": "Mood tracking is off",
+  "moodTrackingOffBannerSubtitle": "New mood data will not be collected",
+  "moodTrackingOffGoToSettings": "Settings",
+  "moodTrackingStatusOff": "Status: Off",
+  "moodTrackingStatusActive": "Status: Active",
+  "moodTrackingNowEnabled": "Mood tracking enabled",
+  "moodTrackingNowDisabled": "Mood tracking disabled",
+  "moodTrackingHistoricalOnly": "Mood tracking is off. Historical mood insights are still available. Enable tracking to record new mood and stress data.",
+  "moodTrackingOffSessionSnackbar": "Mood tracking is off. Enable it in Settings to capture session mood.",
+  "moodTrackingOffBadge": "Tracking Off"
 }

@@ -82,7 +82,36 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
                         onChanged: (value) {
                           Haptics.vibrate(HapticsType.medium);
                           notifier.toggleTracking(value);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                value
+                                    ? l10n.moodTrackingNowEnabled
+                                    : l10n.moodTrackingNowDisabled,
+                              ),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
                         },
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 40),
+                          child: Text(
+                            settings.trackingEnabled
+                                ? l10n.moodTrackingStatusActive
+                                : l10n.moodTrackingStatusOff,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: settings.trackingEnabled
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface
+                                      .withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

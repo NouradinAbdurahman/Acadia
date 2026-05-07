@@ -27,6 +27,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
 
   late PageController _pageController;
   int _moodLevel = 3;
+  int _moodSwitchKey = 0; // increments on every page change — prevents AnimatedSwitcher duplicate-key crash
   double _stressLevel = 5;
   double _energyLevel = 5;
   bool _isSaving = false;
@@ -181,7 +182,10 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
             itemCount: 5,
             onPageChanged: (index) {
               Haptics.vibrate(HapticsType.medium);
-              setState(() => _moodLevel = index + 1);
+              setState(() {
+                _moodLevel = index + 1;
+                _moodSwitchKey++;
+              });
             },
             itemBuilder: (context, index) {
               return AnimatedBuilder(
@@ -286,7 +290,7 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
           duration: const Duration(milliseconds: 200),
           child: Text(
             l10n.imFeelingMood(_nameForMood(_moodLevel, l10n)),
-            key: ValueKey<int>(_moodLevel),
+            key: ValueKey<int>(_moodSwitchKey),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w500,
               color: activeMoodColor,

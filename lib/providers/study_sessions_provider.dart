@@ -621,6 +621,8 @@ class StudySessionsNotifier
         ref.read(analyticsProvider.notifier).refresh();
         if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
           ref.read(moodActionsProvider).queueSessionMoodPrompt();
+        } else if (!ref.read(moodSettingsProvider).trackingEnabled) {
+          ref.read(moodTrackingOffSnackbarProvider.notifier).state = true;
         }
       } catch (e, st) {
         if (!mounted) return;
@@ -712,6 +714,8 @@ class StudySessionsNotifier
         ref.read(analyticsProvider.notifier).refresh();
         if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
           ref.read(moodActionsProvider).queueSessionMoodPrompt();
+        } else if (!ref.read(moodSettingsProvider).trackingEnabled) {
+          ref.read(moodTrackingOffSnackbarProvider.notifier).state = true;
         }
       } catch (e, st) {
         if (!mounted) return;

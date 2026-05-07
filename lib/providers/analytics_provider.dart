@@ -240,20 +240,26 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
     // 3. Read provider values after readiness gate.
     final sessions = sessionsAsync.value ?? <StudySession>[];
     final tasks = tasksAsync.value ?? <Task>[];
-    final moodTrackingOn = ref.watch(moodSettingsProvider).trackingEnabled;
-    final moods = moodTrackingOn
-        ? (moodsAsync.value ?? <MoodLog>[])
-        : <MoodLog>[];
+    // Tracking state only gates NEW collection — reads always use full history.
+    final moods = moodsAsync.value ?? <MoodLog>[];
     final deadlines = deadlinesAsync.value ?? <Deadline>[];
 
     // 4. Compute stable hash for this data snapshot.
-    // Include lengths of all datasets that affect the final report.
+    // Polynomial fold over every mood entry so any insert, delete, or value
+    // change (stress / mood level / timestamp) busts the cache. Order-sensitive
+    // (moods are DESC by created_at) and cheap — purely integer arithmetic.
+    final moodFingerprint = moods.fold(0, (int acc, MoodLog m) {
+      final h = Object.hash(
+          m.createdAt.millisecondsSinceEpoch, m.moodLevel, m.stressLevel);
+      return (acc * 31 + h) & 0x7FFFFFFF;
+    });
     final currentHash = Object.hash(
       semesterId,
       sessions.length,
       tasks.length,
       moods.length,
       deadlines.length,
+      moodFingerprint,
     );
 
     // 5. Cache check — requires BOTH semesterId AND hash to match.
@@ -319,10 +325,8 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
     try {
       final sessions = ref.read(studySessionsProvider).value ?? <StudySession>[];
       final tasks = ref.read(tasksProvider).value ?? <Task>[];
-      final moodOn = ref.read(moodSettingsProvider).trackingEnabled;
-      final moods = moodOn
-          ? (ref.read(moodLogsProvider).value ?? <MoodLog>[])
-          : <MoodLog>[];
+      // Tracking state only gates NEW collection — reads always use full history.
+      final moods = ref.read(moodLogsProvider).value ?? <MoodLog>[];
       final deadlines = ref.read(deadlinesProvider).value ?? <Deadline>[];
 
       final data = await ref.read(analyticsRepositoryProvider).computeFromPreloaded(
@@ -333,12 +337,18 @@ class AnalyticsNotifier extends AsyncNotifier<AnalyticsData> {
         moodLogs: moods,
         deadlines: deadlines,
       );
+      final moodFingerprint = moods.fold(0, (int acc, MoodLog m) {
+        final h = Object.hash(
+            m.createdAt.millisecondsSinceEpoch, m.moodLevel, m.stressLevel);
+        return (acc * 31 + h) & 0x7FFFFFFF;
+      });
       final hash = Object.hash(
         semesterId,
         sessions.length,
         tasks.length,
         moods.length,
         deadlines.length,
+        moodFingerprint,
       );
       _lastHash = hash;
       _cache[semesterId] = (hash: hash, data: data);

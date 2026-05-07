@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../core/design/app_spacing.dart';
 import '../../core/design/app_durations.dart';
 import '../../core/design/app_icons.dart';
@@ -14,10 +15,15 @@ import '../../providers/exams_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../providers/mood_provider.dart';
+import '../../providers/tasks_provider.dart';
+import '../../providers/deadlines_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_back_button.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/notification.dart';
+import '../../models/task.dart';
+import '../../models/deadline.dart';
 
 enum _NotificationGroup {
   today,
@@ -295,17 +301,32 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final locale = ref.watch(localeProvider);
     final topChromeColor = theme.brightness == Brightness.dark
         ? const Color(0xFF0F172A)
         : theme.colorScheme.surface;
     final notificationsAsync = ref.watch(notificationsProvider);
     final courses = ref.watch(courseProvider).value ?? [];
     final exams = ref.watch(examsProvider).value ?? [];
+    final tasks = ref.watch(tasksProvider).value ?? <Task>[];
+    final deadlines = ref.watch(deadlinesProvider).value ?? <Deadline>[];
     final courseColorByName = <String, Color>{
       for (final course in courses) course.courseName: course.uiColor,
     };
     final examTimeByRef = <String, DateTime>{
       for (final exam in exams) 'exam:${exam.id}': exam.examDateTime,
+    };
+    final taskTitleByRef = <String, String>{
+      for (final t in tasks) 'task:${t.id}': t.title,
+    };
+    final taskDateByRef = <String, DateTime?>{
+      for (final t in tasks) 'task:${t.id}': t.deadline,
+    };
+    final deadlineTitleByRef = <String, String>{
+      for (final d in deadlines) 'deadline:${d.id}': d.title,
+    };
+    final deadlineDateByRef = <String, DateTime?>{
+      for (final d in deadlines) 'deadline:${d.id}': d.deadlineDate,
     };
 
     return Scaffold(
@@ -414,7 +435,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                 ),
                               ),
                               for (var i = 0; i < grouped[group]!.length; i++) ...[
-                                _buildNotificationCard(grouped[group]![i], theme, courseColorByName),
+                                _buildNotificationCard(
+                                  grouped[group]![i],
+                                  theme,
+                                  l10n,
+                                  locale,
+                                  courseColorByName,
+                                  taskTitleByRef,
+                                  taskDateByRef,
+                                  deadlineTitleByRef,
+                                  deadlineDateByRef,
+                                ),
                               ],
                               const SizedBox(height: AppSpacing.md),
                             ],
@@ -531,7 +562,99 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     }
   }
 
-  Widget _buildNotificationCard(NotificationModel n, ThemeData theme, Map<String, Color> courseColorByName) {
+  /// Returns the localised title for a notification.
+  /// For task/deadline types, reconstructs from live task data so the title
+  /// updates instantly when the app language changes — no DB roundtrip needed.
+  String _localizedTitle(
+    NotificationModel n,
+    AppLocalizations l10n,
+    Map<String, String> taskTitleByRef,
+    Map<String, String> deadlineTitleByRef,
+  ) {
+    switch (n.type) {
+      case 'mood':
+      case 'mood_check':
+        return l10n.moodCheckNotificationTitle;
+      case 'study_goal':
+        return l10n.weeklyStudyGoalMissed;
+      case 'due_today':
+      case 'due_tomorrow':
+      case 'overdue':
+      case 'task_overdue':
+      case 'deadline':
+      case 'deadline_batch':
+        final ref = n.referenceId ?? '';
+        final itemTitle = taskTitleByRef[ref] ?? deadlineTitleByRef[ref];
+        if (itemTitle != null) {
+          return '$itemTitle ${_localizedContext(n.type, l10n)}';
+        }
+        return n.title;
+      default:
+        return n.title;
+    }
+  }
+
+  String _localizedContext(String type, AppLocalizations l10n) {
+    switch (type) {
+      case 'overdue':
+      case 'task_overdue':
+        return l10n.notificationOverdue;
+      case 'due_today':
+        return l10n.notificationDueToday;
+      case 'due_tomorrow':
+        return l10n.notificationDueTomorrow;
+      default:
+        return l10n.notificationDueSoon;
+    }
+  }
+
+  /// Returns the localised message for a notification.
+  String _localizedMessage(
+    NotificationModel n,
+    AppLocalizations l10n,
+    Locale locale,
+    Map<String, DateTime?> taskDateByRef,
+    Map<String, DateTime?> deadlineDateByRef,
+  ) {
+    switch (n.type) {
+      case 'mood':
+      case 'mood_check':
+        return l10n.moodCheckNotificationMessage;
+      case 'due_today':
+      case 'due_tomorrow':
+      case 'overdue':
+      case 'task_overdue':
+      case 'deadline':
+      case 'deadline_batch':
+        final ref = n.referenceId ?? '';
+        final dueDate = taskDateByRef[ref] ?? deadlineDateByRef[ref];
+        if (dueDate != null) {
+          // Preserve the course name stored in "CourseName • Date" and
+          // re-format the date in the current locale.
+          final parts = n.message.split(' • ');
+          final courseName = parts.isNotEmpty ? parts.first.trim() : '';
+          final formattedDate = DateFormat.MMMd(locale.toString()).format(dueDate);
+          return '$courseName • $formattedDate';
+        }
+        return n.message;
+      default:
+        return n.message;
+    }
+  }
+
+  Widget _buildNotificationCard(
+    NotificationModel n,
+    ThemeData theme,
+    AppLocalizations l10n,
+    Locale locale,
+    Map<String, Color> courseColorByName,
+    Map<String, String> taskTitleByRef,
+    Map<String, DateTime?> taskDateByRef,
+    Map<String, String> deadlineTitleByRef,
+    Map<String, DateTime?> deadlineDateByRef,
+  ) {
+    final displayTitle = _localizedTitle(n, l10n, taskTitleByRef, deadlineTitleByRef);
+    final displayMessage = _localizedMessage(n, l10n, locale, taskDateByRef, deadlineDateByRef);
     final isLight = theme.brightness == Brightness.light;
     final statusColor = _statusColor(n.type, theme);
     final isOverdue = n.type == 'overdue' || n.type == 'task_overdue';
@@ -610,7 +733,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  n.title,
+                                  displayTitle,
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: isUnread ? FontWeight.w800 : FontWeight.w600,
                                     color: isOverdue
@@ -639,7 +762,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            n.message,
+                            displayMessage,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurface.withValues(
                                 alpha: isUnread

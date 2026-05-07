@@ -32,6 +32,10 @@ class StudyService {
           total_cycles,
           mood,
           stress,
+          planned_minutes,
+          actual_minutes,
+          started_at,
+          ended_at,
 
           courses:course_id (
             id,
@@ -71,6 +75,10 @@ class StudyService {
           total_cycles,
           mood,
           stress,
+          planned_minutes,
+          actual_minutes,
+          started_at,
+          ended_at,
 
           courses:course_id (
             id,
@@ -109,6 +117,10 @@ class StudyService {
           total_cycles,
           mood,
           stress,
+          planned_minutes,
+          actual_minutes,
+          started_at,
+          ended_at,
           courses:course_id (
             id,
             course_name,

@@ -495,6 +495,56 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ],
 
                       _buildSectionTitle(theme, l10n.moodAndStressTitle),
+                      if (!ref.watch(moodSettingsProvider).trackingEnabled) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            border: Border.all(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: AppIcon(
+                                  HeroIcons.informationCircle,
+                                  size: 16,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              Expanded(
+                                child: Text(
+                                  l10n.moodTrackingHistoricalOnly,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              GestureDetector(
+                                onTap: () => context.push('/settings/mood-stress'),
+                                child: Text(
+                                  l10n.moodTrackingOffGoToSettings,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.sm),
                       _buildMoodSourceTabs(ref, theme, moodSource),
                       const SizedBox(height: AppSpacing.md),

@@ -337,18 +337,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const SizedBox(height: AppSpacing.md),
 
                               // --- SECTION 1.55: MOOD ENTRY PROMPT (ONLY IF NOT LOGGED TODAY) ---
-                              ref.watch(moodSettingsProvider.notifier).shouldShowDaily
-                                  ? todayMoodAsync.when(
-                                      data: (hasLoggedToday) {
-                                        if (!hasLoggedToday) {
-                                          return _buildMoodEntryCard(context, theme, l10n);
-                                        }
-                                        return const SizedBox.shrink();
-                                      },
-                                      loading: () => const SizedBox.shrink(),
-                                      error: (e, st) => const SizedBox.shrink(),
-                                    )
-                                  : const SizedBox.shrink(),
+                              Builder(builder: (context) {
+                                final moodSettings = ref.watch(moodSettingsProvider);
+                                final notifier = ref.watch(moodSettingsProvider.notifier);
+                                if (!moodSettings.trackingEnabled) {
+                                  return Column(
+                                    children: [
+                                      _buildMoodTrackingOffBanner(context, theme, l10n),
+                                      const SizedBox(height: AppSpacing.md),
+                                    ],
+                                  );
+                                }
+                                if (!notifier.shouldShowDaily) return const SizedBox.shrink();
+                                return todayMoodAsync.when(
+                                  data: (hasLoggedToday) {
+                                    if (!hasLoggedToday) {
+                                      return _buildMoodEntryCard(context, theme, l10n);
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (e, st) => const SizedBox.shrink(),
+                                );
+                              }),
                               if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily &&
                                   !(todayMoodAsync.asData?.value ?? true))
                                 const SizedBox(height: AppSpacing.md),
@@ -592,51 +603,82 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _buildCourseActivity(context, theme, l10n, data),
                               const SizedBox(height: AppSpacing.xl),
 
-                              // 14) Mood History
-                               if (ref.watch(moodSettingsProvider.notifier).shouldShowDaily) ...[
-                                const SizedBox(height: AppSpacing.md),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              // 14) Mood History — always visible; tracking-off badge shown when disabled
+                              Builder(builder: (context) {
+                                final trackingEnabled = ref.watch(moodSettingsProvider).trackingEnabled;
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      l10n.dailyMoodHistory,
-                                      style: theme.textTheme.labelMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                      ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () {
-                                        Haptics.vibrate(HapticsType.selection);
-                                        context.push('/mood/history');
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                        child: Text(
-                                          l10n.view,
-                                          style: theme.textTheme.labelMedium?.copyWith(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.w900,
-                                            fontSize: 11,
+                                    const SizedBox(height: AppSpacing.md),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              l10n.dailyMoodHistory,
+                                              style: theme.textTheme.labelMedium?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                              ),
+                                            ),
+                                            if (!trackingEnabled) ...[
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 10,
+                                                  vertical: 3,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  l10n.moodTrackingOffBadge,
+                                                  style: theme.textTheme.labelSmall?.copyWith(
+                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 9,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                        GestureDetector(
+                                          onTap: () {
+                                            Haptics.vibrate(HapticsType.selection);
+                                            context.push('/mood/history');
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                            child: Text(
+                                              l10n.view,
+                                              style: theme.textTheme.labelMedium?.copyWith(
+                                                color: theme.colorScheme.primary,
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 11,
+                                              ),
+                                            ),
                                           ),
                                         ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    AppGlassCard(
+                                      borderOnly: true,
+                                      padding: const EdgeInsets.all(AppSpacing.md),
+                                      child: MoodDailyList(
+                                        moodLogsAsync: moodLogsAsync,
+                                        days: 7,
+                                        showDate: false,
+                                        isFixed: true,
                                       ),
                                     ),
+                                    const SizedBox(height: AppSpacing.lg),
                                   ],
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                AppGlassCard(
-                                  borderOnly: true,
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: MoodDailyList(
-                                    moodLogsAsync: moodLogsAsync,
-                                    days: 7,
-                                    showDate: false,
-                                    isFixed: true,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                              ],
+                                );
+                              }),
 
                               // 15) Quick Menu — moved to bottom under Mood Daily
                               Text(
@@ -1106,6 +1148,65 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         )
         .toList();
+  }
+
+  Widget _buildMoodTrackingOffBanner(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
+    return AppGlassCard(
+      borderOnly: true,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          AppIcon(
+            HeroIcons.exclamationTriangle,
+            size: 18,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.moodTrackingOffBanner,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                ),
+                Text(
+                  l10n.moodTrackingOffBannerSubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => context.push('/settings/mood-stress'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              l10n.moodTrackingOffGoToSettings,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildMoodEntryCard(

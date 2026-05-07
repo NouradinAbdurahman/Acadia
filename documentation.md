@@ -1534,6 +1534,35 @@ The `MoodSettingsScreen` lets the user:
 - Set the reminder type (daily/session/both)
 - Navigate to mood history
 
+When the user toggles tracking on/off, a SnackBar confirms the change with `moodTrackingNowEnabled` or `moodTrackingNowDisabled`. A status text line below the toggle always shows "Active" or "Off" using `moodTrackingStatusActive` / `moodTrackingStatusOff`.
+
+### Mood Tracking Disabled UX
+
+Disabling mood tracking means the app stops collecting NEW mood data — it does NOT erase or hide historical mood data. The disabled state is communicated through a 7-point UX system:
+
+1. **Home banner** — A persistent info banner appears above the mood history row explaining tracking is off, with a "Settings" button that navigates to `/settings/mood-stress`.
+2. **"Tracking Off" badge** — A small pill badge on the Home mood history row (visible even when tracking is off).
+3. **Mood history always visible** — The mood history row on Home is shown regardless of tracking state. The old `if (shouldShowDaily)` gate was removed so historical data is always accessible.
+4. **Analytics banner** — An info card at the top of the Analytics Mood tab shows `moodTrackingHistoricalOnly` text and a "Settings" CTA when tracking is off.
+5. **Settings status text** — Status line under the toggle (described above).
+6. **Toggle SnackBar** — Instant feedback when the user enables or disables tracking.
+7. **Session-end SnackBar** — After finishing a study session while tracking is off, a one-shot SnackBar (`moodTrackingOffSessionSnackbar`) informs the user that no post-session mood was collected. This is signaled via `moodTrackingOffSnackbarProvider` — a `StateProvider<bool>` in `mood_provider.dart`. The study screen listens via `ref.listenManual` and resets the flag after showing the SnackBar.
+
+### 10 New Localization Keys (Mood Tracking Disabled)
+
+| Key | Description |
+|---|---|
+| `moodTrackingOffBanner` | Main banner title |
+| `moodTrackingOffBannerSubtitle` | Banner explanation |
+| `moodTrackingOffGoToSettings` | "Settings" CTA text |
+| `moodTrackingStatusOff` | Status text below toggle when off |
+| `moodTrackingStatusActive` | Status text below toggle when on |
+| `moodTrackingNowEnabled` | SnackBar when tracking is enabled |
+| `moodTrackingNowDisabled` | SnackBar when tracking is disabled |
+| `moodTrackingHistoricalOnly` | Analytics info card explanation |
+| `moodTrackingOffSessionSnackbar` | Study screen one-shot SnackBar |
+| `moodTrackingOffBadge` | "Tracking Off" pill badge text |
+
 ### Legacy Mood Handling
 
 We used to store moods as strings ("very_bad", "bad", "neutral", "good", "very_good"). At some point we switched to integers (1-5). The `MoodLog.fromJson` method has a `_legacyMoodToLevel` converter that maps old strings to new integers, so old data still works. The `MoodService.insertMood` method also has a fallback that converts integer levels back to strings if the database still has the old schema.
@@ -1548,10 +1577,12 @@ The analytics engine is the heart of the app's intelligence. It's what powers th
 
 The `AnalyticsNotifier` does the following:
 
+**Critical rule — tracking state never gates reads**: `analyticsProvider` reads the full historical mood list regardless of whether `moodSettingsProvider.trackingEnabled` is true or false. Tracking state only controls NEW data collection (prompts, reminders, session post-study logging). It must never be used to gate reads, charts, averages, `AnalyticsData` fields, or any AI inputs. Violations cause a visible contradiction where charts show historical mood data but metric cards say "No data".
+
 1. **Collects raw data** from multiple sources (all scoped to the active semester):
    - Study sessions (from `studySessionsProvider`)
    - Tasks (from `tasksProvider`)
-   - Mood logs (from `moodLogsProvider`)
+   - Mood logs (from `moodLogsProvider`) — **always full history, not gated by tracking state**
    - Deadlines (from `deadlinesProvider`)
    - Course results, courses, semester settings, user settings (fetched from DB)
 
@@ -1755,6 +1786,20 @@ The app supports two languages: English and Turkish.
 2. Add the translation to `app_tr.arb`
 3. Run `flutter gen-l10n`
 4. Use `AppLocalizations.of(context)!.yourNewKey` in widgets, or `ref.read(appLocalizationsProvider).yourNewKey` in providers
+
+**Note on manual ARB workflow**: In this project the generated files (`app_localizations.dart`, `app_localizations_en.dart`, `app_localizations_tr.dart`) are maintained manually alongside the ARB files to ensure they stay in sync without requiring a build step in CI. If you add a key to both ARB files, you must also add the abstract getter to `app_localizations.dart` and concrete implementations to both `app_localizations_en.dart` and `app_localizations_tr.dart`.
+
+### Notification Card Translation (UI-Layer i18n)
+
+Notification titles and messages stored in the Supabase DB are static English strings written at notification creation time. To support locale changes without requiring a DB update, the `NotificationsScreen` translates notification cards dynamically at render time:
+
+- `localeProvider`, `tasksProvider`, and `deadlinesProvider` are watched in `build()`
+- Two lookup maps (`taskTitleByRef`, `deadlineTitleByRef`) index live task/deadline titles by their `reference_id` format (`task:<id>`, `deadline:<id>`)
+- `_localizedTitle()` — maps notification `type` to an l10n string; for task/deadline types, looks up the live title + appends a localized context suffix
+- `_localizedMessage()` — extracts course name from the stored message and reformats the date with `DateFormat.MMMd(locale.toString())` for locale-aware date display; returns `l10n.moodCheckNotificationMessage` for mood types
+- `_localizedContext()` — maps type to a localized suffix (overdue / due today / due tomorrow / due soon)
+
+This means changing the app language immediately reflects in all notification cards — even without a pull-to-refresh — because it's driven by the reactive locale provider, not by DB strings.
 
 ---
 

@@ -4504,4 +4504,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalContactLine => 'Email: support@acadia.app';
+
+  @override
+  String get moodTrackingOffBanner => 'Mood tracking is off';
+
+  @override
+  String get moodTrackingOffBannerSubtitle =>
+      'New mood data will not be collected';
+
+  @override
+  String get moodTrackingOffGoToSettings => 'Settings';
+
+  @override
+  String get moodTrackingStatusOff => 'Status: Off';
+
+  @override
+  String get moodTrackingStatusActive => 'Status: Active';
+
+  @override
+  String get moodTrackingNowEnabled => 'Mood tracking enabled';
+
+  @override
+  String get moodTrackingNowDisabled => 'Mood tracking disabled';
+
+  @override
+  String get moodTrackingHistoricalOnly =>
+      'Mood tracking is off. Historical mood insights are still available. Enable tracking to record new mood and stress data.';
+
+  @override
+  String get moodTrackingOffSessionSnackbar =>
+      'Mood tracking is off. Enable it in Settings to capture session mood.';
+
+  @override
+  String get moodTrackingOffBadge => 'Tracking Off';
 }

@@ -48,6 +48,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
   ProviderSubscription? _timerSub;
   ProviderSubscription<AdaptationMode>? _modeSub;
   ProviderSubscription<MoodPromptRequest?>? _moodPromptSub;
+  ProviderSubscription<bool>? _trackingOffSub;
   bool _handledAnalyticsArgs = false;
 
   @override
@@ -81,6 +82,22 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         if (!mounted || next == null) return;
         ref.read(moodActionsProvider).clearMoodPrompt();
         context.push('/mood/log?source=${next.source}');
+      },
+    );
+
+    _trackingOffSub = ref.listenManual<bool>(
+      moodTrackingOffSnackbarProvider,
+      (previous, next) {
+        if (!mounted || !next) return;
+        ref.read(moodTrackingOffSnackbarProvider.notifier).state = false;
+        final l10n = AppLocalizations.of(context);
+        if (l10n == null) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.moodTrackingOffSessionSnackbar),
+            duration: const Duration(seconds: 4),
+          ),
+        );
       },
     );
 
@@ -211,6 +228,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
     _timerSub?.close();
     _modeSub?.close();
     _moodPromptSub?.close();
+    _trackingOffSub?.close();
     super.dispose();
   }
 
