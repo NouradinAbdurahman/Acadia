@@ -10,6 +10,7 @@ import '../../providers/semester_provider.dart';
 import '../../providers/study_sessions_provider.dart';
 import '../../models/ai_message.dart';
 import '../../theme/app_colors.dart';
+import '../../components/app_toast.dart';
 import '../../core/design/app_spacing.dart';
 import '../../widgets/ai/ai_insight_text_utils.dart';
 import '../../widgets/ai/insight_card.dart';
@@ -150,9 +151,7 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
       if (previous?.error == next.error || next.error == null) return;
       final message = _errorMessage(next.error);
       if (message == null || !context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppToast.show(context, message, type: AppToastType.error);
     });
 
     return Scaffold(
@@ -1138,9 +1137,7 @@ class _DailyPlanCard extends ConsumerWidget {
                         timer.setCourseId(courseId);
                       }
                       timer.start();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Started $duration min planned session")),
-                      );
+                      AppToast.show(context, "Started $duration min planned session", type: AppToastType.success);
                     },
                     child: const Text("Start"),
                   ),
@@ -1319,9 +1316,7 @@ class _FocusCard extends ConsumerWidget {
                       timer.setCourseId(courseId);
                     }
                     timer.start();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Started $duration min focus session")),
-                    );
+                    AppToast.show(context, "Started $duration min focus session", type: AppToastType.success);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -1338,9 +1333,7 @@ class _FocusCard extends ConsumerWidget {
                 IconButton.filled(
                   onPressed: () {
                     ref.read(tasksProvider.notifier).updateTaskStatus(taskId, 'completed');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Task marked as completed!")),
-                    );
+                    AppToast.show(context, "Task marked as completed!", type: AppToastType.success);
                   },
                   icon: const Icon(Icons.check),
                   style: IconButton.styleFrom(
@@ -1454,9 +1447,7 @@ class _TaskItem extends ConsumerWidget {
               GestureDetector(
                 onTap: isCompleted || taskId == null ? null : () {
                   ref.read(tasksProvider.notifier).updateTaskStatus(taskId, 'completed');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Task marked as completed!")),
-                  );
+                  AppToast.show(context, "Task marked as completed!", type: AppToastType.success);
                 },
                 child: Icon(
                   isCompleted ? Icons.check_circle_rounded : Icons.radio_button_off_rounded,
@@ -1504,9 +1495,7 @@ class _TaskItem extends ConsumerWidget {
                   icon: const Icon(Icons.done_all, size: 18),
                   onPressed: () {
                     ref.read(tasksProvider.notifier).updateTaskStatus(taskId, 'completed');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Task marked as completed!")),
-                    );
+                    AppToast.show(context, "Task marked as completed!", type: AppToastType.success);
                   },
                   color: AppColors.primary.withValues(alpha: 0.6),
                   padding: EdgeInsets.zero,

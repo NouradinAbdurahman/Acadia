@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/mood_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_back_button.dart';
+import '../../components/app_toast.dart';
 
 class LogMoodScreen extends ConsumerStatefulWidget {
   const LogMoodScreen({super.key, this.source = 'manual'});
@@ -87,20 +88,8 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
         l10n.moodSavedPositive4,
       ];
       final random = DateTime.now().millisecond % messages.length;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(messages[random]),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.smartInsightUpdated),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppToast.show(context, messages[random], type: AppToastType.success);
+      AppToast.show(context, l10n.smartInsightUpdated, type: AppToastType.success);
       if (widget.source == 'session' && previous != null) {
         final deltaMood = _moodLevel - previous.moodLevel;
         final deltaStress = _stressLevel.round() - previous.stressLevel;
@@ -109,20 +98,12 @@ class _LogMoodScreenState extends ConsumerState<LogMoodScreen> {
             : (deltaStress > 1
                 ? l10n.postSessionStressIncreased
                 : l10n.postSessionFeedbackLogged);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(loopMessage),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppToast.show(context, loopMessage, type: AppToastType.success);
       }
       context.pop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.moodSaveFailed)),
-      );
+      AppToast.show(context, l10n.moodSaveFailed, type: AppToastType.error);
     } finally {
       if (mounted) {
         setState(() {

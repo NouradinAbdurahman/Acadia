@@ -31,7 +31,7 @@ class NotificationModel {
       type: json['type'],
       semesterId: json['semester_id'] as String?,
       isRead: json['is_read'] ?? false,
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: DateTime.parse(json['created_at']).toUtc(),
     );
   }
 

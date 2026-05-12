@@ -15,6 +15,7 @@ import '../../components/app_text_field.dart';
 import '../../components/app_button.dart';
 import '../../components/app_back_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String email;
@@ -66,14 +67,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         Haptics.vibrate(HapticsType.success);
         if (mounted) {
           final l10n = AppLocalizations.of(context);
-          final theme = Theme.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n?.resetPassword ?? ''),
-              backgroundColor: theme.colorScheme.primary,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppToast.show(context, l10n?.resetPassword ?? '', type: AppToastType.success);
           context.go('/login');
         }
       } else {

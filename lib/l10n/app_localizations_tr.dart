@@ -172,6 +172,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get earlier => 'Daha Önce';
 
   @override
+  String get thisMonthLabel => 'Bu Ay';
+
+  @override
   String get home => 'Ana Sayfa';
 
   @override
@@ -947,6 +950,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get major => 'Bölüm';
 
   @override
+  String get majorPlaceholder => 'ör. Bilgisayar Mühendisliği';
+
+  @override
   String get minor => 'Yandal';
 
   @override
@@ -1179,6 +1185,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get editProfile => 'Profili Düzenle';
+
+  @override
+  String get manageExams => 'Sınavları Yönet';
 
   @override
   String get manageCourses => 'Dersleri Yönet';

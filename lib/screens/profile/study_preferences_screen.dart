@@ -13,6 +13,7 @@ import '../../providers/analytics_provider.dart';
 import '../../providers/semester_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 class StudyPreferencesScreen extends ConsumerStatefulWidget {
   const StudyPreferencesScreen({super.key});
@@ -58,9 +59,7 @@ class _StudyPreferencesScreenState
     final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
     if (activeSemester == null) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.startTrackingYourSemester)));
+        AppToast.show(context, l10n.startTrackingYourSemester, type: AppToastType.info);
       }
       return;
     }
@@ -98,9 +97,7 @@ class _StudyPreferencesScreenState
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.saveChanges)),
-        );
+        AppToast.show(context, AppLocalizations.of(context)!.saveChanges, type: AppToastType.success);
         await Future<void>.delayed(Duration.zero);
         if (!mounted) return;
         if (context.canPop()) context.pop();
@@ -111,9 +108,7 @@ class _StudyPreferencesScreenState
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        AppToast.show(context, e.toString(), type: AppToastType.error);
       }
     } finally {
       if (mounted) {

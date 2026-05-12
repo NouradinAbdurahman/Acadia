@@ -20,6 +20,7 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
 import '../../providers/app_providers.dart';
 import '../../core/theme/app_colors.dart';
+import '../../components/app_toast.dart';
 
 class AcademicOnboardingScreen extends ConsumerStatefulWidget {
   const AcademicOnboardingScreen({super.key});
@@ -92,29 +93,21 @@ class _AcademicOnboardingScreenState
     // Simple validation
     if (_currentStep == 0) {
       if (_universityController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.requiredField)));
+        AppToast.show(context, l10n.requiredField, type: AppToastType.warning);
         return;
       }
     } else if (_currentStep == 1) {
       if (_majorController.text.trim().isEmpty || _selectedDegree == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.requiredField)));
+        AppToast.show(context, l10n.requiredField, type: AppToastType.warning);
         return;
       }
     } else if (_currentStep == 2) {
       if (_selectedSemester < 1) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.semesterNumberInvalid)));
+        AppToast.show(context, l10n.semesterNumberInvalid, type: AppToastType.warning);
         return;
       }
       if (_studyHours < 1 || _studyHours > 80) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.weeklyStudyGoalInvalid)));
+        AppToast.show(context, l10n.weeklyStudyGoalInvalid, type: AppToastType.warning);
         return;
       }
     }
@@ -187,11 +180,7 @@ class _AcademicOnboardingScreenState
     } catch (e) {
       debugPrint('[AcademicOnboarding] Error during finish: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)?.networkError ?? 'Error saving profile'),
-        ),
-      );
+      AppToast.show(context, AppLocalizations.of(context)?.networkError ?? 'Error saving profile', type: AppToastType.error);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -443,6 +432,7 @@ class _AcademicOnboardingScreenState
             controller: _majorController,
             label: l10n?.major ?? 'Major',
             icon: HeroIcons.commandLine,
+            hint: l10n?.majorPlaceholder,
           ),
           const SizedBox(height: AppSpacing.lg),
           _buildNumberPicker(
@@ -626,6 +616,7 @@ class _AcademicOnboardingScreenState
     required TextEditingController controller,
     required String label,
     required HeroIcons icon,
+    String? hint,
   }) {
     final theme = Theme.of(context);
     return Container(
@@ -645,6 +636,10 @@ class _AcademicOnboardingScreenState
         enableInteractiveSelection: true,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hint,
+          hintStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+          ),
           labelStyle: theme.textTheme.bodyMedium?.copyWith(
             color: theme.brightness == Brightness.dark
                 ? AppColors.textSecondaryDark

@@ -17,6 +17,7 @@ import '../../providers/course_provider.dart';
 import '../../providers/exams_provider.dart';
 import '../../providers/semester_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 class CreateExamScreen extends ConsumerStatefulWidget {
   const CreateExamScreen({super.key});
@@ -85,9 +86,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_selectedDate == null || _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.examsPickDateTimeError)),
-      );
+      AppToast.show(context, l10n.examsPickDateTimeError, type: AppToastType.warning);
       return;
     }
 
@@ -132,11 +131,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen> {
     } catch (e) {
       debugPrint('[CreateExamScreen] create failed: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
-          SnackBar(content: Text('${l10n.examsCreateError}: $e')),
-        );
+        AppToast.show(context, '${l10n.examsCreateError}: $e', type: AppToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

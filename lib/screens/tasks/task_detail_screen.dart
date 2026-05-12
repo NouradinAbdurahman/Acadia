@@ -16,6 +16,7 @@ import '../../components/app_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/course_provider.dart';
+import '../../components/app_toast.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   const TaskDetailScreen({super.key, required this.taskId});
@@ -207,13 +208,7 @@ class TaskDetailScreen extends ConsumerWidget {
                                   .updateTaskStatus(task.id, newStatus);
                             } catch (_) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(context)!.networkError,
-                                    ),
-                                  ),
-                                );
+                                AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
                               }
                             }
                           },
@@ -234,13 +229,7 @@ class TaskDetailScreen extends ConsumerWidget {
                               }
                             } catch (_) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(context)!.networkError,
-                                    ),
-                                  ),
-                                );
+                                AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
                               }
                             }
                           },

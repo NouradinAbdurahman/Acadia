@@ -16,6 +16,7 @@ import '../../components/app_back_button.dart';
 import '../../components/destructive_confirmation_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import 'semester_management_screen.dart';
+import '../../components/app_toast.dart';
 
 class CreateSemesterScreen extends ConsumerStatefulWidget {
   final Semester? semesterToEdit;
@@ -103,17 +104,13 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     if (_startDate != null && _endDate != null && !_startDate!.isBefore(_endDate!)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.semesterStartBeforeEndError)));
+      AppToast.show(context, l10n.semesterStartBeforeEndError, type: AppToastType.warning);
       return;
     }
 
     final semesters = ref.read(semesterProvider).value ?? const <Semester>[];
     if (_hasDuplicateSemester(semesters)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.semesterAlreadyExists)));
+      AppToast.show(context, l10n.semesterAlreadyExists, type: AppToastType.warning);
       return;
     }
 
@@ -149,9 +146,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.networkError)),
-        );
+        AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -180,9 +175,7 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
       Navigator.pop(context);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.networkError)));
+      AppToast.show(context, l10n.networkError, type: AppToastType.error);
     } finally {
       if (mounted) setState(() => _isDeleting = false);
     }

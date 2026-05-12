@@ -19,6 +19,7 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../providers/bottom_nav_provider.dart';
+import '../../components/app_toast.dart';
 
 class TasksListScreen extends ConsumerStatefulWidget {
   const TasksListScreen({super.key});
@@ -1017,13 +1018,7 @@ class _TaskCard extends ConsumerWidget {
                             .deleteTask(task.id);
                       } catch (_) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                AppLocalizations.of(context)!.networkError,
-                              ),
-                            ),
-                          );
+                          AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
                         }
                       }
                     },
@@ -1043,13 +1038,7 @@ class _TaskCard extends ConsumerWidget {
                   .updateTaskStatus(task.id, 'completed');
             } catch (_) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      AppLocalizations.of(context)!.networkError,
-                    ),
-                  ),
-                );
+                AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
               }
             }
           }
@@ -1399,13 +1388,7 @@ class _DeadlineCard extends ConsumerWidget {
                   .markDeadlineCompleted(deadline.id);
             } catch (_) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      AppLocalizations.of(context)!.networkError,
-                    ),
-                  ),
-                );
+                AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
               }
             }
           }
@@ -1444,13 +1427,7 @@ class _DeadlineCard extends ConsumerWidget {
                             .deleteDeadline(deadline.id);
                       } catch (_) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                AppLocalizations.of(context)!.networkError,
-                              ),
-                            ),
-                          );
+                          AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
                         }
                       }
                     },
@@ -1591,14 +1568,7 @@ class _DeadlineCard extends ConsumerWidget {
                                   .toggleDeadlineCompletion(deadline.id);
                             } catch (_) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      AppLocalizations.of(context)!
-                                          .networkError,
-                                    ),
-                                  ),
-                                );
+                                AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
                               }
                             }
                           },

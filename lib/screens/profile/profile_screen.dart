@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +16,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_bottom_sheet_picker.dart';
 import '../../utils/display_name_resolver.dart';
+import '../../components/app_toast.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -38,12 +38,7 @@ class ProfileScreen extends ConsumerWidget {
       try {
         Haptics.vibrate(HapticsType.medium);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.saving),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+          AppToast.show(context, l10n.saving, type: AppToastType.info, duration: const Duration(seconds: 2));
         }
 
         final newUrl = await ref.read(avatarServiceProvider).uploadAvatar(file);
@@ -55,16 +50,12 @@ class ProfileScreen extends ConsumerWidget {
         await ref.read(currentAppUserProvider.future);
 
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.avatarUpdated)));
+          AppToast.show(context, l10n.avatarUpdated, type: AppToastType.success);
         }
       } catch (e) {
         debugPrint("Upload error: $e");
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${l10n.avatarUploadFailed}: $e')),
-          );
+          AppToast.show(context, '${l10n.avatarUploadFailed}: $e', type: AppToastType.error);
         }
       }
     }
@@ -87,14 +78,7 @@ class ProfileScreen extends ConsumerWidget {
       }
     }
 
-    Future<void> clearRememberedCredentials() async {
-      final box = Hive.box('settings');
-      await box.delete('remembered_email');
-      await box.delete('remembered_password');
-    }
-
     Future<void> handleLogout() async {
-      await clearRememberedCredentials();
       await ref.read(authRepositoryProvider).logout();
     }
 
@@ -331,6 +315,11 @@ class ProfileScreen extends ConsumerWidget {
                       icon: HeroIcons.academicCap,
                       title: l10n.manageCourses,
                       onTap: () => context.push('/profile/courses'),
+                    ),
+                    buildItem(
+                      icon: HeroIcons.clipboardDocumentList,
+                      title: l10n.manageExams,
+                      onTap: () => context.push('/exams'),
                     ),
                     buildItem(
                       icon: HeroIcons.calendarDays,

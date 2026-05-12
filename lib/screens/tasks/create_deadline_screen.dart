@@ -18,6 +18,7 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/course_provider.dart';
 import '../../core/design/app_durations.dart';
 import 'package:go_router/go_router.dart';
+import '../../components/app_toast.dart';
 
 class CreateDeadlineScreen extends ConsumerStatefulWidget {
   const CreateDeadlineScreen({super.key});
@@ -64,26 +65,18 @@ class _CreateDeadlineScreenState extends ConsumerState<CreateDeadlineScreen> {
 
   Future<void> _submit() async {
     if (_deadlineDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectDate)),
-      );
+      AppToast.show(context, AppLocalizations.of(context)!.pleaseSelectDate, type: AppToastType.warning);
       return;
     }
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_selectedCourseId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.pleaseSelectCourse),
-        ),
-      );
+      AppToast.show(context, AppLocalizations.of(context)!.pleaseSelectCourse, type: AppToastType.warning);
       return;
     }
 
     final courses = ref.read(courseProvider).value ?? [];
     if (courses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.addCourseFirst)),
-      );
+      AppToast.show(context, AppLocalizations.of(context)!.addCourseFirst, type: AppToastType.warning);
       return;
     }
 
@@ -124,11 +117,7 @@ class _CreateDeadlineScreenState extends ConsumerState<CreateDeadlineScreen> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.networkError),
-          ),
-        );
+        AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
       }
     } finally {
       if (mounted) {

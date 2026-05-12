@@ -16,6 +16,7 @@ import '../../core/design/app_icons.dart';
 import '../../components/app_button.dart';
 import '../../components/app_back_button.dart';
 import '../../l10n/app_localizations.dart';
+import '../../components/app_toast.dart';
 
 class CreateCourseScreen extends ConsumerStatefulWidget {
   final Course? courseToEdit;
@@ -114,9 +115,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.networkError)),
-        );
+        AppToast.show(context, AppLocalizations.of(context)!.networkError, type: AppToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -264,16 +263,14 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
       Navigator.pop(context);
     } catch (_) {
       if (!mounted) return;
-      _showError(l10n.networkError);
+      AppToast.show(context, l10n.networkError, type: AppToastType.error);
     } finally {
       if (mounted) setState(() => _isDeleting = false);
     }
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    AppToast.show(context, message, type: AppToastType.warning);
   }
 
   @override

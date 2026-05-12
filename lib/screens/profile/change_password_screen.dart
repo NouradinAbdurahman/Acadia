@@ -14,6 +14,7 @@ import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
 import '../../screens/auth/password_validation.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -56,9 +57,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
       Haptics.vibrate(HapticsType.success);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n?.passwordUpdatedSuccess ?? '')),
-      );
+      AppToast.show(context, l10n?.passwordUpdatedSuccess ?? '', type: AppToastType.success);
       context.pop();
     } catch (e) {
       Haptics.vibrate(HapticsType.error);

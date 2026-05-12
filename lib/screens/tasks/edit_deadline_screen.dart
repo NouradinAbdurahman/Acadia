@@ -15,6 +15,7 @@ import '../../providers/deadlines_provider.dart';
 import '../../providers/course_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 class EditDeadlineScreen extends ConsumerStatefulWidget {
   const EditDeadlineScreen({super.key, required this.deadlineId});
@@ -73,24 +74,18 @@ class _EditDeadlineScreenState extends ConsumerState<EditDeadlineScreen> {
   Future<void> _submit(dynamic existing) async {
     final l10n = AppLocalizations.of(context)!;
     if (_deadlineDate == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectDate)));
+      AppToast.show(context, l10n.pleaseSelectDate, type: AppToastType.warning);
       return;
     }
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_selectedCourseId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectCourse)));
+      AppToast.show(context, l10n.pleaseSelectCourse, type: AppToastType.warning);
       return;
     }
 
     final courses = ref.read(courseProvider).value ?? [];
     if (courses.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.addCourseFirst)));
+      AppToast.show(context, l10n.addCourseFirst, type: AppToastType.warning);
       return;
     }
 
@@ -119,9 +114,7 @@ class _EditDeadlineScreenState extends ConsumerState<EditDeadlineScreen> {
       if (mounted) context.pop();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.networkError)),
-        );
+        AppToast.show(context, l10n.networkError, type: AppToastType.error);
       }
     } finally {
       if (mounted) {

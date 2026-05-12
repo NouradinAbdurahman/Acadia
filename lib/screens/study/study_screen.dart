@@ -30,6 +30,7 @@ import '../../providers/decision_provider.dart';
 import '../../providers/decision_engine_provider_v2.dart';
 import '../../providers/adaptive_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../components/app_toast.dart';
 import '../../domain/decision/decision_rules.dart';
 import 'study_history_screen.dart';
 
@@ -92,12 +93,7 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         ref.read(moodTrackingOffSnackbarProvider.notifier).state = false;
         final l10n = AppLocalizations.of(context);
         if (l10n == null) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.moodTrackingOffSessionSnackbar),
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        AppToast.show(context, l10n.moodTrackingOffSessionSnackbar, type: AppToastType.info);
       },
     );
 

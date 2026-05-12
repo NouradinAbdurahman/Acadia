@@ -203,24 +203,14 @@ class _NavItemState extends State<_NavItem> {
     final iconScale = _isPressed ? iconScaleBase * 0.92 : iconScaleBase;
 
     return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _isPressed = true;
-        });
-      },
-      onTapUp: (_) {
-        setState(() {
-          _isPressed = false;
-        });
-        // Stronger haptic for bottom-nav taps.
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTap: () {
+        setState(() => _isPressed = false);
         Haptics.vibrate(HapticsType.medium);
         widget.onTap();
       },
-      onTapCancel: () {
-        setState(() {
-          _isPressed = false;
-        });
-      },
+      onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedSlide(
         duration: AppDurations.fast,
         curve: Curves.easeOut,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../providers/risk_provider.dart';
+import '../../components/app_toast.dart';
 import 'passive_ai_constants.dart';
 
 /// Invisible widget that subscribes to [riskProvider] and surfaces meaningful
@@ -44,13 +45,7 @@ class _PassiveAiRiskListenerState extends ConsumerState<PassiveAiRiskListener> {
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!context.mounted) return;
-        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(
-            content: Text(l10n.aiPassiveRiskSpike),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 5),
-          ),
-        );
+        AppToast.show(context, l10n.aiPassiveRiskSpike, type: AppToastType.info);
       });
     });
 

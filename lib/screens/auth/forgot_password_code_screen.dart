@@ -17,6 +17,7 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_button.dart';
 import '../../components/app_back_button.dart';
+import '../../components/app_toast.dart';
 
 class ForgotPasswordCodeScreen extends ConsumerStatefulWidget {
   final String email;
@@ -138,13 +139,7 @@ class _ForgotPasswordCodeScreenState extends ConsumerState<ForgotPasswordCodeScr
       
       if (mounted) {
         Haptics.vibrate(HapticsType.success);
-        final theme = Theme.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n?.codeResent ?? 'Code sent! Check your inbox.'),
-            backgroundColor: theme.colorScheme.primary,
-          ),
-        );
+        AppToast.show(context, l10n?.codeResent ?? 'Code sent! Check your inbox.', type: AppToastType.success);
       }
     } catch (e) {
       Haptics.vibrate(HapticsType.error);

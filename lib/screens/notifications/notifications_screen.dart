@@ -11,7 +11,6 @@ import '../../core/design/app_icons.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/course_provider.dart';
-import '../../providers/exams_provider.dart';
 import '../../providers/notifications_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../providers/mood_provider.dart';
@@ -27,8 +26,9 @@ import '../../models/deadline.dart';
 
 enum _NotificationGroup {
   today,
-  upcoming,
-  past,
+  thisWeek,
+  thisMonth,
+  earlier,
 }
 
 enum _NotificationCategory {
@@ -94,46 +94,31 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   _NotificationGroup _groupForNotification(
     NotificationModel notification, {
     required DateTime now,
-    required Map<String, DateTime> examTimeByRef,
   }) {
-    if (notification.type == 'exam') {
-      final refId = notification.referenceId ?? '';
-      final examTime = examTimeByRef[refId];
-      if (examTime != null) {
-        if (_isSameDay(examTime, now)) return _NotificationGroup.today;
-        if (examTime.isAfter(now)) return _NotificationGroup.upcoming;
-        return _NotificationGroup.past;
-      }
+    final created = notification.createdAt.toLocal();
+    if (_isSameDay(created, now)) return _NotificationGroup.today;
+
+    final startOfThisWeek = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+    if (!created.isBefore(startOfThisWeek)) return _NotificationGroup.thisWeek;
+
+    if (created.year == now.year && created.month == now.month) {
+      return _NotificationGroup.thisMonth;
     }
 
-    switch (notification.type) {
-      case 'due_today':
-      case 'risk':
-      case 'stress':
-      case 'academic_summary':
-      case 'study_goal':
-      case 'mood':
-      case 'mood_check':
-        return _NotificationGroup.today;
-      case 'due_tomorrow':
-        return _NotificationGroup.upcoming;
-      case 'overdue':
-      case 'overdue_batch':
-      case 'task_overdue':
-        return _NotificationGroup.past;
-      default:
-        return _NotificationGroup.today;
-    }
+    return _NotificationGroup.earlier;
   }
 
   String _groupTitle(AppLocalizations l10n, _NotificationGroup group) {
     switch (group) {
       case _NotificationGroup.today:
         return l10n.today;
-      case _NotificationGroup.upcoming:
-        return l10n.examsUpcomingSectionTitle;
-      case _NotificationGroup.past:
-        return l10n.examsPastSectionTitle;
+      case _NotificationGroup.thisWeek:
+        return l10n.thisWeekLabel;
+      case _NotificationGroup.thisMonth:
+        return l10n.thisMonthLabel;
+      case _NotificationGroup.earlier:
+        return l10n.earlier;
     }
   }
 
@@ -303,18 +288,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
     final topChromeColor = theme.brightness == Brightness.dark
-        ? const Color(0xFF0F172A)
-        : theme.colorScheme.surface;
+        ? AppColors.backgroundDarkEnd
+        : AppColors.backgroundLight;
     final notificationsAsync = ref.watch(notificationsProvider);
     final courses = ref.watch(courseProvider).value ?? [];
-    final exams = ref.watch(examsProvider).value ?? [];
     final tasks = ref.watch(tasksProvider).value ?? <Task>[];
     final deadlines = ref.watch(deadlinesProvider).value ?? <Deadline>[];
     final courseColorByName = <String, Color>{
       for (final course in courses) course.courseName: course.uiColor,
-    };
-    final examTimeByRef = <String, DateTime>{
-      for (final exam in exams) 'exam:${exam.id}': exam.examDateTime,
     };
     final taskTitleByRef = <String, String>{
       for (final t in tasks) 'task:${t.id}': t.title,
@@ -330,6 +311,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     };
 
     return Scaffold(
+      backgroundColor: topChromeColor,
       appBar: AppBar(
         leading: const AppBackButton(),
         title: Text(l10n.notifications),
@@ -349,6 +331,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           child: Column(
             children: [
               _buildCategoryTabs(l10n, theme, topChromeColor),
+              AnimatedContainer(
+                duration: AppDurations.fast,
+                height: 1,
+                color: _isScrolled
+                    ? theme.colorScheme.onSurface.withValues(alpha: 0.08)
+                    : Colors.transparent,
+              ),
               Expanded(
                 child: notificationsAsync.when(
                   data: (notifications) {
@@ -390,8 +379,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
                     final grouped = <_NotificationGroup, List<NotificationModel>>{
                       _NotificationGroup.today: [],
-                      _NotificationGroup.upcoming: [],
-                      _NotificationGroup.past: [],
+                      _NotificationGroup.thisWeek: [],
+                      _NotificationGroup.thisMonth: [],
+                      _NotificationGroup.earlier: [],
                     };
 
                     final now = DateTime.now();
@@ -399,14 +389,14 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       grouped[_groupForNotification(
                         notification,
                         now: now,
-                        examTimeByRef: examTimeByRef,
                       )]!.add(notification);
                     }
 
                     final orderedGroups = [
                       _NotificationGroup.today,
-                      _NotificationGroup.upcoming,
-                      _NotificationGroup.past,
+                      _NotificationGroup.thisWeek,
+                      _NotificationGroup.thisMonth,
+                      _NotificationGroup.earlier,
                     ];
 
                     return RefreshIndicator(
@@ -473,68 +463,73 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   ) {
     final isDark = theme.brightness == Brightness.dark;
 
-    Widget catChip(_NotificationCategory category, String label) {
+    Widget tab(_NotificationCategory category, String label) {
       final selected = _selectedCategory == category;
       return Padding(
         padding: const EdgeInsets.only(right: AppSpacing.sm),
-        child: ChoiceChip(
-          label: Text(label),
-          selected: selected,
-          showCheckmark: false,
-          elevation: 0,
-          onSelected: (val) {
-            if (val) {
-              Haptics.vibrate(HapticsType.selection);
-              setState(() => _selectedCategory = category);
-            }
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            Haptics.vibrate(HapticsType.selection);
+            setState(() => _selectedCategory = category);
           },
-          labelStyle: theme.textTheme.bodyMedium?.copyWith(
-            color: selected
-                ? Colors.white
-                : theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.6 : 0.85),
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            fontSize: 14,
-          ),
-          selectedColor: theme.colorScheme.primary,
-          backgroundColor: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.03),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: BorderSide(
+          child: AnimatedContainer(
+            duration: AppDurations.fast,
+            curve: Curves.easeOut,
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
               color: selected
                   ? theme.colorScheme.primary
                   : (isDark
-                      ? Colors.transparent
-                      : theme.colorScheme.outline.withValues(alpha: 0.35)),
-              width: 1,
+                      ? Colors.white.withValues(alpha: 0.07)
+                      : Colors.black.withValues(alpha: 0.04)),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: selected
+                    ? theme.colorScheme.primary
+                    : (isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : theme.colorScheme.outline.withValues(alpha: 0.25)),
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: selected
+                      ? Colors.white
+                      : theme.colorScheme.onSurface
+                          .withValues(alpha: isDark ? 0.65 : 0.8),
+                  fontWeight:
+                      selected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 13,
+                  height: 1,
+                ),
+              ),
             ),
           ),
         ),
       );
     }
 
-    return AnimatedContainer(
-      duration: AppDurations.fast,
-      height: 84,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: topChromeColor,
-      ),
+    return Container(
+      height: 72,
+      color: topChromeColor,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-        padding: const EdgeInsets.only(left: AppSpacing.md),
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: 18),
         children: [
-          catChip(_NotificationCategory.all, l10n.all),
-          catChip(_NotificationCategory.tasks, l10n.tasks),
-          catChip(_NotificationCategory.deadlines, l10n.deadlines),
-          catChip(_NotificationCategory.exams, l10n.examsTitle),
-          catChip(_NotificationCategory.mood, l10n.mood),
-          catChip(_NotificationCategory.academic, l10n.academic),
-          const SizedBox(width: AppSpacing.xs),
+          tab(_NotificationCategory.all, l10n.all),
+          tab(_NotificationCategory.tasks, l10n.tasks),
+          tab(_NotificationCategory.deadlines, l10n.deadlines),
+          tab(_NotificationCategory.exams, l10n.examsTitle),
+          tab(_NotificationCategory.mood, l10n.mood),
+          tab(_NotificationCategory.academic, l10n.academic),
         ],
       ),
     );
@@ -770,6 +765,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                                     : (isLight ? 0.75 : 0.6),
                               ),
                               fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            () {
+                              final local = n.createdAt.toLocal();
+                              final localeStr = locale.toString();
+                              final date = DateFormat.MMMd(localeStr).format(local);
+                              final time = DateFormat.jm(localeStr).format(local);
+                              return '$date · $time';
+                            }(),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],

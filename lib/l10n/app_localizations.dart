@@ -404,6 +404,12 @@ abstract class AppLocalizations {
   /// **'Earlier'**
   String get earlier;
 
+  /// No description provided for @thisMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get thisMonthLabel;
+
   /// No description provided for @home.
   ///
   /// In en, this message translates to:
@@ -1862,6 +1868,12 @@ abstract class AppLocalizations {
   /// **'Major'**
   String get major;
 
+  /// No description provided for @majorPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Computer Science'**
+  String get majorPlaceholder;
+
   /// No description provided for @minor.
   ///
   /// In en, this message translates to:
@@ -2311,6 +2323,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Profile'**
   String get editProfile;
+
+  /// No description provided for @manageExams.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Exams'**
+  String get manageExams;
 
   /// No description provided for @manageCourses.
   ///

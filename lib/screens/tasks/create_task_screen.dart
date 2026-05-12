@@ -18,6 +18,7 @@ import '../../components/app_back_button.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../providers/course_provider.dart';
+import '../../components/app_toast.dart';
 
 class CreateTaskScreen extends ConsumerStatefulWidget {
   const CreateTaskScreen({
@@ -106,17 +107,13 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
     if (_selectedCourseId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectCourse)));
+      AppToast.show(context, l10n.pleaseSelectCourse, type: AppToastType.warning);
       return;
     }
 
     final courses = ref.read(courseProvider).value ?? [];
     if (courses.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.addCourseFirst)));
+      AppToast.show(context, l10n.addCourseFirst, type: AppToastType.warning);
       return;
     }
 
@@ -148,9 +145,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.networkError)),
-        );
+        AppToast.show(context, l10n.networkError, type: AppToastType.error);
       }
     } finally {
       if (mounted) {

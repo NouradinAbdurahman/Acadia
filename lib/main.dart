@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:upgrader/upgrader.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -708,10 +709,15 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         supportedLocales: const [Locale('en'), Locale('tr')],
         routerConfig: router,
         builder: (context, child) {
-          // Additional safety layer for status bar visibility
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: _overlayStyleForTheme(themeMode),
-            child: AppSwipeBack(child: child ?? const SizedBox.shrink()),
+            child: UpgradeAlert(
+              upgrader: Upgrader(
+                durationUntilAlertAgain: const Duration(days: 1),
+              ),
+              dialogStyle: UpgradeDialogStyle.cupertino,
+              child: AppSwipeBack(child: child ?? const SizedBox.shrink()),
+            ),
           );
         },
       ),

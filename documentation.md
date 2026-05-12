@@ -1817,6 +1817,7 @@ These are the building blocks used across the entire app:
 - **AppBackButton** — consistent back navigation button
 - **AppSectionTitle** — section header with title and optional action button
 - **AppBottomSheetPicker** — bottom sheet with selectable options (used for course pickers, semester pickers, etc.)
+- **AppToast** — overlay toast notification system (`lib/components/app_toast.dart`) that replaces all `ScaffoldMessenger` SnackBar calls app-wide. Uses a root `Overlay` entry so it floats above the bottom navigation bar regardless of the current route. Features glassmorphism blur background, a 3 px left accent pill, a 30×30 tinted icon container, and a slide-up + fade animation (300 ms entrance, 180 ms exit). Four variants: `success` (green `0xFF22C55E`), `error` (red `0xFFEF4444`), `warning` (orange `0xFFF97316`), `info` (blue `0xFF3B82F6`). Tap-to-dismiss. Only one toast is shown at a time — a new call cancels the previous one. Usage: `AppToast.show(context, message, type: AppToastType.success)`.
 
 ### Feature Widgets (in `widgets/`)
 
@@ -2304,3 +2305,116 @@ This keeps legal text consistent with the rest of the app's EN/TR localization a
 ---
 
 And that's the entire Acadia app, from A to Z. If you made it this far, you should have a pretty solid understanding of how everything fits together. The app is big, but the architecture is consistent — once you understand the provider/service/repository pattern, you can navigate any feature area. Good luck out there.
+
+---
+
+## 33. Recent Changes (May 2026)
+
+This section records all significant changes made after the initial A-to-Z documentation was written. Read this section to catch up on anything that isn't reflected in the earlier sections yet.
+
+---
+
+### Notification deduplication and timing fixes
+
+**Problem:** The same notification was occasionally appearing more than once in the inbox, and exam/deadline local notifications were firing at the wrong time (or firing immediately on app open for past-dated events).
+
+**Deduplication fix:**
+- All inbox inserts now go through a single private `_writeInbox(...)` method in `NotificationService`. There was previously more than one insert path, which bypassed the partial unique index and allowed duplicates.
+- Before inserting, the service now queries for an existing unexpired notification matching `(user_id, reference_id, type)` and skips the insert if one is found. This is a belt-and-suspenders guard on top of the DB-level partial unique index.
+- Every insert includes `semester_id` sourced from the active semester. Notifications without a semester ID were not being cleaned up correctly when switching semesters.
+
+**Timing fix:**
+- `FlutterTimezone.getLocalTimezone()` is now awaited before any `tz.TZDateTime` scheduling call. Previously the app could schedule in UTC when the plugin hadn't initialized yet, causing local notifications to fire at the wrong clock time.
+- A guard was added to skip scheduling any notification whose target `DateTime` is already in the past (e.g. an exam that already happened). Previously these would fire instantly when the scheduler evaluated them.
+
+---
+
+### Exams screen redesign
+
+The exams list screen (`lib/screens/exams/exams_screen.dart`) was redesigned to be more compact and visually consistent with the rest of the app.
+
+**Card changes:**
+- Internal padding reduced to 12 px on all sides.
+- Metadata (date, weight, course name) is now rendered as inline `_MetaChip` widgets with a `HeroIcon` prefix and a subtle tinted background pill, instead of a two-row stacked layout.
+- Card gap between items reduced to 8 px.
+- The left color border (`Container` with `Border(left: BorderSide(...))`) was removed entirely.
+- The inner `Divider` between content rows was removed.
+- Edit and delete buttons were removed from the card surface. These actions remain fully accessible in the exam detail screen, which opens when the card is tapped.
+
+**Filter tab changes:**
+- The pill-tab filter row was rebuilt to exactly match the design used in the top section of the Notifications screen: 36 px height, 18 px border radius, 16 px horizontal padding, 13 px font size, `theme.colorScheme.primary` background for the selected tab, `BouncingScrollPhysics` for the scroll behavior, and `HitTestBehavior.opaque` on the outer `GestureDetector` for reliable tap registration.
+
+---
+
+### Profile screen: Manage Exams navigation entry
+
+A "Manage Exams" item (`HeroIcons.clipboardDocumentList`) was added to the **Academic Information** section of `ProfileScreen` (`lib/screens/profile/profile_screen.dart`). Tapping it navigates to `/exams` via `context.push('/exams')`. This was the last missing entry point for the exams module from the profile hub.
+
+---
+
+### In-app update prompt (upgrader)
+
+Added the `upgrader` package (v11.4.0) to `pubspec.yaml`. In `main.dart`, the `AppSwipeBack` child of the `MaterialApp.router` builder is now wrapped in `UpgradeAlert`:
+
+```dart
+child: UpgradeAlert(
+  upgrader: Upgrader(
+    durationUntilAlertAgain: const Duration(days: 1),
+  ),
+  dialogStyle: UpgradeDialogStyle.cupertino,
+  child: AppSwipeBack(child: child ?? const SizedBox.shrink()),
+),
+```
+
+When a newer version is available on the App Store or Google Play, users see a native Cupertino-style dialog on iOS (Material on Android) prompting them to update. The dialog re-appears after 24 hours if dismissed. No backend changes are required — `upgrader` compares the current app version against the live store listing automatically.
+
+---
+
+### AppToast shared component
+
+**Motivation:** The app previously used `ScaffoldMessenger.of(context).showSnackBar(...)` in roughly 60 call sites across 25 screen files. These SnackBars were visually inconsistent, appeared behind the custom bottom navigation bar, and had no type distinction (success vs. error vs. info).
+
+**What was built:** `lib/components/app_toast.dart`
+
+```dart
+// API
+AppToast.show(context, 'Message here', type: AppToastType.success);
+AppToast.show(context, 'Error!', type: AppToastType.error, duration: Duration(seconds: 4));
+
+// Types
+enum AppToastType { success, error, warning, info }
+```
+
+**Design details:**
+- Floats above the bottom navigation bar using `Overlay.of(context, rootOverlay: true)` — completely independent of `Scaffold`.
+- Glassmorphism background: `BackdropFilter` blur (24 px), semi-transparent white/dark fill, subtle border.
+- 3 px left accent pill (color matches type).
+- 30×30 tinted icon container with a solid `AppIcon` at 16 px.
+- Slide-up + fade entrance animation: 300 ms `easeOutCubic`. Fade-out reverse: 180 ms.
+- Tap-to-dismiss anywhere on the toast.
+- Only one toast at a time — showing a new one immediately removes the previous.
+- Positioned at `MediaQuery.padding.bottom + 92` pixels from the bottom edge.
+
+**Files changed:** All `ScaffoldMessenger`/`SnackBar` calls replaced in: `log_mood_screen.dart`, `create_task_screen.dart`, `edit_task_screen.dart`, `create_deadline_screen.dart`, `edit_deadline_screen.dart`, `reset_password_screen.dart`, `forgot_password_code_screen.dart`, `verify_email_screen.dart`, `change_password_screen.dart`, `study_screen.dart`, `create_course_screen.dart`, `create_semester_screen.dart`, `ai_chat_screen.dart`, `create_exam_screen.dart`, `edit_exam_screen.dart`, `task_detail_screen.dart`, `deadline_detail_screen.dart`, `tasks_list_screen.dart`, `study_preferences_screen.dart`, `edit_academic_profile_screen.dart`, `course_result_editor_screen.dart`, `mood_settings_screen.dart`, `academic_onboarding_screen.dart`, `passive_ai_risk_listener.dart`, and `profile_screen.dart`.
+
+---
+
+### Academic profile: Major field placeholder
+
+The **Major** text field in the academic profile setup wizard (`lib/screens/onboarding/academic_onboarding_screen.dart`) now shows a localized placeholder hint when the field is empty.
+
+- New l10n key: `majorPlaceholder`
+  - English (`app_en.arb`): `"e.g. Computer Science"`
+  - Turkish (`app_tr.arb`): `"ör. Bilgisayar Mühendisliği"`
+- The `_buildTextField` helper gained an optional `hint` parameter wired to `InputDecoration.hintText`.
+- The major field call passes `hint: l10n?.majorPlaceholder`.
+
+---
+
+### Remember Me persistence fix
+
+**Bug:** Remembered email/password credentials (stored in Hive `settings` box under `remembered_email` / `remembered_password`) were being deleted every time the user logged out, so the login screen fields were always empty on the next visit even though the user had checked "Remember me".
+
+**Root cause:** `ProfileScreen.handleLogout()` called `clearRememberedCredentials()` before `authRepositoryProvider.logout()`.
+
+**Fix:** Removed `clearRememberedCredentials()` from the logout flow entirely. It is now only called in `AccountSettingsScreen` during the **Delete Account** confirmation flow, which is the correct and only intended lifecycle point for clearing saved credentials. The unused `hive_flutter` import in `profile_screen.dart` was also removed.

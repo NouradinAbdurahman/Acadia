@@ -18,6 +18,7 @@ import '../../components/app_text_field.dart';
 import '../../components/app_back_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
+import '../../components/app_toast.dart';
 import '../../providers/course_provider.dart';
 
 class EditTaskScreen extends ConsumerStatefulWidget {
@@ -107,9 +108,7 @@ class _EditTaskScreenState extends ConsumerState<EditTaskScreen> {
     if (!_formKey.currentState!.validate()) return;
     final l10n = AppLocalizations.of(context)!;
     if (_selectedCourseId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectCourse)));
+      AppToast.show(context, l10n.pleaseSelectCourse, type: AppToastType.warning);
       return;
     }
 
@@ -152,9 +151,7 @@ class _EditTaskScreenState extends ConsumerState<EditTaskScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.networkError)),
-        );
+        AppToast.show(context, l10n.networkError, type: AppToastType.error);
       }
     } finally {
       if (mounted) {

@@ -16,6 +16,7 @@ import '../../components/app_glass_card.dart';
 import '../../components/app_button.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../l10n/app_localizations.dart';
+import '../../components/app_toast.dart';
 
 class DeadlineDetailScreen extends ConsumerWidget {
   const DeadlineDetailScreen({super.key, required this.deadlineId});
@@ -332,11 +333,7 @@ class DeadlineDetailScreen extends ConsumerWidget {
                                   .toggleDeadlineCompletion(deadline.id);
                             } catch (_) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.networkError),
-                                  ),
-                                );
+                                AppToast.show(context, l10n.networkError, type: AppToastType.error);
                               }
                             }
                           },
@@ -365,11 +362,7 @@ class DeadlineDetailScreen extends ConsumerWidget {
                               }
                             } catch (_) {
                               if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.networkError),
-                                  ),
-                                );
+                                AppToast.show(context, l10n.networkError, type: AppToastType.error);
                               }
                             }
                           },

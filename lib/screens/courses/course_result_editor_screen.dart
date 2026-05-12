@@ -16,6 +16,7 @@ import '../../providers/course_provider.dart';
 import '../../providers/course_results_provider.dart';
 import '../../providers/semester_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 const _gradeOptions = <String>[
   'AA',
@@ -319,15 +320,11 @@ class _CourseResultEditorScreenState
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCourseId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectCourse)));
+      AppToast.show(context, l10n.pleaseSelectCourse, type: AppToastType.warning);
       return;
     }
     if (_selectedLetterGrade.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectLetterGrade)));
+      AppToast.show(context, l10n.pleaseSelectLetterGrade, type: AppToastType.warning);
       return;
     }
 
@@ -339,15 +336,11 @@ class _CourseResultEditorScreenState
         component.percentageController.text.trim(),
       );
       if (title.isEmpty || score == null || percentage == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.completeComponentsError)));
+        AppToast.show(context, l10n.completeComponentsError, type: AppToastType.warning);
         return;
       }
       if (score < 0 || score > 100 || percentage < 0 || percentage > 100) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.gradeRangeError)));
+        AppToast.show(context, l10n.gradeRangeError, type: AppToastType.warning);
         return;
       }
       parsedComponents.add(
@@ -366,9 +359,7 @@ class _CourseResultEditorScreenState
       (sum, item) => sum + item.percentage,
     );
     if ((totalPercentage - 100).abs() > 0.01) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.percentageNot100Warning)));
+      AppToast.show(context, l10n.percentageNot100Warning, type: AppToastType.warning);
     }
 
     final finalAverage = _finalAverageController.text.trim().isEmpty
@@ -376,9 +367,7 @@ class _CourseResultEditorScreenState
         : double.tryParse(_finalAverageController.text.trim());
 
     if (finalAverage != null && (finalAverage < 0 || finalAverage > 100)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.gradeRangeError)));
+      AppToast.show(context, l10n.gradeRangeError, type: AppToastType.warning);
       return;
     }
 

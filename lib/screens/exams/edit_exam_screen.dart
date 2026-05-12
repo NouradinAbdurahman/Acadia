@@ -15,6 +15,7 @@ import '../../models/exam.dart';
 import '../../providers/course_provider.dart';
 import '../../providers/exams_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 class EditExamScreen extends ConsumerStatefulWidget {
   const EditExamScreen({super.key, required this.examId});
@@ -111,9 +112,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen> {
     final l10n = AppLocalizations.of(context)!;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_selectedDate == null || _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.examsPickDateTimeError)),
-      );
+      AppToast.show(context, l10n.examsPickDateTimeError, type: AppToastType.warning);
       return;
     }
     final examDateTime = DateTime(
@@ -148,9 +147,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen> {
       if (mounted) context.pop();
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.examsUpdateError)));
+        AppToast.show(context, l10n.examsUpdateError, type: AppToastType.error);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

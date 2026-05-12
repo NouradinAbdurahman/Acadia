@@ -11,6 +11,7 @@ import '../../core/design/app_spacing.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/mood_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
+import '../../components/app_toast.dart';
 
 class MoodSettingsScreen extends ConsumerStatefulWidget {
   const MoodSettingsScreen({super.key});
@@ -82,15 +83,10 @@ class _MoodSettingsScreenState extends ConsumerState<MoodSettingsScreen> {
                         onChanged: (value) {
                           Haptics.vibrate(HapticsType.medium);
                           notifier.toggleTracking(value);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                value
-                                    ? l10n.moodTrackingNowEnabled
-                                    : l10n.moodTrackingNowDisabled,
-                              ),
-                              duration: const Duration(seconds: 3),
-                            ),
+                          AppToast.show(
+                            context,
+                            value ? l10n.moodTrackingNowEnabled : l10n.moodTrackingNowDisabled,
+                            type: value ? AppToastType.success : AppToastType.info,
                           );
                         },
                       ),

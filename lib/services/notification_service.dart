@@ -325,7 +325,7 @@ class NotificationService {
 
     final shouldOnlyInbox = config.isSilent || (!config.allowNightDelivery && isNightTime());
 
-    await _writeInbox(
+    final isNew = await _writeInbox(
       userId: user.id,
       title: title,
       body: body,
@@ -333,6 +333,10 @@ class NotificationService {
       referenceId: referenceId,
       semesterId: effectiveSemesterId,
     );
+
+    // Duplicate — inbox already has this notification. Skip push entirely so
+    // the user doesn't receive repeat device alerts for the same event.
+    if (!isNew) return;
 
     await NotificationBehaviorService.recordSent(
       type,
@@ -352,7 +356,7 @@ class NotificationService {
   static Future<void> _saveToken(String userId) async {
     try {
       final token = await FirebaseMessaging.instance.getToken();
-      print("FCM TOKEN: $token"); // Debugging: Check if token is generated
+      debugPrint("FCM TOKEN: $token");
       if (token != null) {
         await Supabase.instance.client.from('users').update({
           'fcm_token': token,
@@ -492,7 +496,8 @@ class NotificationService {
   static const NotificationDetails _notificationDetails =
       NotificationDetails(android: _androidDetails);
 
-  static Future<void> _writeInbox({
+  // Returns true if a new row was inserted, false if it was a duplicate or error.
+  static Future<bool> _writeInbox({
     required String userId,
     required String title,
     required String body,
@@ -507,12 +512,14 @@ class NotificationService {
         'title': title,
         'message': body,
         'type': type,
-        if (referenceId != null) 'reference_id': referenceId,
-        if (semesterId != null) 'semester_id': semesterId,
+        'reference_id': referenceId,
+        'semester_id': semesterId,
         'created_at': DateTime.now().toUtc().toIso8601String(),
       });
+      return true;
     } catch (e) {
-      debugPrint('Inbox write failed: $e');
+      debugPrint('Inbox write failed (duplicate or error): $e');
+      return false;
     }
   }
 

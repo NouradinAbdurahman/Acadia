@@ -16,6 +16,7 @@ import '../../providers/semester_provider.dart';
 import '../../widgets/auth/auth_background_container.dart';
 import '../../core/design/app_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../components/app_toast.dart';
 
 class EditAcademicProfileScreen extends ConsumerStatefulWidget {
   const EditAcademicProfileScreen({super.key});
@@ -77,16 +78,12 @@ class _EditAcademicProfileScreenState
 
     final l10n = AppLocalizations.of(context)!;
     if (_selectedSemester < 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.semesterNumberInvalid)),
-      );
+      AppToast.show(context, l10n.semesterNumberInvalid, type: AppToastType.warning);
       return;
     }
 
     if (_studyHours < 5 || _studyHours > 40) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.weeklyStudyGoalInvalid)),
-      );
+      AppToast.show(context, l10n.weeklyStudyGoalInvalid, type: AppToastType.warning);
       return;
     }
 
@@ -142,15 +139,11 @@ class _EditAcademicProfileScreenState
         } else {
           context.go('/home');
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.saveChanges)),
-        );
+        AppToast.show(context, AppLocalizations.of(context)!.saveChanges, type: AppToastType.success);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      AppToast.show(context, e.toString(), type: AppToastType.error);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

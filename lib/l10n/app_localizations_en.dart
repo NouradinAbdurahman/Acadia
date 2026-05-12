@@ -172,6 +172,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get earlier => 'Earlier';
 
   @override
+  String get thisMonthLabel => 'This Month';
+
+  @override
   String get home => 'Home';
 
   @override
@@ -946,6 +949,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get major => 'Major';
 
   @override
+  String get majorPlaceholder => 'e.g. Computer Science';
+
+  @override
   String get minor => 'Minor';
 
   @override
@@ -1177,6 +1183,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editProfile => 'Edit Profile';
+
+  @override
+  String get manageExams => 'Manage Exams';
 
   @override
   String get manageCourses => 'Manage Courses';
