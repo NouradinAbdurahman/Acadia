@@ -67,6 +67,24 @@ class ExamsNotifier extends StateNotifier<AsyncValue<List<ExamModel>>> {
     await loadExams(userId: userId, semesterId: semesterId);
   }
 
+  /// Fetches fresh data from Supabase without showing a loading state.
+  /// Used after mutations to ensure the UI reflects server truth immediately.
+  Future<void> silentRefresh() async {
+    final userId = supabaseClient.auth.currentUser?.id;
+    final semesterId = _ref.read(activeSemesterProvider).value;
+    if (userId == null || semesterId == null) return;
+    try {
+      final list = await examRepository.getExams(
+        userId: userId,
+        semesterId: semesterId,
+      ) as List<ExamModel>;
+      if (!mounted) return;
+      state = AsyncValue.data(list);
+    } catch (e) {
+      debugPrint('[ExamsProvider] silentRefresh failed: $e');
+    }
+  }
+
   Future<void> createExam(ExamModel exam) async {
     final semesterId = _ref.read(activeSemesterProvider).value;
     if (semesterId == null) {
@@ -173,7 +191,7 @@ final examsProvider =
             }
           },
           loading: notifier.setEmptyState,
-          error: (_, __) => notifier.setEmptyState(),
+          error: (e, st) => notifier.setEmptyState(),
         );
       }, fireImmediately: true);
 

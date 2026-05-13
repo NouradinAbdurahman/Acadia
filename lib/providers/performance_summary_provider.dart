@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_providers.dart';
+import 'course_results_provider.dart';
 import 'semester_provider.dart';
 import '../models/performance_summary.dart';
 import '../models/semester.dart';
@@ -8,6 +9,9 @@ import '../models/semester.dart';
 final performanceSummaryProvider = FutureProvider<PerformanceSummary?>((ref) async {
   final userAsync = await ref.watch(currentAppUserProvider.future);
   if (userAsync == null) return null;
+
+  // Re-run when course results change so GPA history stays current.
+  ref.watch(courseResultsProvider);
 
   final semestersAsync = ref.watch(semesterProvider);
   final analyticsRepo = ref.watch(analyticsRepositoryProvider);
@@ -79,6 +83,7 @@ final performanceSummaryProvider = FutureProvider<PerformanceSummary?>((ref) asy
         lowestGpa: minGPA < 5.0 ? minGPA : null,
         mostImprovedSemester: mostImproved?.semester,
         improvementDelta: maxDelta > 0 ? maxDelta : null,
+        totalCreditsEarned: history.fold(0, (sum, h) => sum + h.data.totalECTS),
         history: history,
       );
     },

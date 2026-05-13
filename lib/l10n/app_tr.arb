@@ -476,7 +476,9 @@
   "selectDate": "Tarih Seç",
   "noSemestersYet": "Henüz dönem oluşturulmadı",
   "createFirstSemester": "Derslerinizi düzenlemek için ilk döneminizi oluşturun.",
-  "deleteSemesterWarning": "Bu dönem, dönem listenizden kaldırılacak.",
+  "deleteSemesterTitle": "Dönemi Sil",
+  "deleteSemesterWarning": "Bu işlem dönemi ve ona bağlı tüm dersler, görevler, son tarihler ve çalışma oturumları dahil tüm verileri kalıcı olarak silecektir.",
+  "deleteSemesterWarningStrong": "Bu işlem geri alınamaz.",
   "noCoursesYet": "Henüz ders eklenmedi",
   "addFirstCourse": "Takip etmeye başlamak için ilk dersinizi ekleyin.",
   "addFirstCourseBtn": "İlk Dersimi Ekle",
@@ -797,6 +799,9 @@
   "examResults": "Ders Sonuçları",
   "addResult": "Sonuç Ekle",
   "editResult": "Sonucu Düzenle",
+  "deleteResultTitle": "Sonucu Sil",
+  "deleteResultWarning": "Bu işlem geri alınamaz. Bu derse ait tüm not bileşenleri kalıcı olarak silinecektir.",
+  "deleteResultWarningStrong": "Ders sonucu ve not verileri kalıcı olarak silinecektir.",
   "noResultsYet": "Henüz sonuç eklenmedi",
   "addFirstResultPrompt": "Bu dönem için ilk ders sonucunuzu ekleyin.",
   "gradingComponents": "Not Bileşenleri",
@@ -2327,6 +2332,10 @@
   "examsLoadError": "Sinavlar yuklenemedi",
   "examsAddCta": "Sinav Ekle",
   "examsUpcomingSectionTitle": "Yaklasan sinavlar",
+  "examsGroupToday": "Bugün",
+  "examsGroupThisWeek": "Bu Hafta",
+  "examsGroupThisMonth": "Bu Ay",
+  "examsGroupLater": "Daha Sonra",
   "examsPastSectionTitle": "Gecmis sinavlar",
   "examsNoUpcoming": "Bu donem icin yaklasan sinav yok",
   "examsNoUpcomingSubtitle": "Programinizi olusturmak icin \"Sinav Ekle\"ye dokunun",
@@ -2612,5 +2621,50 @@
   "moodTrackingNowDisabled": "Ruh hali takibi devre dışı bırakıldı",
   "moodTrackingHistoricalOnly": "Ruh hali takibi kapalı. Geçmiş ruh hali içgörüleri hâlâ mevcut. Yeni ruh hali ve stres verisi kaydetmek için takibi etkinleştirin.",
   "moodTrackingOffSessionSnackbar": "Ruh hali takibi kapalı. Oturum ruh halini kaydetmek için Ayarlar'dan etkinleştirin.",
-  "moodTrackingOffBadge": "Takip Kapalı"
+  "moodTrackingOffBadge": "Takip Kapalı",
+
+  "studentProfileSummaryTitle": "Akademik Profilim",
+  "profileSummaryOverviewSection": "Genel Bakış",
+  "profileSummaryIdentitySection": "Akademik Kimlik",
+  "profileSemesterHistorySection": "Dönem Geçmişi",
+  "profileActiveSemesterSection": "Aktif Dönem",
+  "profileSemestersCount": "{count} dönem",
+  "@profileSemestersCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "profileCoursesCount": "{count} ders",
+  "@profileCoursesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "profileGpaLabel": "Dönem GPA",
+  "profileCgpaLabel": "CGPA",
+  "profileTaskSummary": "{done}/{total} görev",
+  "@profileTaskSummary": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "profileDeadlineSummary": "{done}/{total} son tarih",
+  "@profileDeadlineSummary": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "profileStudyStatsSection": "Çalışma İstatistikleri",
+  "profilePerformanceHighlightsSection": "Performans Özeti",
+  "profileStudySessions": "Oturum",
+  "profileWeeklyAvgHours": "Ort. saat/hafta",
+  "profileStudyConsistency": "Tutarlılık",
+  "profileThisWeekHours": "Bu hafta",
+  "profileStudyGoal": "Haftalık hedef",
+  "profileBestSemester": "En İyi Dönem",
+  "profileMostImproved": "En Fazla Gelişim",
+  "profileTotalCredits": "Toplam Kredi",
+  "profileNotSet": "—",
+  "profileNoGpaYet": "YOK",
+  "profileNoCoursesYet": "Ders yok",
+  "profileCoursesThisSemester": "Bu dönem dersleri",
+  "countryLabel": "Ülke"
 }

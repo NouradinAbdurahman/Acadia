@@ -28,6 +28,39 @@ class _ExamsScreenState extends ConsumerState<ExamsScreen> {
   bool _isSameDate(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
+  /// Splits [upcoming] (sorted ascending) into the four time buckets.
+  /// Returns a map with keys: 'today', 'week', 'month', 'later'.
+  Map<String, List<ExamModel>> _groupUpcoming(List<ExamModel> upcoming) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Sunday of the current week
+    final endOfWeek = today.add(Duration(days: DateTime.sunday - today.weekday + (today.weekday == DateTime.sunday ? 0 : 0)));
+    // Last day of the current month
+    final endOfMonth = DateTime(now.year, now.month + 1, 0);
+
+    final result = <String, List<ExamModel>>{
+      'today': [],
+      'week': [],
+      'month': [],
+      'later': [],
+    };
+
+    for (final exam in upcoming) {
+      final d = DateTime(exam.examDateTime.year, exam.examDateTime.month, exam.examDateTime.day);
+      if (d == today) {
+        result['today']!.add(exam);
+      } else if (!d.isAfter(endOfWeek)) {
+        result['week']!.add(exam);
+      } else if (!d.isAfter(endOfMonth)) {
+        result['month']!.add(exam);
+      } else {
+        result['later']!.add(exam);
+      }
+    }
+
+    return result;
+  }
+
   String _formatDateTime(DateTime value, Locale locale, AppLocalizations l10n) {
     final localeTag = locale.toLanguageTag();
     final now = DateTime.now();
@@ -132,16 +165,34 @@ class _ExamsScreenState extends ConsumerState<ExamsScreen> {
                         actionLabel: l10n.examsAddCta,
                         onAction: () => context.push('/create-exam'),
                       )
-                    else
-                      ...upcoming.map(
-                        (exam) => _ExamCard(
-                          exam: exam,
-                          typeLabel: _typeLabel(l10n, exam.typeEnum),
-                          subtitleDate: _formatDateTime(exam.examDateTime, locale, l10n),
-                          onTap: () => context.push(
-                              '/exam-detail?id=${Uri.encodeComponent(exam.id)}'),
-                        ),
-                      ),
+                    else ...[
+                      ...() {
+                        final groups = _groupUpcoming(upcoming);
+                        final buckets = [
+                          (l10n.examsGroupToday, groups['today']!),
+                          (l10n.examsGroupThisWeek, groups['week']!),
+                          (l10n.examsGroupThisMonth, groups['month']!),
+                          (l10n.examsGroupLater, groups['later']!),
+                        ];
+                        final widgets = <Widget>[];
+                        for (final (label, items) in buckets) {
+                          if (items.isEmpty) continue;
+                          widgets.add(_GroupLabel(title: label));
+                          widgets.add(const SizedBox(height: 6));
+                          for (final exam in items) {
+                            widgets.add(_ExamCard(
+                              exam: exam,
+                              typeLabel: _typeLabel(l10n, exam.typeEnum),
+                              subtitleDate: _formatDateTime(exam.examDateTime, locale, l10n),
+                              onTap: () => context.push(
+                                  '/exam-detail?id=${Uri.encodeComponent(exam.id)}'),
+                            ));
+                          }
+                          widgets.add(const SizedBox(height: 12));
+                        }
+                        return widgets;
+                      }(),
+                    ],
 
                     const SizedBox(height: 20),
                     _SectionLabel(title: l10n.examsPastSectionTitle),
@@ -188,6 +239,26 @@ class _SectionLabel extends StatelessWidget {
         color: Colors.blueAccent,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.1,
+      ),
+    );
+  }
+}
+
+// ─── Group label (sub-heading inside upcoming) ────────────────────────────────
+
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel({required this.title});
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      title,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.3,
       ),
     );
   }

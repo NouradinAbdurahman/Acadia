@@ -454,19 +454,6 @@ class _AIChatScreenState extends ConsumerState<AIChatScreen> {
     );
   }
 
-  Widget _buildHintChip(BuildContext context, String label, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 10),
-      child: ActionChip(
-        avatar: Icon(icon, size: 14, color: AppColors.textSecondary(context)),
-        label: Text(label, style: TextStyle(color: AppColors.textSecondary(context), fontSize: 12)),
-        onPressed: () => _submitPrompt(label),
-        backgroundColor: AppColors.aiCard(context),
-        side: BorderSide(color: AppColors.border(context)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-    );
-  }
 }
 
 class _MessageBubble extends ConsumerWidget {
@@ -661,7 +648,7 @@ class _MessageBubble extends ConsumerWidget {
   }
 }
 
-class _ActionChip extends StatefulWidget {
+class _ActionChip extends ConsumerStatefulWidget {
   final String label;
   final IconData icon;
   final VoidCallback onPressed;
@@ -673,40 +660,81 @@ class _ActionChip extends StatefulWidget {
   });
 
   @override
-  State<_ActionChip> createState() => _ActionChipState();
+  ConsumerState<_ActionChip> createState() => _ActionChipState();
 }
 
-class _ActionChipState extends State<_ActionChip> {
-  bool _isLoading = false;
+class _ActionChipState extends ConsumerState<_ActionChip> {
+  bool _triggered = false;
   bool _isSuccess = false;
+  bool _isError = false;
 
-  void _handlePress() async {
-    if (_isLoading || _isSuccess) return;
-    
-    setState(() => _isLoading = true);
-    
-    // Call the original onPressed
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _handlePress() {
+    final state = ref.read(aiAssistantProvider);
+    if (state.isLoading || _triggered) return;
+    setState(() {
+      _triggered = true;
+      _isSuccess = false;
+      _isError = false;
+    });
     widget.onPressed();
-    
-    // Simulate/Wait for action
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _isSuccess = true;
-      });
-      
-      // Reset after 3 seconds
-      await Future.delayed(const Duration(seconds: 3));
-      if (mounted) {
-        setState(() => _isSuccess = false);
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final semesterId = ref.watch(activeSemesterProvider).value;
+    final aiState = ref.watch(aiAssistantProvider);
+    final isLoading = aiState.isLoading;
+
+    // Once the AI finishes responding after we triggered, read the result.
+    if (_triggered && !isLoading && !_isSuccess && !_isError) {
+      final messages = aiState.messagesFor(semesterId);
+      final lastAi = messages.lastWhere((m) => !m.isUser, orElse: () => messages.last);
+      final text = lastAi.text.toLowerCase();
+      final sent = text.contains("sent") || text.contains("emailed") || text.contains("check spam");
+      final failed = text.contains("not configured") ||
+          text.contains("add the resend") ||
+          text.contains("set the resend") ||
+          text.contains("no email address") ||
+          text.contains("couldn't") ||
+          text.contains("error");
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _isSuccess = sent && !failed;
+          _isError = failed;
+          if (_isSuccess || _isError) _triggered = false;
+        });
+        if (_isSuccess) {
+          Future.delayed(const Duration(seconds: 4), () {
+            if (mounted) setState(() => _isSuccess = false);
+          });
+        } else if (_isError) {
+          Future.delayed(const Duration(seconds: 5), () {
+            if (mounted) setState(() => _isError = false);
+          });
+        }
+      });
+    }
+
+    final showLoading = _triggered && isLoading;
+    Color borderColor;
+    Color bgColor;
+    if (_isSuccess) {
+      borderColor = AppColors.completed.withValues(alpha: 0.5);
+      bgColor = AppColors.completed.withValues(alpha: 0.1);
+    } else if (_isError) {
+      borderColor = AppColors.urgent.withValues(alpha: 0.5);
+      bgColor = AppColors.urgent.withValues(alpha: 0.08);
+    } else {
+      borderColor = AppColors.border(context);
+      bgColor = AppColors.aiCard(context);
+    }
+
     return InkWell(
       onTap: _handlePress,
       borderRadius: BorderRadius.circular(20),
@@ -714,20 +742,14 @@ class _ActionChipState extends State<_ActionChip> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: _isSuccess 
-              ? AppColors.completed.withValues(alpha: 0.1) 
-              : AppColors.aiCard(context),
+          color: bgColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: _isSuccess 
-                ? AppColors.completed.withValues(alpha: 0.5) 
-                : AppColors.border(context)
-          ),
+          border: Border.all(color: borderColor),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (_isLoading)
+            if (showLoading)
               const SizedBox(
                 width: 14,
                 height: 14,
@@ -735,17 +757,33 @@ class _ActionChipState extends State<_ActionChip> {
               )
             else
               Icon(
-                _isSuccess ? Icons.check_rounded : widget.icon, 
-                size: 16, 
-                color: _isSuccess ? AppColors.completed : AppColors.primary
+                _isSuccess
+                    ? Icons.check_rounded
+                    : _isError
+                        ? Icons.error_outline_rounded
+                        : widget.icon,
+                size: 16,
+                color: _isSuccess
+                    ? AppColors.completed
+                    : _isError
+                        ? AppColors.urgent
+                        : AppColors.primary,
               ),
             const SizedBox(width: 8),
             Text(
-              _isSuccess ? "Sent Successfully" : widget.label,
+              _isSuccess
+                  ? "Sent to email"
+                  : _isError
+                      ? "Email not set up"
+                      : widget.label,
               style: TextStyle(
-                color: _isSuccess ? AppColors.completed : AppColors.textPrimary(context), 
-                fontSize: 13, 
-                fontWeight: FontWeight.w600
+                color: _isSuccess
+                    ? AppColors.completed
+                    : _isError
+                        ? AppColors.urgent
+                        : AppColors.textPrimary(context),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -917,128 +955,6 @@ class _PlanDashboard extends StatelessWidget {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class _TodayPlanCard extends StatelessWidget {
-  final dynamic data;
-  const _TodayPlanCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final List tasks = data is List ? data : [];
-    if (tasks.isEmpty) return const SizedBox.shrink();
-
-    // Top Focus (Big Card)
-    final mainTask = tasks[0];
-    final subTasks = tasks.length > 1 ? tasks.sublist(1) : [];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // BIG CARD
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.8)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.white, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    "PRIMARY FOCUS",
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                mainTask['title'] ?? 'Untitled Task',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Deadline: ${mainTask['deadline'] != null ? DateFormat('MMM d, h:mm a').format(DateTime.parse(mainTask['deadline'])) : 'Today'}",
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-        
-        if (subTasks.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: subTasks.map((task) {
-              return Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(right: task == subTasks.last ? 0 : 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.nestedCard(context),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border(context)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "NEXT",
-                        style: TextStyle(
-                          color: AppColors.textSecondary(context),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        task['title'] ?? 'Task',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppColors.textPrimary(context),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ],
     );
   }
 }

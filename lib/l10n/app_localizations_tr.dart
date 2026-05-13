@@ -1145,8 +1145,14 @@ class AppLocalizationsTr extends AppLocalizations {
       'Derslerinizi düzenlemek için ilk döneminizi oluşturun.';
 
   @override
+  String get deleteSemesterTitle => 'Dönemi Sil';
+
+  @override
   String get deleteSemesterWarning =>
-      'Bu dönem, dönem listenizden kaldırılacak.';
+      'Bu işlem dönemi ve ona bağlı tüm dersler, görevler, son tarihler ve çalışma oturumları dahil tüm verileri kalıcı olarak silecektir.';
+
+  @override
+  String get deleteSemesterWarningStrong => 'Bu işlem geri alınamaz.';
 
   @override
   String get noCoursesYet => 'Henüz ders eklenmedi';
@@ -1672,6 +1678,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get editResult => 'Sonucu Düzenle';
+
+  @override
+  String get deleteResultTitle => 'Sonucu Sil';
+
+  @override
+  String get deleteResultWarning =>
+      'Bu işlem geri alınamaz. Bu derse ait tüm not bileşenleri kalıcı olarak silinecektir.';
+
+  @override
+  String get deleteResultWarningStrong =>
+      'Ders sonucu ve not verileri kalıcı olarak silinecektir.';
 
   @override
   String get noResultsYet => 'Henüz sonuç eklenmedi';
@@ -3988,6 +4005,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get examsUpcomingSectionTitle => 'Yaklasan sinavlar';
 
   @override
+  String get examsGroupToday => 'Bugün';
+
+  @override
+  String get examsGroupThisWeek => 'Bu Hafta';
+
+  @override
+  String get examsGroupThisMonth => 'Bu Ay';
+
+  @override
+  String get examsGroupLater => 'Daha Sonra';
+
+  @override
   String get examsPastSectionTitle => 'Gecmis sinavlar';
 
   @override
@@ -4530,4 +4559,90 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get moodTrackingOffBadge => 'Takip Kapalı';
+
+  @override
+  String get studentProfileSummaryTitle => 'Akademik Profilim';
+
+  @override
+  String get profileSummaryOverviewSection => 'Genel Bakış';
+
+  @override
+  String get profileSummaryIdentitySection => 'Akademik Kimlik';
+
+  @override
+  String get profileSemesterHistorySection => 'Dönem Geçmişi';
+
+  @override
+  String get profileActiveSemesterSection => 'Aktif Dönem';
+
+  @override
+  String profileSemestersCount(int count) {
+    return '$count dönem';
+  }
+
+  @override
+  String profileCoursesCount(int count) {
+    return '$count ders';
+  }
+
+  @override
+  String get profileGpaLabel => 'Dönem GPA';
+
+  @override
+  String get profileCgpaLabel => 'CGPA';
+
+  @override
+  String profileTaskSummary(int done, int total) {
+    return '$done/$total görev';
+  }
+
+  @override
+  String profileDeadlineSummary(int done, int total) {
+    return '$done/$total son tarih';
+  }
+
+  @override
+  String get profileStudyStatsSection => 'Çalışma İstatistikleri';
+
+  @override
+  String get profilePerformanceHighlightsSection => 'Performans Özeti';
+
+  @override
+  String get profileStudySessions => 'Oturum';
+
+  @override
+  String get profileWeeklyAvgHours => 'Ort. saat/hafta';
+
+  @override
+  String get profileStudyConsistency => 'Tutarlılık';
+
+  @override
+  String get profileThisWeekHours => 'Bu hafta';
+
+  @override
+  String get profileStudyGoal => 'Haftalık hedef';
+
+  @override
+  String get profileBestSemester => 'En İyi Dönem';
+
+  @override
+  String get profileMostImproved => 'En Fazla Gelişim';
+
+  @override
+  String get profileTotalCredits => 'Toplam Kredi';
+
+  @override
+  String get profileNotSet => '—';
+
+  @override
+  String get profileNoGpaYet => 'YOK';
+
+  @override
+  String get profileNoCoursesYet => 'Ders yok';
+
+  @override
+  String get profileCoursesThisSemester => 'Bu dönem dersleri';
+
+  @override
+  String get countryLabel => 'Ülke';
 }

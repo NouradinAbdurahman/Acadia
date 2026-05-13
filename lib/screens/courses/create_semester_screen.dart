@@ -53,9 +53,11 @@ class _CreateSemesterScreenState extends ConsumerState<CreateSemesterScreen> {
     super.initState();
     final now = DateTime.now();
     final currentAcademicStartYear = now.month >= 9 ? now.year : now.year - 1;
+    const firstYear = 2000;
+    final lastYear = currentAcademicStartYear + 10;
     _academicYearOptions = List<int>.generate(
-      12,
-      (index) => currentAcademicStartYear - 5 + index,
+      lastYear - firstYear + 1,
+      (index) => firstYear + index,
     );
 
     _selectedAcademicStartYear = currentAcademicStartYear;

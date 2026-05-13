@@ -476,7 +476,9 @@
   "selectDate": "Select Date",
   "noSemestersYet": "No semesters created yet",
   "createFirstSemester": "Create your first semester to organize your courses.",
-  "deleteSemesterWarning": "This semester will be removed from your semester list.",
+  "deleteSemesterTitle": "Delete Semester",
+  "deleteSemesterWarning": "This will permanently remove the semester and all its associated data, including courses, tasks, deadlines, and study sessions.",
+  "deleteSemesterWarningStrong": "This action cannot be undone.",
   "noCoursesYet": "No courses added yet",
   "addFirstCourse": "Add your first course to start tracking.",
   "addFirstCourseBtn": "Add My First Course",
@@ -808,6 +810,9 @@
   "examResults": "Course Results",
   "addResult": "Add Result",
   "editResult": "Edit Result",
+  "deleteResultTitle": "Delete Result",
+  "deleteResultWarning": "This action cannot be undone. All grading components for this course will be permanently removed.",
+  "deleteResultWarningStrong": "This will permanently remove the course result and its grade data.",
   "noResultsYet": "No results added yet",
   "addFirstResultPrompt": "Add your first course result for this semester.",
   "gradingComponents": "Grading Components",
@@ -2422,6 +2427,10 @@
   "examsLoadError": "Could not load exams",
   "examsAddCta": "Add Exam",
   "examsUpcomingSectionTitle": "Upcoming exams",
+  "examsGroupToday": "Today",
+  "examsGroupThisWeek": "This Week",
+  "examsGroupThisMonth": "This Month",
+  "examsGroupLater": "Later",
   "examsPastSectionTitle": "Past exams",
   "examsNoUpcoming": "No upcoming exams for this semester",
   "examsNoUpcomingSubtitle": "Tap \"Add Exam\" to create your schedule",
@@ -2659,5 +2668,50 @@
   "moodTrackingNowDisabled": "Mood tracking disabled",
   "moodTrackingHistoricalOnly": "Mood tracking is off. Historical mood insights are still available. Enable tracking to record new mood and stress data.",
   "moodTrackingOffSessionSnackbar": "Mood tracking is off. Enable it in Settings to capture session mood.",
-  "moodTrackingOffBadge": "Tracking Off"
+  "moodTrackingOffBadge": "Tracking Off",
+
+  "studentProfileSummaryTitle": "My Academic Profile",
+  "profileSummaryOverviewSection": "Overview",
+  "profileSummaryIdentitySection": "Academic Identity",
+  "profileSemesterHistorySection": "Semester History",
+  "profileActiveSemesterSection": "Active Semester",
+  "profileSemestersCount": "{count} semesters",
+  "@profileSemestersCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "profileCoursesCount": "{count} courses",
+  "@profileCoursesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "profileGpaLabel": "Semester GPA",
+  "profileCgpaLabel": "CGPA",
+  "profileTaskSummary": "{done}/{total} tasks",
+  "@profileTaskSummary": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "profileDeadlineSummary": "{done}/{total} deadlines",
+  "@profileDeadlineSummary": {
+    "placeholders": {
+      "done": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "profileStudyStatsSection": "Study Stats",
+  "profilePerformanceHighlightsSection": "Performance Highlights",
+  "profileStudySessions": "Sessions",
+  "profileWeeklyAvgHours": "Avg hrs/week",
+  "profileStudyConsistency": "Consistency",
+  "profileThisWeekHours": "This week",
+  "profileStudyGoal": "Weekly goal",
+  "profileBestSemester": "Best Semester",
+  "profileMostImproved": "Most Improved",
+  "profileTotalCredits": "Total Credits",
+  "profileNotSet": "—",
+  "profileNoGpaYet": "N/A",
+  "profileNoCoursesYet": "No courses",
+  "profileCoursesThisSemester": "Courses this semester",
+  "countryLabel": "Country"
 }

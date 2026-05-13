@@ -907,8 +907,8 @@ Changes are debounced 250ms to avoid rapid re-computation cascades. Without debo
 - **`themeProvider`** — current theme mode (light/dark/system), persisted in Hive
 - **`onboardingProvider`** — whether onboarding has been completed, persisted in Hive
 - **`bottomNavProvider`** — current tab index
-- **`globalRefreshProvider`** — callable that refreshes all data in the correct order
-- **`performanceSummaryProvider`** — lifetime performance across all semesters
+- **`globalRefreshProvider`** — callable that refreshes all data in the correct dependency order: semesters → courses/tasks/deadlines/exams/sessions/profile/results → analytics → trends/risk → dashboard/performanceSummary. Always use this for bulk refreshes.
+- **`performanceSummaryProvider`** — lifetime performance across all semesters. Watches `courseResultsProvider` so it re-runs automatically when grades change. Computes best/worst/most-improved semester and `totalCreditsEarned` (summed from `analyticsData.totalECTS` across all semesters).
 - **`semesterComparisonProvider`** — current vs. previous semester comparison
 - **`predictionProvider`** — delegates to `PredictionEngine` in the domain layer
 - **`courseResultsProvider`** — grade records per semester
@@ -1040,8 +1040,16 @@ Here's every screen in the app, grouped by feature area:
 - **Localization refresh** — Notification data reloads on locale change so translated titles/messages update immediately without manual pull-to-refresh.
 - **Daily mood check seeding** — A `mood_check` notification is generated once per day when mood tracking/reminders are enabled and no daily mood log exists yet.
 
-### Profile (4 screens)
-- **ProfileScreen** — The settings hub. Shows avatar (tap to upload), name, email. Sections: Academic (edit profile, manage courses), Preferences (study preferences, mood settings, language picker, theme toggle), Account (privacy policy, terms of service, data & permissions, contact/support, change password, logout).
+### Profile (5 screens)
+- **ProfileScreen** — The settings hub. Shows avatar (tap to upload), name, email. Sections: Academic (edit profile, My Academic Profile, manage courses), Preferences (study preferences, mood settings, language picker, theme toggle), Account (privacy policy, terms of service, data & permissions, contact/support, change password, logout).
+- **StudentProfileSummaryScreen** (`/profile/student-summary`) — A read-only academic identity view. Sections:
+  - **Liquid glass 3D hero card** — Displays student name, university, degree/major, country flag, and a frosted-glass avatar. Uses `BackdropFilter` + layered box shadows for a depth effect.
+  - **Overview stats** — Total semesters, active courses, current GPA, lifetime CGPA, task completion (`done / total`), and deadline completion (`done / total`). Sourced from `analyticsProvider`, `tasksProvider`, and `deadlinesProvider`.
+  - **Study Stats** — Total tracked sessions, weekly average hours, consistency percentage, this week hours, and weekly study goal. Sourced from `analyticsProvider`. Shows a "no data yet" state when `!analytics.hasData`.
+  - **Performance Highlights** — Best semester with GPA sublabel, sourced from `performanceSummaryProvider`.
+  - **Active Courses** — Lists all courses in the active semester with their color dot and course code. Sourced from `courseProvider`.
+  - **Semester History** — All semesters with GPA, sourced from `performanceSummaryProvider.history`.
+  - All section cards use `_CleanCard` (frosted glass via `BackdropFilter`, `ImageFilter.blur(sigmaX:12, sigmaY:12)`).
 - **EditAcademicProfileScreen** — Full academic profile edit: name, university, degree, major, graduation year, current semester, weekly study hours slider (5-40), preferred study time, break pattern.
 - **StudyPreferencesScreen** — Focused study preferences: weekly study hours, preferred study time, break pattern.
 - **ChangePasswordScreen** — Current password, new password with strength indicator, confirm password. Uses Supabase auth directly.
@@ -1426,6 +1434,26 @@ The Edge Function also supports special intents that the local path doesn't:
 17. **Legal/compliance content enrichment**
    - Expanded Privacy/Terms/Data/Support copy to better reflect actual Acadia behavior (optional mood data handling, notification scope, AI suggestion disclaimer, support scope).
    - Added icon-based section cards in legal screens for clearer visual hierarchy.
+
+18. **"Email summary" fix — `computeSummaryData` mood scope bug**
+   - Root cause: `computeSummaryData` is a top-level TypeScript function in the Edge Function. It referenced a `mood` variable that was only defined inside the `email_tasks` switch case in a different function scope. JavaScript top-level functions cannot access variables from an outer handler's scope, so `mood?.riskDetail?.score` threw a `ReferenceError` at runtime even with optional chaining. The Edge Function returned HTTP 500, which `FunctionException` propagated through the provider catch block to the "I couldn't reach the cloud AI" fallback message.
+   - Fix: Added a `moodContext: any = null` parameter to `computeSummaryData`. First line inside the function now assigns `const mood = moodContext && typeof moodContext === "object" ? moodContext : {};`. All three call sites updated to pass `moodContext`. A `const mood = ...` guard was also added at the outer handler scope for the remaining handler-level references.
+   - Deployed as Edge Function version 69. Confirmed 200 responses in Supabase logs.
+
+19. **`_ActionChip` real response tracking**
+   - Previously, the "Send to email" and other action chips used `Future.delayed(1 second)` to show "Sent Successfully" regardless of whether the AI actually succeeded.
+   - Fixed by converting `_ActionChip` from `StatefulWidget` to `ConsumerStatefulWidget`. It now watches `aiAssistantProvider.isLoading`, and once the AI response arrives, reads the last assistant message text to determine success (contains "sent", "emailed", "check spam") or failure (contains "not configured", "no email address", "couldn't", "error"). Shows green success state or red error state accordingly, then auto-resets after 4 or 5 seconds respectively.
+
+20. **My Academic Profile screen (`StudentProfileSummaryScreen`)**
+   - New screen at route `/profile/student-summary`, accessible from the Profile → Academic section.
+   - Shows a liquid-glass 3D hero identity card, overview stats, study stats, performance highlights (best semester), and active courses with semester history.
+   - Uses `performanceSummaryProvider`, `analyticsProvider`, `tasksProvider`, `deadlinesProvider`, and `courseProvider` — no new providers needed.
+   - All section cards use frosted-glass `_CleanCard` with `BackdropFilter`.
+   - 24 new l10n keys added to both `app_en.arb` and `app_tr.arb`.
+
+21. **`performanceSummaryProvider` correctness fixes**
+   - Added `ref.watch(courseResultsProvider)` so the provider re-runs reactively when grades are entered or edited.
+   - Fixed `totalCreditsEarned`: was always 0 because `.fold` was accumulating the wrong field. Now correctly sums `h.data.totalECTS` across all semester history entries.
 
 ### Typing Animation
 

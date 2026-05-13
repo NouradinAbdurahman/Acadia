@@ -7,6 +7,7 @@ import 'course_results_provider.dart';
 import 'dashboard_provider.dart';
 import 'deadlines_provider.dart';
 import 'exams_provider.dart';
+import 'performance_summary_provider.dart';
 import 'risk_provider.dart';
 import 'semester_provider.dart';
 import 'student_profile_provider.dart';
@@ -46,5 +47,6 @@ final globalRefreshProvider = Provider<Future<void> Function()>((ref) {
     ref.read(riskProvider);
 
     ref.invalidate(dashboardProvider);
+    ref.invalidate(performanceSummaryProvider);
   };
 });

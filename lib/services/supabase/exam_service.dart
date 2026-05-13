@@ -19,8 +19,11 @@ class ExamService {
         .order('exam_datetime', ascending: true);
   }
 
+  static const _examSelect =
+      'id,user_id,semester_id,title,course_id,exam_datetime,classroom,is_online,instructor_name,type,notes,created_at,courses:course_id(course_name)';
+
   Future<Map<String, dynamic>> createExam(Map<String, dynamic> data) async {
-    return await _supabase.from('exams').insert(data).select().single();
+    return await _supabase.from('exams').insert(data).select(_examSelect).single();
   }
 
   Future<Map<String, dynamic>> updateExam(
@@ -31,7 +34,7 @@ class ExamService {
         .from('exams')
         .update(data)
         .eq('id', id)
-        .select()
+        .select(_examSelect)
         .single();
   }
 

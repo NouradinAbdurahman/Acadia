@@ -16,11 +16,20 @@ import '../../widgets/auth/auth_background_container.dart';
 import '../../widgets/common/animated_pressable.dart';
 import 'create_semester_screen.dart';
 
-class SemesterManagementScreen extends ConsumerWidget {
+class SemesterManagementScreen extends ConsumerStatefulWidget {
   const SemesterManagementScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SemesterManagementScreen> createState() =>
+      _SemesterManagementScreenState();
+}
+
+class _SemesterManagementScreenState
+    extends ConsumerState<SemesterManagementScreen> {
+  final Set<String> _dismissedIds = {};
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final semestersAsync = ref.watch(orderedSemestersProvider);
     final activeSemesterId = ref.watch(activeSemesterProvider).value;
@@ -96,10 +105,10 @@ class SemesterManagementScreen extends ConsumerWidget {
               }
 
               final activeSemesters = semesters
-                  .where((s) => s.id == activeSemesterId)
+                  .where((s) => s.id == activeSemesterId && !_dismissedIds.contains(s.id))
                   .toList();
               final previousSemesters = semesters
-                  .where((s) => s.id != activeSemesterId)
+                  .where((s) => s.id != activeSemesterId && !_dismissedIds.contains(s.id))
                   .toList();
 
               return ListView(
@@ -117,7 +126,10 @@ class SemesterManagementScreen extends ConsumerWidget {
                     ...activeSemesters.map(
                       (semester) => Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: _SemesterCard(semester: semester),
+                        child: _SemesterCard(
+                          semester: semester,
+                          onDismissed: () => setState(() => _dismissedIds.add(semester.id)),
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -132,8 +144,12 @@ class SemesterManagementScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.sm),
                     ...previousSemesters.map(
                       (semester) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                        child: _SemesterCard(semester: semester),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: _SemesterCard(
+                          semester: semester,
+                          compact: true,
+                          onDismissed: () => setState(() => _dismissedIds.add(semester.id)),
+                        ),
                       ),
                     ),
                   ],
@@ -162,9 +178,15 @@ class SemesterManagementScreen extends ConsumerWidget {
 }
 
 class _SemesterCard extends ConsumerWidget {
-  const _SemesterCard({required this.semester});
+  const _SemesterCard({
+    required this.semester,
+    required this.onDismissed,
+    this.compact = false,
+  });
 
   final Semester semester;
+  final VoidCallback onDismissed;
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -193,14 +215,16 @@ class _SemesterCard extends ConsumerWidget {
       confirmDismiss: (_) async {
         return showDestructiveConfirmationDialog(
           context: context,
-          title: l10n.delete,
+          title: l10n.deleteSemesterTitle,
           primaryMessage: l10n.deleteSemesterWarning,
+          secondaryMessage: l10n.deleteSemesterWarningStrong,
           cancelLabel: l10n.cancel,
           confirmLabel: l10n.delete,
         );
       },
-      onDismissed: (_) async {
-        await ref.read(semesterProvider.notifier).deleteSemester(semester.id);
+      onDismissed: (_) {
+        onDismissed();
+        ref.read(semesterProvider.notifier).deleteSemester(semester.id);
       },
       child: AnimatedPressable(
         onTap: () async {
@@ -218,90 +242,170 @@ class _SemesterCard extends ConsumerWidget {
             ),
           );
         },
-        child: AppGlassCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const AppIcon(HeroIcons.calendarDays),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
+        child: compact
+            ? AppGlassCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    AppIcon(
+                      HeroIcons.calendarDays,
+                      size: 16,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            semester.name,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${dateLabel(semester.startDate)} – ${dateLabel(semester.endDate)}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        await ref
+                          .read(activeSemesterProvider.notifier)
+                          .setActiveSemester(semester.id);
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: 4,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        l10n.setAsActive,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: AppIcon(
+                        HeroIcons.pencilSquare,
+                        size: 16,
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                      ),
+                      tooltip: l10n.editSemester,
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                CreateSemesterScreen(semesterToEdit: semester),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              )
+            : AppGlassCard(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            semester.name,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (isActive)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              l10n.currentSemesterLabel,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
+                    const AppIcon(HeroIcons.calendarDays),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  semester.name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
+                              if (isActive)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    l10n.currentSemesterLabel,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
-                      ],
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            '${l10n.startDate}: ${dateLabel(semester.startDate)}',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          Text(
+                            '${l10n.endDate}: ${dateLabel(semester.endDate)}',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '${l10n.startDate}: ${dateLabel(semester.startDate)}',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    Text(
-                      '${l10n.endDate}: ${dateLabel(semester.endDate)}',
-                      style: theme.textTheme.bodySmall,
+                    const SizedBox(width: AppSpacing.sm),
+                    if (isActive)
+                      AppIcon(
+                        HeroIcons.checkCircle,
+                        color: theme.colorScheme.primary,
+                      )
+                    else
+                      Text(
+                        l10n.setAsActive,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    const SizedBox(width: AppSpacing.sm),
+                    IconButton(
+                      icon: const AppIcon(HeroIcons.pencilSquare),
+                      tooltip: l10n.editSemester,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                CreateSemesterScreen(semesterToEdit: semester),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              if (isActive)
-                AppIcon(
-                  HeroIcons.checkCircle,
-                  color: theme.colorScheme.primary,
-                )
-              else
-                Text(
-                  l10n.setAsActive,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              const SizedBox(width: AppSpacing.sm),
-              IconButton(
-                icon: const AppIcon(HeroIcons.pencilSquare),
-                tooltip: l10n.editSemester,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CreateSemesterScreen(semesterToEdit: semester),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

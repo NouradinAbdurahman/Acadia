@@ -307,6 +307,11 @@ class ProfileScreen extends ConsumerWidget {
                   title: l10n.academicInformation,
                   children: [
                     buildItem(
+                      icon: HeroIcons.userCircle,
+                      title: l10n.studentProfileSummaryTitle,
+                      onTap: () => context.push('/profile/student-summary'),
+                    ),
+                    buildItem(
                       icon: HeroIcons.identification,
                       title: l10n.editProfile,
                       onTap: () => context.push('/profile/edit'),

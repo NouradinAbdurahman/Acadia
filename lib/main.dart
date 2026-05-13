@@ -48,6 +48,7 @@ import 'screens/courses/create_semester_screen.dart';
 import 'screens/courses/course_results_screen.dart';
 import 'screens/courses/course_result_editor_screen.dart';
 import 'screens/profile/edit_academic_profile_screen.dart';
+import 'screens/profile/student_profile_summary_screen.dart';
 import 'screens/profile/study_preferences_screen.dart';
 import 'screens/profile/account_settings_screen.dart';
 import 'screens/profile/change_password_screen.dart';
@@ -182,8 +183,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: Listenable.merge([
-      GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
-      // We can also add other listenables here if needed
+      GoRouterRefreshStream(
+        Supabase.instance.client.auth.onAuthStateChange.where(
+          (event) =>
+              event.event != AuthChangeEvent.tokenRefreshed &&
+              event.event != AuthChangeEvent.mfaChallengeVerified,
+        ),
+      ),
     ]),
     routes: [
       GoRoute(
@@ -432,6 +438,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           );
         },
+      ),
+      GoRoute(
+        path: '/profile/student-summary',
+        pageBuilder: (context, state) => CupertinoPage<void>(
+          key: state.pageKey,
+          child: const StudentProfileSummaryScreen(),
+        ),
       ),
       GoRoute(
         path: '/profile/edit',

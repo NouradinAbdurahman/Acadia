@@ -64,7 +64,6 @@ class CourseResultEditorScreen extends ConsumerStatefulWidget {
 class _CourseResultEditorScreenState
     extends ConsumerState<CourseResultEditorScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _finalAverageController = TextEditingController();
   final List<_ComponentDraft> _components = [];
 
   String? _selectedCourseId;
@@ -82,7 +81,6 @@ class _CourseResultEditorScreenState
 
   @override
   void dispose() {
-    _finalAverageController.dispose();
     for (final component in _components) {
       component.dispose();
     }
@@ -98,7 +96,6 @@ class _CourseResultEditorScreenState
         _selectedCourseId = loaded.courseId;
         _selectedLetterGrade = _normalizeLetterGrade(loaded.letterGrade);
         _selectedResultStatus = _normalizeResultStatus(loaded.resultStatus);
-        _finalAverageController.text = loaded.finalAverage?.toString() ?? '';
         _createdAt = loaded.createdAt;
         for (final component in loaded.components) {
           _components.add(
@@ -196,6 +193,7 @@ class _CourseResultEditorScreenState
                               return _ComponentCard(
                                 component: component,
                                 index: index,
+                                onChanged: () => setState(() {}),
                                 onDelete: _components.length == 1
                                     ? null
                                     : () {
@@ -233,16 +231,9 @@ class _CourseResultEditorScreenState
                             const SizedBox(height: AppSpacing.lg),
                             _SectionTitle(title: l10n.finalSection),
                             const SizedBox(height: AppSpacing.md),
-                            TextFormField(
-                              controller: _finalAverageController,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              decoration: InputDecoration(
-                                labelText: l10n.finalAverage,
-                                hintText: l10n.finalAverageHint,
-                              ),
+                            _LiveAverageCard(
+                              average: _computedFinalAverage(),
+                              label: l10n.finalAverage,
                             ),
                             const SizedBox(height: AppSpacing.md),
                             AppBottomSheetPicker(
@@ -316,6 +307,14 @@ class _CourseResultEditorScreenState
     });
   }
 
+  double _computedFinalAverage() {
+    return _components.fold<double>(0, (sum, component) {
+      final score = double.tryParse(component.scoreController.text.trim()) ?? 0;
+      final pct = double.tryParse(component.percentageController.text.trim()) ?? 0;
+      return sum + score * (pct / 100);
+    });
+  }
+
   Future<void> _saveResult(String currentSemesterId) async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
@@ -362,14 +361,7 @@ class _CourseResultEditorScreenState
       AppToast.show(context, l10n.percentageNot100Warning, type: AppToastType.warning);
     }
 
-    final finalAverage = _finalAverageController.text.trim().isEmpty
-        ? null
-        : double.tryParse(_finalAverageController.text.trim());
-
-    if (finalAverage != null && (finalAverage < 0 || finalAverage > 100)) {
-      AppToast.show(context, l10n.gradeRangeError, type: AppToastType.warning);
-      return;
-    }
+    final finalAverage = _computedFinalAverage();
 
     setState(() => _isLoading = true);
     final now = DateTime.now();
@@ -437,6 +429,58 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+class _LiveAverageCard extends StatelessWidget {
+  const _LiveAverageCard({required this.average, required this.label});
+
+  final double average;
+  final String label;
+
+  Color _color(double v) {
+    if (v >= 85) return const Color(0xFF22C55E);
+    if (v >= 70) return const Color(0xFF3B82F6);
+    if (v >= 50) return const Color(0xFFF59E0B);
+    return const Color(0xFFEF4444);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = _color(average);
+    final display = average == 0
+        ? '—'
+        : average.toStringAsFixed(
+            average.truncateToDouble() == average ? 0 : 2,
+          );
+    return AppGlassCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Text(
+            display == '—' ? display : '$display / 100',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: display == '—'
+                  ? theme.colorScheme.onSurface.withValues(alpha: 0.4)
+                  : color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CourseDropdown extends StatelessWidget {
   const _CourseDropdown({
     required this.selectedCourseId,
@@ -492,11 +536,13 @@ class _ComponentCard extends StatelessWidget {
   const _ComponentCard({
     required this.component,
     required this.index,
+    required this.onChanged,
     required this.onDelete,
   });
 
   final _ComponentDraft component;
   final int index;
+  final VoidCallback onChanged;
   final VoidCallback? onDelete;
 
   @override
@@ -524,6 +570,7 @@ class _ComponentCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             TextFormField(
               controller: component.titleController,
+              onChanged: (_) => onChanged(),
               decoration: InputDecoration(
                 labelText: l10n.componentTitle,
                 hintText: l10n.componentTitleHint,
@@ -538,6 +585,7 @@ class _ComponentCard extends StatelessWidget {
                 Expanded(
                   child: TextFormField(
                     controller: component.scoreController,
+                    onChanged: (_) => onChanged(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
@@ -560,6 +608,7 @@ class _ComponentCard extends StatelessWidget {
                 Expanded(
                   child: TextFormField(
                     controller: component.percentageController,
+                    onChanged: (_) => onChanged(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),

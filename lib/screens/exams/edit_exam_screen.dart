@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -144,6 +146,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen> {
                 : _notesController.text.trim(),
           });
       Haptics.vibrate(HapticsType.success);
+      unawaited(ref.read(examsProvider.notifier).silentRefresh());
       if (mounted) context.pop();
     } catch (_) {
       if (mounted) {
@@ -173,7 +176,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen> {
           bottom: false,
           child: examsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => Center(child: Text(l10n.examsLoadError)),
+            error: (e, st) => Center(child: Text(l10n.examsLoadError)),
             data: (items) {
               final matched = items.where((e) => e.id == widget.examId).toList();
               if (matched.isEmpty) {
@@ -202,7 +205,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen> {
                         const SizedBox(height: AppSpacing.md),
                         coursesAsync.when(
                           loading: () => const Center(child: CircularProgressIndicator()),
-                          error: (_, __) => Text(l10n.errorLoadingCourses),
+                          error: (e, st) => Text(l10n.errorLoadingCourses),
                           data: (courses) {
                             String display = l10n.examsOptionalCourse;
                             Color? swatch;

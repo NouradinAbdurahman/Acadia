@@ -308,7 +308,8 @@ function summaryDataToHtml(d: any) {
   </ul>`;
 }
 
-async function computeSummaryData(supabase: any, userId: string, semesterId: string | null) {
+async function computeSummaryData(supabase: any, userId: string, semesterId: string | null, moodContext: any = null) {
+  const mood = moodContext && typeof moodContext === "object" ? moodContext : {};
   if (!semesterId) return null;
   const summaryTasks = await getTasks(supabase, userId, semesterId);
   const total = summaryTasks.all.length;
@@ -563,6 +564,7 @@ serve(async (req) => {
     }
 
     const { messages, semesterId, context: clientContext, moodContext } = body;
+    const mood = moodContext && typeof moodContext === "object" ? moodContext : {};
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(
@@ -679,7 +681,7 @@ serve(async (req) => {
         break;
 
       case "get_summary": {
-        const sum = await computeSummaryData(supabase, user.id, resolvedSemesterId);
+        const sum = await computeSummaryData(supabase, user.id, resolvedSemesterId, moodContext);
         if (!sum) {
           responseType = "text";
           reply = "Select an active semester first to see your summary.";
@@ -734,7 +736,6 @@ serve(async (req) => {
 
         const displayName = profile?.full_name || "Student";
         const fromHeader = fromRaw.includes("<") ? fromRaw : `Acadia <${fromRaw}>`;
-        const mood = moodContext && typeof moodContext === "object" ? moodContext : {};
         let subject = "Your Acadia update";
         let html = "";
         let preSendError: string | null = null;
@@ -862,7 +863,7 @@ serve(async (req) => {
               : "<p>No urgent or upcoming tasks.</p>",
           );
         } else if (kind === "summary") {
-          const sum = await computeSummaryData(supabase, user.id, resolvedSemesterId);
+          const sum = await computeSummaryData(supabase, user.id, resolvedSemesterId, moodContext);
           if (!sum) {
             preSendError = "Couldn’t build your summary.";
           } else {
@@ -883,7 +884,7 @@ serve(async (req) => {
           subject = "Your Acadia study plan";
           html = buildTasksEmail(displayName, emailPayload);
         } else {
-          const sum = await computeSummaryData(supabase, user.id, resolvedSemesterId);
+          const sum = await computeSummaryData(supabase, user.id, resolvedSemesterId, moodContext);
           const tasks = await getTasks(supabase, user.id, resolvedSemesterId);
           subject = "Your Acadia overview";
           html = `<div style="background:#0f172a;color:#e2e8f0;padding:24px;border-radius:16px;font-family:system-ui,sans-serif;max-width:560px">

@@ -1144,8 +1144,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create your first semester to organize your courses.';
 
   @override
+  String get deleteSemesterTitle => 'Delete Semester';
+
+  @override
   String get deleteSemesterWarning =>
-      'This semester will be removed from your semester list.';
+      'This will permanently remove the semester and all its associated data, including courses, tasks, deadlines, and study sessions.';
+
+  @override
+  String get deleteSemesterWarningStrong => 'This action cannot be undone.';
 
   @override
   String get noCoursesYet => 'No courses added yet';
@@ -1676,6 +1682,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editResult => 'Edit Result';
+
+  @override
+  String get deleteResultTitle => 'Delete Result';
+
+  @override
+  String get deleteResultWarning =>
+      'This action cannot be undone. All grading components for this course will be permanently removed.';
+
+  @override
+  String get deleteResultWarningStrong =>
+      'This will permanently remove the course result and its grade data.';
 
   @override
   String get noResultsYet => 'No results added yet';
@@ -4005,6 +4022,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get examsUpcomingSectionTitle => 'Upcoming exams';
 
   @override
+  String get examsGroupToday => 'Today';
+
+  @override
+  String get examsGroupThisWeek => 'This Week';
+
+  @override
+  String get examsGroupThisMonth => 'This Month';
+
+  @override
+  String get examsGroupLater => 'Later';
+
+  @override
   String get examsPastSectionTitle => 'Past exams';
 
   @override
@@ -4546,4 +4575,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moodTrackingOffBadge => 'Tracking Off';
+
+  @override
+  String get studentProfileSummaryTitle => 'My Academic Profile';
+
+  @override
+  String get profileSummaryOverviewSection => 'Overview';
+
+  @override
+  String get profileSummaryIdentitySection => 'Academic Identity';
+
+  @override
+  String get profileSemesterHistorySection => 'Semester History';
+
+  @override
+  String get profileActiveSemesterSection => 'Active Semester';
+
+  @override
+  String profileSemestersCount(int count) {
+    return '$count semesters';
+  }
+
+  @override
+  String profileCoursesCount(int count) {
+    return '$count courses';
+  }
+
+  @override
+  String get profileGpaLabel => 'Semester GPA';
+
+  @override
+  String get profileCgpaLabel => 'CGPA';
+
+  @override
+  String profileTaskSummary(int done, int total) {
+    return '$done/$total tasks';
+  }
+
+  @override
+  String profileDeadlineSummary(int done, int total) {
+    return '$done/$total deadlines';
+  }
+
+  @override
+  String get profileStudyStatsSection => 'Study Stats';
+
+  @override
+  String get profilePerformanceHighlightsSection => 'Performance Highlights';
+
+  @override
+  String get profileStudySessions => 'Sessions';
+
+  @override
+  String get profileWeeklyAvgHours => 'Avg hrs/week';
+
+  @override
+  String get profileStudyConsistency => 'Consistency';
+
+  @override
+  String get profileThisWeekHours => 'This week';
+
+  @override
+  String get profileStudyGoal => 'Weekly goal';
+
+  @override
+  String get profileBestSemester => 'Best Semester';
+
+  @override
+  String get profileMostImproved => 'Most Improved';
+
+  @override
+  String get profileTotalCredits => 'Total Credits';
+
+  @override
+  String get profileNotSet => '—';
+
+  @override
+  String get profileNoGpaYet => 'N/A';
+
+  @override
+  String get profileNoCoursesYet => 'No courses';
+
+  @override
+  String get profileCoursesThisSemester => 'Courses this semester';
+
+  @override
+  String get countryLabel => 'Country';
 }

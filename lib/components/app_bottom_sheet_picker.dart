@@ -300,141 +300,10 @@ Future<T?> showAppBottomSheetPicker<T>({
                   )
                 else
                   Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.xs,
-                      ),
-                      itemCount: options.length,
-                      separatorBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xs,
-                        ),
-                        child: Divider(
-                          height: 1,
-                          indent: AppSpacing.sm,
-                          endIndent: AppSpacing.sm,
-                          color: theme.colorScheme.outline.withValues(
-                            alpha: 0.25,
-                          ),
-                        ),
-                      ),
-                      itemBuilder: (context, index) {
-                        final option = options[index];
-                        final isSelected = option.value == selectedValue;
-                        return Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(14),
-                            onTap: () {
-                              Haptics.vibrate(HapticsType.selection);
-                              Navigator.pop(context, option.value);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md,
-                                vertical: AppSpacing.sm,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                gradient: isSelected
-                                    ? LinearGradient(
-                                        colors: [
-                                          theme.colorScheme.primary.withValues(
-                                            alpha: 0.2,
-                                          ),
-                                          theme.colorScheme.primary.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                        ],
-                                      )
-                                    : null,
-                              ),
-                              child: Row(
-                                children: [
-                                  if (option.flagEmoji != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        right: AppSpacing.sm,
-                                      ),
-                                      child: Text(
-                                        option.flagEmoji!,
-                                        style: const TextStyle(fontSize: 24),
-                                      ),
-                                    ),
-                                  if (option.swatchColor != null)
-                                    Container(
-                                      margin: const EdgeInsets.only(
-                                        right: AppSpacing.sm,
-                                      ),
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: option.swatchColor,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: option.swatchColor!
-                                                .withValues(alpha: 0.38),
-                                            blurRadius: 8,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          option.title,
-                                          style: theme.textTheme.bodyLarge
-                                              ?.copyWith(
-                                                fontWeight: isSelected
-                                                    ? FontWeight.w700
-                                                    : FontWeight.w500,
-                                              ),
-                                        ),
-                                        if (option.subtitle != null) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            option.subtitle!,
-                                            style: theme.textTheme.bodySmall
-                                                ?.copyWith(
-                                                  color: theme
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.68),
-                                                ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: theme.colorScheme.primary,
-                                      ),
-                                      child: Center(
-                                        child: AppIcon(
-                                          HeroIcons.check,
-                                          color: theme.colorScheme.onPrimary,
-                                          solid: true,
-                                          size: 14,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                    child: _PickerList<T>(
+                      options: options,
+                      selectedValue: selectedValue,
+                      theme: theme,
                     ),
                   ),
               ],
@@ -444,4 +313,168 @@ Future<T?> showAppBottomSheetPicker<T>({
       );
     },
   );
+}
+
+class _PickerList<T> extends StatefulWidget {
+  const _PickerList({
+    required this.options,
+    required this.selectedValue,
+    required this.theme,
+  });
+
+  final List<AppPickerOption<T>> options;
+  final T? selectedValue;
+  final ThemeData theme;
+
+  @override
+  State<_PickerList<T>> createState() => _PickerListState<T>();
+}
+
+class _PickerListState<T> extends State<_PickerList<T>> {
+  late final ScrollController _controller;
+
+  static const double _itemHeight = 40.0;
+  static const double _separatorHeight = 9.0;
+
+  @override
+  void initState() {
+    super.initState();
+    final selectedIndex = widget.options.indexWhere(
+      (o) => o.value == widget.selectedValue,
+    );
+    final offset = selectedIndex > 0
+        ? (selectedIndex * (_itemHeight + _separatorHeight)).clamp(0.0, double.infinity)
+        : 0.0;
+    _controller = ScrollController(initialScrollOffset: offset);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
+    return ListView.separated(
+      controller: _controller,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      itemCount: widget.options.length,
+      separatorBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Divider(
+          height: 1,
+          indent: AppSpacing.sm,
+          endIndent: AppSpacing.sm,
+          color: theme.colorScheme.outline.withValues(alpha: 0.25),
+        ),
+      ),
+      itemBuilder: (context, index) {
+        final option = widget.options[index];
+        final isSelected = option.value == widget.selectedValue;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () {
+              Haptics.vibrate(HapticsType.selection);
+              Navigator.pop(context, option.value);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: isSelected
+                    ? LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.2),
+                          theme.colorScheme.primary.withValues(alpha: 0.1),
+                        ],
+                      )
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  if (option.flagEmoji != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: AppSpacing.sm),
+                      child: Text(
+                        option.flagEmoji!,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ),
+                  if (option.swatchColor != null)
+                    Container(
+                      margin: const EdgeInsets.only(right: AppSpacing.sm),
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: option.swatchColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: option.swatchColor!.withValues(alpha: 0.38),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                    ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          option.title,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                        if (option.subtitle != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            option.subtitle!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.68),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (isSelected)
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.colorScheme.primary,
+                      ),
+                      child: Center(
+                        child: AppIcon(
+                          HeroIcons.check,
+                          color: theme.colorScheme.onPrimary,
+                          solid: true,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

@@ -2246,11 +2246,23 @@ abstract class AppLocalizations {
   /// **'Create your first semester to organize your courses.'**
   String get createFirstSemester;
 
+  /// No description provided for @deleteSemesterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Semester'**
+  String get deleteSemesterTitle;
+
   /// No description provided for @deleteSemesterWarning.
   ///
   /// In en, this message translates to:
-  /// **'This semester will be removed from your semester list.'**
+  /// **'This will permanently remove the semester and all its associated data, including courses, tasks, deadlines, and study sessions.'**
   String get deleteSemesterWarning;
+
+  /// No description provided for @deleteSemesterWarningStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get deleteSemesterWarningStrong;
 
   /// No description provided for @noCoursesYet.
   ///
@@ -3151,6 +3163,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Result'**
   String get editResult;
+
+  /// No description provided for @deleteResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Result'**
+  String get deleteResultTitle;
+
+  /// No description provided for @deleteResultWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone. All grading components for this course will be permanently removed.'**
+  String get deleteResultWarning;
+
+  /// No description provided for @deleteResultWarningStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently remove the course result and its grade data.'**
+  String get deleteResultWarningStrong;
 
   /// No description provided for @noResultsYet.
   ///
@@ -6974,6 +7004,30 @@ abstract class AppLocalizations {
   /// **'Upcoming exams'**
   String get examsUpcomingSectionTitle;
 
+  /// No description provided for @examsGroupToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get examsGroupToday;
+
+  /// No description provided for @examsGroupThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This Week'**
+  String get examsGroupThisWeek;
+
+  /// No description provided for @examsGroupThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This Month'**
+  String get examsGroupThisMonth;
+
+  /// No description provided for @examsGroupLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get examsGroupLater;
+
   /// No description provided for @examsPastSectionTitle.
   ///
   /// In en, this message translates to:
@@ -7859,6 +7913,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tracking Off'**
   String get moodTrackingOffBadge;
+
+  /// No description provided for @studentProfileSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Academic Profile'**
+  String get studentProfileSummaryTitle;
+
+  /// No description provided for @profileSummaryOverviewSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get profileSummaryOverviewSection;
+
+  /// No description provided for @profileSummaryIdentitySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Academic Identity'**
+  String get profileSummaryIdentitySection;
+
+  /// No description provided for @profileSemesterHistorySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester History'**
+  String get profileSemesterHistorySection;
+
+  /// No description provided for @profileActiveSemesterSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Semester'**
+  String get profileActiveSemesterSection;
+
+  /// No description provided for @profileSemestersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} semesters'**
+  String profileSemestersCount(int count);
+
+  /// No description provided for @profileCoursesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} courses'**
+  String profileCoursesCount(int count);
+
+  /// No description provided for @profileGpaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester GPA'**
+  String get profileGpaLabel;
+
+  /// No description provided for @profileCgpaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CGPA'**
+  String get profileCgpaLabel;
+
+  /// No description provided for @profileTaskSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total} tasks'**
+  String profileTaskSummary(int done, int total);
+
+  /// No description provided for @profileDeadlineSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total} deadlines'**
+  String profileDeadlineSummary(int done, int total);
+
+  /// No description provided for @profileStudyStatsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Stats'**
+  String get profileStudyStatsSection;
+
+  /// No description provided for @profilePerformanceHighlightsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Highlights'**
+  String get profilePerformanceHighlightsSection;
+
+  /// No description provided for @profileStudySessions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions'**
+  String get profileStudySessions;
+
+  /// No description provided for @profileWeeklyAvgHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg hrs/week'**
+  String get profileWeeklyAvgHours;
+
+  /// No description provided for @profileStudyConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get profileStudyConsistency;
+
+  /// No description provided for @profileThisWeekHours.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get profileThisWeekHours;
+
+  /// No description provided for @profileStudyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly goal'**
+  String get profileStudyGoal;
+
+  /// No description provided for @profileBestSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Semester'**
+  String get profileBestSemester;
+
+  /// No description provided for @profileMostImproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Most Improved'**
+  String get profileMostImproved;
+
+  /// No description provided for @profileTotalCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Credits'**
+  String get profileTotalCredits;
+
+  /// No description provided for @profileNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get profileNotSet;
+
+  /// No description provided for @profileNoGpaYet.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get profileNoGpaYet;
+
+  /// No description provided for @profileNoCoursesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No courses'**
+  String get profileNoCoursesYet;
+
+  /// No description provided for @profileCoursesThisSemester.
+  ///
+  /// In en, this message translates to:
+  /// **'Courses this semester'**
+  String get profileCoursesThisSemester;
+
+  /// No description provided for @countryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get countryLabel;
 }
 
 class _AppLocalizationsDelegate

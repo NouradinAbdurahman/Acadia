@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:heroicons/heroicons.dart';
 
 import '../../components/app_button.dart';
+import '../../components/destructive_confirmation_dialog.dart';
 import '../../components/app_glass_card.dart';
 import '../../components/app_back_button.dart';
 import '../../core/design/app_icons.dart';
@@ -532,7 +533,19 @@ class _CourseResultCardState extends State<_CourseResultCard> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       AppButton(
-                        onPressed: () async => widget.onDelete(),
+                        onPressed: () async {
+                          final confirmed =
+                              await showDestructiveConfirmationDialog(
+                            context: context,
+                            title: l10n.deleteResultTitle,
+                            primaryMessage: l10n.deleteResultWarning,
+                            secondaryMessage: l10n.deleteResultWarningStrong,
+                            cancelLabel: l10n.cancel,
+                            confirmLabel: l10n.delete,
+                          );
+                          if (!confirmed) return;
+                          await widget.onDelete();
+                        },
                         variant: AppButtonVariant.text,
                         text: l10n.delete,
                       ),

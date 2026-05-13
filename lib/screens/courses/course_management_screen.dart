@@ -33,6 +33,7 @@ class CourseManagementScreen extends ConsumerStatefulWidget {
 class _CourseManagementScreenState
     extends ConsumerState<CourseManagementScreen> {
   _CourseSort _sortBy = _CourseSort.semester;
+  final Set<String> _dismissedIds = {};
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +98,7 @@ class _CourseManagementScreenState
                   );
                 }
 
-                final sortedCourses = [...courses];
+                final sortedCourses = courses.where((c) => !_dismissedIds.contains(c.id)).toList();
                 if (_sortBy == _CourseSort.alphabetical) {
                   sortedCourses.sort(
                     (a, b) => a.courseName.compareTo(b.courseName),
@@ -405,6 +406,7 @@ class _CourseManagementScreenState
         return confirmed ?? false;
       },
       onDismissed: (_) {
+        setState(() => _dismissedIds.add(course.id));
         Haptics.vibrate(HapticsType.error);
         ref.read(courseProvider.notifier).deleteCourse(course.id);
       },
