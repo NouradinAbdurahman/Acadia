@@ -4,7 +4,7 @@ description: >-
   tasks, deadlines, study timer, mood & stress tracking, analytics, decision engine,
   AI assistant, and smart notifications (Riverpod, GoRouter, Supabase, Firebase).
 publish_to: 'none'
-version: 1.0.2+24
+version: 1.0.3+26
 
 environment:
   sdk: ^3.10.4

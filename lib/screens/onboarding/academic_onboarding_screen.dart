@@ -45,6 +45,7 @@ class _AcademicOnboardingScreenState
 
   String? _selectedDegree;
   int _selectedGradYear = DateTime.now().year + 4;
+  int _selectedYear = 1;
   int _selectedSemester = 1;
   double _studyHours = DEFAULT_WEEKLY_GOAL.toDouble();
   String _preferredTime = 'morning';
@@ -54,7 +55,7 @@ class _AcademicOnboardingScreenState
   void initState() {
     super.initState();
     _prefillForm();
-    
+
     _infoCardTimer = Timer(const Duration(seconds: 10), () {
       if (mounted) {
         setState(() => _showInfoCard = false);
@@ -68,11 +69,13 @@ class _AcademicOnboardingScreenState
       _universityController.text = profile.universityName ?? '';
       _majorController.text = profile.major ?? '';
       _selectedDegree = profile.degreeType;
-        _selectedGradYear = (profile.expectedGraduationYear ?? (DateTime.now().year + 4))
-          .clamp(_currentYear, _currentYear + 10)
-          .toInt();
-        _selectedSemester = profile.currentSemester ?? 1;
-        _studyHours = (ref.read(weeklyStudyGoalHoursProvider)).toDouble();
+      _selectedGradYear =
+          (profile.expectedGraduationYear ?? (DateTime.now().year + 4))
+              .clamp(_currentYear, _currentYear + 10)
+              .toInt();
+      _selectedYear = (profile.academicYear ?? 1).clamp(1, 10).toInt();
+      _selectedSemester = profile.currentSemester ?? 1;
+      _studyHours = (ref.read(weeklyStudyGoalHoursProvider)).toDouble();
       _preferredTime = profile.preferredStudyTime ?? 'morning';
       _breakPattern = profile.breakPattern ?? 'pomodoro';
     }
@@ -103,11 +106,19 @@ class _AcademicOnboardingScreenState
       }
     } else if (_currentStep == 2) {
       if (_selectedSemester < 1) {
-        AppToast.show(context, l10n.semesterNumberInvalid, type: AppToastType.warning);
+        AppToast.show(
+          context,
+          l10n.semesterNumberInvalid,
+          type: AppToastType.warning,
+        );
         return;
       }
       if (_studyHours < 1 || _studyHours > 80) {
-        AppToast.show(context, l10n.weeklyStudyGoalInvalid, type: AppToastType.warning);
+        AppToast.show(
+          context,
+          l10n.weeklyStudyGoalInvalid,
+          type: AppToastType.warning,
+        );
         return;
       }
     }
@@ -137,7 +148,7 @@ class _AcademicOnboardingScreenState
       universityName: _universityController.text.trim(),
       degreeType: _selectedDegree,
       major: _majorController.text.trim(),
-      academicYear: null,
+      academicYear: _selectedYear,
       currentSemester: _selectedSemester,
       expectedGraduationYear: _selectedGradYear,
       preferredStudyTime: _preferredTime,
@@ -161,8 +172,12 @@ class _AcademicOnboardingScreenState
       // Persist weekly goal to active semester if one already exists.
       final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
       if (activeSemester != null) {
-        debugPrint('[AcademicOnboarding] Persisting weekly goal: ${_studyHours.toInt()}');
-        await ref.read(semesterProvider.notifier).updateSemester(
+        debugPrint(
+          '[AcademicOnboarding] Persisting weekly goal: ${_studyHours.toInt()}',
+        );
+        await ref
+            .read(semesterProvider.notifier)
+            .updateSemester(
               activeSemester.copyWith(weeklyStudyGoal: _studyHours.toInt()),
             );
         if (!mounted) return;
@@ -175,12 +190,18 @@ class _AcademicOnboardingScreenState
       await ref.refresh(currentAppUserProvider.future).catchError((_) => null);
       if (!mounted) return;
 
-      debugPrint('[AcademicOnboarding] User state ready. Transitioning to home.');
+      debugPrint(
+        '[AcademicOnboarding] User state ready. Transitioning to home.',
+      );
       context.go('/home');
     } catch (e) {
       debugPrint('[AcademicOnboarding] Error during finish: $e');
       if (!mounted) return;
-      AppToast.show(context, AppLocalizations.of(context)?.networkError ?? 'Error saving profile', type: AppToastType.error);
+      AppToast.show(
+        context,
+        AppLocalizations.of(context)?.networkError ?? 'Error saving profile',
+        type: AppToastType.error,
+      );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -209,20 +230,31 @@ class _AcademicOnboardingScreenState
                         child: _showInfoCard
                             ? Padding(
                                 key: const ValueKey('onboarding_info_card'),
-                                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.lg,
+                                ),
                                 child: Stack(
                                   clipBehavior: Clip.none,
                                   children: [
                                     AppGlassCard(
-                                      padding: const EdgeInsets.all(AppSpacing.md),
+                                      padding: const EdgeInsets.all(
+                                        AppSpacing.md,
+                                      ),
                                       child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Container(
-                                            padding: const EdgeInsets.all(AppSpacing.sm),
+                                            padding: const EdgeInsets.all(
+                                              AppSpacing.sm,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                                              color: theme.colorScheme.primary
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppRadius.lg,
+                                                  ),
                                             ),
                                             child: AppIcon(
                                               HeroIcons.sparkles,
@@ -233,24 +265,43 @@ class _AcademicOnboardingScreenState
                                           const SizedBox(width: AppSpacing.md),
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   l10n?.academicAnalyticsContext ??
                                                       'This information helps personalize your academic analytics and recommendations.',
-                                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
-                                                    height: 1.35,
-                                                  ),
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: theme
+                                                            .colorScheme
+                                                            .onSurface
+                                                            .withValues(
+                                                              alpha: 0.75,
+                                                            ),
+                                                        height: 1.35,
+                                                      ),
                                                 ),
-                                                const SizedBox(height: AppSpacing.xs),
+                                                const SizedBox(
+                                                  height: AppSpacing.xs,
+                                                ),
                                                 Text(
                                                   l10n?.onboardingRiskImpactHint ??
                                                       'Your semester and study goal are used to calculate academic risk and progress insights.',
-                                                  style: theme.textTheme.bodySmall?.copyWith(
-                                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
-                                                    height: 1.3,
-                                                  ),
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: theme
+                                                            .colorScheme
+                                                            .onSurface
+                                                            .withValues(
+                                                              alpha: 0.65,
+                                                            ),
+                                                        height: 1.3,
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -267,26 +318,34 @@ class _AcademicOnboardingScreenState
                                           setState(() => _showInfoCard = false);
                                         },
                                         child: Container(
-                                          padding: const EdgeInsets.all(AppSpacing.xs),
+                                          padding: const EdgeInsets.all(
+                                            AppSpacing.xs,
+                                          ),
                                           decoration: BoxDecoration(
                                             color: theme.colorScheme.surface,
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.1),
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.1,
+                                                ),
                                                 blurRadius: 8,
                                                 offset: const Offset(0, 2),
                                               ),
                                             ],
                                             border: Border.all(
-                                              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                              color: theme
+                                                  .colorScheme
+                                                  .outlineVariant
+                                                  .withValues(alpha: 0.5),
                                               width: 1,
                                             ),
                                           ),
                                           child: AppIcon(
                                             HeroIcons.xMark,
                                             size: 14,
-                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                            color: theme.colorScheme.onSurface
+                                                .withValues(alpha: 0.6),
                                           ),
                                         ),
                                       ),
@@ -387,8 +446,7 @@ class _AcademicOnboardingScreenState
         children: [
           _buildStepHeader(
             l10n?.universitySetup ?? 'University',
-            l10n?.universitySetupDesc ??
-                'Tell us where you study.',
+            l10n?.universitySetupDesc ?? 'Tell us where you study.',
             HeroIcons.academicCap,
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -437,7 +495,8 @@ class _AcademicOnboardingScreenState
           const SizedBox(height: AppSpacing.lg),
           _buildNumberPicker(
             label: l10n?.expectedGraduationYear ?? 'Grad Year',
-            helperText: l10n?.graduationYearHint ??
+            helperText:
+                l10n?.graduationYearHint ??
                 'Choose your expected graduation year (this year or later).',
             value: _selectedGradYear,
             min: _currentYear,
@@ -462,8 +521,21 @@ class _AcademicOnboardingScreenState
           ),
           const SizedBox(height: AppSpacing.xl),
           _buildNumberPicker(
+            label: l10n?.academicYear ?? 'Academic Year',
+            helperText:
+                l10n?.academicYearHint ??
+                'Your current year of study (1 = freshman, 2 = sophomore, etc.).',
+            value: _selectedYear,
+            min: 1,
+            max: 10,
+            onChanged: (val) => setState(() => _selectedYear = val),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildNumberPicker(
             label: l10n?.currentSemesterNumber ?? 'Current Semester',
-            helperText: l10n?.currentSemesterHint ?? 'Enter your current semester number.',
+            helperText:
+                l10n?.currentSemesterHint ??
+                'Enter your current semester number.',
             value: _selectedSemester,
             min: 1,
             max: null,
@@ -518,7 +590,9 @@ class _AcademicOnboardingScreenState
                     l10n?.studyGoalRecommendation ??
                         'Recommended: 10-25 hours per week',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.65,
+                      ),
                     ),
                   ),
                 ),

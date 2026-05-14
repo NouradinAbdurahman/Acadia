@@ -416,6 +416,7 @@
   "majorPlaceholder": "e.g. Computer Science",
   "minor": "Minor",
   "academicYear": "Academic Year",
+  "academicYearHint": "Your current year of study (1 = freshman, 2 = sophomore, etc.).",
   "expectedGraduationYear": "Expected Graduation Year",
   "currentSemesterNumber": "Current Semester",
   "currentSemesterHint": "Enter your current semester number.",

@@ -416,6 +416,7 @@
   "majorPlaceholder": "ör. Bilgisayar Mühendisliği",
   "minor": "Yandal",
   "academicYear": "Akademik Yıl",
+  "academicYearHint": "Mevcut öğrenim yılınız (1 = birinci sınıf, 2 = ikinci sınıf, vb.).",
   "expectedGraduationYear": "Beklenen Mezuniyet Yılı",
   "currentSemesterNumber": "Mevcut Dönem",
   "currentSemesterHint": "Mevcut dönem numaranızı girin.",

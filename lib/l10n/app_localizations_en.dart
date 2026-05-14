@@ -958,6 +958,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get academicYear => 'Academic Year';
 
   @override
+  String get academicYearHint =>
+      'Your current year of study (1 = freshman, 2 = sophomore, etc.).';
+
+  @override
   String get expectedGraduationYear => 'Expected Graduation Year';
 
   @override

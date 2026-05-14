@@ -1886,6 +1886,12 @@ abstract class AppLocalizations {
   /// **'Academic Year'**
   String get academicYear;
 
+  /// No description provided for @academicYearHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current year of study (1 = freshman, 2 = sophomore, etc.).'**
+  String get academicYearHint;
+
   /// No description provided for @expectedGraduationYear.
   ///
   /// In en, this message translates to:

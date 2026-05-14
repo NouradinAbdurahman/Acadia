@@ -30,18 +30,39 @@ class MoodDailyList extends StatelessWidget {
         final dailyMoods = <DateTime, MoodLog>{};
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
-        
+
+        // If no logs fall within the selected window, shift to the most recent log.
+        DateTime windowEnd = today;
+        if (logs.isNotEmpty) {
+          final windowStart = today.subtract(Duration(days: days - 1));
+          final hasRecentData = logs.any((l) {
+            final d = l.createdAt.toLocal();
+            final date = DateTime(d.year, d.month, d.day);
+            return !date.isBefore(windowStart);
+          });
+          if (!hasRecentData) {
+            final sorted = [...logs]
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            final mostRecent = sorted.first.createdAt.toLocal();
+            windowEnd = DateTime(
+              mostRecent.year,
+              mostRecent.month,
+              mostRecent.day,
+            );
+          }
+        }
+
         for (var i = 0; i < days; i++) {
-          final date = today.subtract(Duration(days: i));
+          final date = windowEnd.subtract(Duration(days: i));
           final dateOnly = DateTime(date.year, date.month, date.day);
-          
+
           final dayLogs = logs.where((l) {
             final logDate = l.createdAt.toLocal();
             return logDate.year == dateOnly.year &&
                 logDate.month == dateOnly.month &&
                 logDate.day == dateOnly.day;
           }).toList();
-          
+
           if (dayLogs.isNotEmpty) {
             // Use the last mood log for that day
             dailyMoods[dateOnly] = dayLogs.first;
@@ -50,7 +71,7 @@ class MoodDailyList extends StatelessWidget {
 
         // Generate the list of dates to display (chronological)
         final displayDates = List.generate(days, (i) {
-          final date = today.subtract(Duration(days: days - 1 - i));
+          final date = windowEnd.subtract(Duration(days: days - 1 - i));
           return DateTime(date.year, date.month, date.day);
         });
 
@@ -62,15 +83,17 @@ class MoodDailyList extends StatelessWidget {
               final moodLevel = log?.moodLevel;
               final locale = Localizations.localeOf(context).toString();
               final dayName = DateFormat.E(locale).format(date);
-              
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
-                    onTap: log == null ? null : () {
-                      Haptics.vibrate(HapticsType.selection);
-                      MoodDetailsBottomSheet.show(context, log);
-                    },
+                    onTap: log == null
+                        ? null
+                        : () {
+                            Haptics.vibrate(HapticsType.selection);
+                            MoodDetailsBottomSheet.show(context, log);
+                          },
                     child: MoodEmojiCircle(moodLevel: moodLevel, size: 36),
                   ),
                   const SizedBox(height: 6),
@@ -100,19 +123,21 @@ class MoodDailyList extends StatelessWidget {
               final date = displayDates[index];
               final log = dailyMoods[date];
               final moodLevel = log?.moodLevel;
-              
+
               final locale = Localizations.localeOf(context).toString();
               final dayName = DateFormat.E(locale).format(date);
               final dateLabel = DateFormat.Md(locale).format(date);
-              
+
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
-                    onTap: log == null ? null : () {
-                      Haptics.vibrate(HapticsType.selection);
-                      MoodDetailsBottomSheet.show(context, log);
-                    },
+                    onTap: log == null
+                        ? null
+                        : () {
+                            Haptics.vibrate(HapticsType.selection);
+                            MoodDetailsBottomSheet.show(context, log);
+                          },
                     child: MoodEmojiCircle(moodLevel: moodLevel),
                   ),
                   const SizedBox(height: 8),
@@ -127,7 +152,9 @@ class MoodDailyList extends StatelessWidget {
                     Text(
                       dateLabel,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.4,
+                        ),
                         fontSize: 9,
                         fontWeight: FontWeight.w500,
                       ),
@@ -227,23 +254,35 @@ class MoodEmojiCircle extends StatelessWidget {
 
   String _emojiForMood(int level) {
     switch (level) {
-      case 1: return '😞';
-      case 2: return '🙁';
-      case 3: return '😐';
-      case 4: return '🙂';
-      case 5: return '😄';
-      default: return '😐';
+      case 1:
+        return '😞';
+      case 2:
+        return '🙁';
+      case 3:
+        return '😐';
+      case 4:
+        return '🙂';
+      case 5:
+        return '😄';
+      default:
+        return '😐';
     }
   }
 
   Color _getMoodColor(int level) {
     switch (level) {
-      case 1: return const Color(0xFFE53935);
-      case 2: return const Color(0xFFFF7043);
-      case 3: return const Color(0xFFFFC107);
-      case 4: return const Color(0xFF66BB6A);
-      case 5: return const Color(0xFF2ECC71);
-      default: return const Color(0xFFFFC107);
+      case 1:
+        return const Color(0xFFE53935);
+      case 2:
+        return const Color(0xFFFF7043);
+      case 3:
+        return const Color(0xFFFFC107);
+      case 4:
+        return const Color(0xFF66BB6A);
+      case 5:
+        return const Color(0xFF2ECC71);
+      default:
+        return const Color(0xFFFFC107);
     }
   }
 
@@ -251,16 +290,20 @@ class MoodEmojiCircle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     if (moodLevel == null) {
       return Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.05 : 0.08),
+          color: theme.colorScheme.onSurface.withValues(
+            alpha: isDark ? 0.05 : 0.08,
+          ),
           border: Border.all(
-            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.1 : 0.15),
+            color: theme.colorScheme.onSurface.withValues(
+              alpha: isDark ? 0.1 : 0.15,
+            ),
             width: 1,
           ),
         ),
@@ -268,14 +311,16 @@ class MoodEmojiCircle extends StatelessWidget {
           child: Icon(
             Icons.horizontal_rule_rounded,
             size: size * 0.4,
-            color: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.2 : 0.3),
+            color: theme.colorScheme.onSurface.withValues(
+              alpha: isDark ? 0.2 : 0.3,
+            ),
           ),
         ),
       );
     }
 
     final color = _getMoodColor(moodLevel!);
-    
+
     return Container(
       width: size,
       height: size,
@@ -300,10 +345,16 @@ class MoodEmojiCircle extends StatelessWidget {
           ),
         ],
       ),
-      alignment: Alignment.center,
-      child: Text(
-        _emojiForMood(moodLevel!),
-        style: TextStyle(fontSize: size * 0.54),
+      child: Center(
+        child: Text(
+          _emojiForMood(moodLevel!),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: size * 0.54,
+            height: 1.0,
+            leadingDistribution: TextLeadingDistribution.even,
+          ),
+        ),
       ),
     );
   }

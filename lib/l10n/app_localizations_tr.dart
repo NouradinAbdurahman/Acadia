@@ -959,6 +959,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get academicYear => 'Akademik Yıl';
 
   @override
+  String get academicYearHint =>
+      'Mevcut öğrenim yılınız (1 = birinci sınıf, 2 = ikinci sınıf, vb.).';
+
+  @override
   String get expectedGraduationYear => 'Beklenen Mezuniyet Yılı';
 
   @override

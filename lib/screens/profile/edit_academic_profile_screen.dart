@@ -38,6 +38,7 @@ class _EditAcademicProfileScreenState
 
   String? _selectedDegree;
   late int _selectedGradYear;
+  late int _selectedYear;
   late int _selectedSemester;
   late double _studyHours;
   late String _preferredTime;
@@ -54,9 +55,11 @@ class _EditAcademicProfileScreenState
     );
     _majorController = TextEditingController(text: profile?.major ?? '');
     _selectedDegree = profile?.degreeType ?? 'Bachelor';
-    _selectedGradYear = profile?.expectedGraduationYear ?? (DateTime.now().year + 4);
+    _selectedGradYear =
+        profile?.expectedGraduationYear ?? (DateTime.now().year + 4);
+    _selectedYear = (profile?.academicYear ?? 1).clamp(1, 10).toInt();
     _selectedSemester = profile?.currentSemester ?? 1;
-    
+
     // Fix: Watch the centralized goal provider instead of reading from profile
     final currentGoal = ref.read(weeklyStudyGoalHoursProvider);
     _studyHours = currentGoal.toDouble();
@@ -78,12 +81,20 @@ class _EditAcademicProfileScreenState
 
     final l10n = AppLocalizations.of(context)!;
     if (_selectedSemester < 1) {
-      AppToast.show(context, l10n.semesterNumberInvalid, type: AppToastType.warning);
+      AppToast.show(
+        context,
+        l10n.semesterNumberInvalid,
+        type: AppToastType.warning,
+      );
       return;
     }
 
     if (_studyHours < 5 || _studyHours > 40) {
-      AppToast.show(context, l10n.weeklyStudyGoalInvalid, type: AppToastType.warning);
+      AppToast.show(
+        context,
+        l10n.weeklyStudyGoalInvalid,
+        type: AppToastType.warning,
+      );
       return;
     }
 
@@ -101,7 +112,7 @@ class _EditAcademicProfileScreenState
       universityName: normalizedUniversity,
       degreeType: _selectedDegree,
       major: normalizedMajor,
-      academicYear: currentProfile?.academicYear,
+      academicYear: _selectedYear,
       currentSemester: _selectedSemester,
       expectedGraduationYear: _selectedGradYear,
       preferredStudyTime: _preferredTime,
@@ -123,7 +134,9 @@ class _EditAcademicProfileScreenState
       // Keep weekly goal scoped to active semester.
       final activeSemester = ref.read(activeSemesterFullProvider).valueOrNull;
       if (activeSemester != null) {
-        await ref.read(semesterProvider.notifier).updateSemester(
+        await ref
+            .read(semesterProvider.notifier)
+            .updateSemester(
               activeSemester.copyWith(weeklyStudyGoal: _studyHours.toInt()),
             );
         ref.invalidate(semesterProvider);
@@ -139,7 +152,11 @@ class _EditAcademicProfileScreenState
         } else {
           context.go('/home');
         }
-        AppToast.show(context, AppLocalizations.of(context)!.saveChanges, type: AppToastType.success);
+        AppToast.show(
+          context,
+          AppLocalizations.of(context)!.saveChanges,
+          type: AppToastType.success,
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -219,8 +236,7 @@ class _EditAcademicProfileScreenState
                     value: _selectedGradYear,
                     min: DateTime.now().year - 5,
                     max: DateTime.now().year + 10,
-                    onChanged: (val) =>
-                        setState(() => _selectedGradYear = val),
+                    onChanged: (val) => setState(() => _selectedGradYear = val),
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
@@ -228,6 +244,14 @@ class _EditAcademicProfileScreenState
                     l10n.currentSemesterLoad,
                     HeroIcons.briefcase,
                   ),
+                  _buildNumberPicker(
+                    label: l10n.academicYear,
+                    value: _selectedYear,
+                    min: 1,
+                    max: 10,
+                    onChanged: (val) => setState(() => _selectedYear = val),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   _buildNumberPicker(
                     label: l10n.currentSemesterNumber,
                     value: _selectedSemester,
@@ -248,7 +272,9 @@ class _EditAcademicProfileScreenState
                   Text(
                     l10n.onboardingRiskImpactHint,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.65,
+                      ),
                     ),
                   ),
 
@@ -294,7 +320,9 @@ class _EditAcademicProfileScreenState
                   Text(
                     l10n.optionalPreferencesDesc,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.65,
+                      ),
                     ),
                   ),
 
@@ -397,7 +425,7 @@ class _EditAcademicProfileScreenState
     required String label,
     required int value,
     required int min,
-      int? max,
+    int? max,
     required ValueChanged<int> onChanged,
   }) {
     final theme = Theme.of(context);
@@ -539,7 +567,9 @@ class _EditAcademicProfileScreenState
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.25,
+                            ),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -552,8 +582,12 @@ class _EditAcademicProfileScreenState
                     entry.value,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelLarge?.copyWith(
-                      color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ),

@@ -29,16 +29,31 @@ class MoodLog {
         ? rawFactors.map((item) => item.toString()).toList()
         : <String>[];
 
-    final moodLevel = ((json['mood_level'] as num?)?.toInt()) ??
+    final moodLevel =
+        ((json['mood_level'] as num?)?.toInt()) ??
         _legacyMoodToLevel(json['mood']?.toString()) ??
         3;
 
     final stressLevel = ((json['stress_level'] as num?)?.toInt()) ?? 5;
 
     final createdAtRaw = json['created_at']?.toString();
-    final createdAt = createdAtRaw != null
+    final parsed = createdAtRaw != null
         ? DateTime.tryParse(createdAtRaw)
         : null;
+    // Treat the stored wall-clock as the user's local time. Construct a naive
+    // local DateTime from the raw components so that displays don't shift by
+    // the device's UTC offset.
+    final createdAt = parsed == null
+        ? null
+        : DateTime(
+            parsed.year,
+            parsed.month,
+            parsed.day,
+            parsed.hour,
+            parsed.minute,
+            parsed.second,
+            parsed.millisecond,
+          );
 
     return MoodLog(
       id: json['id']?.toString() ?? '',

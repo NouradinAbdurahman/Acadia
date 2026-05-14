@@ -69,44 +69,48 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     return ((minutes / 5).ceil() * 5).clamp(5, 240);
   }
 
-  Widget _buildMoodSourceTabs(WidgetRef ref, ThemeData theme, String currentSource) {
+  Widget _buildMoodSourceTabs(
+    WidgetRef ref,
+    ThemeData theme,
+    String currentSource,
+  ) {
     final l10n = AppLocalizations.of(ref.context)!;
     return RepaintBoundary(
       child: Container(
-      height: 48,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildMoodStressTabItem(
-              label: l10n.dailyBaseline,
-              isSelected: currentSource == 'daily',
-              theme: theme,
-              accentColor: AppColors.moodSourceDailyAccent,
-              onTap: () {
-                Haptics.vibrate(HapticsType.selection);
-                ref.read(moodChartSourceProvider.notifier).state = 'daily';
-              },
+        height: 48,
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildMoodStressTabItem(
+                label: l10n.dailyBaseline,
+                isSelected: currentSource == 'daily',
+                theme: theme,
+                accentColor: AppColors.moodSourceDailyAccent,
+                onTap: () {
+                  Haptics.vibrate(HapticsType.selection);
+                  ref.read(moodChartSourceProvider.notifier).state = 'daily';
+                },
+              ),
             ),
-          ),
-          Expanded(
-            child: _buildMoodStressTabItem(
-              label: l10n.studySessions,
-              isSelected: currentSource == 'session',
-              theme: theme,
-              accentColor: AppColors.moodSourceSessionAccent,
-              onTap: () {
-                Haptics.vibrate(HapticsType.selection);
-                ref.read(moodChartSourceProvider.notifier).state = 'session';
-              },
+            Expanded(
+              child: _buildMoodStressTabItem(
+                label: l10n.studySessions,
+                isSelected: currentSource == 'session',
+                theme: theme,
+                accentColor: AppColors.moodSourceSessionAccent,
+                onTap: () {
+                  Haptics.vibrate(HapticsType.selection);
+                  ref.read(moodChartSourceProvider.notifier).state = 'session';
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -206,7 +210,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     color: theme.colorScheme.primary.withValues(alpha: 0.25),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -284,8 +288,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final trendDays = ref.watch(trendDaysProvider);
     final trendAsync = ref.watch(trendProvider(trendDays));
     final moodSource = ref.watch(moodChartSourceProvider);
-    final moodLogsAsync = moodSource == 'daily' 
-        ? ref.watch(dailyMoodLogsProvider) 
+    final moodLogsAsync = moodSource == 'daily'
+        ? ref.watch(dailyMoodLogsProvider)
         : ref.watch(sessionMoodLogsProvider);
     final moodTrendDays = ref.watch(moodTrendDaysProvider);
     final courses = ref.watch(courseProvider).valueOrNull ?? const <Course>[];
@@ -319,30 +323,53 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   children: [
                     Text(
                       l10n.analytics,
-                      style: theme.textTheme.displayLarge?.copyWith(fontSize: 28),
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        fontSize: 28,
+                      ),
                     ).animate().fade().slideX(begin: -0.1),
                     const SizedBox(height: AppSpacing.xl),
 
                     // --- MOVED FROM HOME ---
                     if (hasData && decision.hasContent) ...[
-                      _buildDecisionInsightsCard(context, ref, theme, l10n, decision, studyAnalytics),
+                      _buildDecisionInsightsCard(
+                        context,
+                        ref,
+                        theme,
+                        l10n,
+                        decision,
+                        studyAnalytics,
+                      ),
                       const SizedBox(height: AppSpacing.sm),
                     ],
 
-                    if (hasData && decision.hasContent && prediction.hasData) ...[
+                    if (hasData &&
+                        decision.hasContent &&
+                        prediction.hasData) ...[
                       _StudyProfileCard(studyAnalytics: studyAnalytics),
                       const SizedBox(height: AppSpacing.md),
                       Divider(
                         height: AppSpacing.md,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.08,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                     ],
 
                     if (hasData && prediction.hasData) ...[
-                      _buildPredictedStressCard(context, theme, l10n, prediction),
+                      _buildPredictedStressCard(
+                        context,
+                        theme,
+                        l10n,
+                        prediction,
+                      ),
                       const SizedBox(height: AppSpacing.md),
-                      _buildRecommendedPlanCard(context, theme, l10n, prediction),
+                      _buildRecommendedPlanCard(
+                        context,
+                        theme,
+                        l10n,
+                        prediction,
+                      ),
                       const SizedBox(height: AppSpacing.md),
                     ],
 
@@ -371,7 +398,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             HeroIcon(
                               HeroIcons.presentationChartLine,
                               size: 48,
-                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.3,
+                              ),
                             ),
                             const SizedBox(height: AppSpacing.md),
                             Text(
@@ -386,7 +415,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               textAlign: TextAlign.center,
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 height: 1.35,
-                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
                               ),
                             ),
                             const SizedBox(height: AppSpacing.lg),
@@ -398,7 +429,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   return;
                                 }
                                 if (sessions.isEmpty) {
-                                  ref.read(bottomNavProvider.notifier).state = 2;
+                                  ref.read(bottomNavProvider.notifier).state =
+                                      2;
                                   context.go('/home');
                                   return;
                                 }
@@ -413,16 +445,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 courses.isEmpty
                                     ? HeroIcons.academicCap
                                     : (sessions.isEmpty
-                                        ? HeroIcons.play
-                                        : HeroIcons.clipboardDocumentCheck),
+                                          ? HeroIcons.play
+                                          : HeroIcons.clipboardDocumentCheck),
                                 size: 18,
                               ),
                               label: Text(
                                 courses.isEmpty
                                     ? l10n.manageCourses
                                     : (sessions.isEmpty
-                                        ? l10n.startStudySession
-                                        : l10n.createTask),
+                                          ? l10n.startStudySession
+                                          : l10n.createTask),
                               ),
                             ),
                           ],
@@ -504,10 +536,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             vertical: AppSpacing.sm,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.05,
+                            ),
                             borderRadius: BorderRadius.circular(AppRadius.md),
                             border: Border.all(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.1,
+                              ),
                             ),
                           ),
                           child: Row(
@@ -518,7 +554,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 child: AppIcon(
                                   HeroIcons.informationCircle,
                                   size: 16,
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.4,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.xs),
@@ -526,13 +564,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 child: Text(
                                   l10n.moodTrackingHistoricalOnly,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.5),
                                   ),
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.xs),
                               GestureDetector(
-                                onTap: () => context.push('/settings/mood-stress'),
+                                onTap: () =>
+                                    context.push('/settings/mood-stress'),
                                 child: Text(
                                   l10n.moodTrackingOffGoToSettings,
                                   style: theme.textTheme.labelSmall?.copyWith(
@@ -556,23 +596,35 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               children: [
                                 Expanded(
                                   child: _MoodMetricTile(
-                                  title: l10n.moodAverageLabel,
-                                  value: moodSource == 'daily'
-                                      ? (data.dailyMoodLogCount == 0 ? l10n.moodNoData : data.avgDailyMood.toStringAsFixed(1))
-                                      : (data.sessionMoodLogCount == 0 ? l10n.moodNoData : data.avgSessionMood.toStringAsFixed(1)),
-                                  icon: HeroIcons.faceSmile,
+                                    title: l10n.moodAverageLabel,
+                                    value: moodSource == 'daily'
+                                        ? (data.dailyMoodLogCount == 0
+                                              ? l10n.moodNoData
+                                              : data.avgDailyMood
+                                                    .toStringAsFixed(1))
+                                        : (data.sessionMoodLogCount == 0
+                                              ? l10n.moodNoData
+                                              : data.avgSessionMood
+                                                    .toStringAsFixed(1)),
+                                    icon: HeroIcons.faceSmile,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Expanded(
-                                child: _MoodMetricTile(
-                                  title: l10n.stressAverageLabel,
-                                  value: moodSource == 'daily'
-                                      ? (data.dailyMoodLogCount == 0 ? l10n.moodNoData : data.avgDailyStress.toStringAsFixed(1))
-                                      : (data.sessionMoodLogCount == 0 ? l10n.moodNoData : data.avgSessionStress.toStringAsFixed(1)),
-                                  icon: HeroIcons.bolt,
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: _MoodMetricTile(
+                                    title: l10n.stressAverageLabel,
+                                    value: moodSource == 'daily'
+                                        ? (data.dailyMoodLogCount == 0
+                                              ? l10n.moodNoData
+                                              : data.avgDailyStress
+                                                    .toStringAsFixed(1))
+                                        : (data.sessionMoodLogCount == 0
+                                              ? l10n.moodNoData
+                                              : data.avgSessionStress
+                                                    .toStringAsFixed(1)),
+                                    icon: HeroIcons.bolt,
+                                  ),
                                 ),
-                              ),
                               ],
                             ),
                             const SizedBox(height: AppSpacing.md),
@@ -583,7 +635,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   l10n.moodOverLastDays(moodTrendDays),
                                   style: theme.textTheme.labelMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.7),
                                   ),
                                 ),
                                 Theme(
@@ -599,19 +652,27 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       side: BorderSide(
-                                        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                        color: theme.colorScheme.outlineVariant
+                                            .withValues(alpha: 0.5),
                                         width: 1,
                                       ),
                                     ),
                                     color: theme.colorScheme.surface,
                                     child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(24),
                                         border: Border.all(
-                                          color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.15),
                                           width: 1.2,
                                         ),
                                       ),
@@ -620,11 +681,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                         children: [
                                           Text(
                                             l10n.daysFilter(moodTrendDays),
-                                            style: theme.textTheme.labelMedium?.copyWith(
-                                              color: theme.colorScheme.primary,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.2,
-                                            ),
+                                            style: theme.textTheme.labelMedium
+                                                ?.copyWith(
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.2,
+                                                ),
                                           ),
                                           const SizedBox(width: 4),
                                           Icon(
@@ -635,7 +698,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                         ],
                                       ),
                                     ),
-                                    itemBuilder: (context) => [7, 14, 30].map((days) {
+                                    itemBuilder: (context) => [7, 14, 30].map((
+                                      days,
+                                    ) {
                                       final isSelected = days == moodTrendDays;
                                       return PopupMenuItem<int>(
                                         value: days,
@@ -645,21 +710,29 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                             Expanded(
                                               child: Text(
                                                 l10n.daysFilter(days),
-                                                style: theme.textTheme.bodyMedium?.copyWith(
-                                                  color: isSelected 
-                                                      ? theme.colorScheme.primary 
-                                                      : theme.colorScheme.onSurface,
-                                                  fontWeight: isSelected 
-                                                      ? FontWeight.w700 
-                                                      : FontWeight.w500,
-                                                ),
+                                                style: theme
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      color: isSelected
+                                                          ? theme
+                                                                .colorScheme
+                                                                .primary
+                                                          : theme
+                                                                .colorScheme
+                                                                .onSurface,
+                                                      fontWeight: isSelected
+                                                          ? FontWeight.w700
+                                                          : FontWeight.w500,
+                                                    ),
                                               ),
                                             ),
                                             if (isSelected)
                                               Icon(
                                                 Icons.check_rounded,
                                                 size: 16,
-                                                color: theme.colorScheme.primary,
+                                                color:
+                                                    theme.colorScheme.primary,
                                               ),
                                           ],
                                         ),
@@ -667,7 +740,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     }).toList(),
                                     onSelected: (value) {
                                       Haptics.vibrate(HapticsType.selection);
-                                      ref.read(moodTrendDaysProvider.notifier).state = value;
+                                      ref
+                                              .read(
+                                                moodTrendDaysProvider.notifier,
+                                              )
+                                              .state =
+                                          value;
                                     },
                                   ),
                                 ),
@@ -688,11 +766,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 l10n.historicalConsistencyScoreLine(
-                                  (100 - studyAnalytics.timeInconsistencyScore).round(),
+                                  (100 - studyAnalytics.timeInconsistencyScore)
+                                      .round(),
                                   studyAnalytics.consistencyTrendLabel,
                                 ),
                                 style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   fontSize: 10,
                                 ),
                               ),
@@ -705,15 +786,28 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       const BurnoutStatusCard(),
                       const SizedBox(height: AppSpacing.xl),
 
-                      if (studyAnalytics.moodDurationImpactDetails['hasEnoughData'] as bool) ...[
-                        _buildMoodVsStudyCard(theme, l10n, decision, studyAnalytics),
+                      if (studyAnalytics
+                              .moodDurationImpactDetails['hasEnoughData']
+                          as bool) ...[
+                        _buildMoodVsStudyCard(
+                          theme,
+                          l10n,
+                          decision,
+                          studyAnalytics,
+                        ),
                         const SizedBox(height: AppSpacing.xl),
                       ],
 
                       // 1. Study Hours by Course
-                      _buildSectionTitle(theme, l10n.studyHoursByCourse,
-                          showAiHint: false),
-                      Text(l10n.thisWeekLabel, style: theme.textTheme.bodySmall),
+                      _buildSectionTitle(
+                        theme,
+                        l10n.studyHoursByCourse,
+                        showAiHint: false,
+                      ),
+                      Text(
+                        l10n.thisWeekLabel,
+                        style: theme.textTheme.bodySmall,
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       _StudyHoursBarChart(data: data),
                       const SizedBox(height: AppSpacing.lg),
@@ -723,15 +817,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ),
                       const SizedBox(height: AppSpacing.xl),
 
-
-
-
-
                       // 4. Trend Analysis
                       KeyedSubtree(
                         key: _trendsSectionKey,
-                        child: _buildSectionTitle(theme, l10n.trendAnalysis,
-                            showAiHint: false),
+                        child: _buildSectionTitle(
+                          theme,
+                          l10n.trendAnalysis,
+                          showAiHint: false,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       _buildTrendDaysTabs(ref, theme, trendDays),
@@ -745,7 +838,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             data: data,
                             studyAnalytics: studyAnalytics,
                             showDetails: _showTrendDetails,
-                            onToggleDetails: () => setState(() => _showTrendDetails = !_showTrendDetails),
+                            onToggleDetails: () => setState(
+                              () => _showTrendDetails = !_showTrendDetails,
+                            ),
                           ),
                         ),
                         loading: () => const AppGlassCard(
@@ -867,10 +962,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final recoLines = layerParts == null
         ? const <String>[]
         : layerParts.recommendation
-            .split('\n')
-            .map((s) => s.trim())
-            .where((s) => s.isNotEmpty)
-            .toList();
+              .split('\n')
+              .map((s) => s.trim())
+              .where((s) => s.isNotEmpty)
+              .toList();
 
     return AppGlassCard(
       key: ValueKey('decision-$signature'),
@@ -964,19 +1059,26 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              text: 'Start ${_resolvedDecisionMinutes(ref, decision.suggestedSessionMinutes)} min session',
+              text:
+                  'Start ${_resolvedDecisionMinutes(ref, decision.suggestedSessionMinutes)} min session',
               onPressed: () => _startNowFromDecision(
                 context,
                 ref,
                 decision.suggestedSessionMinutes,
               ),
-              icon: const AppIcon(HeroIcons.play, size: 16, color: Colors.white),
+              icon: const AppIcon(
+                HeroIcons.play,
+                size: 16,
+                color: Colors.white,
+              ),
             ),
           ),
           if (decision.suggestedSessionMinutes != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Text(
-              l10n.decisionRecommendedSession(decision.suggestedSessionMinutes!),
+              l10n.decisionRecommendedSession(
+                decision.suggestedSessionMinutes!,
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w700,
@@ -1016,7 +1118,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             l10n.focusRecommendationPrimary,
             style: theme.textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              color: isPriorityOne ? theme.colorScheme.error : theme.colorScheme.primary,
+              color: isPriorityOne
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.primary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -1039,14 +1143,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildRankedFactorRow(ThemeData theme, AppLocalizations l10n, String text, {bool isMain = false}) {
+  Widget _buildRankedFactorRow(
+    ThemeData theme,
+    AppLocalizations l10n,
+    String text, {
+    bool isMain = false,
+  }) {
     return Row(
       children: [
         Container(
           width: 4,
           height: 14,
           decoration: BoxDecoration(
-            color: isMain ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            color: isMain
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -1055,20 +1166,28 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           text,
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: isMain ? FontWeight.w800 : FontWeight.w600,
-            color: isMain ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            color: isMain
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSignalChip(ThemeData theme, AppLocalizations l10n, String signal) {
+  Widget _buildSignalChip(
+    ThemeData theme,
+    AppLocalizations l10n,
+    String signal,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+        ),
       ),
       child: Text(
         signal,
@@ -1081,18 +1200,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildStatBadge(ThemeData theme, String text, {bool isWarning = false}) {
+  Widget _buildStatBadge(
+    ThemeData theme,
+    String text, {
+    bool isWarning = false,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isWarning 
-            ? theme.colorScheme.error.withValues(alpha: 0.1) 
+        color: isWarning
+            ? theme.colorScheme.error.withValues(alpha: 0.1)
             : theme.colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
-          color: isWarning 
-              ? theme.colorScheme.error.withValues(alpha: 0.2) 
-              : theme.colorScheme.primary.withValues(alpha: 0.2)
+          color: isWarning
+              ? theme.colorScheme.error.withValues(alpha: 0.2)
+              : theme.colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       child: Text(
@@ -1100,7 +1223,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         style: theme.textTheme.labelSmall?.copyWith(
           fontSize: 10,
           fontWeight: FontWeight.bold,
-          color: isWarning ? theme.colorScheme.error : theme.colorScheme.primary,
+          color: isWarning
+              ? theme.colorScheme.error
+              : theme.colorScheme.primary,
         ),
       ),
     );
@@ -1121,8 +1246,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final color = isPriorityOne
         ? theme.colorScheme.error
         : (item.type == DecisionType.warning
-            ? theme.colorScheme.error.withValues(alpha: 0.7)
-            : theme.colorScheme.primary);
+              ? theme.colorScheme.error.withValues(alpha: 0.7)
+              : theme.colorScheme.primary);
 
     final title = item.title;
     final action = item.description;
@@ -1154,7 +1279,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   Text(
                     title,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.92),
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.92,
+                      ),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1163,7 +1290,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     Text(
                       action,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.72,
+                        ),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1236,10 +1365,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     ref.read(bottomNavProvider.notifier).state = 2;
 
     // 3. Navigation with Extra (Requested Audit requirement)
-    context.go('/app', extra: {
-      'duration': minutes,
-      'source': 'analytics',
-    });
+    context.go('/app', extra: {'duration': minutes, 'source': 'analytics'});
   }
 
   int _resolvedDecisionMinutes(WidgetRef ref, int? _) {
@@ -1366,7 +1492,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-
   String _relativeDayLabel(AppLocalizations l10n, DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -1374,10 +1499,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final delta = day.difference(today).inDays;
     if (delta == 0) return l10n.today;
     if (delta == 1) return l10n.tomorrow;
-    return DateFormat.EEEE(Localizations.localeOf(context).languageCode).format(date);
+    return DateFormat.EEEE(
+      Localizations.localeOf(context).languageCode,
+    ).format(date);
   }
 
-  String _predictionRiskLine(AppLocalizations l10n, PredictionResult prediction) {
+  String _predictionRiskLine(
+    AppLocalizations l10n,
+    PredictionResult prediction,
+  ) {
     final level = switch (prediction.performanceRiskLevel) {
       PredictionLevel.low => l10n.predictionLevelLow,
       PredictionLevel.medium => l10n.predictionLevelMedium,
@@ -1445,21 +1575,30 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   String _weekdayNameFromInt(String? value) {
     final weekday = int.tryParse(value ?? '');
-    if (weekday == null || weekday < DateTime.monday || weekday > DateTime.sunday) {
+    if (weekday == null ||
+        weekday < DateTime.monday ||
+        weekday > DateTime.sunday) {
       return '-';
     }
 
     final now = DateTime.now();
     final date = now.subtract(Duration(days: now.weekday - weekday));
-    return DateFormat.EEEE(Localizations.localeOf(context).languageCode).format(date);
+    return DateFormat.EEEE(
+      Localizations.localeOf(context).languageCode,
+    ).format(date);
   }
 
-  Widget _buildSectionTitle(ThemeData theme, String title,
-      {bool showAiHint = false}) {
+  Widget _buildSectionTitle(
+    ThemeData theme,
+    String title, {
+    bool showAiHint = false,
+  }) {
     if (!showAiHint) {
       return Text(
         title,
-        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
       );
     }
     return Row(
@@ -1467,7 +1606,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         Expanded(
           child: Text(
             title,
-            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         const AiSparkleHint(size: 15),
@@ -1535,7 +1676,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildMoodVsStudyCard(ThemeData theme, AppLocalizations l10n, DecisionResult decision, StudyAnalytics studyAnalytics) {
+  Widget _buildMoodVsStudyCard(
+    ThemeData theme,
+    AppLocalizations l10n,
+    DecisionResult decision,
+    StudyAnalytics studyAnalytics,
+  ) {
     final details = studyAnalytics.moodDurationImpactDetails;
     final hasEnoughData = details['hasEnoughData'] as bool;
     final impact = details['impact'] as int;
@@ -1550,23 +1696,28 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         children: [
           Row(
             children: [
-              const AppIcon(HeroIcons.presentationChartLine, color: Colors.blueAccent),
+              const AppIcon(
+                HeroIcons.presentationChartLine,
+                color: Colors.blueAccent,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 l10n.analyticsMoodPerformanceTitle,
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            !hasEnoughData 
-               ? l10n.analyticsNotEnoughData
-               : (isMoodGood
-                    ? l10n.analyticsMoodPerformanceGoodDesc
-                    : (isMoodBad
-                        ? l10n.analyticsMoodPerformanceBadDesc
-                        : l10n.analyticsMoodPerformanceStableDesc)),
+            !hasEnoughData
+                ? l10n.analyticsNotEnoughData
+                : (isMoodGood
+                      ? l10n.analyticsMoodPerformanceGoodDesc
+                      : (isMoodBad
+                            ? l10n.analyticsMoodPerformanceBadDesc
+                            : l10n.analyticsMoodPerformanceStableDesc)),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               height: 1.4,
@@ -1578,32 +1729,49 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    Text(l10n.analyticsMoodBetterMood, style: theme.textTheme.labelSmall),
+                    Text(
+                      l10n.analyticsMoodBetterMood,
+                      style: theme.textTheme.labelSmall,
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      hasEnoughData ? l10n.analyticsImpactPositive(impact) : l10n.analyticsNotEnoughData, 
+                      hasEnoughData
+                          ? l10n.analyticsImpactPositive(impact)
+                          : l10n.analyticsNotEnoughData,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.greenAccent,
                         fontSize: hasEnoughData ? 20 : 10,
                       ),
                     ),
-                    Text(l10n.analyticsMoodFocusBoost, style: theme.textTheme.labelSmall?.copyWith(fontSize: 8)),
+                    Text(
+                      l10n.analyticsMoodFocusBoost,
+                      style: theme.textTheme.labelSmall?.copyWith(fontSize: 8),
+                    ),
                   ],
                 ),
               ),
-              Container(width: 1, height: 40, color: theme.colorScheme.onSurface.withValues(alpha: 0.1)),
+              Container(
+                width: 1,
+                height: 40,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              ),
               Expanded(
                 child: Column(
                   children: [
                     const SizedBox(height: 16), // Adjusted spacing
                     Text(
-                      hasEnoughData ? l10n.analyticsImpactNegative(impact + 5) : l10n.analyticsNotEnoughData, 
+                      hasEnoughData
+                          ? l10n.analyticsImpactNegative(impact + 5)
+                          : l10n.analyticsNotEnoughData,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: Colors.redAccent,
                         fontSize: hasEnoughData ? 20 : 10,
                       ),
                     ),
-                    Text(l10n.analyticsMoodFocusDrain, style: theme.textTheme.labelSmall?.copyWith(fontSize: 8)),
+                    Text(
+                      l10n.analyticsMoodFocusDrain,
+                      style: theme.textTheme.labelSmall?.copyWith(fontSize: 8),
+                    ),
                   ],
                 ),
               ),
@@ -1680,10 +1848,7 @@ class _MoodMetricTile extends StatelessWidget {
 }
 
 class _MoodTrendChart extends StatelessWidget {
-  const _MoodTrendChart({
-    required this.moodLogsAsync,
-    required this.days,
-  });
+  const _MoodTrendChart({required this.moodLogsAsync, required this.days});
 
   final AsyncValue<List<MoodLog>> moodLogsAsync;
   final int days;
@@ -1698,23 +1863,40 @@ class _MoodTrendChart extends StatelessWidget {
         height: 140,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, stackTrace) => SizedBox(
-        height: 140,
-        child: Center(child: Text(l10n.networkError)),
-      ),
+      error: (error, stackTrace) =>
+          SizedBox(height: 140, child: Center(child: Text(l10n.networkError))),
       data: (logs) {
         final now = DateTime.now();
         final today = DateTime(now.year, now.month, now.day);
+
+        // If no logs fall within the selected window, shift to the most recent log.
+        DateTime windowEnd = today;
+        if (logs.isNotEmpty) {
+          final windowStart = today.subtract(Duration(days: days - 1));
+          final hasRecentData = logs.any((entry) {
+            final d = entry.createdAt.toLocal();
+            final date = DateTime(d.year, d.month, d.day);
+            return !date.isBefore(windowStart);
+          });
+          if (!hasRecentData) {
+            final sorted = [...logs]
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            final mostRecent = sorted.first.createdAt.toLocal();
+            windowEnd = DateTime(
+              mostRecent.year,
+              mostRecent.month,
+              mostRecent.day,
+            );
+          }
+        }
+
         final values = <double>[];
 
         for (var i = days - 1; i >= 0; i--) {
-          final day = today.subtract(Duration(days: i));
+          final day = windowEnd.subtract(Duration(days: i));
           final sameDay = logs.where((entry) {
-            final d = DateTime(
-              entry.createdAt.year,
-              entry.createdAt.month,
-              entry.createdAt.day,
-            );
+            final local = entry.createdAt.toLocal();
+            final d = DateTime(local.year, local.month, local.day);
             return d == day;
           }).toList();
 
@@ -1745,34 +1927,6 @@ class _MoodTrendChart extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     l10n.startTrackingToSeeTrends,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final dataPoints = values.where((value) => value > 0).length;
-        if (dataPoints < 2) {
-          return SizedBox(
-            height: 140,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    l10n.moodKeepLogging,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    l10n.moodTrendNeedsData,
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                       fontStyle: FontStyle.italic,
@@ -1844,23 +1998,23 @@ class _MoodTrendChart extends StatelessWidget {
                     reservedSize: 24,
                     getTitlesWidget: (value, meta) {
                       final index = value.toInt();
-                      if (index < 0 || index >= days) return const SizedBox.shrink();
-                      
+                      if (index < 0 || index >= days)
+                        return const SizedBox.shrink();
+
                       final interval = days >= 30 ? 5 : (days >= 14 ? 2 : 1);
                       if (index % interval != 0 && index != days - 1) {
                         return const SizedBox.shrink();
                       }
-                      
+
                       final daysAgo = (days - 1) - index;
-                      final date = DateTime.now().subtract(Duration(days: daysAgo));
-                      final label = DateFormat.E(Localizations.localeOf(context).languageCode).format(date);
-                      
+                      final date = windowEnd.subtract(Duration(days: daysAgo));
+                      final label = DateFormat.E(
+                        Localizations.localeOf(context).languageCode,
+                      ).format(date);
+
                       return Padding(
                         padding: const EdgeInsets.only(top: 6),
-                        child: Text(
-                          label,
-                          style: theme.textTheme.labelSmall,
-                        ),
+                        child: Text(label, style: theme.textTheme.labelSmall),
                       );
                     },
                   ),
@@ -1907,7 +2061,8 @@ class _MoodTrendChart extends StatelessWidget {
 
   Color _getMoodChartColor(List<FlSpot> spots) {
     if (spots.isEmpty) return Colors.grey;
-    final avgMood = spots.map((s) => s.y).reduce((a, b) => a + b) / spots.length;
+    final avgMood =
+        spots.map((s) => s.y).reduce((a, b) => a + b) / spots.length;
     return _getMoodLevelColor(avgMood, null);
   }
 
@@ -1931,11 +2086,7 @@ class _EmptyStateBulletRow extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        HeroIcon(
-          icon,
-          size: 16,
-          color: theme.colorScheme.primary,
-        ),
+        HeroIcon(icon, size: 16, color: theme.colorScheme.primary),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
@@ -1996,211 +2147,211 @@ class _TrendAnalysisSection extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           AppGlassCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.schedule, size: 16),
-                      SizedBox(width: 6),
-                      Text(l10n.studyTrend),
-                    ],
-                  ),
-                  Text(
-                    l10n.trendTodayDuration(
-                      _formatDurationFromHours(
-                        _latestDouble(trend.studyTrend),
-                        l10n,
-                      ),
-                    ),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.trendStudySubtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 140,
-                child: _TrendLineChart(
-                  data: trend.studyTrend,
-                  valueSuffix: l10n.hoursAbbreviation,
-                  emptyMessage: l10n.trendStudyEmptyMessage,
-                  useDurationLabels: true,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppGlassCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.checklist, size: 16),
-                      SizedBox(width: 6),
-                      Text(l10n.taskCompletionTrend),
-                    ],
-                  ),
-                  Text(
-                    l10n.trendCompletedToday(_latestInt(trend.taskTrend)),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.trendTaskSubtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 140,
-                child: _TrendBarChart(data: trend.taskTrend, valueSuffix: ''),
-              ),
-              if (_activeDaysCount(trend.taskTrend) <= 2 &&
-                  trend.taskTrend.values.fold<int>(
-                        0,
-                        (sum, value) => sum + value,
-                      ) >
-                      0)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.sm),
-                  child: Text(
-                    l10n.trendTasksOneDayHint,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppGlassCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.warning_amber_rounded, size: 16),
-                      SizedBox(width: 6),
-                      Text(l10n.workloadTrend),
-                    ],
-                  ),
-                  Text(
-                    l10n.trendNewToday(_latestInt(trend.workloadTrend)),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.trendWorkloadSubtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 140,
-                child: _TrendLineChart(
-                  data: trend.workloadTrend.map(
-                    (key, value) => MapEntry(key, value.toDouble()),
-                  ),
-                  valueSuffix: '',
-                  minActivePoints: 1,
-                  emptyMessage: l10n.trendWorkloadEmptyMessage,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        AppGlassCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.show_chart, size: 16),
-                  SizedBox(width: 6),
-                  Text(l10n.performanceTrend),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.trendPerformanceSubtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SizedBox(
-                height: 140,
-                child: _TrendGradeLineChart(points: trend.gradeTrend),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        ..._sortedInsights(trend.insights).map(
-          (insight) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: AppGlassCard(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.insights_rounded,
-                    size: 18,
-                    color: switch (insight.type) {
-                      InsightType.good => Colors.green,
-                      InsightType.warning => Colors.orange,
-                      InsightType.critical => Colors.red,
-                    },
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          TrendLocalizer.localizeTitle(l10n, insight),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(TrendLocalizer.localizeMessage(l10n, insight)),
+                        Icon(Icons.schedule, size: 16),
+                        SizedBox(width: 6),
+                        Text(l10n.studyTrend),
                       ],
                     ),
+                    Text(
+                      l10n.trendTodayDuration(
+                        _formatDurationFromHours(
+                          _latestDouble(trend.studyTrend),
+                          l10n,
+                        ),
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.trendStudySubtitle,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  height: 140,
+                  child: _TrendLineChart(
+                    data: trend.studyTrend,
+                    valueSuffix: l10n.hoursAbbreviation,
+                    emptyMessage: l10n.trendStudyEmptyMessage,
+                    useDurationLabels: true,
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppGlassCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.checklist, size: 16),
+                        SizedBox(width: 6),
+                        Text(l10n.taskCompletionTrend),
+                      ],
+                    ),
+                    Text(
+                      l10n.trendCompletedToday(_latestInt(trend.taskTrend)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.trendTaskSubtitle,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  height: 140,
+                  child: _TrendBarChart(data: trend.taskTrend, valueSuffix: ''),
+                ),
+                if (_activeDaysCount(trend.taskTrend) <= 2 &&
+                    trend.taskTrend.values.fold<int>(
+                          0,
+                          (sum, value) => sum + value,
+                        ) >
+                        0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
+                    child: Text(
+                      l10n.trendTasksOneDayHint,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppGlassCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 16),
+                        SizedBox(width: 6),
+                        Text(l10n.workloadTrend),
+                      ],
+                    ),
+                    Text(
+                      l10n.trendNewToday(_latestInt(trend.workloadTrend)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.trendWorkloadSubtitle,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  height: 140,
+                  child: _TrendLineChart(
+                    data: trend.workloadTrend.map(
+                      (key, value) => MapEntry(key, value.toDouble()),
+                    ),
+                    valueSuffix: '',
+                    minActivePoints: 1,
+                    emptyMessage: l10n.trendWorkloadEmptyMessage,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppGlassCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.show_chart, size: 16),
+                    SizedBox(width: 6),
+                    Text(l10n.performanceTrend),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.trendPerformanceSubtitle,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  height: 140,
+                  child: _TrendGradeLineChart(points: trend.gradeTrend),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ..._sortedInsights(trend.insights).map(
+            (insight) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: AppGlassCard(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.insights_rounded,
+                      size: 18,
+                      color: switch (insight.type) {
+                        InsightType.good => Colors.green,
+                        InsightType.warning => Colors.orange,
+                        InsightType.critical => Colors.red,
+                      },
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            TrendLocalizer.localizeTitle(l10n, insight),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(TrendLocalizer.localizeMessage(l10n, insight)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ],
-    ],
-  );
-}
+    );
+  }
 
   double _latestDouble(Map<DateTime, double> values) {
     if (values.isEmpty) return 0;
@@ -2230,7 +2381,6 @@ class _TrendAnalysisSection extends StatelessWidget {
     sorted.sort((a, b) => rank(a.type).compareTo(rank(b.type)));
     return sorted;
   }
-
 
   String _formatDurationFromHours(double hoursValue, AppLocalizations l10n) {
     final totalMinutes = (hoursValue * 60).round();
@@ -2345,11 +2495,17 @@ class _TrendSummaryCard extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: theme.colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: theme.colorScheme.error.withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 children: [
-                  const AppIcon(HeroIcons.exclamationTriangle, size: 16, color: Colors.orange),
+                  const AppIcon(
+                    HeroIcons.exclamationTriangle,
+                    size: 16,
+                    color: Colors.orange,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -2371,7 +2527,7 @@ class _TrendSummaryCard extends ConsumerWidget {
           Text(
             studyAnalytics.getBurnoutShortExplanation(l10n),
             style: theme.textTheme.bodySmall?.copyWith(
-              color: studyAnalytics.burnoutLevel == BurnoutLevel.stable 
+              color: studyAnalytics.burnoutLevel == BurnoutLevel.stable
                   ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
                   : theme.colorScheme.primary,
               fontStyle: FontStyle.italic,
@@ -2841,16 +2997,16 @@ class _OverallStatusCard extends StatelessWidget {
     );
     final totalTasks = _estimatedTotalTasks(trend, completed);
     final l10n = AppLocalizations.of(context)!;
-    
+
     // New unified logic based on user request
     final bool isCriticalRisk = riskScore >= 50;
     final bool isStudyDeclining = trend.studyChangePercent < 0;
     final bool isLowConsistency = consistency < 0.5;
-    
+
     final String status;
     final String detail;
     final Color color;
-    
+
     if (isCriticalRisk) {
       status = l10n.trendStatusNeedsAttention; // Map to appropriate L10n
       detail = l10n.trendStatusCriticalRiskDetail;
@@ -2902,7 +3058,8 @@ class _StudyHoursBarChart extends ConsumerStatefulWidget {
   const _StudyHoursBarChart({required this.data});
 
   @override
-  ConsumerState<_StudyHoursBarChart> createState() => _StudyHoursBarChartState();
+  ConsumerState<_StudyHoursBarChart> createState() =>
+      _StudyHoursBarChartState();
 }
 
 class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
@@ -2956,7 +3113,11 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                 ),
           );
           barData.add(
-            _BarData(course, hours * 60.0, _formatCourseName(course.courseName)),
+            _BarData(
+              course,
+              hours * 60.0,
+              _formatCourseName(course.courseName),
+            ),
           );
         });
 
@@ -2965,7 +3126,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
         final allBars = barData;
         final maxMinutes = allBars.isEmpty
             ? 60.0
-          : allBars
+            : allBars
                   .map((e) => e.minutes)
                   .reduce((a, b) => a > b ? a : b)
                   .clamp(1.0, 24 * 60.0)
@@ -3007,26 +3168,35 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                               maxY: maxY,
                               barTouchData: BarTouchData(
                                 enabled: true,
-                                touchCallback: (FlTouchEvent event, barResponse) {
-                                  if (event is FlTapUpEvent) {
-                                    final tappedIndex = (barResponse == null ||
-                                            barResponse.spot == null)
-                                        ? null
-                                        : barResponse.spot!.touchedBarGroupIndex;
+                                touchCallback:
+                                    (FlTouchEvent event, barResponse) {
+                                      if (event is FlTapUpEvent) {
+                                        final tappedIndex =
+                                            (barResponse == null ||
+                                                barResponse.spot == null)
+                                            ? null
+                                            : barResponse
+                                                  .spot!
+                                                  .touchedBarGroupIndex;
 
-                                    final newIndex =
-                                        tappedIndex == _selectedIndex ? null : tappedIndex;
+                                        final newIndex =
+                                            tappedIndex == _selectedIndex
+                                            ? null
+                                            : tappedIndex;
 
-                                    if (_selectedIndex != newIndex) {
-                                      Haptics.vibrate(HapticsType.selection);
-                                      setState(() {
-                                        _selectedIndex = newIndex;
-                                      });
-                                    }
-                                  }
-                                },
+                                        if (_selectedIndex != newIndex) {
+                                          Haptics.vibrate(
+                                            HapticsType.selection,
+                                          );
+                                          setState(() {
+                                            _selectedIndex = newIndex;
+                                          });
+                                        }
+                                      }
+                                    },
                                 touchTooltipData: BarTouchTooltipData(
-                                  getTooltipColor: (_) => theme.colorScheme.surface,
+                                  getTooltipColor: (_) =>
+                                      theme.colorScheme.surface,
                                   tooltipRoundedRadius: 8,
                                   tooltipPadding: const EdgeInsets.symmetric(
                                     horizontal: 10,
@@ -3035,50 +3205,55 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                   tooltipMargin: 12,
                                   fitInsideHorizontally: true,
                                   fitInsideVertically: true,
-                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                    final bar = allBars[groupIndex];
-                                    final courseCode =
-                                        (bar.course.courseCode ?? '')
-                                            .replaceAll(RegExp(r'[\s\-]'), '')
-                                            .toUpperCase();
-                                    final shortName =
-                                        bar.displayName.length > 15
+                                  getTooltipItem:
+                                      (group, groupIndex, rod, rodIndex) {
+                                        final bar = allBars[groupIndex];
+                                        final courseCode =
+                                            (bar.course.courseCode ?? '')
+                                                .replaceAll(
+                                                  RegExp(r'[\s\-]'),
+                                                  '',
+                                                )
+                                                .toUpperCase();
+                                        final shortName =
+                                            bar.displayName.length > 15
                                             ? '${bar.displayName.substring(0, 15)}...'
                                             : bar.displayName;
-                                    final duration = _formatDurationFromMinutes(
-                                      l10n: l10n,
-                                      totalMinutes: rod.toY.round(),
-                                    );
+                                        final duration =
+                                            _formatDurationFromMinutes(
+                                              l10n: l10n,
+                                              totalMinutes: rod.toY.round(),
+                                            );
 
-                                    return BarTooltipItem(
-                                      '',
-                                      theme.textTheme.labelMedium!,
-                                      children: [
-                                        TextSpan(
-                                          text: courseCode.isEmpty
-                                              ? ''
-                                              : '$courseCode\n',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          text: '$shortName\n',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.normal,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          text: duration,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                      textAlign: TextAlign.center,
-                                    );
-                                  },
+                                        return BarTooltipItem(
+                                          '',
+                                          theme.textTheme.labelMedium!,
+                                          children: [
+                                            TextSpan(
+                                              text: courseCode.isEmpty
+                                                  ? ''
+                                                  : '$courseCode\n',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: '$shortName\n',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.normal,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: duration,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                          textAlign: TextAlign.center,
+                                        );
+                                      },
                                 ),
                               ),
                               titlesData: FlTitlesData(
@@ -3089,30 +3264,39 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                     reservedSize: 34,
                                     getTitlesWidget: (value, meta) {
                                       final index = value.toInt();
-                                      if (index >= 0 && index < allBars.length) {
+                                      if (index >= 0 &&
+                                          index < allBars.length) {
                                         final bar = allBars[index];
-                                        final rawCode = bar.course.courseCode ??
+                                        final rawCode =
+                                            bar.course.courseCode ??
                                             (bar.displayName.length > 8
-                                                ? bar.displayName.substring(0, 7)
+                                                ? bar.displayName.substring(
+                                                    0,
+                                                    7,
+                                                  )
                                                 : bar.displayName);
                                         final normalizedCode = rawCode
                                             .replaceAll(RegExp(r'[\s\-]'), '')
                                             .toUpperCase();
                                         return Padding(
-                                          padding: const EdgeInsets.only(top: 8.0),
+                                          padding: const EdgeInsets.only(
+                                            top: 8.0,
+                                          ),
                                           child: Text(
                                             normalizedCode,
                                             textAlign: TextAlign.center,
                                             style: TextStyle(
                                               fontSize: 7,
-                                              fontWeight: index == _selectedIndex
+                                              fontWeight:
+                                                  index == _selectedIndex
                                                   ? FontWeight.w900
                                                   : FontWeight.bold,
-                                              color: _selectedIndex == null ||
+                                              color:
+                                                  _selectedIndex == null ||
                                                       _selectedIndex == index
                                                   ? theme.colorScheme.onSurface
                                                   : theme.colorScheme.onSurface
-                                                      .withValues(alpha: 0.3),
+                                                        .withValues(alpha: 0.3),
                                             ),
                                           ),
                                         );
@@ -3139,7 +3323,8 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                   sideTitles: SideTitles(
                                     showTitles: true,
                                     reservedSize: 24,
-                                    getTitlesWidget: (_, __) => const SizedBox.shrink(),
+                                    getTitlesWidget: (_, __) =>
+                                        const SizedBox.shrink(),
                                   ),
                                 ),
                                 rightTitles: const AxisTitles(
@@ -3154,16 +3339,17 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                     _selectedIndex != null && !isSelected;
                                 return BarChartGroupData(
                                   x: entry.key,
-                                  showingTooltipIndicators: isSelected ? [0] : [],
+                                  showingTooltipIndicators: isSelected
+                                      ? [0]
+                                      : [],
                                   barRods: [
                                     BarChartRodData(
-                                      toY:
-                                          entry.value.minutes < 1
-                                              ? 1
-                                              : entry.value.minutes,
+                                      toY: entry.value.minutes < 1
+                                          ? 1
+                                          : entry.value.minutes,
                                       color: isDimmed
                                           ? entry.value.course.uiColor
-                                              .withValues(alpha: 0.2)
+                                                .withValues(alpha: 0.2)
                                           : entry.value.course.uiColor,
                                       width: isSelected ? 18 : 16,
                                       borderRadius: const BorderRadius.vertical(
@@ -3171,7 +3357,9 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                       ),
                                       borderSide: isSelected
                                           ? BorderSide(
-                                              color: Colors.white.withValues(alpha: 0.6),
+                                              color: Colors.white.withValues(
+                                                alpha: 0.6,
+                                              ),
                                               width: 1.5,
                                             )
                                           : BorderSide.none,
@@ -3180,7 +3368,9 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                 );
                               }).toList(),
                             ),
-                            swapAnimationDuration: const Duration(milliseconds: 350),
+                            swapAnimationDuration: const Duration(
+                              milliseconds: 350,
+                            ),
                             swapAnimationCurve: Curves.easeOutCubic,
                           ),
                         ),
@@ -3200,12 +3390,13 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                           final isSelected = _selectedIndex == index;
                           const legendFontSize = 10.0;
 
-                          final displayCode = (bar.course.courseCode ??
-                                  (bar.displayName.length > 8
-                                      ? bar.displayName.substring(0, 7)
-                                      : bar.displayName))
-                              .replaceAll(RegExp(r'[\s\-]'), '')
-                              .toUpperCase();
+                          final displayCode =
+                              (bar.course.courseCode ??
+                                      (bar.displayName.length > 8
+                                          ? bar.displayName.substring(0, 7)
+                                          : bar.displayName))
+                                  .replaceAll(RegExp(r'[\s\-]'), '')
+                                  .toUpperCase();
 
                           final durationStr = _formatDurationFromMinutes(
                             l10n: l10n,
@@ -3223,11 +3414,15 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                               },
                               child: AnimatedOpacity(
                                 duration: const Duration(milliseconds: 200),
-                                opacity: _selectedIndex == null || isSelected ? 1.0 : 0.3,
+                                opacity: _selectedIndex == null || isSelected
+                                    ? 1.0
+                                    : 0.3,
                                 child: Row(
                                   children: [
                                     AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
                                       width: isSelected ? 12 : 8,
                                       height: isSelected ? 12 : 8,
                                       decoration: BoxDecoration(
@@ -3240,7 +3435,7 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                                       .withValues(alpha: 0.4),
                                                   blurRadius: 4,
                                                   spreadRadius: 2,
-                                                )
+                                                ),
                                               ]
                                             : null,
                                       ),
@@ -3249,9 +3444,11 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                     Expanded(
                                       child: RichText(
                                         text: TextSpan(
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: theme.colorScheme.onSurface,
-                                          ),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color:
+                                                    theme.colorScheme.onSurface,
+                                              ),
                                           children: [
                                             TextSpan(
                                               text: displayCode,
@@ -3267,8 +3464,14 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                               text: ' – ${bar.displayName}',
                                               style: TextStyle(
                                                 fontSize: legendFontSize,
-                                                color: theme.colorScheme.onSurface
-                                                    .withValues(alpha: isSelected ? 0.9 : 0.6),
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(
+                                                      alpha: isSelected
+                                                          ? 0.9
+                                                          : 0.6,
+                                                    ),
                                               ),
                                             ),
                                             TextSpan(
@@ -3278,8 +3481,14 @@ class _StudyHoursBarChartState extends ConsumerState<_StudyHoursBarChart> {
                                                 fontWeight: isSelected
                                                     ? FontWeight.w800
                                                     : FontWeight.w600,
-                                                color: theme.colorScheme.onSurface
-                                                    .withValues(alpha: isSelected ? 1.0 : 0.7),
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(
+                                                      alpha: isSelected
+                                                          ? 1.0
+                                                          : 0.7,
+                                                    ),
                                               ),
                                             ),
                                           ],
@@ -3484,7 +3693,10 @@ class _GradeDistributionCard extends StatelessWidget {
 }
 
 String _formatDayLabel(DateTime date, BuildContext context) {
-  return DateFormat('d', Localizations.localeOf(context).languageCode).format(date);
+  return DateFormat(
+    'd',
+    Localizations.localeOf(context).languageCode,
+  ).format(date);
 }
 
 int _xAxisStep(int length) {
@@ -3534,11 +3746,16 @@ class _StudyProfileCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              AppIcon(HeroIcons.identification, color: theme.colorScheme.primary),
+              AppIcon(
+                HeroIcons.identification,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 l10n.studyProfileTitle,
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -3551,12 +3768,16 @@ class _StudyProfileCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           _ProfileRow(
             icon: HeroIcons.bolt,
-            text: l10n.studyProfileStressThreshold(profile['stressThreshold'].toStringAsFixed(1)),
+            text: l10n.studyProfileStressThreshold(
+              profile['stressThreshold'].toStringAsFixed(1),
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           _ProfileRow(
             icon: HeroIcons.sun,
-            text: l10n.studyProfilePeakWindow(windowLabel(profile['peakWindow'])),
+            text: l10n.studyProfilePeakWindow(
+              windowLabel(profile['peakWindow']),
+            ),
           ),
         ],
       ),
@@ -3575,7 +3796,11 @@ class _ProfileRow extends StatelessWidget {
     final theme = Theme.of(context);
     return Row(
       children: [
-        AppIcon(icon, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+        AppIcon(
+          icon,
+          size: 16,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
         const SizedBox(width: AppSpacing.sm),
         Text(
           text,
