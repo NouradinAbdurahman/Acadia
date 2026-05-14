@@ -63,3 +63,6 @@ GoogleService-Info.plist
 Rules/
 ACADIA_A_TO_Z.md
 CLAUDE.md
+CLAUDE.local.md
+CLAUDE.local.md.example
+.claude/

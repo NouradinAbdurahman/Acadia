@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:acadia/l10n/app_localizations.dart';
 import 'services/notification_service.dart';
+import 'services/review_service.dart';
 
 import 'core/config/env_validation.dart';
 import 'core/navigation/navigation_keys.dart';
@@ -96,77 +97,79 @@ Future<void> _initDeferredNotificationStack(bool attachFcmListeners) async {
       supabaseAnonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
     );
   } catch (e, st) {
-    debugPrint(
-      '[Startup] BackgroundNotificationService.initialize failed: $e',
-    );
+    debugPrint('[Startup] BackgroundNotificationService.initialize failed: $e');
     debugPrintStack(stackTrace: st);
   }
 }
 
 void main() {
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    debugPrint('[Startup] 1/5 — Flutter binding ready');
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      debugPrint('[Startup] 1/5 — Flutter binding ready');
 
-    var isFirebaseInitialized = false;
-    try {
-      await Firebase.initializeApp().timeout(const Duration(seconds: 10));
-      isFirebaseInitialized = true;
-      debugPrint('[Startup] 2/5 — Firebase initialized');
-    } on TimeoutException {
-      debugPrint(
-        '[Startup] 2/5 — Firebase.initializeApp timed out after 10s, continuing without FCM',
+      var isFirebaseInitialized = false;
+      try {
+        await Firebase.initializeApp().timeout(const Duration(seconds: 10));
+        isFirebaseInitialized = true;
+        debugPrint('[Startup] 2/5 — Firebase initialized');
+      } on TimeoutException {
+        debugPrint(
+          '[Startup] 2/5 — Firebase.initializeApp timed out after 10s, continuing without FCM',
+        );
+      } catch (error, stackTrace) {
+        debugPrint(
+          '[Startup] 2/5 — Firebase init failed, continuing without FCM. Error: $error',
+        );
+        debugPrintStack(stackTrace: stackTrace);
+      }
+
+      await Hive.initFlutter();
+      await Hive.openBox('settings');
+      debugPrint('[Startup] 3/5 — Hive ready');
+
+      await dotenv.load(fileName: '.env');
+      validateRequiredEnv();
+      debugPrint('[Startup] 4/5 — dotenv loaded');
+
+      await Supabase.initialize(
+        url: dotenv.env['SUPABASE_URL']!.trim(),
+        anonKey: dotenv.env['SUPABASE_ANON_KEY']!.trim(),
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.pkce,
+          detectSessionInUri: true,
+        ),
       );
-    } catch (error, stackTrace) {
-      debugPrint(
-        '[Startup] 2/5 — Firebase init failed, continuing without FCM. Error: $error',
-      );
-      debugPrintStack(stackTrace: stackTrace);
-    }
+      debugPrint('[Startup] 5/5 — Supabase initialized');
 
-    await Hive.initFlutter();
-    await Hive.openBox('settings');
-    debugPrint('[Startup] 3/5 — Hive ready');
+      if (kDebugMode) {
+        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+          debugPrint('EVENT: ${data.event}');
+          debugPrint('SESSION: ${data.session != null ? 'not null' : 'null'}');
+          if (data.session != null) {
+            debugPrint('SIGNED IN SUCCESSFULLY');
+          }
+        });
+      }
 
-    await dotenv.load(fileName: '.env');
-    validateRequiredEnv();
-    debugPrint('[Startup] 4/5 — dotenv loaded');
+      runApp(const ProviderScope(child: MyApp()));
 
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!.trim(),
-      anonKey: dotenv.env['SUPABASE_ANON_KEY']!.trim(),
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-        detectSessionInUri: true,
-      ),
-    );
-    debugPrint('[Startup] 5/5 — Supabase initialized');
-
-    if (kDebugMode) {
-      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-        debugPrint('EVENT: ${data.event}');
-        debugPrint('SESSION: ${data.session != null ? 'not null' : 'null'}');
-        if (data.session != null) {
-          debugPrint('SIGNED IN SUCCESSFULLY');
-        }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_initDeferredNotificationStack(isFirebaseInitialized));
+        unawaited(ReviewService.onAppLaunch());
       });
-    }
-
-    runApp(const ProviderScope(child: MyApp()));
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_initDeferredNotificationStack(isFirebaseInitialized));
-    });
-  }, (Object error, StackTrace stack) {
-    // Deep-link PKCE failures call notifyException → can surface here; avoid crashing debug builds.
-    if (error is AuthException) {
-      debugPrint('Supabase auth (handled): ${error.message}');
-      return;
-    }
-    FlutterError.dumpErrorToConsole(
-      FlutterErrorDetails(exception: error, stack: stack),
-    );
-  });
+    },
+    (Object error, StackTrace stack) {
+      // Deep-link PKCE failures call notifyException → can surface here; avoid crashing debug builds.
+      if (error is AuthException) {
+        debugPrint('Supabase auth (handled): ${error.message}');
+        return;
+      }
+      FlutterError.dumpErrorToConsole(
+        FlutterErrorDetails(exception: error, stack: stack),
+      );
+    },
+  );
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -238,10 +241,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final email = state.uri.queryParameters['email'] ?? '';
           final fullName = state.uri.queryParameters['fullName'] ?? '';
-          return VerifyEmailScreen(
-            email: email,
-            fullName: fullName,
-          );
+          return VerifyEmailScreen(email: email, fullName: fullName);
         },
       ),
       GoRoute(path: '/home', builder: (context, state) => const AppShell()),
@@ -261,10 +261,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/create-deadline',
         builder: (context, state) => const CreateDeadlineScreen(),
       ),
-      GoRoute(
-        path: '/exams',
-        builder: (context, state) => const ExamsScreen(),
-      ),
+      GoRoute(path: '/exams', builder: (context, state) => const ExamsScreen()),
       GoRoute(
         path: '/exams-calendar',
         builder: (context, state) => const ExamsCalendarScreen(),
@@ -681,10 +678,14 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
             authState.session != null) {
           Future(() async {
             try {
-              await ref.read(authRepositoryProvider).ensurePublicUserRowIfMissing();
+              await ref
+                  .read(authRepositoryProvider)
+                  .ensurePublicUserRowIfMissing();
             } catch (e) {
               // Log clearly so RLS / network failures are visible in the console.
-              debugPrint('[AuthListener] ensurePublicUserRowIfMissing failed: $e');
+              debugPrint(
+                '[AuthListener] ensurePublicUserRowIfMissing failed: $e',
+              );
             }
             ref.invalidate(currentAppUserProvider);
             ref.invalidate(studentProfileProvider);

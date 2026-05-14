@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
+import '../services/review_service.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
@@ -13,11 +14,7 @@ import 'semester_provider.dart';
 import 'analytics_provider.dart';
 import 'mood_provider.dart';
 
-enum StudyType {
-  pomodoro,
-  deepWork,
-  review,
-}
+enum StudyType { pomodoro, deepWork, review }
 
 int getDefaultDuration(StudyType type) {
   switch (type) {
@@ -114,13 +111,16 @@ class StudyTimerState {
       isCompleted: isCompleted ?? this.isCompleted,
       completedCycles: completedCycles ?? this.completedCycles,
       skippedBreak: skippedBreak ?? this.skippedBreak,
-      totalFocusAccumulated: totalFocusAccumulated ?? this.totalFocusAccumulated,
-      totalBreakAccumulated: totalBreakAccumulated ?? this.totalBreakAccumulated,
+      totalFocusAccumulated:
+          totalFocusAccumulated ?? this.totalFocusAccumulated,
+      totalBreakAccumulated:
+          totalBreakAccumulated ?? this.totalBreakAccumulated,
     );
   }
 }
 
-class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBindingObserver {
+class StudyTimerNotifier extends StateNotifier<StudyTimerState>
+    with WidgetsBindingObserver {
   StudyTimerNotifier(this.ref) : super(const StudyTimerState()) {
     WidgetsBinding.instance.addObserver(this);
     _initPersistence();
@@ -128,27 +128,33 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
 
   Future<void> _initPersistence() async {
     final box = await Hive.openBox('timer_state');
-    
+
     final startTimeStr = box.get('startTime') as String?;
     final lastUpdateStr = box.get('lastUpdate') as String?;
     final isRunning = box.get('isRunning', defaultValue: false) as bool;
     final isPaused = box.get('isPaused', defaultValue: false) as bool;
     final pausedAtStr = box.get('pausedAt') as String?;
-    final pausedDurationMs = box.get('pausedDurationMs', defaultValue: 0) as int;
-    final sessionTypeIndex = box.get('sessionTypeIndex', defaultValue: 0) as int;
+    final pausedDurationMs =
+        box.get('pausedDurationMs', defaultValue: 0) as int;
+    final sessionTypeIndex =
+        box.get('sessionTypeIndex', defaultValue: 0) as int;
     final courseId = box.get('courseId') as String?;
     final intent = box.get('intent') as String?;
     final currentRound = box.get('currentRound', defaultValue: 1) as int;
-    final totalFocusAccumulated = box.get('totalFocusAccumulated', defaultValue: 0) as int;
-    final totalBreakAccumulated = box.get('totalBreakAccumulated', defaultValue: 0) as int;
+    final totalFocusAccumulated =
+        box.get('totalFocusAccumulated', defaultValue: 0) as int;
+    final totalBreakAccumulated =
+        box.get('totalBreakAccumulated', defaultValue: 0) as int;
     final targetDurationSeconds = box.get('targetDurationSeconds') as int?;
 
     if (startTimeStr != null) {
       final startTime = DateTime.parse(startTimeStr);
       final sessionType = StudyType.values[sessionTypeIndex];
-      final targetDuration = targetDurationSeconds != null 
-          ? Duration(seconds: targetDurationSeconds) 
-          : (sessionType == StudyType.pomodoro ? const Duration(minutes: 25) : const Duration(minutes: 45));
+      final targetDuration = targetDurationSeconds != null
+          ? Duration(seconds: targetDurationSeconds)
+          : (sessionType == StudyType.pomodoro
+                ? const Duration(minutes: 25)
+                : const Duration(minutes: 45));
 
       state = state.copyWith(
         startTime: startTime,
@@ -167,10 +173,9 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
 
       final now = DateTime.now();
       if (isRunning && lastUpdateStr != null) {
-        
         // Time-jump: Add the time passed while app was closed to elapsed
         final elapsed = _elapsedAt(now);
-        
+
         if (elapsed >= targetDuration) {
           state = state.copyWith(elapsed: targetDuration);
           _onPhaseComplete();
@@ -191,7 +196,7 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
       await box.clear();
       return;
     }
-    
+
     await box.put('startTime', state.startTime?.toIso8601String());
     await box.put('lastUpdate', DateTime.now().toIso8601String());
     await box.put('isRunning', state.isRunning);
@@ -206,7 +211,6 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
     await box.put('totalBreakAccumulated', state.totalBreakAccumulated);
     await box.put('targetDurationSeconds', state.targetDuration.inSeconds);
   }
-
 
   final Ref ref;
   Timer? _timer;
@@ -237,18 +241,18 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
 
   Duration _elapsedAt(DateTime now) {
     if (state.startTime == null) return Duration.zero;
-    
+
     // Total time since start
     final totalSinceStart = now.difference(state.startTime!);
-    
+
     // Subtract total paused duration
     var activeElapsed = totalSinceStart - state.pausedDuration;
-    
+
     // If currently paused, also subtract time since pause started
     if (state.isPaused && state.pausedAt != null) {
       activeElapsed -= now.difference(state.pausedAt!);
     }
-    
+
     return activeElapsed.isNegative ? Duration.zero : activeElapsed;
   }
 
@@ -274,7 +278,7 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
 
   void start() {
     if (state.isRunning) return;
-    _timer?.cancel(); 
+    _timer?.cancel();
 
     if (state.isCompleted || state.startTime == null) {
       state = state.copyWith(
@@ -293,7 +297,9 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
     final now = DateTime.now();
     final isPomodoro = state.sessionType == StudyType.pomodoro;
     final rounds = isPomodoro ? 4 : 1;
-    final duration = isPomodoro ? const Duration(minutes: 25) : state.targetDuration;
+    final duration = isPomodoro
+        ? const Duration(minutes: 25)
+        : state.targetDuration;
 
     state = state.copyWith(
       elapsed: Duration.zero,
@@ -333,7 +339,7 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
     _timer?.cancel();
     NotificationService.showCompletionNotification();
 
-    await _player.stop(); 
+    await _player.stop();
     await _player.play(AssetSource('sounds/finish.mp3'));
     Haptics.vibrate(HapticsType.success);
 
@@ -364,7 +370,8 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
       final isLastRound = state.currentRound == state.totalRounds;
 
       if (isLastRound) {
-        final isFullyCompleted = state.currentRound == state.totalRounds && !state.isBreak;
+        final isFullyCompleted =
+            state.currentRound == state.totalRounds && !state.isBreak;
         final finalState = state.copyWith(
           isCompleted: true,
           isRunning: false,
@@ -372,7 +379,12 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
         );
         state = finalState;
         if (finalState.courseId != null) {
-          ref.read(studySessionsProvider.notifier).savePomodoroSession(finalState, isFullyCompleted: isFullyCompleted);
+          ref
+              .read(studySessionsProvider.notifier)
+              .savePomodoroSession(
+                finalState,
+                isFullyCompleted: isFullyCompleted,
+              );
         }
       } else {
         final breakMinutes = 5;
@@ -418,8 +430,9 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
   void resume() {
     if (!state.isPaused || state.startTime == null) return;
     final now = DateTime.now();
-    final extraPause =
-        state.pausedAt == null ? Duration.zero : now.difference(state.pausedAt!);
+    final extraPause = state.pausedAt == null
+        ? Duration.zero
+        : now.difference(state.pausedAt!);
     state = state.copyWith(
       elapsed: _elapsedAt(now),
       isRunning: true,
@@ -428,7 +441,9 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
       pausedDuration: state.pausedDuration + extraPause,
     );
     _timer?.cancel();
-    NotificationService.scheduleCompletion(state.targetDuration - state.elapsed);
+    NotificationService.scheduleCompletion(
+      state.targetDuration - state.elapsed,
+    );
     _startTimerTargetCheck();
     _persist();
   }
@@ -439,7 +454,9 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
     NotificationService.cancelAll();
     final end = DateTime.now();
     final finalElapsed = _elapsedAt(end);
-    final safeElapsed = finalElapsed > state.targetDuration ? state.targetDuration : finalElapsed;
+    final safeElapsed = finalElapsed > state.targetDuration
+        ? state.targetDuration
+        : finalElapsed;
 
     final extraFocus = !state.isBreak ? (safeElapsed.inSeconds ~/ 60) : 0;
     final extraBreak = state.isBreak ? (safeElapsed.inSeconds ~/ 60) : 0;
@@ -449,7 +466,7 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
       isRunning: false,
       isPaused: false,
       endTime: end,
-      isCompleted: false, 
+      isCompleted: false,
       totalFocusAccumulated: state.totalFocusAccumulated + extraFocus,
       totalBreakAccumulated: state.totalBreakAccumulated + extraBreak,
     );
@@ -458,14 +475,17 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
     if (state.sessionType == StudyType.pomodoro &&
         state.courseId != null &&
         stoppedState.totalFocusAccumulated > 0) {
-      ref.read(studySessionsProvider.notifier).savePomodoroSession(stoppedState);
-    } 
-    else if (state.sessionType != StudyType.pomodoro &&
-             state.courseId != null &&
-             stoppedState.totalFocusAccumulated >= 10) {
-      ref.read(studySessionsProvider.notifier).saveFromTimer(stoppedState.copyWith(isCompleted: true));
+      ref
+          .read(studySessionsProvider.notifier)
+          .savePomodoroSession(stoppedState);
+    } else if (state.sessionType != StudyType.pomodoro &&
+        state.courseId != null &&
+        stoppedState.totalFocusAccumulated >= 10) {
+      ref
+          .read(studySessionsProvider.notifier)
+          .saveFromTimer(stoppedState.copyWith(isCompleted: true));
     }
-    
+
     // Clear the active session metadata so it doesn't recover ghost sessions
     state = const StudyTimerState();
     _persist();
@@ -481,8 +501,8 @@ class StudyTimerNotifier extends StateNotifier<StudyTimerState> with WidgetsBind
 
 final studyTimerProvider =
     StateNotifierProvider<StudyTimerNotifier, StudyTimerState>(
-  (ref) => StudyTimerNotifier(ref),
-);
+      (ref) => StudyTimerNotifier(ref),
+    );
 
 class StudySessionsNotifier
     extends StateNotifier<AsyncValue<List<StudySession>>> {
@@ -502,17 +522,29 @@ class StudySessionsNotifier
     state = const AsyncValue.data(<StudySession>[]);
   }
 
-  Future<void> loadSessions({required String userId, String? semesterId}) async {
+  Future<void> loadSessions({
+    required String userId,
+    String? semesterId,
+  }) async {
     if (semesterId != null &&
         _lastLoadedSemesterId == semesterId &&
         state.hasValue) {
       return;
     }
     try {
-      state = const AsyncValue<List<StudySession>>.loading().copyWithPrevious(state);
-      final list = await studyRepository.getSessions(userId: userId, semesterId: semesterId) as List<StudySession>;
-      
-      debugPrint('[StudySessionsProvider] Loading for Semester: $semesterId | Data Count: ${list.length}');
+      state = const AsyncValue<List<StudySession>>.loading().copyWithPrevious(
+        state,
+      );
+      final list =
+          await studyRepository.getSessions(
+                userId: userId,
+                semesterId: semesterId,
+              )
+              as List<StudySession>;
+
+      debugPrint(
+        '[StudySessionsProvider] Loading for Semester: $semesterId | Data Count: ${list.length}',
+      );
       if (!mounted) return;
       _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(list);
@@ -531,7 +563,8 @@ class StudySessionsNotifier
   }
 
   bool _isSaving = false;
-  bool _pomodoroSaved = false; // Prevents duplicate saves from _onPhaseComplete + stop()
+  bool _pomodoroSaved =
+      false; // Prevents duplicate saves from _onPhaseComplete + stop()
 
   void resetPomodoroSaveFlag() {
     _pomodoroSaved = false;
@@ -548,12 +581,16 @@ class StudySessionsNotifier
     }
 
     debugPrint("📥 saveFromTimer CALLED");
-    debugPrint("minutes = $minutes | isBreak = ${timerState.isBreak} | courseId = ${timerState.courseId}");
+    debugPrint(
+      "minutes = $minutes | isBreak = ${timerState.isBreak} | courseId = ${timerState.courseId}",
+    );
 
     // Business rule: completion = technical event, valid session = business rule
     final isValidSession = timerState.isCompleted && minutes >= 10;
     if (!isValidSession) {
-      debugPrint("❌ Not saved: completed=${timerState.isCompleted}, minutes=$minutes");
+      debugPrint(
+        "❌ Not saved: completed=${timerState.isCompleted}, minutes=$minutes",
+      );
       return;
     }
 
@@ -595,7 +632,8 @@ class StudySessionsNotifier
         userId: userId,
         courseId: timerState.courseId!,
         semesterId: semesterId,
-        sessionType: sessionTypeOverride ?? mapSessionType(timerState.sessionType),
+        sessionType:
+            sessionTypeOverride ?? mapSessionType(timerState.sessionType),
         durationMinutes: minutes,
         createdAt: DateTime.now(),
         plannedMinutes: timerState.targetDuration.inMinutes,
@@ -608,17 +646,17 @@ class StudySessionsNotifier
         skippedBreaks: timerState.skippedBreak ? 1 : 0,
       );
 
-
       final previous = state;
       try {
-        final created = await studyRepository.createSession(newSession)
-            as StudySession;
+        final created =
+            await studyRepository.createSession(newSession) as StudySession;
 
         if (!mounted) return;
 
         state = state.whenData((sessions) => [created, ...sessions]);
         debugPrint("✅ Saved: $minutes min");
         ref.read(analyticsProvider.notifier).refresh();
+        unawaited(ReviewService.onSessionCompleted());
         if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
           ref.read(moodActionsProvider).queueSessionMoodPrompt();
         } else if (!ref.read(moodSettingsProvider).trackingEnabled) {
@@ -645,7 +683,9 @@ class StudySessionsNotifier
     }
 
     debugPrint("🍅 savePomodoroSession CALLED");
-    debugPrint("totalFocus = $totalFocus | cycles = ${timerState.completedCycles}/${timerState.totalRounds} | full=$isFullyCompleted");
+    debugPrint(
+      "totalFocus = $totalFocus | cycles = ${timerState.completedCycles}/${timerState.totalRounds} | full=$isFullyCompleted",
+    );
 
     // ── Validity gate ──
     final isValidPomodoro = totalFocus >= 10;
@@ -701,17 +741,19 @@ class StudySessionsNotifier
         skippedBreaks: timerState.skippedBreak ? 1 : 0,
       );
 
-
       final previous = state;
       try {
-        final created = await studyRepository.createSession(session)
-            as StudySession;
+        final created =
+            await studyRepository.createSession(session) as StudySession;
 
         if (!mounted) return;
 
         state = state.whenData((sessions) => [created, ...sessions]);
-        debugPrint("✅ Pomodoro saved: ${totalFocus}m focus, ${timerState.completedCycles} cycles");
+        debugPrint(
+          "✅ Pomodoro saved: ${totalFocus}m focus, ${timerState.completedCycles} cycles",
+        );
         ref.read(analyticsProvider.notifier).refresh();
+        unawaited(ReviewService.onSessionCompleted());
         if (ref.read(moodSettingsProvider.notifier).shouldShowAfterStudy) {
           ref.read(moodActionsProvider).queueSessionMoodPrompt();
         } else if (!ref.read(moodSettingsProvider).trackingEnabled) {
@@ -741,17 +783,14 @@ class StudySessionsNotifier
 
     // We attach to the most recent session (first in the list after sort)
     final lastSession = currentList.first;
-    
+
     // Safety: Don't override if already has mood (Requirement 6)
     if (lastSession.mood != null) return;
 
     final updated = lastSession.copyWith(mood: mood, stress: stress);
-    
+
     // Update local state first
-    state = AsyncValue.data([
-      updated,
-      ...currentList.sublist(1),
-    ]);
+    state = AsyncValue.data([updated, ...currentList.sublist(1)]);
 
     try {
       await studyRepository.updateSession(updated);
@@ -762,29 +801,33 @@ class StudySessionsNotifier
   }
 }
 
-final studySessionsProvider = StateNotifierProvider<StudySessionsNotifier, AsyncValue<List<StudySession>>>((ref) {
-  final repo = ref.watch(app.studyRepositoryProvider);
-  final userId = ref.watch(app.currentUserProvider)?.id;
-  final semesterIdAsync = ref.watch(activeSemesterProvider);
-  final supabase = Supabase.instance.client;
-  
-  final notifier = StudySessionsNotifier(
-    studyRepository: repo,
-    supabaseClient: supabase,
-    ref: ref,
-  );
-  
-  semesterIdAsync.when(
-    data: (id) {
-      if (userId != null && id != null) {
-        notifier.loadSessions(userId: userId, semesterId: id);
-        return;
-      }
-      notifier.setEmptyState();
-    },
-    loading: () => notifier.setEmptyState(),
-    error: (_, __) => notifier.setEmptyState(),
-  );
-  
-  return notifier;
-});
+final studySessionsProvider =
+    StateNotifierProvider<
+      StudySessionsNotifier,
+      AsyncValue<List<StudySession>>
+    >((ref) {
+      final repo = ref.watch(app.studyRepositoryProvider);
+      final userId = ref.watch(app.currentUserProvider)?.id;
+      final semesterIdAsync = ref.watch(activeSemesterProvider);
+      final supabase = Supabase.instance.client;
+
+      final notifier = StudySessionsNotifier(
+        studyRepository: repo,
+        supabaseClient: supabase,
+        ref: ref,
+      );
+
+      semesterIdAsync.when(
+        data: (id) {
+          if (userId != null && id != null) {
+            notifier.loadSessions(userId: userId, semesterId: id);
+            return;
+          }
+          notifier.setEmptyState();
+        },
+        loading: () => notifier.setEmptyState(),
+        error: (_, _) => notifier.setEmptyState(),
+      );
+
+      return notifier;
+    });

@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/tasks/task_deadline_validation.dart';
+import '../services/review_service.dart';
 import '../models/task.dart';
 import 'app_providers.dart';
 import 'deadlines_provider.dart';
@@ -10,40 +13,41 @@ import 'semester_provider.dart';
 
 import '../services/smart_notification_engine.dart';
 
-
 final taskFilterProvider = StateProvider<String>((ref) => 'all');
 
 /// Tasks screen primary tab: show only tasks or only deadlines (never mixed).
 final tasksListSegmentProvider = StateProvider<String>((ref) => 'tasks');
 
-final tasksProvider = StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>>>((ref) {
-  final repo = ref.watch(taskRepositoryProvider);
-  final userId = ref.watch(currentUserProvider)?.id;
-  final semesterIdAsync = ref.watch(activeSemesterProvider);
-  final supabase = Supabase.instance.client;
-  
-  final notifier = TasksNotifier(
-    ref: ref,
-    taskRepository: repo,
-    supabaseClient: supabase,
-  );
-  
-  semesterIdAsync.when(
-    data: (id) {
-      if (userId != null && id != null) {
-        debugPrint("[TasksProvider] Loading tasks for user: $userId, semester: $id");
-        notifier.loadTasks(userId: userId, semesterId: id);
-        return;
-      }
-      notifier.setEmptyState();
-    },
-    loading: () => notifier.setEmptyState(),
-    error: (_, __) => notifier.setEmptyState(),
-  );
-  
-  return notifier;
-});
+final tasksProvider =
+    StateNotifierProvider<TasksNotifier, AsyncValue<List<Task>>>((ref) {
+      final repo = ref.watch(taskRepositoryProvider);
+      final userId = ref.watch(currentUserProvider)?.id;
+      final semesterIdAsync = ref.watch(activeSemesterProvider);
+      final supabase = Supabase.instance.client;
 
+      final notifier = TasksNotifier(
+        ref: ref,
+        taskRepository: repo,
+        supabaseClient: supabase,
+      );
+
+      semesterIdAsync.when(
+        data: (id) {
+          if (userId != null && id != null) {
+            debugPrint(
+              "[TasksProvider] Loading tasks for user: $userId, semester: $id",
+            );
+            notifier.loadTasks(userId: userId, semesterId: id);
+            return;
+          }
+          notifier.setEmptyState();
+        },
+        loading: () => notifier.setEmptyState(),
+        error: (_, _) => notifier.setEmptyState(),
+      );
+
+      return notifier;
+    });
 
 final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
   final tasksAsync = ref.watch(tasksProvider);
@@ -52,13 +56,13 @@ final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
   int compareTasks(Task a, Task b) {
     final now = DateTime.now();
     final startOfToday = DateTime(now.year, now.month, now.day);
-    
+
     bool isOverdue(Task t) {
       if (t.status == 'completed') return false;
       if (t.status == 'overdue') return true;
       return t.deadline != null && t.deadline!.isBefore(startOfToday);
     }
-    
+
     bool aIsOverdue = isOverdue(a);
     bool bIsOverdue = isOverdue(b);
     bool aIsCompleted = a.status == 'completed';
@@ -66,7 +70,7 @@ final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
 
     if (aIsCompleted && !bIsCompleted) return 1;
     if (!aIsCompleted && bIsCompleted) return -1;
-    
+
     if (aIsOverdue && !bIsOverdue) return -1;
     if (!aIsOverdue && bIsOverdue) return 1;
 
@@ -100,7 +104,7 @@ final filteredTasksProvider = Provider<AsyncValue<List<Task>>>((ref) {
       default:
         filtered = tasks;
     }
-    
+
     final sorted = List<Task>.from(filtered)..sort(compareTasks);
     return sorted;
   });
@@ -120,8 +124,8 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     required Ref ref,
     required this.taskRepository,
     required this.supabaseClient,
-  })  : _ref = ref,
-        super(const AsyncValue.loading());
+  }) : _ref = ref,
+       super(const AsyncValue.loading());
 
   final Ref _ref;
   final dynamic taskRepository;
@@ -145,11 +149,17 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       return;
     }
     try {
-      debugPrint("[TasksNotifier] Loading tasks for user: $userId, semester: $semesterId");
+      debugPrint(
+        "[TasksNotifier] Loading tasks for user: $userId, semester: $semesterId",
+      );
       state = const AsyncValue<List<Task>>.loading().copyWithPrevious(state);
-      final list = await taskRepository.getTasks(userId: userId, semesterId: semesterId) as List<Task>;
-      
-      debugPrint('[TasksNotifier] Load complete. Semester: $semesterId | Data Count: ${list.length}');
+      final list =
+          await taskRepository.getTasks(userId: userId, semesterId: semesterId)
+              as List<Task>;
+
+      debugPrint(
+        '[TasksNotifier] Load complete. Semester: $semesterId | Data Count: ${list.length}',
+      );
       if (!mounted) return;
       _lastLoadedSemesterId = semesterId;
       state = AsyncValue.data(list);
@@ -166,7 +176,6 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       await loadTasks(userId: userId, semesterId: semesterId, force: true);
     }
   }
-
 
   Future<void> createTask({
     required String title,
@@ -186,7 +195,6 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     if (semesterId == null) {
       throw Exception('No active semester set. Cannot create task.');
     }
-
 
     final deadlinesList = _ref.read(deadlinesProvider).valueOrNull ?? const [];
     final safeDeadlineId = validatedDeadlineIdForTask(
@@ -212,7 +220,6 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       createdAt: DateTime.now(),
     );
 
-
     final previous = state;
     try {
       final created = await taskRepository.createTask(newTask);
@@ -233,12 +240,11 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
       deadlineId: task.deadlineId,
       deadlines: deadlinesList,
     );
-    final taskWithUpdate = task
-        .copyWith(
-          deadlineId: safeDeadlineId,
-          clearDeadlineId: safeDeadlineId == null && task.deadlineId != null,
-          updatedAt: DateTime.now(),
-        );
+    final taskWithUpdate = task.copyWith(
+      deadlineId: safeDeadlineId,
+      clearDeadlineId: safeDeadlineId == null && task.deadlineId != null,
+      updatedAt: DateTime.now(),
+    );
 
     final previous = state;
     try {
@@ -270,6 +276,9 @@ class TasksNotifier extends StateNotifier<AsyncValue<List<Task>>> {
     );
 
     await updateTask(updated);
+    if (status == 'completed') {
+      unawaited(ReviewService.onTaskCompleted());
+    }
   }
 
   Future<void> deleteTask(String taskId) async {
