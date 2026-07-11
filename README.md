@@ -5,6 +5,7 @@ Acadia is a Flutter-based academic productivity app that helps students plan cou
 ## Core Features
 
 
+
 - **Authentication** — Email/password signup with OTP verification, password reset via OTP flow, Google + Apple OAuth (Supabase PKCE), auth rate limiting with exponential backoff
 - **Multi-step onboarding** — Language selection, welcome carousel, academic profile wizard, mandatory first-semester creation before entering Home
 - **Semester management** — Create/edit/delete semesters, set active semester as the app-wide data scope, weekly study goals per semester
