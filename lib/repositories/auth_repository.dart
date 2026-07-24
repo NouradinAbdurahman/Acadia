@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/config/feature_flags.dart';
 import '../core/config/oauth_env.dart';
 import '../models/app_user.dart';
 import '../services/supabase/auth_service.dart';
@@ -14,14 +15,15 @@ class AuthRepository {
   DateTime? _lastEmailRateLimit;
   DateTime? _lastAuthRateLimit;
   DateTime? _lastSignupSuccessTime;
-  
+
   int _emailRateLimitCount = 0;
   int _authRateLimitCount = 0;
 
   AuthRepository(
     this._authService, {
     StudentProfileServiceBase? studentProfileService,
-  }) : _studentProfileService = studentProfileService ?? StudentProfileService() {
+  }) : _studentProfileService =
+           studentProfileService ?? StudentProfileService() {
     _loadLimits();
     // Clean up expired limits on start
     _syncLimits();
@@ -36,16 +38,17 @@ class AuthRepository {
   void _loadLimits() {
     try {
       final box = Hive.box('settings');
-      
+
       final emailSaved = box.get('lastEmailRateLimit');
       if (emailSaved != null) _lastEmailRateLimit = DateTime.parse(emailSaved);
-      
+
       final authSaved = box.get('lastAuthRateLimit');
       if (authSaved != null) _lastAuthRateLimit = DateTime.parse(authSaved);
-      
+
       final signupSaved = box.get('lastSignupSuccessTime');
-      if (signupSaved != null) _lastSignupSuccessTime = DateTime.parse(signupSaved);
-      
+      if (signupSaved != null)
+        _lastSignupSuccessTime = DateTime.parse(signupSaved);
+
       _emailRateLimitCount = box.get('emailRateLimitCount', defaultValue: 0);
       _authRateLimitCount = box.get('authRateLimitCount', defaultValue: 0);
     } catch (e) {
@@ -58,7 +61,10 @@ class AuthRepository {
       final box = Hive.box('settings');
       box.put('lastEmailRateLimit', _lastEmailRateLimit?.toIso8601String());
       box.put('lastAuthRateLimit', _lastAuthRateLimit?.toIso8601String());
-      box.put('lastSignupSuccessTime', _lastSignupSuccessTime?.toIso8601String());
+      box.put(
+        'lastSignupSuccessTime',
+        _lastSignupSuccessTime?.toIso8601String(),
+      );
       box.put('emailRateLimitCount', _emailRateLimitCount);
       box.put('authRateLimitCount', _authRateLimitCount);
     } catch (e) {
@@ -69,15 +75,15 @@ class AuthRepository {
   void _syncLimits() {
     final now = DateTime.now();
     if (_lastEmailRateLimit != null && now.isAfter(_lastEmailRateLimit!)) {
-       // Counter persists for a while to allow backoff to stick, but we clear it if it's very old
-       if (now.difference(_lastEmailRateLimit!) > const Duration(minutes: 30)) {
-         _emailRateLimitCount = 0;
-       }
+      // Counter persists for a while to allow backoff to stick, but we clear it if it's very old
+      if (now.difference(_lastEmailRateLimit!) > const Duration(minutes: 30)) {
+        _emailRateLimitCount = 0;
+      }
     }
     if (_lastAuthRateLimit != null && now.isAfter(_lastAuthRateLimit!)) {
-       if (now.difference(_lastAuthRateLimit!) > const Duration(minutes: 30)) {
-         _authRateLimitCount = 0;
-       }
+      if (now.difference(_lastAuthRateLimit!) > const Duration(minutes: 30)) {
+        _authRateLimitCount = 0;
+      }
     }
     _saveLimits();
   }
@@ -144,6 +150,24 @@ class AuthRepository {
 
   // --- Authenticated Methods ---
 
+  // ======================================================
+  // TEMPORARILY DISABLED
+  //
+  // Google Sign-In and Apple Sign-In are intentionally disabled for the
+  // current App Store release (see lib/core/config/feature_flags.dart).
+  //
+  // The implementation below is preserved and must NOT be removed. The
+  // login/signup screens no longer render OAuth buttons, so this method is
+  // unreachable from the UI; the flag check below is a second line of
+  // defense in case any other call site is added.
+  //
+  // To re-enable:
+  // 1. Configure Apple/Google OAuth in Supabase.
+  // 2. Set FeatureFlags.enableAppleSignIn / enableGoogleSignIn = true.
+  // 3. Verify Apple Developer / Google Cloud credentials.
+  //
+  // See docs/authentication/OAUTH_REENABLE_GUIDE.md
+  // ======================================================
   /// Opens the provider’s OAuth page in a browser / Custom Tabs. Completion is
   /// observed via [authStateChanges] after the app receives the redirect URL.
   ///
@@ -152,15 +176,24 @@ class AuthRepository {
   /// (`https://<project>.supabase.co/auth/v1/callback` is configured in Google,
   /// not in this string).
   Future<bool> signInWithOAuth(OAuthProvider provider) async {
+    final providerEnabled = switch (provider) {
+      OAuthProvider.apple => FeatureFlags.enableAppleSignIn,
+      OAuthProvider.google => FeatureFlags.enableGoogleSignIn,
+      _ => false,
+    };
+    if (!providerEnabled) {
+      throw StateError(
+        '$provider sign-in is temporarily disabled for this release. '
+        'See docs/authentication/OAUTH_REENABLE_GUIDE.md.',
+      );
+    }
+
     return _supabase.auth.signInWithOAuth(
       provider,
       redirectTo: oauthRedirectForCurrentPlatform(),
       // iOS: external browser avoids in-app webview / canOpenUrl issues; Android Google same.
       authScreenLaunchMode: LaunchMode.externalApplication,
-      queryParams: const {
-        'access_type': 'offline',
-        'prompt': 'consent',
-      },
+      queryParams: const {'access_type': 'offline', 'prompt': 'consent'},
     );
   }
 
@@ -206,7 +239,7 @@ class AuthRepository {
     // ── 1. public.users ─────────────────────────────────────────────────────
     final existing = await _supabase
         .from('users')
-        .select('id, name')
+        .select('id, name, email')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -228,9 +261,23 @@ class AuthRepository {
       final existingName = (existing['name'] as String? ?? '').trim();
       if (existingName.isEmpty && oauthName.isNotEmpty) {
         debugPrint('[ensurePublicUser] Backfilling empty users.name...');
-        await _supabase.from('users').update({
-          'name': oauthName,
-        }).eq('id', user.id);
+        await _supabase
+            .from('users')
+            .update({'name': oauthName})
+            .eq('id', user.id);
+      }
+      // Backfill a missing email — e.g. rows created by the OTP signup path,
+      // which historically only wrote id + academic_profile_completed.
+      // AppUser.fromJson requires email non-null, so a null here permanently
+      // breaks currentAppUserProvider (and with it, all auth-gated routing)
+      // for that account.
+      final existingEmail = (existing['email'] as String? ?? '').trim();
+      if (existingEmail.isEmpty && (user.email ?? '').isNotEmpty) {
+        debugPrint('[ensurePublicUser] Backfilling empty users.email...');
+        await _supabase
+            .from('users')
+            .update({'email': user.email})
+            .eq('id', user.id);
       }
       debugPrint('[ensurePublicUser] users row ready ✓');
     }
@@ -254,13 +301,19 @@ class AuthRepository {
         debugPrint('[ensurePublicUser] ERROR upserting student_profiles: $e');
       }
     } else {
-      final existingFullName = (existingProfile['full_name'] as String? ?? '').trim();
+      final existingFullName = (existingProfile['full_name'] as String? ?? '')
+          .trim();
       if (existingFullName.isEmpty && oauthName.isNotEmpty) {
-        debugPrint('[ensurePublicUser] Backfilling empty student_profiles.full_name...');
-        await _supabase.from('student_profiles').update({
-          'full_name': oauthName,
-          'updated_at': DateTime.now().toIso8601String(),
-        }).eq('user_id', user.id);
+        debugPrint(
+          '[ensurePublicUser] Backfilling empty student_profiles.full_name...',
+        );
+        await _supabase
+            .from('student_profiles')
+            .update({
+              'full_name': oauthName,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
+            .eq('user_id', user.id);
       }
       debugPrint('[ensurePublicUser] student_profiles row ready ✓');
     }
@@ -268,26 +321,30 @@ class AuthRepository {
 
   Future<AuthResponse> login(String email, String password) async {
     if (isAuthRateLimited()) {
-      throw AuthApiException('Please wait before trying to login again.', code: 'too_many_requests');
+      throw AuthApiException(
+        'Please wait before trying to login again.',
+        code: 'too_many_requests',
+      );
     }
 
     try {
-      final response = await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      ).timeout(const Duration(seconds: 45));
-      
+      final response = await _supabase.auth
+          .signInWithPassword(email: email, password: password)
+          .timeout(const Duration(seconds: 45));
+
       // Reset counter on success
       _authRateLimitCount = 0;
       _lastAuthRateLimit = null;
       _saveLimits();
-      
+
       return response;
     } on AuthApiException catch (e) {
       final msg = e.message.toLowerCase();
-      if (e.code == 'over_email_send_rate_limit' || msg.contains('rate limit')) {
+      if (e.code == 'over_email_send_rate_limit' ||
+          msg.contains('rate limit')) {
         _markRateLimit(isEmail: true);
-      } else if (e.code == 'too_many_requests' || msg.contains('too many requests')) {
+      } else if (e.code == 'too_many_requests' ||
+          msg.contains('too many requests')) {
         _markRateLimit(isEmail: false);
       }
       debugPrint("LOGIN REAL ERROR: $e");
@@ -298,24 +355,34 @@ class AuthRepository {
     }
   }
 
-  Future<AuthResponse> signUp(String email, String password, String fullName) async {
+  Future<AuthResponse> signUp(
+    String email,
+    String password,
+    String fullName,
+  ) async {
     if (isBlockedForEmail()) {
-      throw AuthApiException('Too many signup attempts. Please wait a few minutes.', code: 'over_email_send_rate_limit');
+      throw AuthApiException(
+        'Too many signup attempts. Please wait a few minutes.',
+        code: 'over_email_send_rate_limit',
+      );
     }
 
     try {
-      final response = await _supabase.auth.signUp(
-        email: email,
-        password: password,
-        data: {'full_name': fullName},
-      ).timeout(const Duration(seconds: 15));
-      
+      final response = await _supabase.auth
+          .signUp(
+            email: email,
+            password: password,
+            data: {'full_name': fullName},
+          )
+          .timeout(const Duration(seconds: 15));
+
       _lastSignupSuccessTime = DateTime.now();
       _saveLimits();
-      
+
       return response;
     } on AuthApiException catch (e) {
-      if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+      if (e.code == 'over_email_send_rate_limit' ||
+          e.message.toLowerCase().contains('rate limit')) {
         _markRateLimit(isEmail: true);
       }
       rethrow;
@@ -324,16 +391,19 @@ class AuthRepository {
 
   Future<void> resendOTP(String email, {OtpType type = OtpType.signup}) async {
     if (isBlockedForEmail()) {
-      throw AuthApiException('Check and wait a few minutes before resending.', code: 'over_email_send_rate_limit');
+      throw AuthApiException(
+        'Check and wait a few minutes before resending.',
+        code: 'over_email_send_rate_limit',
+      );
     }
 
     try {
-      await _supabase.auth.resend(
-        type: type,
-        email: email,
-      ).timeout(const Duration(seconds: 15));
+      await _supabase.auth
+          .resend(type: type, email: email)
+          .timeout(const Duration(seconds: 15));
     } on AuthApiException catch (e) {
-      if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+      if (e.code == 'over_email_send_rate_limit' ||
+          e.message.toLowerCase().contains('rate limit')) {
         _markRateLimit(isEmail: true);
       }
       rethrow;
@@ -342,16 +412,22 @@ class AuthRepository {
 
   Future<void> sendPasswordResetOTP(String email) async {
     if (isEmailRateLimited()) {
-      throw AuthApiException('Too many requests. Please wait a few minutes.', code: 'over_email_send_rate_limit');
+      throw AuthApiException(
+        'Too many requests. Please wait a few minutes.',
+        code: 'over_email_send_rate_limit',
+      );
     }
 
     try {
-      await _supabase.auth.resetPasswordForEmail(
-        email,
-        redirectTo: passwordResetRedirectUrlFromEnv(),
-      ).timeout(const Duration(seconds: 15));
+      await _supabase.auth
+          .resetPasswordForEmail(
+            email,
+            redirectTo: passwordResetRedirectUrlFromEnv(),
+          )
+          .timeout(const Duration(seconds: 15));
     } on AuthApiException catch (e) {
-      if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+      if (e.code == 'over_email_send_rate_limit' ||
+          e.message.toLowerCase().contains('rate limit')) {
         _markRateLimit(isEmail: true);
       }
       rethrow;
@@ -368,40 +444,37 @@ class AuthRepository {
         token: code,
         type: OtpType.recovery,
       );
-      
+
       return {
         'success': response.session != null,
         'session_token': response.session?.accessToken,
       };
     } on AuthApiException catch (e) {
-      if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+      if (e.code == 'over_email_send_rate_limit' ||
+          e.message.toLowerCase().contains('rate limit')) {
         _markRateLimit(isEmail: true);
       }
-      return {
-        'success': false,
-        'error': e.message,
-        'code': e.code,
-      };
+      return {'success': false, 'error': e.message, 'code': e.code};
     } catch (e) {
-      return {
-        'success': false,
-        'error': e.toString(),
-      };
+      return {'success': false, 'error': e.toString()};
     }
   }
 
-  Future<AuthResponse> verifyOTP(String email, String token, String fullName) async {
+  Future<AuthResponse> verifyOTP(
+    String email,
+    String token,
+    String fullName,
+  ) async {
     try {
-      final response = await _supabase.auth.verifyOTP(
-        email: email,
-        token: token,
-        type: OtpType.signup,
-      ).timeout(const Duration(seconds: 20));
-      
+      final response = await _supabase.auth
+          .verifyOTP(email: email, token: token, type: OtpType.signup)
+          .timeout(const Duration(seconds: 20));
+
       if (response.user != null) {
         // Keep auth-linked app row for routing/system flags.
         await _supabase.from('users').upsert({
           'id': response.user!.id,
+          'email': response.user!.email ?? email,
           'academic_profile_completed': false,
         }, onConflict: 'id');
 
@@ -411,10 +484,11 @@ class AuthRepository {
           fullName: fullName,
         );
       }
-      
+
       return response;
     } on AuthApiException catch (e) {
-      if (e.code == 'over_email_send_rate_limit' || e.message.toLowerCase().contains('rate limit')) {
+      if (e.code == 'over_email_send_rate_limit' ||
+          e.message.toLowerCase().contains('rate limit')) {
         _markRateLimit(isEmail: true);
       }
       rethrow;

@@ -56,12 +56,12 @@ class BackgroundNotificationService {
     _initialized = true;
 
     if (Platform.isAndroid) {
-      await wm.Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+      await wm.Workmanager().initialize(callbackDispatcher);
       await wm.Workmanager().registerPeriodicTask(
         _workmanagerTaskName,
         _workmanagerTaskName,
         frequency: const Duration(minutes: 30),
-        existingWorkPolicy: wm.ExistingWorkPolicy.keep,
+        existingWorkPolicy: wm.ExistingPeriodicWorkPolicy.keep,
         constraints: wm.Constraints(networkType: wm.NetworkType.connected),
       );
     }
@@ -96,10 +96,7 @@ class BackgroundNotificationService {
     if (supabaseUrl == null || supabaseAnonKey == null) return;
 
     try {
-      await Supabase.initialize(
-        url: supabaseUrl,
-        anonKey: supabaseAnonKey,
-      );
+      await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
     } catch (_) {
       // If the background isolate has already been bootstrapped, continue.
     }
@@ -137,10 +134,8 @@ class BackgroundNotificationService {
     await NotificationIntelligenceService.evaluateBackground(
       analytics: analytics,
       tasks: tasks,
-      fetchTasks: () => taskRepository.getTasks(
-        userId: user.id,
-        semesterId: semesterId,
-      ),
+      fetchTasks: () =>
+          taskRepository.getTasks(userId: user.id, semesterId: semesterId),
     );
 
     if (source == 'manual_smoke') {

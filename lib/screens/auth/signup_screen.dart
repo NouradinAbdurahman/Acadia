@@ -9,6 +9,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:acadia/l10n/app_localizations.dart';
+import '../../core/config/feature_flags.dart';
 import '../../core/design/app_spacing.dart';
 
 import '../../widgets/auth/auth_background_container.dart';
@@ -67,8 +68,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (authRepo.isBlockedForEmail()) {
       final remaining = authRepo.remainingEmailRateLimitTime();
       if (remaining != Duration.zero) {
-        final timeStr = '${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, "0")}';
-        setState(() => _errorMessage = l10n?.emailRateLimitWithTimer(timeStr) ?? '');
+        final timeStr =
+            '${remaining.inMinutes}:${(remaining.inSeconds % 60).toString().padLeft(2, "0")}';
+        setState(
+          () => _errorMessage = l10n?.emailRateLimitWithTimer(timeStr) ?? '',
+        );
       } else {
         setState(() => _errorMessage = l10n?.emailRateLimit ?? '');
       }
@@ -82,7 +86,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     }
 
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       Haptics.vibrate(HapticsType.medium);
       _isLoading = true;
@@ -96,13 +100,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         _passwordController.text.trim(),
         _nameController.text.trim(),
       );
-      
+
       Haptics.vibrate(HapticsType.success);
-      
+
       if (mounted) {
         // Handle existing email even if enumeration protection is on
         final user = response.user;
-        if (user != null && user.identities != null && user.identities!.isEmpty) {
+        if (user != null &&
+            user.identities != null &&
+            user.identities!.isEmpty) {
           setState(() {
             _errorMessage = l10n?.emailAlreadyInUse ?? '';
           });
@@ -112,7 +118,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         }
 
         debugPrint('SIGNUP SUCCESS');
-        context.push('/verify-email?email=${Uri.encodeComponent(_emailController.text.trim())}&fullName=${Uri.encodeComponent(_nameController.text.trim())}');
+        context.push(
+          '/verify-email?email=${Uri.encodeComponent(_emailController.text.trim())}&fullName=${Uri.encodeComponent(_nameController.text.trim())}',
+        );
       }
     } on TimeoutException {
       Haptics.vibrate(HapticsType.error);
@@ -125,13 +133,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       if (mounted) {
         String msg = l10n?.networkError ?? '';
         final lower = e.message.toLowerCase();
-        
-        if (e.code == 'over_email_send_rate_limit' || lower.contains('rate limit')) {
+
+        if (e.code == 'over_email_send_rate_limit' ||
+            lower.contains('rate limit')) {
           debugPrint('SIGNUP ERROR: rate_limit detected');
           msg = l10n?.emailRateLimit ?? '';
-        } else if (lower.contains('already registered') || e.code == 'user_already_exists') {
+        } else if (lower.contains('already registered') ||
+            e.code == 'user_already_exists') {
           msg = l10n?.emailAlreadyInUse ?? '';
-        } else if (e.code == 'invalid_email' || lower.contains('invalid email')) {
+        } else if (e.code == 'invalid_email' ||
+            lower.contains('invalid email')) {
           msg = l10n?.invalidEmail ?? '';
         } else if (e.code == 'weak_password') {
           msg = l10n?.passwordTooShort ?? '';
@@ -140,7 +151,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         } else {
           msg = e.message;
         }
-        
+
         setState(() => _errorMessage = msg);
       }
     } on SocketException {
@@ -152,7 +163,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       Haptics.vibrate(HapticsType.error);
       if (mounted) {
         final errText = e.toString();
-        if (errText.contains('SocketException') || errText.contains('ClientException')) {
+        if (errText.contains('SocketException') ||
+            errText.contains('ClientException')) {
           setState(() => _errorMessage = l10n?.checkInternetConnection ?? '');
         } else {
           setState(() => _errorMessage = l10n?.networkError ?? '');
@@ -209,7 +221,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final authRepo = ref.read(authRepositoryProvider);
     final isEmailLimited = authRepo.isBlockedForEmail();
     final remainingTime = authRepo.remainingEmailRateLimitTime();
-    
+
     String buttonText = l10n?.signup ?? '';
     if (isEmailLimited && remainingTime.inSeconds > 0) {
       final minutes = remainingTime.inMinutes;
@@ -271,19 +283,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           l10n?.signupSubtitle ?? '',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.8,
+                            ),
                           ),
                         ).animate().fade(delay: 150.ms).slideY(begin: 0.1),
                         const SizedBox(height: AppSpacing.lg),
                         if (_errorMessage != null)
                           Container(
                             padding: const EdgeInsets.all(AppSpacing.md),
-                            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                            margin: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.error.withValues(alpha: 0.1),
+                              color: theme.colorScheme.error.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: theme.colorScheme.error.withValues(alpha: 0.3),
+                                color: theme.colorScheme.error.withValues(
+                                  alpha: 0.3,
+                                ),
                               ),
                             ),
                             child: Text(
@@ -304,7 +324,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               borderColor: fieldBorderColor,
                               focusedBorderColor: fieldFocusedBorderColor,
                               validator: (value) =>
-                                  value == null || value.isEmpty ? (l10n?.requiredField ?? '') : null,
+                                  value == null || value.isEmpty
+                                  ? (l10n?.requiredField ?? '')
+                                  : null,
                             ),
                             const SizedBox(height: AppSpacing.md),
                             AppTextField(
@@ -316,9 +338,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               focusedBorderColor: fieldFocusedBorderColor,
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) =>
-                                  value == null || value.isEmpty || !value.contains('@')
-                                      ? (l10n?.invalidEmail ?? '')
-                                      : null,
+                                  value == null ||
+                                      value.isEmpty ||
+                                      !value.contains('@')
+                                  ? (l10n?.invalidEmail ?? '')
+                                  : null,
                             ),
                             const SizedBox(height: AppSpacing.md),
                             AppTextField(
@@ -330,128 +354,175 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               borderColor: fieldBorderColor,
                               focusedBorderColor: fieldFocusedBorderColor,
                               obscureText: true,
-                              validator: (value) => validatePasswordForSignup(value, l10n),
+                              validator: (value) =>
+                                  validatePasswordForSignup(value, l10n),
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4.0,
+                              ),
                               child: Column(
                                 children: [
                                   if (_passwordController.text.isNotEmpty)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             passwordStrengthLabel(
                                               _passwordController.text,
                                               l10n,
                                             ),
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: passwordStrengthColor(
-                                                theme,
-                                                _passwordController.text,
-                                              ),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: passwordStrengthColor(
+                                                    theme,
+                                                    _passwordController.text,
+                                                  ),
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
-                                          if (_passwordController.text.length < 8)
+                                          if (_passwordController.text.length <
+                                              8)
                                             Text(
                                               '${_passwordController.text.length}/8',
-                                              style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.textTheme.bodySmall?.color,
-                                        fontSize: 10,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.color,
+                                                    fontSize: 10,
+                                                  ),
+                                            ),
+                                        ],
                                       ),
-                                    ),
+                                    ).animate().fade().slideY(begin: -0.5),
                                 ],
                               ),
-                            ).animate().fade().slideY(begin: -0.5),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            AppTextField(
+                              controller: _confirmPasswordController,
+                              labelText: l10n?.confirmPassword ?? '',
+                              prefixIcon: HeroIcons.lockClosed,
+                              fillColor: fieldFillColor,
+                              borderColor: fieldBorderColor,
+                              focusedBorderColor: fieldFocusedBorderColor,
+                              obscureText: true,
+                              validator: (value) =>
+                                  validateConfirmPasswordForSignup(
+                                    value,
+                                    _passwordController.text,
+                                    l10n,
+                                  ),
+                            ),
+                          ],
+                        ).animate().fade(delay: 200.ms).slideY(begin: 0.1),
+                        const SizedBox(height: AppSpacing.xl),
+                        AppButton(
+                          onPressed:
+                              (_isLoading ||
+                                  isEmailLimited ||
+                                  _oauthBusy != null)
+                              ? null
+                              : _signUp,
+                          isLoading: _isLoading,
+                          text: buttonText,
+                          isFullWidth: true,
+                        ).animate().fade(delay: 300.ms).slideY(begin: 0.1),
+                        // ======================================================
+                        // TEMPORARILY DISABLED
+                        //
+                        // Google Sign-In and Apple Sign-In are intentionally
+                        // hidden from the UI for the current App Store release.
+                        //
+                        // The implementation is preserved below and must NOT
+                        // be removed — it only renders when the corresponding
+                        // FeatureFlags.enable*SignIn flag is true.
+                        //
+                        // To re-enable:
+                        // 1. Configure Apple/Google OAuth in Supabase.
+                        // 2. Set FeatureFlags.enableAppleSignIn /
+                        //    enableGoogleSignIn = true in
+                        //    lib/core/config/feature_flags.dart.
+                        // 3. Verify Apple Developer / Google Cloud credentials.
+                        //
+                        // See docs/authentication/OAUTH_REENABLE_GUIDE.md
+                        // ======================================================
+                        if (FeatureFlags.enableAnyOAuth) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          _buildOrContinueWith(
+                            context,
+                          ).animate().fade(delay: 350.ms).slideY(begin: 0.1),
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            children: [
+                              if (FeatureFlags.enableGoogleSignIn)
+                                Expanded(
+                                  child: _buildSocialButton(
+                                    context: context,
+                                    assetPath: 'assets/google.png',
+                                    label: l10n?.googleLabel ?? '',
+                                    isGoogleIcon: true,
+                                    isBusy: _oauthBusy == OAuthProvider.google,
+                                    onPressed:
+                                        (_isLoading || _oauthBusy != null)
+                                        ? null
+                                        : () => _signInWithOAuth(
+                                            OAuthProvider.google,
+                                          ),
+                                  ),
+                                ),
+                              if (FeatureFlags.enableGoogleSignIn &&
+                                  FeatureFlags.enableAppleSignIn)
+                                const SizedBox(width: AppSpacing.sm),
+                              if (FeatureFlags.enableAppleSignIn)
+                                Expanded(
+                                  child: _buildSocialButton(
+                                    context: context,
+                                    assetPath: 'assets/icons/apple.png',
+                                    label: l10n?.appleLabel ?? '',
+                                    isGoogleIcon: false,
+                                    isBusy: _oauthBusy == OAuthProvider.apple,
+                                    onPressed:
+                                        (_isLoading || _oauthBusy != null)
+                                        ? null
+                                        : () => _signInWithOAuth(
+                                            OAuthProvider.apple,
+                                          ),
+                                  ),
+                                ),
+                            ],
+                          ).animate().fade(delay: 400.ms).slideY(begin: 0.1),
                         ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    AppTextField(
-                      controller: _confirmPasswordController,
-                      labelText: l10n?.confirmPassword ?? '',
-                      prefixIcon: HeroIcons.lockClosed,
-                      fillColor: fieldFillColor,
-                      borderColor: fieldBorderColor,
-                      focusedBorderColor: fieldFocusedBorderColor,
-                      obscureText: true,
-                      validator: (value) => validateConfirmPasswordForSignup(
-                        value,
-                        _passwordController.text,
-                        l10n,
-                      ),
-                    ),
-                  ],
-                ).animate().fade(delay: 200.ms).slideY(begin: 0.1),
-                const SizedBox(height: AppSpacing.xl),
-                AppButton(
-                  onPressed: (_isLoading || isEmailLimited || _oauthBusy != null)
-                      ? null
-                      : _signUp,
-                  isLoading: _isLoading,
-                  text: buttonText,
-                  isFullWidth: true,
-                ).animate().fade(delay: 300.ms).slideY(begin: 0.1),
-                const SizedBox(height: AppSpacing.md),
-                _buildOrContinueWith(context).animate().fade(delay: 350.ms).slideY(begin: 0.1),
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildSocialButton(
-                        context: context,
-                        assetPath: 'assets/google.png',
-                        label: l10n?.googleLabel ?? '',
-                        isGoogleIcon: true,
-                        isBusy: _oauthBusy == OAuthProvider.google,
-                        onPressed: (_isLoading || _oauthBusy != null)
-                            ? null
-                            : () => _signInWithOAuth(OAuthProvider.google),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: _buildSocialButton(
-                        context: context,
-                        assetPath: 'assets/icons/apple.png',
-                        label: l10n?.appleLabel ?? '',
-                        isGoogleIcon: false,
-                        isBusy: _oauthBusy == OAuthProvider.apple,
-                        onPressed: (_isLoading || _oauthBusy != null)
-                            ? null
-                            : () => _signInWithOAuth(OAuthProvider.apple),
-                      ),
-                    ),
-                  ],
-                ).animate().fade(delay: 400.ms).slideY(begin: 0.1),
-                const SizedBox(height: AppSpacing.lg),
-                AppButton(
-                  onPressed: () => context.pop(),
-                  variant: AppButtonVariant.text,
-                  text: '',
-                  child: RichText(
-                    text: TextSpan(
-                      text: '${l10n?.alreadyHaveAccount ?? ''} ',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.textTheme.bodySmall?.color,
-                      ),
-                      children: [
-                        TextSpan(
-                          text: l10n?.login ?? '',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(height: AppSpacing.lg),
+                        AppButton(
+                          onPressed: () => context.pop(),
+                          variant: AppButtonVariant.text,
+                          text: '',
+                          child: RichText(
+                            text: TextSpan(
+                              text: '${l10n?.alreadyHaveAccount ?? ''} ',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.textTheme.bodySmall?.color,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: l10n?.login ?? '',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ).animate().fade(delay: 450.ms).slideY(begin: 0.1),
+                        ).animate().fade(delay: 450.ms).slideY(begin: 0.1),
                       ],
                     ),
                   ),
@@ -512,9 +583,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         side: BorderSide(
           color: theme.colorScheme.onSurface.withValues(alpha: 0.22),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         backgroundColor: Colors.white.withValues(alpha: 0.05),
       ),
       child: isBusy

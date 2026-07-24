@@ -173,16 +173,27 @@ void main() {
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  // Rebuild the router when these providers change
-  final localeLoaded = ref.watch(localeLoadedProvider);
-  final onboardingLoaded = ref.watch(onboardingLoadedProvider);
-  final appUserAsync = ref.watch(currentAppUserProvider);
-  final onboardingCompleted = ref.watch(onboardingProvider);
-  final languageSelected = ref.watch(languageSelectedProvider);
-  final themeLoaded = ref.watch(themeLoadedProvider);
-  final activeSemesterAsync = ref.watch(activeSemesterProvider);
+  // A single, stable GoRouter instance for the app's lifetime. Re-running
+  // redirect() via router.refresh() (below) — rather than tearing down and
+  // recreating GoRouter whenever a dependency changes — is required
+  // correctness, not just an optimization: recreating GoRouter resets
+  // navigation to initialLocation ('/splash') and re-evaluates redirect()
+  // against whatever provider values happen to be captured at that instant.
+  // That raced with context.go('/home') at the end of academic onboarding:
+  // the in-flight navigation could run against a GoRouter built before
+  // academicProfileCompleted flipped to true, bouncing back to
+  // /academic-onboarding and making it look like the screen looped forever.
+  late final GoRouter router;
 
-  return GoRouter(
+  ref.listen(localeLoadedProvider, (_, _) => router.refresh());
+  ref.listen(onboardingLoadedProvider, (_, _) => router.refresh());
+  ref.listen(currentAppUserProvider, (_, _) => router.refresh());
+  ref.listen(onboardingProvider, (_, _) => router.refresh());
+  ref.listen(languageSelectedProvider, (_, _) => router.refresh());
+  ref.listen(themeLoadedProvider, (_, _) => router.refresh());
+  ref.listen(activeSemesterProvider, (_, _) => router.refresh());
+
+  router = GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: Listenable.merge([
@@ -508,6 +519,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
+      // Read fresh on every redirect() invocation — this callback runs on
+      // the one long-lived router instance (see comment above), so these
+      // must never be values captured once at router-construction time.
+      final localeLoaded = ref.read(localeLoadedProvider);
+      final onboardingLoaded = ref.read(onboardingLoadedProvider);
+      final appUserAsync = ref.read(currentAppUserProvider);
+      final onboardingCompleted = ref.read(onboardingProvider);
+      final languageSelected = ref.read(languageSelectedProvider);
+      final themeLoaded = ref.read(themeLoadedProvider);
+      final activeSemesterAsync = ref.read(activeSemesterProvider);
+
       final session = Supabase.instance.client.auth.currentSession;
       final loggedIn = session != null;
 
@@ -595,6 +617,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
   );
+
+  ref.onDispose(router.dispose);
+  return router;
 });
 
 class MyApp extends ConsumerStatefulWidget {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,7 +21,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
   static bool _pluginInitialized = false;
   static bool _isLocalPermissionGranted = false;
-      
+
   // In-memory cache mirrored to SharedPreferences so cooldown survives restarts.
   static final Map<String, DateTime> _lastSent = {};
   static SharedPreferences? _prefs;
@@ -43,7 +44,8 @@ class NotificationService {
     if (requestPermissions) {
       final iosImplementation = _plugin
           .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>();
+            IOSFlutterLocalNotificationsPlugin
+          >();
       final granted = await iosImplementation?.requestPermissions(
         alert: true,
         badge: true,
@@ -51,12 +53,13 @@ class NotificationService {
       );
       if (iosImplementation != null) {
         _isLocalPermissionGranted = granted ?? false;
-        debugPrint('[Notification] iOS local permission granted: $_isLocalPermissionGranted');
+        debugPrint(
+          '[Notification] iOS local permission granted: $_isLocalPermissionGranted',
+        );
       } else {
         // Non-iOS platforms rely on their own runtime permission flow.
         _isLocalPermissionGranted = true;
       }
-
     }
 
     // 1. Initialize timezones
@@ -73,7 +76,8 @@ class NotificationService {
     if (requestPermissions) {
       await _plugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestNotificationsPermission();
     }
 
@@ -90,9 +94,10 @@ class NotificationService {
         try {
           final user = Supabase.instance.client.auth.currentUser;
           if (user != null && newToken.isNotEmpty) {
-            await Supabase.instance.client.from('users').update({
-              'fcm_token': newToken,
-            }).eq('id', user.id);
+            await Supabase.instance.client
+                .from('users')
+                .update({'fcm_token': newToken})
+                .eq('id', user.id);
           }
         } catch (e) {
           debugPrint('Failed to persist refreshed FCM token: $e');
@@ -103,13 +108,13 @@ class NotificationService {
     if (attachForegroundListeners) {
       // 7. Get token and listen for auth state to save token
       final supabase = Supabase.instance.client;
-      
+
       // Save token if user is already logged in
       final currentUser = supabase.auth.currentUser;
       if (currentUser != null) {
         _saveToken(currentUser.id);
       }
-      
+
       supabase.auth.onAuthStateChange.listen((data) {
         if (data.session?.user != null) {
           _saveToken(data.session!.user.id);
@@ -123,10 +128,10 @@ class NotificationService {
           final type = message.data['type'] ?? 'system';
           final id = message.data['id'] ?? '';
           _plugin.show(
-            notification.hashCode,
-            notification.title,
-            notification.body,
-            _notificationDetailsForType(type),
+            id: notification.hashCode,
+            title: notification.title,
+            body: notification.body,
+            notificationDetails: _notificationDetailsForType(type),
             payload: '$type|$id',
           );
         }
@@ -162,7 +167,7 @@ class NotificationService {
     const settings = InitializationSettings(android: android, iOS: ios);
 
     await _plugin.initialize(
-      settings,
+      settings: settings,
       onDidReceiveNotificationResponse: (details) {
         if (details.payload != null) {
           _onNotificationTap(details.payload!);
@@ -173,7 +178,8 @@ class NotificationService {
     if (requestPermissions) {
       await _plugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestNotificationsPermission();
     }
 
@@ -215,7 +221,8 @@ class NotificationService {
     final now = DateTime.now().toUtc();
     final last = _lastSent[key];
     final type = key.contains('_') ? key.split('_').first : key;
-    final resolvedCooldown = cooldown ?? NotificationTypeConfig.resolve(type).cooldown;
+    final resolvedCooldown =
+        cooldown ?? NotificationTypeConfig.resolve(type).cooldown;
     if (last != null && now.difference(last) <= resolvedCooldown) {
       return false;
     }
@@ -228,16 +235,25 @@ class NotificationService {
 
     _lastSent[key] = now;
     final prefs = _prefs ??= await SharedPreferences.getInstance();
-    await prefs.setString(_storageKey(_lastSentPrefix, key), now.toIso8601String());
+    await prefs.setString(
+      _storageKey(_lastSentPrefix, key),
+      now.toIso8601String(),
+    );
     await _writeCounter(dailyKey, dailyCount + 1);
     return true;
   }
 
-  static Importance _importanceForType(String type, {Priority? priorityOverride}) {
+  static Importance _importanceForType(
+    String type, {
+    Priority? priorityOverride,
+  }) {
     final config = NotificationTypeConfig.resolve(type);
     final effectivePriority = priorityOverride ?? _priorityForType(type);
-    if (config.isCritical || effectivePriority == Priority.high) return Importance.max;
-    if (type == 'deadline' || type == 'deadline_batch' || type == 'academic_summary') {
+    if (config.isCritical || effectivePriority == Priority.high)
+      return Importance.max;
+    if (type == 'deadline' ||
+        type == 'deadline_batch' ||
+        type == 'academic_summary') {
       return Importance.high;
     }
     return Importance.defaultImportance;
@@ -259,13 +275,18 @@ class NotificationService {
       android: AndroidNotificationDetails(
         'acad_notifications',
         'Academic Alerts',
-        channelDescription: 'Notifications for tasks, deadlines, and academic risk',
-        importance: _importanceForType(type, priorityOverride: priorityOverride),
+        channelDescription:
+            'Notifications for tasks, deadlines, and academic risk',
+        importance: _importanceForType(
+          type,
+          priorityOverride: priorityOverride,
+        ),
         priority: priorityOverride ?? _priorityForType(type),
         showWhen: true,
         enableLights: true,
         enableVibration: true,
-        fullScreenIntent: type == 'risk' || type == 'overdue' || type == 'overdue_batch',
+        fullScreenIntent:
+            type == 'risk' || type == 'overdue' || type == 'overdue_batch',
       ),
       iOS: const DarwinNotificationDetails(
         presentAlert: true,
@@ -287,9 +308,11 @@ class NotificationService {
     return current.hour < 7 || current.hour >= 22;
   }
 
-  static bool isCriticalType(String type) => NotificationTypeConfig.resolve(type).isCritical;
+  static bool isCriticalType(String type) =>
+      NotificationTypeConfig.resolve(type).isCritical;
 
-  static bool isSilentType(String type) => NotificationTypeConfig.resolve(type).isSilent;
+  static bool isSilentType(String type) =>
+      NotificationTypeConfig.resolve(type).isSilent;
 
   static Future<String?> _getActiveSemesterId() async {
     try {
@@ -323,7 +346,8 @@ class NotificationService {
 
     final effectiveSemesterId = semesterId ?? await _getActiveSemesterId();
 
-    final shouldOnlyInbox = config.isSilent || (!config.allowNightDelivery && isNightTime());
+    final shouldOnlyInbox =
+        config.isSilent || (!config.allowNightDelivery && isNightTime());
 
     final isNew = await _writeInbox(
       userId: user.id,
@@ -358,12 +382,22 @@ class NotificationService {
       final token = await FirebaseMessaging.instance.getToken();
       debugPrint("FCM TOKEN: $token");
       if (token != null) {
-        await Supabase.instance.client.from('users').update({
-          'fcm_token': token,
-        }).eq('id', userId);
+        await Supabase.instance.client
+            .from('users')
+            .update({'fcm_token': token})
+            .eq('id', userId);
+      }
+    } on FirebaseException catch (e) {
+      // iOS Simulators never receive a real APNS token, so getToken() always
+      // throws this — harmless and expected there; on a real device it
+      // would indicate an actual push-registration problem worth surfacing.
+      if (e.code == 'apns-token-not-set') {
+        debugPrint('FCM token unavailable (expected on iOS Simulator)');
+      } else {
+        debugPrint('Failed to save FCM token: $e');
       }
     } catch (e) {
-      debugPrint("Failed to save FCM token: $e");
+      debugPrint('Failed to save FCM token: $e');
     }
   }
 
@@ -371,7 +405,10 @@ class NotificationService {
     final context = rootNavigatorKey.currentContext;
     if (context == null) {
       _pendingTapPayload = payload;
-      Future<void>.delayed(const Duration(milliseconds: 800), _flushPendingTapIfAny);
+      Future<void>.delayed(
+        const Duration(milliseconds: 800),
+        _flushPendingTapIfAny,
+      );
       return;
     }
 
@@ -403,7 +440,9 @@ class NotificationService {
         if (taskId != null) {
           context.push('/task-detail?id=${Uri.encodeComponent(taskId)}');
         } else if (deadlineId != null) {
-          context.push('/deadline-detail?id=${Uri.encodeComponent(deadlineId)}');
+          context.push(
+            '/deadline-detail?id=${Uri.encodeComponent(deadlineId)}',
+          );
         } else {
           context.push('/tasks');
         }
@@ -482,19 +521,21 @@ class NotificationService {
 
   static const AndroidNotificationDetails _androidDetails =
       AndroidNotificationDetails(
-    'acad_notifications',
-    'Academic Alerts',
-    channelDescription: 'Notifications for tasks, deadlines, and academic risk',
-    importance: Importance.max,
-    priority: Priority.high,
-    showWhen: true,
-    enableLights: true,
-    enableVibration: true,
-    fullScreenIntent: true,
-  );
+        'acad_notifications',
+        'Academic Alerts',
+        channelDescription:
+            'Notifications for tasks, deadlines, and academic risk',
+        importance: Importance.max,
+        priority: Priority.high,
+        showWhen: true,
+        enableLights: true,
+        enableVibration: true,
+        fullScreenIntent: true,
+      );
 
-  static const NotificationDetails _notificationDetails =
-      NotificationDetails(android: _androidDetails);
+  static const NotificationDetails _notificationDetails = NotificationDetails(
+    android: _androidDetails,
+  );
 
   // Returns true if a new row was inserted, false if it was a duplicate or error.
   static Future<bool> _writeInbox({
@@ -517,8 +558,21 @@ class NotificationService {
         'created_at': DateTime.now().toUtc().toIso8601String(),
       });
       return true;
+    } on PostgrestException catch (e) {
+      // 23505 = unique_violation on notifications_reference_type_unique —
+      // this IS the (user_id, reference_id, type) dedup working as intended
+      // (see CLAUDE.md's notification contract), not a failure. Any other
+      // Postgrest error is unexpected and worth keeping visible.
+      if (e.code == '23505') {
+        debugPrint(
+          'Inbox write skipped — already notified for $type|$referenceId',
+        );
+      } else {
+        debugPrint('Inbox write failed: $e');
+      }
+      return false;
     } catch (e) {
-      debugPrint('Inbox write failed (duplicate or error): $e');
+      debugPrint('Inbox write failed: $e');
       return false;
     }
   }
@@ -534,7 +588,10 @@ class NotificationService {
     final basePriority = _priorityForType(type);
     final boostPriority = await NotificationBehaviorService.userEngages(type);
     final effectivePriority = boostPriority ? Priority.high : basePriority;
-    final details = _notificationDetailsForType(type, priorityOverride: effectivePriority);
+    final details = _notificationDetailsForType(
+      type,
+      priorityOverride: effectivePriority,
+    );
 
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
@@ -559,10 +616,7 @@ class NotificationService {
             'priority': _edgePriorityForType(effectivePriority),
           };
           debugPrint('PUSH BODY JSON: ${jsonEncode(pushBody)}');
-          await supabase.functions.invoke(
-            'send-push',
-            body: pushBody,
-          );
+          await supabase.functions.invoke('send-push', body: pushBody);
         }
       } catch (e) {
         debugPrint("Failed to send remote push: $e");
@@ -571,10 +625,10 @@ class NotificationService {
 
     final notificationId = DateTime.now().millisecondsSinceEpoch % 100000;
     await _plugin.show(
-      notificationId,
-      title,
-      body,
-      details,
+      id: notificationId,
+      title: title,
+      body: body,
+      notificationDetails: details,
       payload: "$type|${referenceId ?? ""}",
     );
   }
@@ -592,14 +646,17 @@ class NotificationService {
     final basePriority = _priorityForType(type);
     final boostPriority = await NotificationBehaviorService.userEngages(type);
     final effectivePriority = boostPriority ? Priority.high : basePriority;
-    final reduceFrequency = await NotificationBehaviorService.ignoredTooMuch(type);
+    final reduceFrequency = await NotificationBehaviorService.ignoredTooMuch(
+      type,
+    );
     final cooldownMultiplier = reduceFrequency ? 2 : 1;
     final config = NotificationTypeConfig.resolve(type);
     final adaptiveCooldown = config.cooldown * cooldownMultiplier;
 
     if (!await NotificationBehaviorService.canSendDaily()) return;
 
-    if (effectivePriority == Priority.high && !await NotificationBehaviorService.canSendHighPriority()) {
+    if (effectivePriority == Priority.high &&
+        !await NotificationBehaviorService.canSendHighPriority()) {
       return;
     }
 
@@ -644,19 +701,17 @@ class NotificationService {
   static Future<void> scheduleCompletion(Duration remaining) async {
     if (remaining.isNegative || remaining == Duration.zero) return;
 
-    await _plugin.cancel(0);
+    await _plugin.cancel(id: 0);
 
     final scheduledDate = tz.TZDateTime.now(tz.local).add(remaining);
 
     await _plugin.zonedSchedule(
-      0,
-      'Session Complete',
-      'Your study session has finished. Great job!',
-      scheduledDate,
-      _notificationDetails,
+      id: 0,
+      title: 'Session Complete',
+      body: 'Your study session has finished. Great job!',
+      scheduledDate: scheduledDate,
+      notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'study_goal|',
     );
   }
@@ -671,7 +726,7 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
-    await _plugin.cancel(1001);
+    await _plugin.cancel(id: 1001);
 
     final now = tz.TZDateTime.now(tz.local);
     var scheduledDate = tz.TZDateTime(
@@ -688,21 +743,19 @@ class NotificationService {
     }
 
     await _plugin.zonedSchedule(
-      1001,
-      title,
-      body,
-      scheduledDate,
-      _notificationDetails,
+      id: 1001,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'mood|',
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
   static Future<void> cancelDailyMoodReminder() async {
-    await _plugin.cancel(1001);
+    await _plugin.cancel(id: 1001);
   }
 
   static int _examReminderId(String examId, int slot) {
@@ -727,7 +780,8 @@ class NotificationService {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
     final semesterId = await _getActiveSemesterId();
-    final formattedTime = '${examAt.hour.toString().padLeft(2, '0')}:${examAt.minute.toString().padLeft(2, '0')}';
+    final formattedTime =
+        '${examAt.hour.toString().padLeft(2, '0')}:${examAt.minute.toString().padLeft(2, '0')}';
 
     // Keep one up-to-date exam notification row per exam reminder source.
     try {
@@ -762,9 +816,13 @@ class NotificationService {
     String? classroom,
   }) async {
     await _ensurePluginInitialized(requestPermissions: false);
-    debugPrint('[Notification] scheduleExamReminders called for examId=$examId');
+    debugPrint(
+      '[Notification] scheduleExamReminders called for examId=$examId',
+    );
     if (!_isLocalPermissionGranted) {
-      debugPrint('[Notification] Skipped scheduling exam reminders - local permission not granted');
+      debugPrint(
+        '[Notification] Skipped scheduling exam reminders - local permission not granted',
+      );
       return;
     }
 
@@ -780,8 +838,11 @@ class NotificationService {
       debugPrint('[Notification] Skipped - exam time is in the past');
       return;
     }
-    final isTurkish = ui.PlatformDispatcher.instance.locale.languageCode.toLowerCase().startsWith('tr');
-    final time = '${examAt.hour.toString().padLeft(2, '0')}:${examAt.minute.toString().padLeft(2, '0')}';
+    final isTurkish = ui.PlatformDispatcher.instance.locale.languageCode
+        .toLowerCase()
+        .startsWith('tr');
+    final time =
+        '${examAt.hour.toString().padLeft(2, '0')}:${examAt.minute.toString().padLeft(2, '0')}';
     final parsedType = ExamType.fromDb(examType);
     final examTypeLabel = isTurkish
         ? switch (parsedType) {
@@ -798,7 +859,9 @@ class NotificationService {
         ? (isTurkish ? 'Online Sinav' : 'Online')
         : ((classroom == null || classroom.trim().isEmpty)
               ? (isTurkish ? 'Sinif' : 'Classroom')
-              : (isTurkish ? 'Oda ${classroom.trim()}' : 'Room ${classroom.trim()}'));
+              : (isTurkish
+                    ? 'Oda ${classroom.trim()}'
+                    : 'Room ${classroom.trim()}'));
 
     await _recordExamNotification(
       examId: examId,
@@ -813,16 +876,14 @@ class NotificationService {
     if (oneDayBefore.isAfter(now)) {
       debugPrint('[Notification] Scheduling 24h reminder at: $oneDayBefore');
       await _plugin.zonedSchedule(
-        _examReminderId(examId, 24),
-        isTurkish ? 'Sinav YarIn' : 'Exam Tomorrow',
-        isTurkish
+        id: _examReminderId(examId, 24),
+        title: isTurkish ? 'Sinav YarIn' : 'Exam Tomorrow',
+        body: isTurkish
             ? 'Yarin: $title $examTypeLabel\n$time • $locationText'
             : 'Tomorrow: $title $examTypeLabel\n$time • $locationText',
-        oneDayBefore,
-        _notificationDetailsForType('deadline'),
+        scheduledDate: oneDayBefore,
+        notificationDetails: _notificationDetailsForType('deadline'),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'exam|exam:$examId',
       );
     } else {
@@ -834,16 +895,14 @@ class NotificationService {
     if (twoHoursBefore.isAfter(now)) {
       debugPrint('[Notification] Scheduling 2h reminder at: $twoHoursBefore');
       await _plugin.zonedSchedule(
-        _examReminderId(examId, 2),
-        isTurkish ? 'Sinav Yakinda' : 'Exam Soon',
-        isTurkish
+        id: _examReminderId(examId, 2),
+        title: isTurkish ? 'Sinav Yakinda' : 'Exam Soon',
+        body: isTurkish
             ? '2 saat sonra: $title $examTypeLabel\nOdagini koru'
             : 'In 2 hours: $title $examTypeLabel\nStay focused',
-        twoHoursBefore,
-        _notificationDetailsForType('deadline'),
+        scheduledDate: twoHoursBefore,
+        notificationDetails: _notificationDetailsForType('deadline'),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'exam|exam:$examId',
       );
     } else {
@@ -854,42 +913,40 @@ class NotificationService {
     if (examAt.isAfter(now)) {
       debugPrint('[Notification] Scheduling exam-time reminder at: $examAt');
       await _plugin.zonedSchedule(
-        _examReminderId(examId, 0),
-        isTurkish ? 'Sinav Simdi' : 'Exam Now',
-        isTurkish
+        id: _examReminderId(examId, 0),
+        title: isTurkish ? 'Sinav Simdi' : 'Exam Now',
+        body: isTurkish
             ? '$title $examTypeLabel simdi basliyor\n$time • $locationText'
             : '$title $examTypeLabel is starting now\n$time • $locationText',
-        examAt,
-        _notificationDetailsForType('deadline'),
+        scheduledDate: examAt,
+        notificationDetails: _notificationDetailsForType('deadline'),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'exam|exam:$examId',
       );
     } else {
       // Safety: if exam is very near and TZ jitter made it slightly in the past.
       final immediate = now.add(const Duration(seconds: 10));
-      debugPrint('[Notification] Scheduling immediate fallback reminder at: $immediate');
+      debugPrint(
+        '[Notification] Scheduling immediate fallback reminder at: $immediate',
+      );
       await _plugin.zonedSchedule(
-        _examReminderId(examId, -1),
-        isTurkish ? 'Sinav Yakinda' : 'Exam Soon',
-        isTurkish
+        id: _examReminderId(examId, -1),
+        title: isTurkish ? 'Sinav Yakinda' : 'Exam Soon',
+        body: isTurkish
             ? '$title $examTypeLabel cok yakinda\n$time • $locationText'
             : '$title $examTypeLabel is coming up\n$time • $locationText',
-        immediate,
-        _notificationDetailsForType('deadline'),
+        scheduledDate: immediate,
+        notificationDetails: _notificationDetailsForType('deadline'),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: 'exam|exam:$examId',
       );
     }
   }
 
   static Future<void> cancelExamReminders(String examId) async {
-    await _plugin.cancel(_examReminderId(examId, 24));
-    await _plugin.cancel(_examReminderId(examId, 2));
-    await _plugin.cancel(_examReminderId(examId, 0));
-    await _plugin.cancel(_examReminderId(examId, -1));
+    await _plugin.cancel(id: _examReminderId(examId, 24));
+    await _plugin.cancel(id: _examReminderId(examId, 2));
+    await _plugin.cancel(id: _examReminderId(examId, 0));
+    await _plugin.cancel(id: _examReminderId(examId, -1));
   }
 }
