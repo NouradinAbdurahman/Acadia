@@ -19,7 +19,13 @@ class AppUser {
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
       id: json['id'],
-      email: json['email'],
+      // public.users.email is nullable in the DB (e.g. rows created before
+      // the signup path wrote it); falling back instead of crashing here
+      // matters because an uncaught error puts currentAppUserProvider into
+      // AsyncError, which the router's redirect logic treats identically to
+      // "no profile yet" — permanently trapping the user on academic
+      // onboarding regardless of what they submit.
+      email: json['email'] as String? ?? '',
       name: json['name'],
       createdAt: DateTime.parse(json['created_at']),
       avatarUrl: json['avatar_url'],
